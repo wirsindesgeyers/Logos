@@ -148,6 +148,9 @@ Texto determinístico de um valor, usado pelos vetores e pelo teste diferencial 
 - `CanonDecode::decode` e `from_canon` usam o decoder estrito; `from_canon` exige o fim da
   entrada.
 - `Vec<u8>` é um **array de inteiros**; strings de bytes são `Bytes` ou `[u8; N]`.
+- `Option<T>` usa **presença explícita**: `None` é o array vazio (`80`) e `Some(x)` é o array
+  `[x]` (`81 …`). Usar `null` para `None` faria `Some(null)` e `Some(None)` colidirem com ele; a
+  codificação de tipos tipados precisa ser injetiva (hashes e assinaturas dependem disso).
 
 ## 11. Vetores e testes
 

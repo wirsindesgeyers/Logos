@@ -38,30 +38,57 @@ class CanonError(Exception):
 
 
 class CanonMap:
-    """Mapa canônico: entradas ordenadas pelos bytes codificados da chave, sem repetição."""
+    """Mapa canônico: entradas ordenadas pelos bytes codificados da chave, sem repetição.
 
-    entries: tuple[tuple[Value, Value], ...]
+    Guarda os pares como foram dados e **recalcula** ordem e unicidade a cada leitura de
+    :attr:`entries` e a cada codificação. Assim, mutar uma chave ou um valor (listas são
+    mutáveis) depois da construção nunca produz bytes não canônicos: a codificação reflete o
+    estado atual, ou levanta CanonError.
+    """
 
     def __init__(self, pairs: Iterable[tuple[Value, Value]]) -> None:
-        keyed = sorted(((encode(k), k, v) for k, v in pairs), key=lambda t: t[0])
-        for (a, _, _), (b, _, _) in pairwise(keyed):
+        self._pairs: tuple[tuple[Value, Value], ...] = tuple(pairs)
+        _check_depth(self)
+        _ = self.entries  # valida já na construção (DuplicateKey)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, CanonMap) and encode(self) == encode(other)
+
+    __hash__ = None  # type: ignore[assignment]  # mutável: não é hasheável
+
+    def _encoded_entries(self) -> list[tuple[bytes, Value]]:
+        """``(chave codificada, valor)`` na ordem canônica, conforme o estado atual."""
+        keyed = sorted(((encode(k), v) for k, v in self._pairs), key=lambda t: t[0])
+        for (a, _), (b, _) in pairwise(keyed):
             if a == b:
                 raise CanonError("DuplicateKey")
-        self.entries = tuple((k, v) for _, k, v in keyed)
-        _check_depth(self)
+        return keyed
 
-
-def _depth(value: Value) -> int:
-    if isinstance(value, list):
-        return 1 + max((_depth(v) for v in value), default=0)
-    if isinstance(value, CanonMap):
-        return 1 + max((max(_depth(k), _depth(v)) for k, v in value.entries), default=0)
-    return 0
+    @property
+    def entries(self) -> tuple[tuple[Value, Value], ...]:
+        """Entradas na ordem canônica, conforme o estado atual das chaves."""
+        by_key = {encode(k): k for k, _ in self._pairs}
+        return tuple((by_key[kb], v) for kb, v in self._encoded_entries())
 
 
 def _check_depth(value: Value) -> None:
-    if _depth(value) > MAX_DEPTH:
-        raise CanonError("DepthExceeded")
+    """Levanta DepthExceeded assim que algum aninhamento passa de MAX_DEPTH.
+
+    Percurso iterativo (sem recursão do Python) que para no primeiro nível excedente, então um
+    valor com milhares de níveis, ou cíclico, vira CanonError e não RecursionError.
+    """
+    stack: list[tuple[Value, int]] = [(value, 0)]
+    while stack:
+        item, depth = stack.pop()
+        if isinstance(item, list):
+            children: Iterable[Value] = item
+        elif isinstance(item, CanonMap):
+            children = (x for pair in item._pairs for x in pair)
+        else:
+            continue
+        if depth + 1 > MAX_DEPTH:
+            raise CanonError("DepthExceeded")
+        stack.extend((child, depth + 1) for child in children)
 
 
 def _head(major: int, arg: int) -> bytes:
@@ -113,8 +140,9 @@ def _encode(value: Value) -> bytes:
     if isinstance(value, list):
         return _head(4, len(value)) + b"".join(_encode(v) for v in value)
     if isinstance(value, CanonMap):
-        body = b"".join(_encode(k) + _encode(v) for k, v in value.entries)
-        return _head(5, len(value.entries)) + body
+        entries = value._encoded_entries()
+        body = b"".join(kb + _encode(v) for kb, v in entries)
+        return _head(5, len(entries)) + body
     raise TypeError(f"tipo sem codificação canônica: {type(value).__name__}")
 
 

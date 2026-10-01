@@ -160,17 +160,29 @@ impl<const N: usize> CanonDecode for [u8; N] {
     }
 }
 
+/// `Option<T>` usa presença explícita: `None` é o array vazio e `Some(x)` é o array `[x]`.
+///
+/// Não se usa `null` para `None` porque `Some(Value::Null)` e `Some(None)` colidiriam com ele:
+/// a codificação precisa ser injetiva (hashes e assinaturas dependem disso).
 impl<T: Canon> Canon for Option<T> {
     fn to_value(&self) -> Result<Value, CanonError> {
-        self.as_ref().map_or(Ok(Value::Null), Canon::to_value)
+        let items = match self {
+            None => Vec::new(),
+            Some(x) => vec![x.to_value()?],
+        };
+        Ok(Value::Array(Array::new(items)?))
     }
 }
 
 impl<T: CanonDecode> CanonDecode for Option<T> {
     fn from_value(value: &Value) -> Result<Self, CanonError> {
         match value {
-            Value::Null => Ok(None),
-            other => T::from_value(other).map(Some),
+            Value::Array(a) => match a.items() {
+                [] => Ok(None),
+                [x] => T::from_value(x).map(Some),
+                _ => Err(CanonError::WrongType),
+            },
+            _ => Err(CanonError::WrongType),
         }
     }
 }
@@ -246,6 +258,41 @@ mod tests {
     fn wrong_length_array_is_wrong_type() {
         assert_eq!(
             from_canon::<[u8; 4]>(&enc(&Bytes(vec![1, 2, 3]))),
+            Err(CanonError::WrongType)
+        );
+    }
+
+    #[test]
+    fn option_encoding_is_injective() {
+        // None, Some(Null) e Some(None) nunca compartilham bytes e voltam idênticos.
+        let none = enc(&None::<Value>);
+        let some_null = enc(&Some(Value::Null));
+        assert_ne!(none, some_null);
+        assert_eq!(from_canon::<Option<Value>>(&none), Ok(None));
+        assert_eq!(
+            from_canon::<Option<Value>>(&some_null),
+            Ok(Some(Value::Null))
+        );
+
+        let all: [Option<Option<bool>>; 4] =
+            [None, Some(None), Some(Some(false)), Some(Some(true))];
+        let encoded: Vec<Vec<u8>> = all.iter().map(enc).collect();
+        for (i, x) in all.iter().enumerate() {
+            assert_eq!(from_canon::<Option<Option<bool>>>(&encoded[i]), Ok(*x));
+            for other in &encoded[i + 1..] {
+                assert_ne!(&encoded[i], other);
+            }
+        }
+    }
+
+    #[test]
+    fn option_rejects_longer_arrays() {
+        assert_eq!(
+            from_canon::<Option<bool>>(&enc(&vec![true, false])),
+            Err(CanonError::WrongType)
+        );
+        assert_eq!(
+            from_canon::<Option<bool>>(&enc(&true)),
             Err(CanonError::WrongType)
         );
     }

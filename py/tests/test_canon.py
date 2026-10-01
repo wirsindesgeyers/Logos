@@ -73,3 +73,49 @@ def test_depth_limit() -> None:
     with pytest.raises(CanonError) as e:
         canon.encode([v])
     assert e.value.kind == "DepthExceeded"
+
+
+def test_map_mutation_after_construction_never_yields_non_canonical_bytes() -> None:
+    k: list[canon.Value] = [1]
+    m = CanonMap([(k, 0), ([2], 0)])
+    k[0] = 3  # a chave mutável muda depois da construção
+    data = canon.encode(m)
+    assert data.hex() == "a2810200810300"  # chaves [2] e [3], já na ordem canônica
+    assert canon.verdict(data).startswith("ok:")  # o decoder estrito aceita
+    assert canon.encode(canon.decode(data)) == data
+
+
+def test_map_mutation_into_duplicate_key_is_an_error_not_bad_bytes() -> None:
+    k: list[canon.Value] = [1]
+    m = CanonMap([(k, 0), ([2], 0)])
+    k[0] = 2  # agora as duas chaves são iguais
+    with pytest.raises(CanonError) as e:
+        canon.encode(m)
+    assert e.value.kind == "DuplicateKey"
+
+
+def test_depth_error_before_python_recursion_limit() -> None:
+    deep: canon.Value = None
+    for _ in range(100_000):
+        deep = [deep]
+    with pytest.raises(CanonError) as e:
+        canon.encode(deep)
+    assert e.value.kind == "DepthExceeded"
+
+
+def test_cyclic_value_is_depth_error() -> None:
+    cyclic: list[canon.Value] = []
+    cyclic.append(cyclic)
+    with pytest.raises(CanonError) as e:
+        canon.encode(cyclic)
+    assert e.value.kind == "DepthExceeded"
+
+
+def test_deep_map_is_depth_error() -> None:
+    inner: canon.Value = None
+    for _ in range(canon.MAX_DEPTH):
+        inner = CanonMap([(0, inner)])
+    assert canon.decode(canon.encode(inner)) is not None
+    with pytest.raises(CanonError) as e:
+        canon.encode(CanonMap([(0, inner)]))
+    assert e.value.kind == "DepthExceeded"
