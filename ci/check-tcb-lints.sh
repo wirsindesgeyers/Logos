@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Falha se algum crate de TCB perdeu as proibições da §4 do roadmap.
-# A lista vive em ci/tcb-crates.txt (substituída por tcb/manifest.toml na Etapa 0.2).
+# A lista vem de tcb/manifest.toml (crates com `strict = true`).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 status=0
@@ -19,5 +19,5 @@ while read -r crate; do
     echo "ERRO: uso de 'unsafe' em crates/$crate" >&2
     status=1
   fi
-done < ci/tcb-crates.txt
+done < <(python3 tcb/tcb.py strict-crates)
 exit $status

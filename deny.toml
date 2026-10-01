@@ -37,6 +37,7 @@ allow = [
   { name = "logos-audit" },
   { name = "logos-cli" },
   { name = "logos-tui" },
+  { name = "xtask" },
 ]
 
 [sources]

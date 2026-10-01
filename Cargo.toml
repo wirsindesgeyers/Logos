@@ -21,6 +21,7 @@ members = [
     "crates/logos-audit",
     "crates/logos-cli",
     "crates/logos-tui",
+    "xtask",
 ]
 
 [workspace.package]

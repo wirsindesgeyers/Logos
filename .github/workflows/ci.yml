@@ -33,8 +33,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - run: tcb/count.sh check
       - run: ci/check-tcb-lints.sh
       - run: ci/check-audit-independence.sh
+
+  tcb-report:
+    name: Medição da TCB
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: tokei
+      - name: Relatório do commit atual
+        run: |
+          cargo xtask tcb report --json tcb-head.json --markdown tcb-head.md
+          cat tcb-head.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tcb-report
+          path: |
+            tcb-head.json
+            tcb-head.md
+      - name: Diferença em relação à base do PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          git worktree add ../base "$BASE_SHA"
+          if [ -f ../base/tcb/manifest.toml ]; then
+            python3 tcb/tcb.py --root ../base report --json tcb-base.json >/dev/null
+          else
+            # base ainda sem manifesto (primeiro PR da Etapa 0.2): trata como TCB vazia
+            python3 - <<'PY'
+          import json
+          head = json.load(open("tcb-head.json"))
+          empty = {"properties": {k: {**v, "loc_total": 0} for k, v in head["properties"].items()},
+                   "crates": [], "dependencies": []}
+          json.dump(empty, open("tcb-base.json", "w"))
+          PY
+          fi
+          python3 tcb/tcb.py diff tcb-base.json tcb-head.json | tee tcb-diff.md >> "$GITHUB_STEP_SUMMARY"
+          # fork sem permissão de escrita: o resumo acima continua valendo
+          gh pr comment "$PR" --body-file tcb-diff.md --edit-last --create-if-none || true
 
   supply-chain:
     name: cargo deny + cargo audit
@@ -58,10 +107,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --locked
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
+      - run: uv run ruff check . ../tcb
+      - run: uv run ruff format --check . ../tcb
       - run: uv run mypy
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/tests
       - run: uv run pytest -q
+      - run: uv run pytest -q ../tcb/tests
 
   selftest:
     name: As regras bloqueiam o que deveriam bloquear

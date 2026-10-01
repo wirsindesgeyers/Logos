@@ -1,0 +1,136 @@
+# Manifesto da TCB (roadmap §4, Etapa 0.2; spec §5).
+#
+# Para cada propriedade, lista o que pertence à sua base de confiança. Regras (checadas por
+# `tcb/count.sh check`, que roda na CI):
+#   * todo arquivo .rs em src/ de um crate listado precisa aparecer em `files` (e vice-versa);
+#   * crates com `strict = true` precisam ter os lints da §4 (ci/check-tcb-lints.sh);
+#   * `verified` ∈ none | kani | verus | cakeml.
+# Adicionar um arquivo a um crate de TCB sem atualizá-lo aqui falha a CI.
+
+version = 1
+
+[properties.correctness]
+title = "Correção (soundness)"
+guarantee = "Nenhum Verified ou token falso"
+
+[properties.fidelity]
+title = "Fidelidade"
+guarantee = "A fórmula diz o que se quis dizer; os fatos refletem o mundo"
+
+[properties.progress]
+title = "Progresso (liveness)"
+guarantee = "O sistema consegue concluir coisas. Provers, LLM e formalizador ficam FORA da TCB: um bug aqui gera UNKNOWN, nunca um aceite falso"
+
+# Binários externos (hash SHA-256 do arquivo, conferido pelo ExternalDigest da 0.4). Entram
+# quando registrados (ex.: cake_lpr na 4.5):
+#
+# [[external]]
+# name = "cake_lpr"
+# sha256 = "<64 hex>"
+# properties = ["correctness"]
+# verified = "cakeml"
+
+[[crate]]
+name = "logos-canon"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-crypto"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-core"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-air"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-obligation"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-model"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-ground"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-lrat"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-ledger"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-policy"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-token"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-kernel"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-gateway"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-seal"
+properties = ["fidelity"]
+strict = true
+verified = "none"
+files = ["src/lib.rs"]
+
+[[crate]]
+name = "logos-attest"
+properties = ["fidelity"]
+strict = false
+verified = "none"
+files = ["src/lib.rs"]

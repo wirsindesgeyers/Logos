@@ -44,4 +44,8 @@ fresh_copy
 printf '\n[dependencies]\nlogos-kernel = { path = "../logos-kernel" }\n' >> crates/logos-audit/Cargo.toml
 expect_failure "logos-audit dependendo de logos-kernel" ci/check-audit-independence.sh
 
+fresh_copy
+printf '\n' > crates/logos-canon/src/novo_arquivo.rs
+expect_failure "arquivo novo em crate de TCB sem atualizar o manifesto" tcb/count.sh check
+
 [ "$fail" = 0 ] && echo "selftest: todas as regras bloqueiam o que deveriam" || exit 1

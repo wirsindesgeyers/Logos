@@ -19,6 +19,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
+| `tcb/` | Manifesto da TCB (`manifest.toml`) e ferramenta de contagem (`cargo xtask tcb`) |
 | `fuzz/` | Alvos de `cargo fuzz` |
 
 ## Desenvolvimento
@@ -27,6 +28,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 cargo build --workspace && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
+cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
 ci/selftest.sh   # prova que a CI bloqueia unsafe, unwrap e dependências fora da allowlist
 ```
 
