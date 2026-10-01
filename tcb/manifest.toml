@@ -42,7 +42,7 @@ name = "logos-crypto"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/domain.rs", "src/error.rs", "src/lib.rs", "src/sig.rs", "src/signer.rs"]
 
 [[crate]]
 name = "logos-core"

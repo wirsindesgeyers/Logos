@@ -50,17 +50,13 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ## 4. Verificação completa (rodar antes de todo commit)
 
 ```sh
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-ci/check-tcb-lints.sh && ci/check-audit-independence.sh
-tcb/count.sh check                 # ou: cargo xtask tcb check
-cargo deny check && cargo audit
-( cd py && uv run ruff check . ../tcb ../tools && uv run ruff format --check . ../tcb ../tools \
-    && uv run mypy && uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py \
-    && uv run python ../tools/gen_unicode_assigned.py --check && uv run pytest -q && uv run pytest -q ../tcb/tests )
-ci/selftest.sh                     # a CI bloqueia o que deveria, pelo motivo certo (~1 min, usa rede)
+ci/verify.sh              # fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
+                          # manifesto, cargo deny/audit, ruff/mypy/pytest (inclui o diferencial)
+ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
+
+O script termina com `VERIFY_OK` e usa `set -euo pipefail`. Rode-o e confira o código de saída.
+Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o seu atalho local.
 
 - **Não coloque `| tail`/`| head` numa cadeia `&&` de verificação**: o pipe esconde o código de
   saída do comando que falhou (isso já deixou passar um clippy quebrado). Use `set -o pipefail`

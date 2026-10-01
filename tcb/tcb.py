@@ -135,36 +135,67 @@ _METADATA: Json | None = None
 def cargo_metadata() -> Json:
     global _METADATA
     if _METADATA is None:
-        _METADATA = json.loads(run(["cargo", "metadata", "--format-version", "1", "--locked"]))
+        host = next(
+            line.split(":", 1)[1].strip()
+            for line in run(["rustc", "-vV"]).splitlines()
+            if line.startswith("host:")
+        )
+        # --filter-platform: cargo avalia os `cfg(...)` das dependências para o alvo (descarta
+        # backends opcionais e crates de outras plataformas, ex. fiat-crypto e windows-*).
+        _METADATA = json.loads(
+            run(
+                [
+                    "cargo",
+                    "metadata",
+                    "--format-version",
+                    "1",
+                    "--locked",
+                    "--filter-platform",
+                    host,
+                ]
+            )
+        )
     return _METADATA
 
 
 def transitive_dependencies(tcb_crates: set[str]) -> list[Json]:
-    """Dependências externas (fora do workspace) alcançáveis a partir de `tcb_crates`."""
+    """Dependências externas (fora do workspace) alcançáveis a partir de `tcb_crates`.
+
+    Cada uma é classificada como ``runtime`` (entra no código que roda) ou ``build`` (só roda na
+    compilação: build scripts e macros procedurais). Alcançável por qualquer caminho de execução
+    => ``runtime``.
+    """
     meta = cargo_metadata()
     packages = {p["id"]: p for p in meta["packages"]}
     nodes = {n["id"]: n for n in meta["resolve"]["nodes"]}
     workspace = set(meta["workspace_members"])
-    stack = [pid for pid in workspace if packages[pid]["name"] in tcb_crates]
-    seen: set[str] = set()
+
+    def is_proc_macro(pid: str) -> bool:
+        return any("proc-macro" in t["kind"] for t in packages[pid]["targets"])
+
+    stack = [(pid, False) for pid in workspace if packages[pid]["name"] in tcb_crates]
+    seen: set[tuple[str, bool]] = set()
     while stack:
-        pid = stack.pop()
-        if pid in seen:
+        pid, build_only = stack.pop()
+        if (pid, build_only) in seen:
             continue
-        seen.add(pid)
+        seen.add((pid, build_only))
         for dep in nodes[pid]["deps"]:
             kinds = {k["kind"] for k in dep["dep_kinds"]}
             if kinds <= {"dev"}:
                 continue  # só dev-dependency: não entra na TCB
-            stack.append(dep["pkg"])
+            only_build = kinds <= {"build", "dev"} or is_proc_macro(dep["pkg"])
+            stack.append((dep["pkg"], build_only or only_build))
+    runtime = {pid for pid, b in seen if not b}
     deps: list[Json] = []
-    for pid in sorted(seen - workspace, key=lambda i: packages[i]["name"]):
+    for pid in sorted({pid for pid, _ in seen} - workspace, key=lambda i: packages[i]["name"]):
         pkg = packages[pid]
         base = Path(pkg["manifest_path"]).parent
         deps.append(
             {
                 "name": pkg["name"],
                 "version": pkg["version"],
+                "kind": "runtime" if pid in runtime else "build",
                 "paths": [p for p in (base / "src", base / "build.rs") if p.exists()],
             }
         )
@@ -204,7 +235,8 @@ def build_report(manifest: Json) -> Json:
         for dep in transitive_dependencies(member_names) if member_names else []:
             key = f"{dep['name']} {dep['version']}"
             dep_props.setdefault(key, set()).add(prop)
-            dep_info[key] = dep
+            if dep_info.get(key, {}).get("kind") != "runtime":
+                dep_info[key] = dep  # runtime vence se algum crate o usa em execução
     dep_rows: list[Json] = []
     for key in sorted(dep_info):
         dep = dep_info[key]
@@ -213,6 +245,7 @@ def build_report(manifest: Json) -> Json:
             {
                 "name": dep["name"],
                 "version": dep["version"],
+                "kind": dep["kind"],
                 "properties": sorted(dep_props[key]),
                 "loc": dep_loc,
             }
@@ -223,13 +256,15 @@ def build_report(manifest: Json) -> Json:
         members = [r for r in crate_rows if prop in r["properties"]]
         own = sum(r["loc"] for r in members)
         verified = sum(r["loc"] for r in members if r["verified"] != "none")
-        deps = sum(d["loc"] for d in dep_rows if prop in d["properties"])
+        deps = sum(d["loc"] for d in dep_rows if prop in d["properties"] and d["kind"] == "runtime")
+        build = sum(d["loc"] for d in dep_rows if prop in d["properties"] and d["kind"] == "build")
         total = own + deps
         per_property[prop] = {
             "title": manifest["properties"][prop]["title"],
             "crates": [r["name"] for r in members],
             "loc_own": own,
             "loc_deps": deps,
+            "loc_build_deps": build,
             "loc_total": total,
             "loc_verified": verified,
             "verified_ratio": round(verified / total, 4) if total else 0.0,
@@ -239,7 +274,12 @@ def build_report(manifest: Json) -> Json:
         "format": FORMAT_VERSION,
         "commit": git("rev-parse", "HEAD"),
         "dirty": bool(git("status", "--porcelain")),
-        "unit": "linhas de código Rust (tokei), cota superior (inclui #[cfg(test)] em src/)",
+        "unit": (
+            "linhas de código Rust (tokei), cota superior: inclui #[cfg(test)] em src/ e o src/ "
+            "inteiro das dependências (todos os módulos/plataformas do crate). "
+            "Total = próprio + dependências de execução; dependências só de compilação "
+            "(build scripts, macros procedurais) ficam em coluna à parte"
+        ),
         "properties": per_property,
         "crates": crate_rows,
         "dependencies": dep_rows,
@@ -255,13 +295,15 @@ def render_markdown(report: Json) -> str:
         + (" (árvore modificada)" if report["dirty"] else "")
         + f" · {report['unit']}",
         "",
-        "| Propriedade | Crates | LOC próprio | LOC deps | Total | Verificado |",
-        "| --- | ---: | ---: | ---: | ---: | ---: |",
+        "| Propriedade | Crates | LOC próprio | LOC deps (execução) | Total | Verificado "
+        "| LOC deps (só compilação) |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for p in report["properties"].values():
         lines.append(
             f"| {p['title']} | {len(p['crates'])} | {p['loc_own']} | {p['loc_deps']} "
-            f"| {p['loc_total']} | {p['loc_verified']} ({p['verified_ratio']:.0%}) |"
+            f"| {p['loc_total']} | {p['loc_verified']} ({p['verified_ratio']:.0%}) "
+            f"| {p.get('loc_build_deps', 0)} |"
         )
     lines += [
         "",
@@ -274,10 +316,17 @@ def render_markdown(report: Json) -> str:
             f"| {c['verified']} |"
         )
     if report["dependencies"]:
-        lines += ["", "| Dependência | Versão | Propriedades | LOC |", "| --- | --- | --- | ---: |"]
+        lines += [
+            "",
+            "| Dependência | Versão | Uso | Propriedades | LOC |",
+            "| --- | --- | --- | --- | ---: |",
+        ]
         for d in report["dependencies"]:
             props = ", ".join(d["properties"])
-            lines.append(f"| `{d['name']}` | {d['version']} | {props} | {d['loc']} |")
+            lines.append(
+                f"| `{d['name']}` | {d['version']} | {d.get('kind', 'runtime')} | {props} "
+                f"| {d['loc']} |"
+            )
     else:
         lines += ["", "Nenhuma dependência externa na TCB."]
     for e in report["external"]:

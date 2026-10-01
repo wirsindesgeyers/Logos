@@ -10,6 +10,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 logos-canon = { path = "../crates/logos-canon" }
+logos-crypto = { path = "../crates/logos-crypto" }
 
 # Um target por parser/decoder de TCB (roadmap §4). O job noturno roda todos os targets listados
 # por `cargo fuzz list`.
@@ -23,6 +24,20 @@ bench = false
 [[bin]]
 name = "canon_text"
 path = "fuzz_targets/canon_text.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "crypto_decode"
+path = "fuzz_targets/crypto_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "crypto_keyfile"
+path = "fuzz_targets/crypto_keyfile.rs"
 test = false
 doc = false
 bench = false

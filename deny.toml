@@ -16,6 +16,8 @@ confidence-threshold = 0.9
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Dependências de caminho entre membros do workspace (publish = false) não precisam de versão.
+allow-wildcard-paths = true
 # Allowlist: com a lista abaixo não vazia, qualquer crate fora dela é recusado.
 allow = [
   { name = "logos-canon" },
@@ -41,6 +43,30 @@ allow = [
   # logos-canon (ADR 0003)
   { name = "unicode-normalization" },
   { name = "tinyvec" },
+  # logos-crypto (ADR 0004)
+  { name = "sha2" },
+  { name = "ed25519-dalek" },
+  { name = "ed25519" },
+  { name = "curve25519-dalek" },
+  { name = "curve25519-dalek-derive" },
+  { name = "signature" },
+  { name = "digest" },
+  { name = "block-buffer" },
+  { name = "crypto-common" },
+  { name = "generic-array" },
+  { name = "typenum" },
+  { name = "subtle" },
+  { name = "cfg-if" },
+  { name = "cpufeatures" },
+  { name = "libc" },
+  { name = "fiat-crypto" },
+  { name = "version_check" },
+  { name = "rustc_version" },
+  { name = "semver" },
+  { name = "proc-macro2" },
+  { name = "quote" },
+  { name = "syn" },
+  { name = "unicode-ident" },
 ]
 
 [sources]

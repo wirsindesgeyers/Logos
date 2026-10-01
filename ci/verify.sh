@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Verificação completa local (AGENTS.md §4). Falha no primeiro erro; sem pipes que mascarem o
+# código de saída. Use --selftest para incluir o autoteste da CI (~1-2 min, usa rede).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+ci/check-tcb-lints.sh
+ci/check-audit-independence.sh
+tcb/count.sh check
+cargo deny check
+cargo audit
+(
+  cd py
+  uv run ruff check . ../tcb ../tools
+  uv run ruff format --check . ../tcb ../tools
+  uv run mypy
+  uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py
+  uv run python ../tools/gen_unicode_assigned.py --check
+  uv run python ../tools/gen_crypto_vectors.py --check
+  uv run pytest -q # inclui o diferencial Rust x Python da canon
+  uv run pytest -q ../tcb/tests
+)
+if [ "${1:-}" = "--selftest" ]; then
+  ci/selftest.sh
+fi
+echo "VERIFY_OK"

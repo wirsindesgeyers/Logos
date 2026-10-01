@@ -333,12 +333,12 @@ Ordem recomendada: 0.1 → 0.2 → 0.3 → 0.4 → 0.5, com 0.6 iniciada após a
 - Carregamento de chave a partir de arquivo com permissão `0600` (recusa se mais aberto).
 
 **Critério de conclusão.**
-- [ ] Teste de tipo (compile-fail com `trybuild`, sobre dois domínios marcadores de teste): passar `Hash<A>` onde se espera `Hash<B>` não compila; passar `ExternalDigest` onde se espera `Hash<T>` não compila.
-- [ ] Teste: assinatura com domínio `event` não verifica com domínio `token`.
-- [ ] Teste: `hash::<T>(x)` e `hash_raw::<T>(canon(x))` coincidem, e `hash_raw` com tags diferentes nunca coincide (vetores em `spec/vectors/domains/`).
-- [ ] Teste: assinatura com `alg` trocado no envelope não verifica; `alg` desconhecido dá erro tipado.
-- [ ] Vetores de teste Ed25519 do RFC 8032 passam.
-- [ ] Chave com permissão `0644` é recusada.
+- [x] Teste de tipo (compile-fail via *doctests* `compile_fail,E0308` em vez de `trybuild`, ver ADR 0004; dois domínios marcadores de teste): passar `Hash<A>` onde se espera `Hash<B>` não compila; passar `ExternalDigest` onde se espera `Hash<T>` não compila.
+- [x] Teste: assinatura com domínio `event` não verifica com domínio `token`.
+- [x] Teste: `hash::<T>(x)` e `hash_raw::<T>(canon(x))` coincidem, e `hash_raw` com tags diferentes nunca coincide (vetores em `spec/vectors/domains/`).
+- [x] Teste: assinatura com `alg` trocado no envelope não verifica; `alg` desconhecido dá erro tipado.
+- [x] Vetores de teste Ed25519 do RFC 8032 passam.
+- [x] Chave com permissão `0644` é recusada.
 
 ---
 
