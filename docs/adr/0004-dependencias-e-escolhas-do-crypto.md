@@ -37,15 +37,26 @@ backends, mas **não** entram na medição do host: o `tcb.py` passou a usar `--
 - **`Option`/ES256:** `SigAlg` já reserva `Es256`, mas `PublicKey::new`/`Signature::new` o recusam
   (`UnsupportedAlgorithm`), então nenhum valor ES256 existe até a 9.2. A checagem de algoritmo em
   `verify` é inalcançável pela API pública; é testada por testes unitários internos.
-- **Verificação estrita** (`verify_strict`): rejeita assinaturas maleáveis e componentes de ordem
-  pequena. Como `PublicKey::new` já recusa chaves fracas, a diferença para o `verify` frouxo não é
-  observável por testes com chaves honestas (**mutante equivalente**, documentado aqui); fica como
-  defesa em profundidade.
+- **Verificação estrita** (`verify_strict`): rejeita assinaturas maleáveis e componentes `R` de ordem
+  pequena. *Correção (revisão externa):* este ADR afirmou, erradamente, que a diferença para o `verify`
+  frouxo não era observável com chaves honestas e classificou o mutante como equivalente. Não é: quem
+  **conhece a chave** (a semente do RFC 8032 é pública) fabrica uma assinatura válida com `R` = identidade
+  que o `verify` frouxo aceita e o estrito rejeita. O teste
+  `signature_with_small_order_r_is_rejected_even_if_the_key_owner_forges_it` a constrói e traz controles
+  (o frouxo aceita, o estrito rejeita), e o mutante passou a ser morto. Além disso, `PublicKey::new`
+  recusa chaves de ordem pequena.
 - **Teste de tipos sem `trybuild`:** o roadmap pedia `trybuild`, que puxa dezenas de crates. Usamos
   *doctests* `compile_fail,E0308` (o rustdoc exige o código de erro, então a falha é a de tipos e
   não qualquer erro).
-- **Arquivo de chave:** 64 hex minúsculos (+ `\n` opcional); regular, sem link simbólico, sem
-  permissões para grupo/outros; permissão conferida no arquivo **já aberto** (fstat). Não há
+- **Arquivo de chave:** 64 hex minúsculos (+ `\n` opcional); regular, sem permissões para
+  grupo/outros. É aberto com `O_NOFOLLOW | O_NONBLOCK` e **só então** conferido por `fstat`: uma checagem
+  prévia do caminho (`lstat`) deixaria uma janela entre checar e abrir em que o arquivo vira link
+  simbólico para uma chave substituta (achado da revisão externa). `O_NONBLOCK` evita travar se o caminho
+  virar uma FIFO. Os valores das flags são fixos por plataforma (a crate `libc` somaria ~113 k LOC à TCB
+  só por constantes) e plataformas desconhecidas **falham fechadas**; os testes de symlink, FIFO e de
+  corrida quebram se um valor estiver errado. Linux x86_64 verificado; **aarch64 a confirmar no runner
+  da Etapa 0.6**. Só o último componente do caminho é protegido: diretórios intermediários devem ser
+  de confiança (quem pode escrever neles já controla o arquivo). Não há
   geração de chave nesta etapa (exigiria RNG): é da CLI (`logos user init`, 6.5) e do kernel.
 - **Chave em memória:** o `FileSigner` mantém a semente no processo; zeragem de memória e HSM/TEE
   ficam para a Etapa 13.1. `Debug` nunca imprime a chave privada.
@@ -56,5 +67,5 @@ backends, mas **não** entram na medição do host: o `tcb.py` passou a usar `--
 
 Vetores do RFC 8032 (Ed25519 puro, via um domínio de assinatura de tag vazia só nos testes); vetores
 de hash/KeyId/assinatura com domínio gerados de forma **independente** (`hashlib`, `cryptography`,
-`canon.py`) por `tools/gen_crypto_vectors.py`; mutação manual de 12 bugs (11 mortos, 1 equivalente);
+`canon.py`) por `tools/gen_crypto_vectors.py`; mutação manual de 13 bugs, todos mortos;
 fuzz de `PublicKey`/`Signature`/`Hash` e do parser do arquivo de chave.

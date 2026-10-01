@@ -14,5 +14,9 @@ logos-canon = { path = "../logos-canon" }
 sha2 = { version = "0.10", default-features = false }
 ed25519-dalek = { version = "2", default-features = false }
 
+[dev-dependencies]
+# Só para fabricar, nos testes, uma assinatura com R de ordem pequena (aritmética de escalares).
+curve25519-dalek = { version = "4", default-features = false }
+
 [lints]
 workspace = true

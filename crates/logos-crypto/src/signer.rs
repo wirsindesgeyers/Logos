@@ -33,8 +33,9 @@ pub trait Signer {
 /// Assinante Ed25519 cuja chave vem de um arquivo (desenvolvimento e papéis simples).
 ///
 /// Formato do arquivo: a semente de 32 bytes em 64 dígitos hexadecimais minúsculos, com um `\n`
-/// final opcional, e nada mais. O arquivo precisa ser regular (não link simbólico) e não ter
-/// nenhuma permissão para grupo/outros (`mode & 0o077 == 0`). A chave fica em memória do
+/// final opcional, e nada mais. O arquivo precisa ser regular (aberto com `O_NOFOLLOW`: link
+/// simbólico no último componente é recusado) e não ter nenhuma permissão para grupo/outros
+/// (`mode & 0o077 == 0`). A chave fica em memória do
 /// processo; mantê-la fora dele é o objetivo da Etapa 13.1.
 pub struct FileSigner {
     key: SigningKey,
@@ -68,16 +69,10 @@ impl FileSigner {
     /// [`CryptoError::KeyFileFormat`] ou [`CryptoError::Io`].
     pub fn load(path: &Path) -> Result<Self, CryptoError> {
         let io = |e: std::io::Error| CryptoError::Io(e.kind());
-        // Recusa link simbólico (o caminho em si), depois confere o arquivo *aberto* (fstat),
-        // para que trocar o arquivo entre as duas etapas não contorne a checagem de permissão.
-        if !fs::symlink_metadata(path)
-            .map_err(io)?
-            .file_type()
-            .is_file()
-        {
-            return Err(CryptoError::KeyFileNotRegular);
-        }
-        let file = File::open(path).map_err(io)?;
+        // Abre sem seguir link simbólico no último componente (O_NOFOLLOW) e sem bloquear se o
+        // caminho virou uma FIFO (O_NONBLOCK); só depois confere o arquivo *aberto* (fstat). Não há
+        // checagem prévia do caminho: qualquer uma deixaria uma janela entre checar e abrir.
+        let file = open_key_file(path)?;
         let meta = file.metadata().map_err(io)?;
         if !meta.is_file() {
             return Err(CryptoError::KeyFileNotRegular);
@@ -99,6 +94,56 @@ impl FileSigner {
     pub fn from_key_file_bytes(content: &[u8]) -> Result<Self, CryptoError> {
         Self::from_seed(&parse_seed(content)?)
     }
+}
+
+/// `O_NOFOLLOW | O_NONBLOCK` da plataforma. Valores fixos (sem a crate `libc`, que somaria ~113 k
+/// LOC à TCB só por constantes); os testes de symlink e FIFO de `tests/security.rs` quebram se um
+/// valor estiver errado. Plataforma desconhecida: recusa (falha fechada).
+#[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "x86")))]
+const OPEN_FLAGS: Option<i32> = Some(0o400000 | 0o4000);
+/// aarch64/arm usam `O_NOFOLLOW = 0o100000`; **a confirmar no runner aarch64 (Etapa 0.6)**: os
+/// testes de symlink/FIFO fazem essa confirmação.
+#[cfg(all(target_os = "linux", any(target_arch = "aarch64", target_arch = "arm")))]
+const OPEN_FLAGS: Option<i32> = Some(0o100000 | 0o4000);
+#[cfg(target_os = "macos")]
+const OPEN_FLAGS: Option<i32> = Some(0x0100 | 0x0004);
+#[cfg(not(any(
+    all(
+        target_os = "linux",
+        any(
+            target_arch = "x86_64",
+            target_arch = "x86",
+            target_arch = "aarch64",
+            target_arch = "arm"
+        )
+    ),
+    target_os = "macos"
+)))]
+const OPEN_FLAGS: Option<i32> = None;
+
+#[cfg(unix)]
+fn open_key_file(path: &Path) -> Result<File, CryptoError> {
+    use std::os::unix::fs::OpenOptionsExt;
+    let Some(flags) = OPEN_FLAGS else {
+        return Err(CryptoError::Io(std::io::ErrorKind::Unsupported));
+    };
+    match fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(flags)
+        .open(path)
+    {
+        Ok(file) => Ok(file),
+        // Só para dar o erro certo: o último componente é um link simbólico?
+        Err(_) if fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink()) => {
+            Err(CryptoError::KeyFileNotRegular)
+        }
+        Err(e) => Err(CryptoError::Io(e.kind())),
+    }
+}
+
+#[cfg(not(unix))]
+fn open_key_file(_: &Path) -> Result<File, CryptoError> {
+    Err(CryptoError::Io(std::io::ErrorKind::Unsupported))
 }
 
 #[cfg(unix)]

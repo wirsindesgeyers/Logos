@@ -61,8 +61,12 @@ Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o 
 - **Não coloque `| tail`/`| head` numa cadeia `&&` de verificação**: o pipe esconde o código de
   saída do comando que falhou (isso já deixou passar um clippy quebrado). Use `set -o pipefail`
   ou rode sem pipe e olhe o `exit=`.
-- Fuzz (alvos em `fuzz/fuzz_targets/`): `cd fuzz && RUSTC_BOOTSTRAP=1 cargo +stable fuzz run <alvo> -- -max_total_time=150`.
-  A meta de ≥ 1 h por alvo roda no job noturno da CI (`.github/workflows/fuzz.yml`).
+- Fuzz (alvos em `fuzz/fuzz_targets/`): `ci/fuzz.sh SEGUNDOS [alvo...]` — **o mesmo script da CI**
+  (`.github/workflows/fuzz.yml`). Ele fixa `RUSTUP_TOOLCHAIN` (padrão `nightly`; localmente use um
+  nightly datado: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 canon_decode`). **Não use
+  `RUSTC_BOOTSTRAP=1`**: ele faz o fuzz rodar na stable e esconde exatamente o erro que a CI teria
+  (o `rust-toolchain.toml` da raiz fixa `stable` e vale dentro de `fuzz/`). A meta de ≥ 1 h por alvo
+  roda no job noturno.
 - Medição da TCB: `cargo xtask tcb report` (LOC próprio + dependências transitivas por propriedade).
 
 ## 5. Git
@@ -105,13 +109,17 @@ fuzz/       alvos de cargo fuzz (workspace próprio)
 
 ## 8. Armadilhas conhecidas do ambiente
 
-- `rust-toolchain.toml` fixa `stable` (1.99); o `nightly` padrão da máquina (1.98) é **mais velho**
-  que o `rust-version` do projeto. Para fuzz local: `RUSTC_BOOTSTRAP=1 cargo +stable fuzz ...`.
+- `rust-toolchain.toml` fixa `stable` (1.99) e vale também dentro de `fuzz/`; o `nightly` padrão da
+  máquina (1.98) é **mais velho** que o `rust-version` do projeto. Para fuzz local instale um nightly
+  datado (`rustup toolchain install nightly-2026-09-28 --profile minimal`) e use `ci/fuzz.sh`.
+- Constantes de `O_NOFOLLOW`/`O_NONBLOCK` em `logos-crypto` são fixas por plataforma (sem `libc`); o
+  valor do aarch64 ainda precisa ser confirmado no runner aarch64 (Etapa 0.6).
+- O Python precisa ser **3.14** (`requires-python = ">=3.14,<3.15"`).
 - `cp` está com alias interativo (`cp -i`) no shell do mantenedor: use `command cp -f` em scripts.
 - `pkill -f <padrão>` e `pgrep -f` casam com a *própria* linha de comando do shell que os chama;
   use PIDs ou nomes exatos de processo.
 - `gen` é palavra reservada na edição 2024 do Rust.
-- O `unicodedata` do Python **precisa ser 16.0.0** (Python 3.14, via `py/.python-version`); o do 3.12
+- O `unicodedata` do Python **precisa ser 16.0.0** (Python 3.14); o do 3.12
   é 15.0 e o `unicode-normalization` 0.1.25 é Unicode 17 (por isso está fixado em `=0.1.24`).
 - `gh` (GitHub CLI) não está instalado: não dá para consultar a CI daqui; peça ao mantenedor.
 - Ferramentas instaladas: `cargo-deny`, `cargo-audit`, `cargo-fuzz`, `tokei`, `uv`.

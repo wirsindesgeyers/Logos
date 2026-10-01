@@ -273,3 +273,157 @@ fn debug_output_never_contains_the_private_key() {
         "{s}"
     );
 }
+
+/// FIFO no lugar do arquivo: abrir sem `O_NONBLOCK` bloquearia para sempre. O `load` tem de
+/// recusar rápido (a thread + timeout faz o teste *falhar* em vez de travar se a flag sumir).
+#[test]
+fn key_file_that_is_a_fifo_is_refused_without_blocking() {
+    let path = std::env::temp_dir().join(format!("logos-key-fifo-{}", std::process::id()));
+    let _ = std::fs::remove_file(&path);
+    let made = std::process::Command::new("mkfifo")
+        .arg(&path)
+        .status()
+        .unwrap();
+    assert!(made.success(), "mkfifo indisponível");
+    let (tx, rx) = std::sync::mpsc::channel();
+    let p = path.clone();
+    std::thread::spawn(move || {
+        let _ = tx.send(FileSigner::load(&p).map(|_| ()));
+    });
+    let result = rx.recv_timeout(std::time::Duration::from_secs(5));
+    let _ = std::fs::remove_file(&path);
+    assert_eq!(
+        result.expect("load travou numa FIFO"),
+        Err(CryptoError::KeyFileNotRegular)
+    );
+}
+
+/// Corrida: enquanto `load` roda, o caminho alterna (rename atômico) entre o arquivo legítimo e
+/// um link simbólico para uma chave substituta. Nenhuma carga pode devolver a chave substituta.
+#[test]
+fn swapping_the_path_to_a_symlink_never_loads_the_replacement_key() {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let dir = std::env::temp_dir().join(format!("logos-key-race-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let legit = signer();
+    let attacker_seed = hex(&[0x42u8; 32]);
+    let write = |name: &str, content: &str| {
+        use std::os::unix::fs::PermissionsExt;
+        let p = dir.join(name);
+        std::fs::write(&p, content).unwrap();
+        std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o600)).unwrap();
+        p
+    };
+    let target = dir.join("key");
+    let attacker = write("attacker", &attacker_seed);
+    std::fs::write(&target, SEED).unwrap();
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
+
+    let stop = Arc::new(AtomicBool::new(false));
+    let swapper = {
+        let (stop, dir, target, attacker) =
+            (stop.clone(), dir.clone(), target.clone(), attacker.clone());
+        std::thread::spawn(move || {
+            let tmp = dir.join("tmp");
+            let mut as_link = true;
+            while !stop.load(Ordering::Relaxed) {
+                let _ = std::fs::remove_file(&tmp);
+                if as_link {
+                    std::os::unix::fs::symlink(&attacker, &tmp).unwrap();
+                } else {
+                    use std::os::unix::fs::PermissionsExt;
+                    std::fs::write(&tmp, SEED).unwrap();
+                    std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600)).unwrap();
+                }
+                std::fs::rename(&tmp, &target).unwrap();
+                as_link = !as_link;
+            }
+        })
+    };
+
+    let (mut ok, mut refused) = (0, 0);
+    for _ in 0..500 {
+        match FileSigner::load(&target) {
+            Ok(s) => {
+                assert_eq!(
+                    s.public_key().as_bytes(),
+                    legit.public_key().as_bytes(),
+                    "carregou a chave substituta através do symlink"
+                );
+                ok += 1;
+            }
+            Err(CryptoError::KeyFileNotRegular | CryptoError::Io(_)) => refused += 1,
+            Err(other) => panic!("erro inesperado: {other}"),
+        }
+    }
+    stop.store(true, Ordering::Relaxed);
+    swapper.join().unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    assert!(
+        ok > 0 && refused > 0,
+        "a corrida não alternou o bastante: ok={ok} refused={refused}"
+    );
+}
+
+/// Quem conhece a chave (a semente do RFC 8032 é pública) pode fabricar uma assinatura com
+/// `R` = identidade (ponto de ordem 1) que a verificação **frouxa** do Ed25519 aceita. A
+/// verificação estrita (`verify_strict`) a rejeita, e o nosso `verify` tem de rejeitá-la.
+/// O controle prova que o teste distingue as duas: sem ele o teste poderia passar por acaso.
+#[test]
+fn signature_with_small_order_r_is_rejected_even_if_the_key_owner_forges_it() {
+    use curve25519_dalek::scalar::Scalar;
+    use ed25519_dalek::{Signature as DalekSig, Verifier as _, VerifyingKey};
+    use sha2::{Digest, Sha512};
+
+    let seed: [u8; 32] = unhex(SEED).try_into().unwrap();
+    let owner = signer();
+    let public = owner.public_key().as_bytes().to_vec();
+    assert!(
+        PublicKey::new(SigAlg::Ed25519, &public).is_ok(),
+        "a chave pública é honesta"
+    );
+
+    // a = escalar secreto (RFC 8032 §5.1.5): SHA-512(seed)[..32] com clamp.
+    let mut a_bytes: [u8; 32] = Sha512::digest(seed)[..32].try_into().unwrap();
+    a_bytes[0] &= 248;
+    a_bytes[31] &= 127;
+    a_bytes[31] |= 64;
+    let a = Scalar::from_bytes_mod_order(a_bytes);
+
+    let mut r = [0u8; 32];
+    r[0] = 1; // codificação do ponto identidade
+    let msg = b"mensagem forjada";
+    let k = Scalar::from_bytes_mod_order_wide(
+        &Sha512::new()
+            .chain_update(r)
+            .chain_update(&public)
+            .chain_update(msg)
+            .finalize()
+            .into(),
+    );
+    let mut raw = [0u8; 64];
+    raw[..32].copy_from_slice(&r);
+    raw[32..].copy_from_slice(&(k * a).to_bytes()); // [S]B = [k]A, logo R + [k]A = [S]B com R = 0
+
+    let key = VerifyingKey::from_bytes(public.as_slice().try_into().unwrap()).unwrap();
+    let dalek_sig = DalekSig::from_bytes(&raw);
+    assert!(
+        key.verify(msg, &dalek_sig).is_ok(),
+        "controle: o verify frouxo ACEITA esta assinatura"
+    );
+    assert!(
+        key.verify_strict(msg, &dalek_sig).is_err(),
+        "controle: o estrito a rejeita"
+    );
+
+    let sig = Signature::new(SigAlg::Ed25519, &raw).unwrap();
+    assert_eq!(
+        verify::<RawSig>(msg, &sig, owner.public_key()),
+        Err(CryptoError::BadSignature)
+    );
+}

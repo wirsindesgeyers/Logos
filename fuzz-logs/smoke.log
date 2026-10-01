@@ -1,0 +1,48 @@
+   Compiling version_check v0.9.5
+   Compiling typenum v1.20.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling libc v0.2.189
+   Compiling unicode-ident v1.0.26
+   Compiling semver v1.0.28
+   Compiling find-msvc-tools v0.1.14
+   Compiling cfg-if v1.0.5
+   Compiling cpufeatures v0.2.17
+   Compiling shlex v2.0.1
+   Compiling signature v2.2.0
+   Compiling rustc_version v0.4.1
+   Compiling tinyvec v1.13.3
+   Compiling subtle v2.6.1
+   Compiling ed25519 v2.2.3
+   Compiling generic-array v0.14.7
+   Compiling arbitrary v1.4.2
+   Compiling curve25519-dalek v4.1.3
+   Compiling unicode-normalization v0.1.24
+   Compiling syn v2.0.119
+   Compiling logos-canon v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-canon)
+   Compiling jobserver v0.1.35
+   Compiling cc v1.5.1
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling libfuzzer-sys v0.4.13
+   Compiling curve25519-dalek-derive v0.1.1
+   Compiling ed25519-dalek v2.2.0
+   Compiling logos-crypto v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-crypto)
+   Compiling logos-fuzz v0.0.0 (/home/kauan/Documentos/LOGOS/fuzz)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 00s
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.13s
+     Running `target/x86_64-unknown-linux-gnu/release/smoke -artifact_prefix=/home/kauan/Documentos/LOGOS/fuzz/artifacts/smoke/ -max_total_time=8 /home/kauan/Documentos/LOGOS/fuzz/corpus/smoke`
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 2347790710
+INFO: Loaded 1 modules   (343 inline 8-bit counters): 343 [0x564395792f30, 0x564395793087), 
+INFO: Loaded 1 PC tables (343 PCs): 343 [0x564395793088,0x5643957945f8), 
+INFO:        0 files found in /home/kauan/Documentos/LOGOS/fuzz/corpus/smoke
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2	INITED cov: 18 ft: 19 corp: 1/1b exec/s: 0 rss: 32Mb
+#524288	pulse  cov: 18 ft: 19 corp: 1/1b lim: 4096 exec/s: 262144 rss: 74Mb
+#1048576	pulse  cov: 18 ft: 19 corp: 1/1b lim: 4096 exec/s: 209715 rss: 113Mb
+#1918207	DONE   cov: 18 ft: 19 corp: 1/1b lim: 4096 exec/s: 213134 rss: 178Mb
+Done 1918207 runs in 9 second(s)
