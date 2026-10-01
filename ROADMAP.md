@@ -297,20 +297,21 @@ Ordem recomendada: 0.1 → 0.2 → 0.3 → 0.4 → 0.5, com 0.6 iniciada após a
 
 **Entregáveis.**
 - Subconjunto de CBOR determinístico: inteiros (menor codificação; faixa dos tipos maiores 0 e 1, `[-2^64, 2^64-1]`), bytes, strings UTF-8 NFC, arrays, mapas com chaves ordenadas pela ordem lexicográfica dos bytes codificados (RFC 8949 §4.2.1), `bool`, `null`. **Sem** floats, tags arbitrárias, comprimentos indefinidos.
+- **Profundidade máxima de aninhamento** (`MAX_DEPTH = 128`): o decoder rejeita acima disso e o encoder recusa; sem isso, entrada hostil estoura a pilha (ADR 0003).
 - **Identificador de versão da codificação** (`canon/v1`), definido em `spec/encoding.md` e exposto como constante. É o “versão do encoder” que a obrigação carrega (§4.1); qualquer mudança de regra é `canon/v2`.
 - **Versão de Unicode fixada** em `spec/encoding.md` para a checagem NFC, com a regra para code points não atribuídos nessa versão (padrão: rejeitar). Rust e Python precisam usar a mesma tabela; o teste diferencial confere a versão.
-- Traits `Canon` (encode) e `CanonDecode` (decode estrito) + derive macro **ou** implementação manual (preferir manual na TCB; macro só se pequena e auditável).
+- Traits `Canon` (encode) e `CanonDecode` (decode estrito), implementadas à mão (sem derive macro): o tipo se descreve como `Value` (`to_value` / `from_value`) e a serialização estrita é única. `Canon::encode` devolve `Result`: objeto fundo demais ou com chaves repetidas não tem codificação e nunca é codificado como outra coisa (ADR 0003).
 - Decoder estrito: rejeita mapas fora de ordem, chaves duplicadas, inteiros não mínimos, UTF-8 inválido ou não NFC, code points não atribuídos, bytes sobrando.
 - `spec/encoding.md`: especificação normativa (alguém deve poder reimplementar em outra linguagem só lendo).
 - Implementação de referência em Python (`py/logos_client/canon.py`) — fora da TCB, usada para teste diferencial.
 
 **Critério de conclusão.**
-- [ ] Property test: `decode(encode(x)) == x` para objetos aleatórios.
-- [ ] Property test: para toda sequência de bytes `b` aceita, `encode(decode(b)) == b` (unicidade da codificação).
-- [ ] Teste diferencial Rust × Python sobre 100k objetos aleatórios (incluindo strings com caracteres fora do ASCII e combinantes): bytes idênticos e mesmas rejeições.
-- [ ] Teste: as duas implementações reportam a mesma versão de Unicode, igual à de `spec/encoding.md`.
-- [ ] Fuzz do decoder ≥ 1h sem crash nem aceitação de codificação não canônica.
-- [ ] ≥ 30 vetores de teste em `spec/vectors/canon/` incluindo casos de rejeição.
+- [x] Property test: `decode(encode(x)) == x` para objetos aleatórios.
+- [x] Property test: para toda sequência de bytes `b` aceita, `encode(decode(b)) == b` (unicidade da codificação).
+- [x] Teste diferencial Rust × Python sobre 100k objetos aleatórios (incluindo strings com caracteres fora do ASCII e combinantes): bytes idênticos e mesmas rejeições.
+- [x] Teste: as duas implementações reportam a mesma versão de Unicode, igual à de `spec/encoding.md`.
+- [ ] Fuzz do decoder ≥ 1h sem crash nem aceitação de codificação não canônica. *(local: 1,3 M + 0,8 M execuções sem crash; falta a hora completa no job noturno da CI.)*
+- [x] ≥ 30 vetores de teste em `spec/vectors/canon/` incluindo casos de rejeição.
 
 ---
 

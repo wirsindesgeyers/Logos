@@ -105,13 +105,17 @@ jobs:
         working-directory: py
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable # o teste diferencial da canon chama `cargo`
+      - uses: Swatinem/rust-cache@v2
       - uses: astral-sh/setup-uv@v5
+      # Python 3.14 (py/.python-version): Unicode 16.0.0, igual ao crate Rust (spec/encoding.md §5)
       - run: uv sync --locked
-      - run: uv run ruff check . ../tcb
-      - run: uv run ruff format --check . ../tcb
+      - run: uv run ruff check . ../tcb ../tools
+      - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/tests
-      - run: uv run pytest -q
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py
+      - run: uv run python ../tools/gen_unicode_assigned.py --check
+      - run: uv run pytest -q # inclui o diferencial Rust x Python de 100k casos por direção
       - run: uv run pytest -q ../tcb/tests
 
   selftest:

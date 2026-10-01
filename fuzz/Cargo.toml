@@ -9,9 +9,24 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+logos-canon = { path = "../crates/logos-canon" }
 
-# Targets reais (decoders e parsers de TCB) são adicionados junto com cada crate,
-# a partir da Etapa 0.3. O job noturno roda todos os targets listados por `cargo fuzz list`.
+# Um target por parser/decoder de TCB (roadmap §4). O job noturno roda todos os targets listados
+# por `cargo fuzz list`.
+[[bin]]
+name = "canon_decode"
+path = "fuzz_targets/canon_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "canon_text"
+path = "fuzz_targets/canon_text.rs"
+test = false
+doc = false
+bench = false
+
 [[bin]]
 name = "smoke"
 path = "fuzz_targets/smoke.rs"

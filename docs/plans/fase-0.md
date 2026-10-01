@@ -23,7 +23,7 @@ Gerado a partir do `ROADMAP.md` (Revisão 2) e de `docs/spec/LOGOS-proof-carryin
 | --- | --- |
 | 0.1 → todas | Workspace com os crates da §2 do roadmap (inclui `logos-core`), lints `forbid(unsafe_code)`, `clippy::unwrap_used`/`panic`, `deny.toml`, CI de PR + job noturno de fuzz |
 | 0.2 → todas ⚠ TCB | `tcb/manifest.toml` por propriedade (correção, fidelidade, progresso) e job que falha se um arquivo de TCB não está listado |
-| 0.3 → 0.4, 0.6, 1.x, 10.1 | `const CANON_VERSION: &str = "canon/v1"`; `trait Canon { fn encode(&self, out: &mut Vec<u8>); }`; `trait CanonDecode: Sized { fn decode(d: &mut Decoder) -> Result<Self, CanonError>; }`; `fn from_canon<T: CanonDecode>(b: &[u8]) -> Result<T, CanonError>` (recusa bytes sobrando); `py/logos_client/canon.py` com `encode`/`decode` |
+| 0.3 → 0.4, 0.6, 1.x, 10.1 | `const CANON_VERSION: &str = "canon/v1"`; `trait Canon { fn to_value(&self) -> Result<Value, CanonError>; fn encode(&self, out: &mut Vec<u8>) -> Result<(), CanonError>; }` (falível: ADR 0003); `trait CanonDecode: Sized { fn from_value(&Value) -> Result<Self, CanonError>; fn decode(d: &mut Decoder) -> Result<Self, CanonError>; }`; `fn to_canon<T: Canon>(&T) -> Result<Vec<u8>, CanonError>`; `fn from_canon<T: CanonDecode>(b: &[u8]) -> Result<T, CanonError>` (recusa bytes sobrando); `Value`, `Text`, `Array`, `Map`, `Bytes`, `MAX_DEPTH = 128`, `UNICODE_VERSION`; `py/logos_client/canon.py` com `encode`/`decode` |
 | 0.4 → 0.5, 1.1, 3.x, 8.x, 9.2, 13.1 | `trait Domain { const TAG: &'static [u8]; }`; `Hash<T: Domain>`; `hash<T: Domain + Canon>(&T)`; `hash_raw<T: Domain>(&[u8])`; `ExternalDigest`; `enum SigAlg { Ed25519 /* Es256 reservado */ }`; `KeyId`, `PublicKey`, `Signature` com `alg`; `trait SigDomain`; `trait Signer`; `FileSigner::load(path)` (exige 0600); `verify::<D>`; `spec/domains.md` |
 | 0.5 → 2.3, 3.2, 3.5, 3.6, 4.x, 17.x | `Cas::open(root, Limits)`; `put::<T>(&[u8])`, `put_reader::<T>(impl Read)`; `get::<T>(&Hash<T>) -> Result<Option<Vec<u8>>, CasError>`; `CasError { Integrity, TooLarge { limit, actual }, Io }`; `spec/cas.md` |
 | 0.6 → 2.2, 3.1, 4.4, 5.x | `CheckOutcome`, `Reason`, `Exhausted`, `Budget`, `StepMeter`, `Verdict`, todos `Canon`; sem caminho `Unknown → Verified/Refuted` nem `Rejected → Refuted` |
@@ -54,7 +54,7 @@ A Fase 0 não tem `★`; o marco da §5 do roadmap é “repositório, canon, cr
 
 **ADRs a abrir**
 - 0001 — decisões iniciais e divergências em relação à especificação (token próprio × Biscuit; `logos-core`; assinatura com algoritmo identificado); licença (Apache-2.0 / MIT); `uv`.
-- Dependências de TCB: `sha2`, `ed25519-dalek`, `unicode-normalization` (e a versão de Unicode que ele fixa); de desenvolvimento: `proptest`, `trybuild`, `cargo-fuzz`; ferramenta: `tokei`.
+- Dependências de TCB: `sha2`, `ed25519-dalek`, `unicode-normalization` (e a versão de Unicode que ele fixa); de desenvolvimento: `trybuild` (0.4; o `proptest` foi dispensado, ADR 0003); ferramentas: `cargo-fuzz`, `tokei`.
 - Hash de binário externo: confirmar que `ExternalDigest` (SHA-256 puro) é usado só para conferência contra hashes publicados, e que o ledger sempre registra `hash_raw::<Checker>`.
 
 ## 6. Estimativa
