@@ -1,0 +1,49 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # noturno: ≥ 1h por target
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: "Segundos por target"
+        default: "3600"
+  pull_request:
+    paths: ["fuzz/**", "crates/**"] # smoke de poucos minutos
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 720
+    env:
+      SECONDS_PER_TARGET: ${{ github.event_name == 'pull_request' && '120' || inputs.seconds || '3600' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz
+      - name: Fuzz de todos os targets
+        working-directory: fuzz
+        run: |
+          set -o pipefail
+          mkdir -p ../fuzz-logs
+          for t in $(cargo fuzz list); do
+            echo "== $t (${SECONDS_PER_TARGET}s) =="
+            cargo fuzz run "$t" -- -max_total_time="${SECONDS_PER_TARGET}" 2>&1 | tee "../fuzz-logs/$t.log"
+          done
+      - name: Arquivar logs e corpus
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-logs
+          path: |
+            fuzz-logs/
+            fuzz/artifacts/
+          if-no-files-found: ignore

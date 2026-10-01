@@ -1,0 +1,22 @@
+[package]
+name = "logos-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+# Targets reais (decoders e parsers de TCB) são adicionados junto com cada crate,
+# a partir da Etapa 0.3. O job noturno roda todos os targets listados por `cargo fuzz list`.
+[[bin]]
+name = "smoke"
+path = "fuzz_targets/smoke.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

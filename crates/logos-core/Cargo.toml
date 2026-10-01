@@ -1,0 +1,12 @@
+[package]
+name = "logos-core"
+description = "CheckOutcome, Verdict, Budget e StepMeter: vocabulário comum dos checkers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,31 @@
+[project]
+name = "logos"
+version = "0.0.0"
+description = "LOGOS — lado Python (agente, MCP, prover farm, avaliação). Tudo aqui é NÃO confiável."
+requires-python = ">=3.12"
+license = "MIT OR Apache-2.0"
+dependencies = []
+
+[dependency-groups]
+dev = ["mypy>=1.13", "pytest>=8", "ruff>=0.8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["logos_client", "logos_provers", "logos_mcp", "logos_agent", "logos_eval"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
+files = ["logos_client", "logos_provers", "logos_mcp", "logos_agent", "logos_eval", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

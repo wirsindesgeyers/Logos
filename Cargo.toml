@@ -1,0 +1,39 @@
+[workspace]
+resolver = "3"
+exclude = ["fuzz"]
+members = [
+    "crates/logos-canon",
+    "crates/logos-crypto",
+    "crates/logos-core",
+    "crates/logos-air",
+    "crates/logos-obligation",
+    "crates/logos-model",
+    "crates/logos-ground",
+    "crates/logos-lrat",
+    "crates/logos-alethe",
+    "crates/logos-ledger",
+    "crates/logos-seal",
+    "crates/logos-policy",
+    "crates/logos-token",
+    "crates/logos-kernel",
+    "crates/logos-gateway",
+    "crates/logos-attest",
+    "crates/logos-audit",
+    "crates/logos-cli",
+    "crates/logos-tui",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/wirsindesgeyers/Logos"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

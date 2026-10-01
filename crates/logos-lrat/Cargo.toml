@@ -1,0 +1,12 @@
+[package]
+name = "logos-lrat"
+description = "Checker LRAT próprio e wrapper do cake_lpr"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

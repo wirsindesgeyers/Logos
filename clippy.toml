@@ -1,0 +1,4 @@
+# Nos crates de TCB, unwrap/expect/panic são proibidos fora de testes (roadmap §4).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true

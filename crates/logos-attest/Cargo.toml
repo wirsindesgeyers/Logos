@@ -1,0 +1,12 @@
+[package]
+name = "logos-attest"
+description = "SDK de atestadores e atestadores de referência"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

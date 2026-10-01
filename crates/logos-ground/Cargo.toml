@@ -1,0 +1,12 @@
+[package]
+name = "logos-ground"
+description = "Grounder, Tseitin e mapa cláusula→premissa"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

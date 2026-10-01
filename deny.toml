@@ -1,0 +1,46 @@
+# cargo-deny: licenças, fontes e allowlist de crates (roadmap §4 / Etapa 0.1).
+# Toda nova dependência de TCB precisa de ADR e entrada em [bans].allow.
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+ignore = []
+
+[licenses]
+version = 2
+allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-3-Clause", "ISC", "Unicode-3.0"]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Allowlist: com a lista abaixo não vazia, qualquer crate fora dela é recusado.
+allow = [
+  { name = "logos-canon" },
+  { name = "logos-crypto" },
+  { name = "logos-core" },
+  { name = "logos-air" },
+  { name = "logos-obligation" },
+  { name = "logos-model" },
+  { name = "logos-ground" },
+  { name = "logos-lrat" },
+  { name = "logos-alethe" },
+  { name = "logos-ledger" },
+  { name = "logos-seal" },
+  { name = "logos-policy" },
+  { name = "logos-token" },
+  { name = "logos-kernel" },
+  { name = "logos-gateway" },
+  { name = "logos-attest" },
+  { name = "logos-audit" },
+  { name = "logos-cli" },
+  { name = "logos-tui" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
