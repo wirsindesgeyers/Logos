@@ -21,7 +21,7 @@ Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`
 | 0.3 `logos-canon` (canon/v1) | ⚠ concluída, falta 1 h de fuzz | 28 testes unitários + propriedades + 77 vetores + diferencial Rust×Python (100k/direção) passam; 7 mutantes do decoder pegos. Fuzz local: 1,3 M (`canon_decode`) e 0,8 M (`canon_text`) execuções sem crash. **Falta:** ≥ 1 h por alvo no job noturno (`fuzz.yml`). |
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
 | 0.5 CAS | ⚠ implementada, falta CI/fuzz noturno | 17 testes (6 unitários + 10 públicos + 1 de vetores), smoke real e 6 mutantes mortos; 3 endereços reproduzidos só por `spec/cas.md` + `hashlib`; fuzz final `cas_domain`: 798945 execuções em 61 s sem crash. **Falta:** CI e ≥ 1 h no job noturno. ADR 0005, `spec/cas.md` e [`plano`](docs/plans/etapa-0.5.md) §7. |
-| 0.6 `logos-core` (veredictos/orçamentos) | ⏳ | depende da 0.3 (feita); runner aarch64 na CI |
+| 0.6 `logos-core` (veredictos/orçamentos) | ⏳ planejada; implementação não iniciada | [`plano`](docs/plans/etapa-0.6.md) com APIs, formato proposto, S2/S3, `trybuild` e matriz CI; depende da 0.3 (feita); runner aarch64 ainda ausente |
 | 0.7 Ameaças e escopo (docs) | ⏳ | independente; só documentação |
 
 Fases 1–23: não iniciadas.
@@ -43,7 +43,7 @@ Fases 1–23: não iniciadas.
 
 ## Próximo passo: Etapa 0.6 — veredictos, orçamentos e erros (`P`, ⚠ TCB)
 
-Criar plano da 0.6 e implementar em `logos-core`, conforme `ROADMAP.md` Etapa 0.6.
+Implementar o [plano da 0.6](docs/plans/etapa-0.6.md) em `logos-core`, conforme `ROADMAP.md` Etapa 0.6.
 Dependências técnicas prontas: workspace (0.1), `Canon`/`CanonDecode` e canon/v1 (0.3).
 CAS (0.5) já fornece `TooLarge`; conversão futura de excesso é `Unknown(Size)`, nunca rejeição.
 
@@ -54,10 +54,13 @@ Checkers internos contam passos; `wall_ms` só para checkers externos.
 Não oferecer conversões `Unknown` → `Verified`/`Refuted` nem `Rejected` → `Refuted`.
 Checkers concretos, tentativas após `Unknown` e estados de claims ficam fora do escopo.
 
-Decisões a resolver no plano/ADR: representação canônica/versionada dos tipos,
-contrato do medidor e funções nomeadas que constroem veredictos.
-Roadmap pede `trybuild` para compile-fail; avaliar dependência/allowlist explicitamente,
-sem trocar silenciosamente por doctests.
+Registrar propostas do plano em ADR 0006 antes do código: arrays `core/v1` sobre
+`canon/v1`, `Reason(Text)`, `StepMeter::run` com latch irreversível e funções nomeadas
+para prova/contramodelo que recusam `Rejected`/`Unknown`. Roadmap pede `trybuild`;
+inventariar dev-dependency/transitivas e allowlist, sem substituir por doctests.
+Limite explícito: enum público permite construção direta de `Verdict`; compile-fail
+prova ausência de conversões, não autorização. Complementar com testes e revisão;
+garantia de checker ativo pertence à 5.4, sem alterar escopo silenciosamente.
 
 Risco de fechamento: S3 exige 1000 execuções em x86_64 **e** aarch64 na CI.
 Adicionar runner ARM se ausente; gratuidade de `ubuntu-24.04-arm` depende de repositório público.
@@ -134,3 +137,13 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   2433 LOC próprios + 78287 de dependências de execução (51581 só compilação).
   Primeiras verificações falharam em compilação/lints e na formatação Python; corrigidas
   antes da verificação completa final. Próximo passo: 0.6; CI remota/hora de fuzz pendentes.
+- **2026-10-02** — Criado plano da Etapa 0.6 em `docs/plans/etapa-0.6.md`: APIs,
+  latch de exaustão com finalização central, proposta `core/v1`, vetores independentes,
+  `trybuild`, mutações e matriz CI nativa x86_64/aarch64. Identificado limite dos enums
+  públicos: ausência de conversões não impede construção direta de veredictos.
+  Implementação não iniciada; propostas aguardam ADR 0006. Runner ARM ainda ausente,
+  fechamento S3 e demais verificações remotas continuam pendentes.
+- **2026-10-02** — Verificação do planejamento 0.6: links locais, blocos de código e
+  seis seções do formato do roadmap validados; `ci/verify.sh --selftest` terminou
+  com `VERIFY_OK` localmente. Nenhum teste de comportamento da 0.6 executado:
+  o crate continua esqueleto; os testes descritos no plano são trabalho futuro.
