@@ -63,9 +63,14 @@ Decisões propostas no plano (registrar em ADR 0005 antes do código) / riscos:
   manter `Domain` inalterado. Tag desconhecida retorna `Io(InvalidInput)`, nunca caminho arbitrário.
 - **Limites por tag:** canônicos 16 MiB; certificate/checker crus 256 MiB; overrides configuráveis,
   aplicados também em `get`. Excesso vira `TooLarge`, não rejeição de certificado.
+- **Leitura bounded:** no máximo limite de bytes no `Vec`, probe externo de um byte;
+  reserva falível e crescimento controlado em `put_reader`/`get`. Overrides não representáveis
+  são `Io(InvalidInput)`; reserva falha é `Io(OutOfMemory)`, não `TooLarge`.
 - **Bytes opacos:** CAS não valida `canon/v1`; consumidor valida codificação e semântica.
-- **Durabilidade:** tmp exclusivo + rename + fsync do arquivo, shard e pais novos;
-  erro após publicação não promete rollback. Raiz/ancestrais confiáveis; filesystem local Unix.
+- **Durabilidade:** cada `open` sincroniza raiz/ancestrais; cada writer faz tmp exclusivo,
+  rename e fsync do arquivo, shard, domínio e raiz, sem depender de quem criou diretórios.
+  Testes planejados: criação concorrente, reader durante publicação e falhas de fsync.
+  Erro após publicação não promete rollback; filesystem local Unix e ancestrais confiáveis.
 - Resolver representação de `Limits` e propagação conjunta de erro primário/limpeza no ADR.
 - Sem dependências externas novas esperadas; apenas `logos-crypto` e `std`.
 - Teste de concorrência determinístico (sem `sleep`); criar diretórios temporários sem crate `tempfile`
@@ -119,3 +124,7 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   sequência, quatro critérios rastreados e decisões propostas para ADR 0005. Implementação
   não iniciada; CI remota/fuzz longo continuam pendentes. Descoberta: `tcb/history/` vazio,
   apesar do entregável de histórico JSON versionado da 0.2; não corrigido nesta etapa de planejamento.
+- **2026-10-02** — Ajustado plano da 0.5 após revisão: durabilidade independente entre
+  writers, teste determinístico de reader durante publicação (mutante sem tmp+rename),
+  injeção de falhas de fsync/reserva e byte de excesso fora do `Vec`. Testes descritos
+  são critérios da futura implementação, não evidência de CAS já implementado.

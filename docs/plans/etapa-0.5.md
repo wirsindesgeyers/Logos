@@ -97,6 +97,10 @@ impl Cas {
 - Padrões: domínios canonical, 16 MiB; certificate e checker (raw), 256 MiB.
   Overrides por tag; limite zero permite somente objeto vazio. Documentar valores em
   bytes e unidades binárias. Limite exato é aceito, primeiro byte além dele é recusado.
+- Overrides acima de `isize::MAX` (máximo representável por `Vec<u8>`) retornam
+  `Io(InvalidInput)` em `with_domain_limit`, antes de qualquer leitura ou alocação.
+  Conversões de tamanho e somas são checadas; falha de reserva retorna `Io` com
+  `ErrorKind::OutOfMemory`, nunca `TooLarge`, bytes truncados ou aborto deliberado.
 - CAS não valida `canon/v1`: o chamador entrega a codificação correta. A validação
   semântica/canônica pertence à camada consumidora, não ao armazenamento.
 - `get`: ausência do objeto final retorna `Ok(None)`; arquivo presente com conteúdo
@@ -104,10 +108,13 @@ impl Cas {
   permissões negadas ou leitura interrompida em ausência. Aplicar limite também na leitura.
 - `TooLarge.actual` é tamanho conhecido para `put`; em leitura limitada, é quantidade
   observada até a recusa (não alegar comprimento total de um fluxo não consumido).
-- Só publicar sucesso após sincronizar arquivo e diretórios necessários. Falha de
-  sincronização após rename retorna `Io`, mesmo se arquivo já estiver visível; erro
-  não promete rollback. Durabilidade supõe filesystem local com rename atômico e
-  suporte a fsync de diretório; não prometer equivalência em NFS ou hardware defeituoso.
+- Cada `Cas::open` bem-sucedido garante a durabilidade da raiz: criar diretórios necessários
+  e sincronizar a cadeia da raiz CAS até `/`, de baixo para cima, mesmo se já existir.
+  Cada writer sincroniza arquivo, faz rename e sincroniza shard, domínio e raiz CAS,
+  nessa ordem, antes de retornar sucesso; nunca depende do writer que criou diretórios.
+  Falha de sincronização retorna `Io`, mesmo depois de publicação; não promete rollback.
+  Durabilidade supõe filesystem local com rename atômico e suporte a fsync de diretório;
+  não prometer equivalência em NFS ou hardware defeituoso.
 - Base Unix, coerente com `FileSigner`. Raiz e diretórios ancestrais sob controle do
   operador confiável; não prometer isolamento contra operador/SO malicioso ou troca
   hostil de diretórios. Documentar essa premissa, sem ampliar para sandbox de filesystem.
@@ -149,22 +156,58 @@ separação de domínios e limites independentes; `tcb/count.sh check` na verifi
 
 1. Resolver domínio/limite antes de tocar o destino; `put` recusa tamanho excedido antes
    de escrever e não copia a slice para um `Vec` intermediário.
-2. `put_reader` lê blocos com buffer fixo, alimenta `RawHasher`, e guarda no máximo o
-   limite mais o byte necessário para detectar excesso. Tratar overflow e `Interrupted`
-   sem truncamento silencioso; falha do reader não publica objeto parcial.
-3. Criar diretório de domínio e shard; sincronizar pais quando novos diretórios forem
-   criados, inclusive a cadeia necessária para persistir a raiz.
+2. `put_reader` lê blocos com buffer fixo, com tamanho de leitura limitado ao saldo
+   disponível, alimenta `RawHasher` e guarda no máximo `limit` bytes no `Vec`.
+   Ao atingir limite, lê um único byte em buffer separado: EOF aceita tamanho exato;
+   byte presente retorna `TooLarge { limit, actual: limit + 1 }`, sem acrescentá-lo
+   ao `Vec`, alimentar hash ou solicitar reserva para detectá-lo. Limite zero usa
+   diretamente esse probe. Tratar `Interrupted`, overflow e erro do reader sem
+   truncamento silencioso; falha não publica objeto parcial.
+   Crescer capacidade por metas geométricas limitadas ao limite configurado, usando
+   `try_reserve_exact` antes de acrescentar bytes; não pré-alocar limite inteiro para
+   objetos pequenos nem realocar a cada bloco. Reserva solicitada não excede limite;
+   allocator pode conceder capacidade extra — limite de objeto não é teto total de RSS.
+3. Criar diretório de domínio e shard. Não usar existência nem autoria de `mkdir` como
+   prova de durabilidade; outra operação pode ter criado diretório e falhado antes de fsync.
 4. Criar temporário exclusivo no shard com `create_new`; nome PID + contador atômico,
    repetindo apenas colisões de nome. Nunca compartilhar temporário entre escritores.
 5. Escrever todos os bytes, sincronizar arquivo, renomear no mesmo filesystem para
-   endereço final e sincronizar diretório. Writers concorrentes do mesmo objeto publicam
-   bytes idênticos, sem lock global e sem expor arquivo parcial.
+   endereço final; sincronizar shard, domínio e raiz CAS, incondicionalmente, antes do
+   sucesso. Raiz e ancestrais já foram sincronizados pelo próprio `Cas::open`.
+   Writers concorrentes do mesmo objeto publicam bytes idênticos, sem lock global
+   e sem expor arquivo parcial. Qualquer falha de fsync impede retorno de sucesso.
 6. Remover temporário em falha quando ainda existir. Preservar erro primário e expor
    falha de limpeza, se houver; não esconder erro de durabilidade ou prometer rollback.
+
+**Leitura limitada:** `bounded_read_stops_at_first_excess_byte` mede bytes consumidos
+por reader real controlado, em limite zero e fronteiras; excesso consome só `limit + 1`
+bytes e nunca publica. `allocation_failure_is_io` injeta falha de reserva no helper
+interno: `put_reader`/`get` devem devolver `Io(OutOfMemory)`, sem dados parciais.
+Verificar como diagnóstico que probe não solicita reserva; não transformar capacidade
+incidental de `Vec` em contrato de teste permanente.
 
 **Fecha com:** `put_reader_matches_put`, `reader_error_does_not_publish`,
 `concurrent_put_same_object` (16 threads, `Barrier`, sem `sleep`), e round-trip após
 fechar/reabrir CAS. Observar que concorrência prova atomicidade lógica, não queda de energia.
+
+**Publicação observada:** `read_during_publication_never_sees_partial_object`, com
+arquivo real e writer pausado por canais depois de escrever prefixo, antes de completar
+escrita/rename. Reader chama `get` durante a pausa: no primeiro put, só ausência; após
+publicação, bytes completos. Na substituição de objeto correto existente, reader recebe
+bytes completos também durante a pausa; nunca prefixo nem `Integrity` causado pelo writer.
+Ponto de pausa deve estar na escrita real, inclusive quando temporário for removido por
+mutação, para que escrever diretamente no destino seja detectado. Sem `sleep` ou polling.
+
+**Durabilidade sob concorrência:** `concurrent_directory_creation_is_durable`, com
+dois handles CAS independentes e sincronização por canais: A cria domínio/shard e pausa
+antes de fsync; B encontra diretórios existentes e publica. B precisa concluir sua própria
+sincronização de shard, domínio e raiz antes do sucesso, sem esperar A. A falha em seguida.
+`sync_failure_is_io` injeta falha em cada sincronização da raiz/ancestrais no `open`,
+arquivo no `put` e diretórios na publicação; observar erro público, inclusive após rename.
+Colocar cenários com pontos de controle no módulo de testes unitários de `src/cas.rs`,
+sob `cfg(test)`, exercitando arquivos e APIs reais; manter integrações sem hooks em
+`tests/cas.rs`. Não criar API pública de debug nem simular o CAS inteiro. Teste de ordem
+de chamadas é complementar: só vale junto ao erro observável e ao cenário entre writers.
 
 ### 3.4. Implementar leitura com checagem de integridade
 
@@ -174,10 +217,14 @@ Abrir objeto final, ler de forma limitada (não confiar só no metadata), recalc
 sobre os bytes efetivamente lidos e comparar com endereço pedido antes de entregar `Vec`.
 Recusar arquivo acima do limite; não expor conteúdo parcial. Só `NotFound` na abertura do
 objeto corresponde a ausência; falhas posteriores continuam erros.
+Reutilizar algoritmo bounded da 3.3, incluindo probe externo, reserva falível e crescimento
+controlado. EOF até limite permite checagem do hash; excesso tem precedência e retorna
+`TooLarge`, sem calcular digest sobre conteúdo truncado.
 
 **Fecha com:** `corrupted_byte_is_integrity_error`, `missing_object_is_none`,
-`oversized_get_is_too_large`, e erro de I/O distinguível de ausência. Usar arquivos
-pequenos e limites de teste, sem alocar 256 MiB só para testar fronteira.
+`oversized_get_is_too_large`, `bounded_read_stops_at_first_excess_byte`,
+`allocation_failure_is_io`, `unrepresentable_limit_is_invalid_input`, e erro de I/O
+distinguível de ausência. Usar arquivos pequenos e limites de teste, sem alocar 256 MiB.
 
 ### 3.5. Provar interoperabilidade e resistência dos testes
 
@@ -193,9 +240,11 @@ Rust grava via CAS e compara endereço e localização reais com os vetores.
 
 **Fecha com:** `cas_addresses_match_independent_vectors` e execução de `--check`.
 Mutação manual deve fazer testes falharem ao remover checagem de integridade, omitir tag
-no hash e ignorar limite. Restaurar conteúdo e executar verificação completa após mutações;
-não adicionar framework permanente de mutação. Não alegar que testes unitários provam
-resistência a power loss; revisar explicitamente sequência de fsync e propagação de erros.
+no hash, ignorar limite, publicar diretamente sem tmp+rename, omitir fsync de pais quando
+diretório já existe e suprimir erro de fsync. Associar cada mutante ao cenário que o mata.
+Restaurar conteúdo e executar verificação completa após mutações; não adicionar framework
+permanente de mutação. Esses testes detectam violação do protocolo, não demonstram
+resistência experimental a power loss; registrar essa limitação.
 
 ### 3.6. Fuzz, smoke e fechamento
 
@@ -222,8 +271,8 @@ apenas após verificação completa; sem push não solicitado.
 | Contrato do roadmap 0.5 | Evidência planejada |
 | --- | --- |
 | Corromper 1 byte faz `get` retornar integridade | `corrupted_byte_is_integrity_error`; smoke observa o erro após alteração real em disco. |
-| 16 threads gravam mesmo objeto sem corrupção | `concurrent_put_same_object`; Barrier, resultados iguais e leitura exata após reabrir. |
-| Objeto acima do limite dá `TooLarge` | `size_limits_at_boundary`: limite − 1, limite e limite + 1 em `put` e `put_reader`; `oversized_get_is_too_large`; override não afeta outro domínio. |
+| 16 threads gravam mesmo objeto sem corrupção | `concurrent_put_same_object`; Barrier, resultados iguais e leitura exata após reabrir. Complementar atomicidade com `read_during_publication_never_sees_partial_object`. |
+| Objeto acima do limite dá `TooLarge` | `size_limits_at_boundary`: limite − 1, limite e limite + 1 em `put`/`put_reader`/`get`, além de limite zero; override não afeta outro domínio. `bounded_read_stops_at_first_excess_byte` verifica parada sem consumir resto do fluxo. |
 | Endereços de 3 objetos calculados independentemente | `tools/gen_cas_vectors.py --check` e `cas_addresses_match_independent_vectors`, baseados apenas em `spec/cas.md`. |
 
 Comandos de verificação da implementação, não resultados já obtidos:
@@ -247,9 +296,9 @@ wiring, nomes incidentais ou ecos de mocks.
 | Risco / escolha | Tratamento planejado |
 | --- | --- |
 | Nome derivado de tag permitir traversal ou colisão | Tabela de tags reservadas exatas; rejeição tipada via `Io(InvalidInput)`; teste e fuzz da resolução. |
-| Limites virarem leitura/alocação ilimitada | Checar slice antes de escrever; leitura bounded com um byte de detecção; aritmética checada; limite também em `get`. |
-| Rename sem durabilidade da árvore | fsync do arquivo, shard e pais novos; não suprimir falha; premissas explícitas na spec. |
-| Corrida entre writers | Temporário exclusivo e rename no mesmo shard; 16 threads sem temporização artificial. |
+| Limites virarem leitura/alocação ilimitada | No máximo `limit` bytes no Vec; probe externo de um byte, reserva falível com crescimento controlado, conversões checadas; mesmo algoritmo em `get`. Limite de objeto não promete teto de RSS. |
+| Rename sem durabilidade da árvore | `open` sincroniza raiz/ancestrais; cada writer sincroniza arquivo, shard, domínio e raiz, sem depender do criador; corrida controlada e falhas de fsync injetadas. |
+| Corrida entre writers / leitura parcial | Temporário exclusivo e rename no mesmo shard; 16 threads, reader durante escrita pausada e mutante sem publicação atômica. |
 | Canon inválido ser tratado como certificado válido | CAS prova integridade de bytes, não validade semântica; consumidor faz checagem. |
 | Arquivo corrompido já existente no endereço | `get` acusa erro; novo `put` dos bytes corretos pode substituí-lo atomicamente. Nenhum fast path baseado só em existência. |
 | Fuzz helper exigir abertura desnecessária da API | Resolver desenho do harness antes de exportar símbolo; sem APIs apenas de debug na superfície pública. |
