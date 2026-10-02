@@ -43,6 +43,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "cas_domain"
+path = "fuzz_targets/cas_domain.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "smoke"
 path = "fuzz_targets/smoke.rs"
 test = false

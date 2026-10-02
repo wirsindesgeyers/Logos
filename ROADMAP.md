@@ -358,10 +358,14 @@ Ordem recomendada: 0.1 → 0.2 → 0.3 → 0.4 → 0.5, com 0.6 iniciada após a
 - Limite de tamanho por domínio (configurável; padrão: certificado ≤ 256 MiB).
 
 **Critério de conclusão.**
-- [ ] Corromper 1 byte de um objeto faz `get` retornar erro de integridade.
-- [ ] `put` concorrente do mesmo objeto por 16 threads não corrompe nada.
-- [ ] Objeto acima do limite é recusado com erro tipado `TooLarge`.
-- [ ] Teste: o endereço de 3 objetos de exemplo calculado só a partir de `spec/cas.md` (script Python independente) coincide com o do `Cas`.
+- [x] Corromper 1 byte de um objeto faz `get` retornar erro de integridade.
+- [x] `put` concorrente do mesmo objeto por 16 threads não corrompe nada.
+- [x] Objeto acima do limite é recusado com erro tipado `TooLarge`.
+- [x] Teste: o endereço de 3 objetos de exemplo calculado só a partir de `spec/cas.md` (script Python independente) coincide com o do `Cas`.
+
+Evidência local (2026-10-02): 17 testes em `logos-ledger`, smoke de arquivos reais e
+seis mutantes detectados; rastreio no ADR 0005 e `docs/plans/etapa-0.5.md` §7.
+Definition of Done global ainda depende de CI remota e ≥ 1 h de fuzz noturno de `cas_domain`.
 
 ---
 

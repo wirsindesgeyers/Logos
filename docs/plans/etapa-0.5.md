@@ -1,7 +1,7 @@
 # Plano de etapa — 0.5: armazenamento endereçado por conteúdo (CAS)
 
 - **Data:** 2026-10-02.
-- **Estado:** planejamento concluído; implementação não iniciada.
+- **Estado:** implementada e testada localmente; fechamento remoto depende de CI e fuzz noturno.
 - **Escopo:** Etapa 0.5 do `ROADMAP.md`, tamanho **P**, TCB de correção.
 - **Referências:** roadmap §0, §2, §4 e 0.5; especificação conceitual §4 (recheck e
   certificados grandes), §5 (TCB) e §7 (PVC); `spec/domains.md`; ADRs 0001–0004.
@@ -330,3 +330,30 @@ não de escopo; qualquer divergência dos contratos acima exige atualizar plano 
 Mantida **P**, conforme roadmap. Escopo pequeno, APIs crypto prontas e apenas `std` para
 filesystem. Principal risco é contrato de durabilidade/erro, não hashing. Validação remota
 e janela de fuzz longo são condições de fechamento, não funcionalidades adicionais.
+
+## 7. Execução local — 2026-10-02
+
+Implementados `Cas`, `Limits`, `CasError`, resolver privado, manifesto, ADR 0005,
+`spec/cas.md`, vetores independentes, integração CI e alvo `cas_domain`.
+17 testes passaram em `cargo test -p logos-ledger`; smoke real observou reabertura,
+três digests iguais aos vetores, `Integrity` após corrupção e `TooLarge` no limite zero.
+Exemplo temporário removido; entradas permanecem em `spec/cas.md` e vetores.
+
+Nomes finais dos cenários internos: `allocation_failure_is_io`,
+`every_open_ancestor_sync_failure_is_public_io`,
+`every_publication_sync_failure_is_public_io`,
+`read_during_publication_never_sees_partial_object`,
+`concurrent_directory_creation_is_durable` e
+`cleanup_preserves_primary_and_secondary_errors`.
+Reúnem os cenários planejados sem APIs públicas de teste ou framework de mutação.
+Seis mutantes foram mortos por asserções, isoladamente, e restaurados; mapa em
+[`ADR 0005`](../adr/0005-escolhas-do-cas.md#evidência-local--2026-10-02).
+Não demonstrado: power loss, CI remota e hora de fuzz noturna.
+
+Verificação final completa: `ci/verify.sh --selftest` → `VERIFY_OK`.
+Fuzz com tabela final: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 cas_domain`
+→ 798945 execuções em 61 s, sem crash; log local em `fuzz-logs/cas_domain.log`.
+`cargo xtask tcb check/report` passou; relatório local em
+`/tmp/logos-etapa-0.5-tcb.json` (árvore modificada, não histórico versionado por commit).
+TCB de correção: 2433 LOC próprios + 78287 LOC de dependências de execução;
+51581 LOC só de compilação. A contagem inclui `cfg(test)` em `src/`.

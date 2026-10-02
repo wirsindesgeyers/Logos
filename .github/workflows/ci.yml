@@ -113,8 +113,10 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
+      - run: uv run python ../tools/gen_crypto_vectors.py --check
+      - run: uv run python ../tools/gen_cas_vectors.py --check
       - run: uv run pytest -q # inclui o diferencial Rust x Python de 100k casos por direção
       - run: uv run pytest -q ../tcb/tests
 

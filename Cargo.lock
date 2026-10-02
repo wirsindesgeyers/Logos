@@ -171,6 +171,9 @@ version = "0.0.0"
 [[package]]
 name = "logos-ledger"
 version = "0.0.0"
+dependencies = [
+ "logos-crypto",
+]
 
 [[package]]
 name = "logos-lrat"
