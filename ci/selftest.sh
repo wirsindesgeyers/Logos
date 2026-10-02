@@ -24,6 +24,23 @@ add_dependency() { # arquivo, linha
   fi
 }
 
+# Ponte realmente externa ao workspace, com aliases e ativação por --all-features.
+external_audit_bridge() { # pacote de destino
+  mkdir -p "$work/bridge/src"
+  cat > "$work/bridge/Cargo.toml" <<TOML
+[package]
+name = "audit-bridge"
+version = "0.0.0"
+edition = "2024"
+[workspace]
+[dependencies]
+renamed = { package = "$1", path = "$work/repo/crates/$1" }
+TOML
+  printf '\n' > "$work/bridge/src/lib.rs"
+  add_dependency crates/logos-audit/Cargo.toml \
+    "audit_bridge = { package = \"audit-bridge\", path = \"$work/bridge\", optional = true }"
+}
+
 # O comando precisa FALHAR e a saída precisa conter o diagnóstico esperado.
 expect_blocked() { # descrição, padrão-do-diagnóstico, comando...
   local desc="$1" pattern="$2"; shift 2
@@ -76,6 +93,18 @@ expect_blocked "dependência fora da allowlist" "crate 'either[^']*' is not expl
 fresh_copy
 add_dependency crates/logos-audit/Cargo.toml 'logos-kernel = { path = "../logos-kernel" }'
 expect_blocked "logos-audit dependendo de logos-kernel" 'logos-audit depende de logos-kernel' ci/check-audit-independence.sh
+
+fresh_copy
+external_audit_bridge logos-core
+expect_passes "auditor com ponte externa permitida" ci/check-audit-independence.sh
+
+fresh_copy
+external_audit_bridge logos-ledger
+expect_blocked "auditor com ponte externa para ledger" 'logos-audit depende de logos-ledger' ci/check-audit-independence.sh
+
+fresh_copy
+external_audit_bridge logos-kernel
+expect_blocked "auditor com ponte externa para kernel" 'logos-audit depende de logos-kernel' ci/check-audit-independence.sh
 
 fresh_copy
 printf '\n' > crates/logos-canon/src/novo_arquivo.rs

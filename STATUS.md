@@ -10,13 +10,14 @@
 Fase 0 (Fundação): **6 de 7 etapas implementadas e verificadas localmente** (0.1–0.6).
 Há código real em `logos-canon`, `logos-crypto`, `logos-core` e no CAS de `logos-ledger`;
 os outros crates continuam esqueletos. Novos jobs da CI ainda não foram observados.
-Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`.
+Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`
+em árvore limpa exportada do conteúdo staged, incluindo as correções da revisão.
 
 ## Etapas da Fase 0
 
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
-| 0.1 Repositório, workspace e CI | ⚠ concluída, falta confirmar na CI | Build/clippy/testes/deny/audit locais passam; `ci/selftest.sh` prova que `unsafe`, `unwrap`, remoção do lint, dependência fora da allowlist, arquivo fora do manifesto e `logos-audit→kernel` são bloqueados pelo motivo certo. **Falta:** ver `ci.yml` verde no GitHub e os PRs de teste bloqueados de verdade. |
+| 0.1 Repositório, workspace e CI | ⚠ concluída, falta confirmar na CI | Build/clippy/testes/deny/audit locais passam; selftest cobre regras da TCB e independência direta/transitiva do auditor, incluindo ponte externa opcional com aliases e controle permitido. **Falta:** ver `ci.yml` verde no GitHub e os PRs de teste bloqueados de verdade. |
 | 0.2 Manifesto e contagem da TCB | ⚠ concluída, falta confirmar na CI | `cargo xtask tcb check/report` funcionam; diff e comentário de PR escritos mas **nunca executados num PR real**. |
 | 0.3 `logos-canon` (canon/v1) | ⚠ concluída, falta 1 h de fuzz | 28 testes unitários + propriedades + 77 vetores + diferencial Rust×Python (100k/direção) passam; 7 mutantes do decoder pegos. Fuzz local: 1,3 M (`canon_decode`) e 0,8 M (`canon_text`) execuções sem crash. **Falta:** ≥ 1 h por alvo no job noturno (`fuzz.yml`). |
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
@@ -65,6 +66,9 @@ credencial ou limites declarados com monitoramento global de memória. ADR 0006 
 essas fronteiras; não prometer mais que código/spec demonstram.
 Pendências remotas 0.1–0.6 (incluindo S3/flags ARM/fuzz noturno) permanecem separadas:
 não exigem implementação nova nem impedem documentação independente da 0.7.
+Correções da revisão verificadas localmente: manifesto CAS incluído no conteúdo staged;
+gate de independência percorre grafo resolvido por `PackageId`, com todas as features.
+Verificação completa passou em árvore limpa, sem depender das alterações locais de fuzz/logs.
 
 ## Decisões em aberto para o mantenedor
 
@@ -158,3 +162,13 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   diagnóstico certo. TCB: 2736 LOC próprios + 78287 execução (51581 compilação).
   Alterações recebidas no manifesto CAS e log `cas_domain` preservadas fora do commit;
   verificação completa usou a árvore com esse hunk CAS. Próximo passo: 0.7.
+- **2026-10-02** — Corrigidos os dois achados da revisão: manifesto de `logos-ledger`
+  lista `src/cas.rs`, `src/cas_domain.rs` e `src/lib.rs`; gate do auditor usa metadata
+  completo e grafo resolvido por `PackageId` com `--all-features`, sem ignorar pacotes externos.
+  Smoke real com ponte externa opcional e aliases retornou erro por dependência de
+  `logos-ledger`. Selftest cobre ponte permitida para `logos-core` e bloqueios transitivos
+  para `logos-ledger` e `logos-kernel`; todos passaram pelo diagnóstico esperado.
+  `bash -n`, conferência do manifesto e `ci/verify.sh --selftest` passaram em árvore
+  limpa exportada do conteúdo staged; run completo terminou com `VERIFY_OK`.
+  Alterações locais de fuzz e logs ficaram fora dessa árvore e do commit.
+  Sem push nem nova verificação remota. Próximo passo permanece 0.7.

@@ -91,7 +91,7 @@ name = "logos-ledger"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/cas.rs", "src/cas_domain.rs", "src/lib.rs"]
 
 [[crate]]
 name = "logos-policy"
