@@ -304,10 +304,26 @@ wiring, nomes incidentais ou ecos de mocks.
 | Fuzz helper exigir abertura desnecessária da API | Resolver desenho do harness antes de exportar símbolo; sem APIs apenas de debug na superfície pública. |
 | Supor suporte fora de Unix ou filesystem local | Não prometer; documentar plataforma e suporte a fsync. ARM continua na 0.6. |
 
-Pendências de desenho de baixo nível: representação interna de `Limits` e forma de
-preservar erro de limpeza junto ao erro primário em `Io`. Resolver antes do código
-correspondente e registrar no ADR; não exigem mudança de escopo. Nenhuma dependência
-externa nova prevista.
+### Decisões propostas para fechar o desenho
+
+- **Representação de `Limits`:** array privado de `u64`, com uma posição por domínio
+  reservado, inicializado com os padrões da tabela normativa. O resolver privado retorna
+  índice e nome estático; configuração e operações usam o mesmo resolver. Evitar mapas,
+  strings alocadas e cópias de tags; nenhum índice faz parte do formato persistido.
+  `with_domain_limit` substitui somente a posição do domínio escolhido, depois de validar
+  tag e representabilidade. Não duplicar a tabela de resolução entre limites e caminhos.
+- **Erro primário + limpeza:** manter as três variantes públicas de `CasError`.
+  Se remover temporário também falhar, retornar `CasError::Io` contendo erro composto
+  privado, com o `ErrorKind` do erro primário, ambos os erros no `Display` e o primário
+  como `source()`. Não converter falha de limpeza em sucesso nem descartar erro original.
+  Temporário já ausente (`NotFound`) não é falha de limpeza. Teste interno deve provocar
+  falhas reais/controladas de escrita e remoção, conferir ambos os diagnósticos e o kind;
+  caso de limpeza bem-sucedida preserva o erro original sem wrapper.
+- **ADR:** registrar essas propostas junto aos contratos da seção 2 no ADR 0005 antes
+  da implementação; documento de planejamento não equivale a decisão já implementada.
+
+Nenhuma dependência externa nova prevista. Decisões remanescentes são de implementação,
+não de escopo; qualquer divergência dos contratos acima exige atualizar plano e ADR.
 
 ## 6. Estimativa revisada
 

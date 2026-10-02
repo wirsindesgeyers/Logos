@@ -71,7 +71,8 @@ Decisões propostas no plano (registrar em ADR 0005 antes do código) / riscos:
   rename e fsync do arquivo, shard, domínio e raiz, sem depender de quem criou diretórios.
   Testes planejados: criação concorrente, reader durante publicação e falhas de fsync.
   Erro após publicação não promete rollback; filesystem local Unix e ancestrais confiáveis.
-- Resolver representação de `Limits` e propagação conjunta de erro primário/limpeza no ADR.
+- Plano propõe `Limits` como array privado por domínio e erro composto privado dentro de
+  `Io` para preservar erro primário + falha de limpeza; registrar no ADR antes do código.
 - Sem dependências externas novas esperadas; apenas `logos-crypto` e `std`.
 - Teste de concorrência determinístico (sem `sleep`); criar diretórios temporários sem crate `tempfile`
   (ver `tests/security.rs` do crypto para o padrão usado).
@@ -128,3 +129,8 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   writers, teste determinístico de reader durante publicação (mutante sem tmp+rename),
   injeção de falhas de fsync/reserva e byte de excesso fora do `Vec`. Testes descritos
   são critérios da futura implementação, não evidência de CAS já implementado.
+- **2026-10-02** — Planejamento solicitado para a próxima etapa: confirmada 0.5 (CAS),
+  ainda não implementada. Mantido plano existente e completadas propostas de representação
+  de `Limits` e propagação conjunta de erro primário/limpeza, sem ampliar escopo.
+  Links locais válidos; `ci/verify.sh --selftest` terminou com `VERIFY_OK` localmente.
+  CI remota e fuzz longo permanecem pendentes; nenhuma implementação do CAS nesta sessão.
