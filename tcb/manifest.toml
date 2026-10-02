@@ -49,7 +49,7 @@ name = "logos-core"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/budget.rs", "src/canon.rs", "src/lib.rs", "src/outcome.rs", "src/verdict.rs"]
 
 [[crate]]
 name = "logos-air"

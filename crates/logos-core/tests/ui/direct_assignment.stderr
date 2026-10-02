@@ -1,0 +1,7 @@
+error[E0308]: mismatched types
+ --> tests/ui/direct_assignment.rs:5:29
+  |
+5 |     let _verdict: Verdict = outcome;
+  |                   -------   ^^^^^^^ expected `Verdict`, found `CheckOutcome`
+  |                   |
+  |                   expected due to this

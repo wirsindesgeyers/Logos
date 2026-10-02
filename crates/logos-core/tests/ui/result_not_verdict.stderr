@@ -1,0 +1,19 @@
+error[E0308]: mismatched types
+ --> tests/ui/result_not_verdict.rs:7:20
+  |
+7 |     accept_verdict(res);
+  |     -------------- ^^^ expected `Verdict`, found `Result<Verdict, CheckOutcome>`
+  |     |
+  |     arguments to this function are incorrect
+  |
+  = note: expected enum `Verdict`
+             found enum `Result<Verdict, CheckOutcome>`
+note: function defined here
+ --> tests/ui/result_not_verdict.rs:3:4
+  |
+3 | fn accept_verdict(_v: Verdict) {}
+  |    ^^^^^^^^^^^^^^ -----------
+help: consider using `Result::expect` to unwrap the `Result<Verdict, CheckOutcome>` value, panicking if the value is a `Result::Err`
+  |
+7 |     accept_verdict(res.expect("REASON"));
+  |                       +++++++++++++++++

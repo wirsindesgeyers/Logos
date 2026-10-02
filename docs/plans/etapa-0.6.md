@@ -1,12 +1,12 @@
 # Plano de etapa — 0.6: veredictos, orçamentos e erros
 
 - **Data:** 2026-10-02.
-- **Estado:** planejada; implementação não iniciada.
+- **Estado:** implementada e verificada localmente; fechamento S3 depende da CI nativa x86_64/aarch64.
 - **Escopo:** Etapa 0.6 do `ROADMAP.md`, tamanho **P**, TCB de correção.
 - **Referências:** roadmap §0, §3 (S2/S3), §4 e 0.6; especificação conceitual
   §4.4 (rejeição não é refutação), §4 (certificados grandes), §5 (trust boundaries)
   e §10 ameaça 18; ADRs 0001, 0003 e 0004.
-- **Local:** `crates/logos-core`, atualmente apenas esqueleto com lints da TCB.
+- **Local:** `crates/logos-core`, com tipos, medidor e codificação `core/v1`.
 
 **Fora do escopo:** checkers concretos das Fases 2 e 4; política de tentativas após
 `Unknown` (5.4); estados `Pending`/`Invalidated` do claim (5.1). Também não implementar
@@ -301,3 +301,81 @@ Atualizar este plano com evidências, `STATUS.md` (tabela, pendências, próximo
 Diário) e somente checkboxes demonstrados do roadmap. Sem evidência remota de S3,
 registrar implementação local com pendência, não conclusão. Próxima etapa após 0.6:
 0.7, documentação de ameaças/garantias/limites, ainda dentro da Fase 0.
+
+## 7. Implementação e evidências (2026-10-02)
+
+Contrato do plano adotado no ADR 0006 e em `spec/core.md`. Produção em cinco arquivos
+de `logos-core`, dependência direta somente de `logos-canon`. Dev-dependencies exatas:
+`trybuild` 1.0.121 e `serde_json` 1.0.151 (esta já transitiva da primeira; substitui
+parser artesanal de expectativas JSON). Vetores independentes: **126**, sendo
+**28 positivos e 98 negativos**; gerador `--check`, ruff e mypy strict passaram.
+Smoke público: `cargo run -p logos-core --example core_smoke` produziu
+`CORE_SMOKE_OK: budgets, latch, veredictos e core/v1 (x86_64)`.
+
+Primeira execução de `cargo test -p logos-core` passou, gerando diagnósticos com
+`TRYBUILD=overwrite`; sete fixtures falham pelo contrato esperado, controle positivo
+compila. Teste incidental de Copy/Clone e unitários que duplicavam os vetores foram
+removidos; conformidade de bytes e semântica ficou nos vetores independentes.
+Testes S3 repetem oito entradas fixas e cenário de erro ignorado 1000 vezes cada;
+também verificam irrelevância de `wall_ms`. ARM ainda não executado.
+
+### Sensibilidade dos testes: 11 mutantes mortos e restaurados
+
+Cada linha abaixo aplica apenas a alteração descrita e executa
+`cargo test -p logos-core --test <suíte> <teste>` (para vetores/UI, sem filtro).
+Todas as execuções mutadas terminaram com **exit 101** por falha de teste, não por
+erro de compilação. Restaurar alteração antes da próxima linha e recompilar.
+
+| Mutação | Suíte / teste que matou | Resultado observado |
+| --- | --- | --- |
+| `charge`: `steps <= remaining` → `<` | `budget reference_checker_acceptance_exact_boundary` | `Unknown(Steps)` em vez de `Accepted`. |
+| Saldo: subtração → `remaining.wrapping_add(steps)` | `budget u64_max_boundary_and_no_overflow` | Cobrança após `u64::MAX` devolveu `Ok(())`, esperado `Err(Steps)`. |
+| Excesso: `exhausted.set(true)` → `false` | `budget ignored_error_latch_precedence_over_accepted` | `Accepted` em vez de `Unknown(Steps)`. |
+| `run` devolve `outcome` sem finalização pelo latch | `budget ignored_error_latch_precedence_over_rejected` | `Rejected` em vez de `Unknown(Steps)`. |
+| Contramodelo promove `Rejected(_)` → `Ok(Refuted)` | `verdict refuted_from_countermodel_matrix` | `expect_err` recebeu `Refuted`. |
+| Contramodelo promove `Unknown(_)` → `Ok(Refuted)` | `verdict refuted_from_countermodel_matrix` | `expect_err` recebeu `Refuted`. |
+| Prova promove `Unknown(_)` → `Ok(Verified)` | `verdict verified_from_proof_matrix` | `expect_err` recebeu `Verified`. |
+| `check_version` aceita qualquer `Value::Unsigned(_)` | `vectors` | `err-budget-version-0` decodificou `Budget`. |
+| Tag desconhecida de `Exhausted` → `Ok(Time)` | `vectors` | `err-exhausted-tag-4` decodificou `Time`. |
+| `Accepted` aceita aridade extra (`!= 2` → `< 2`) | `vectors` | `err-outcome-accepted-extra` decodificou `Accepted`. |
+| Adicionar `From<CheckOutcome> for Verdict` retornando `Refuted` | `compile_fail` | Quatro fixtures `.into()`/`try_from` compilaram indevidamente; cinco de oito fixtures sinalizaram falha no total. |
+
+Mutações do medidor, funções nomeadas e decoder restauraram os mesmos snapshots
+de conteúdo antes dos novos checks. Não atualizar `.stderr` para aceitar mutante.
+O teste UI não prova impossibilidade de consumidor construir enum diretamente:
+essa fronteira continua explicitada no ADR, sem credencial fictícia.
+
+### Integração e pendências
+
+CI Rust agora tem matriz nativa x86_64/aarch64, confirma `uname -m` e executa smoke
+além de fmt/build/clippy/testes. Testes crypto existentes também rodam em ARM para
+fechar a pendência das flags de arquivo de chave. API pública do GitHub confirmou
+`private=false`; não houve push nem observação do novo job remoto.
+Fuzz `core_decode` tenta os cinco tipos, com corpus dos vetores; descoberta automática
+do script CI inclui o alvo no smoke e noturno.
+
+`ci/verify.sh` inclui smoke público e gerador de vetores; `AGENTS.md` atualizado.
+Allowlist de dev-dependencies inclui agora `itoa`, portanto selftest de dependência
+proibida passou a injetar `either`, ainda fora da lista, exigindo diagnóstico próprio.
+Primeiros checks falharam em ruff (variável de loop não usada), mypy (reuso de lista
+com tipos distintos) e clippy (`chunks_exact` constante); causas corrigidas.
+Relatório local `cargo xtask tcb report`: **2736 LOC próprios** de correção,
+**78287 LOC** de dependências de execução e **51581 LOC** só compilação;
+`logos-core`: **305 LOC**, sem dependência externa adicional de execução.
+
+### Verificação final
+
+- `ci/verify.sh --selftest` terminou com **`VERIFY_OK`**, exit 0: fmt, clippy
+  `-D warnings`, testes workspace, smoke, regras/manifesto/independência, deny/audit,
+  ruff/mypy/geradores e pytest (104 + 7), além do selftest com dependência `either`.
+- `logos-core`: **21 testes** (13 budget, 3 verdict, 3 determinism, 1 vectors,
+  1 harness trybuild com 7 compile-fail + 1 pass) passaram no código restaurado.
+- `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 core_decode`: **224269 execuções
+  em 61 segundos**, sem crash. Log local em `fuzz-logs/core_decode.log`.
+- S2 e compile-fail marcados no roadmap; S3 remoto permanece **desmarcado**.
+  Não houve execução ARM, observação dos novos jobs nem push.
+
+A árvore recebida já continha mudança no manifesto para listar os arquivos do CAS
+de `logos-ledger`, além de `fuzz-logs/cas_domain.log`. Preservadas: não incorporadas
+ao commit 0.6. A verificação completa usou essa árvore com o manifesto CAS corrigido;
+o hunk de `logos-core` é a única mudança deste trabalho no manifesto.

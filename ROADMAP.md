@@ -388,9 +388,9 @@ Definition of Done global ainda depende de CI remota e ≥ 1 h de fuzz noturno d
   - **`Rejected` não tem conversão para `Refuted`**: certificado rejeitado não é refutação, a obrigação volta para `Pending` (§4.4). Só um contramodelo checado produz `Refuted`. Sem isso, um prover que envia lixo dispararia o bloqueio S4 sobre uma obrigação possivelmente verdadeira.
 
 **Critério de conclusão.**
-- [ ] Teste: estourar `steps` num checker de referência de teste (construído sobre `StepMeter`) sempre dá `Unknown(Steps)`, nunca `Rejected` nem `Accepted` (S2). O teste vira regressão obrigatória dos checkers reais (2.2, 4.4).
+- [x] Teste: estourar `steps` num checker de referência de teste (construído sobre `StepMeter`) sempre dá `Unknown(Steps)`, nunca `Rejected` nem `Accepted` (S2). O teste vira regressão obrigatória dos checkers reais (2.2, 4.4). Evidência local: `crates/logos-core/tests/budget.rs`, smoke público e mutações; plano 0.6 §7.
 - [ ] Teste: o mesmo input com o mesmo `Budget` (sem `wall_ms`) dá o mesmo outcome em 1000 execuções e em 2 arquiteturas da CI (x86_64, aarch64) (S3).
-- [ ] Teste compile-fail (`trybuild`): não existe caminho de `CheckOutcome::Rejected` ou `Unknown` para `Verdict::Refuted`/`Verified` fora das funções nomeadas de construção.
+- [x] Teste compile-fail (`trybuild`): não existe caminho de `CheckOutcome::Rejected` ou `Unknown` para `Verdict::Refuted`/`Verified` fora das funções nomeadas de construção. Evidência: `tests/compile_fail.rs` (7 fixtures negativas + controle positivo), matrizes runtime e mutante `From` detectado. Fronteira dos enums públicos e alcance da garantia da biblioteca: ADR 0006.
 
 ---
 

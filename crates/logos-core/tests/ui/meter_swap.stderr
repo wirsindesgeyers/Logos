@@ -1,0 +1,22 @@
+error[E0308]: arguments to this function are incorrect
+ --> tests/ui/meter_swap.rs:7:13
+  |
+7 |             std::mem::swap(meter1, meter2);
+  |             ^^^^^^^^^^^^^^
+  |
+note: types differ in mutability
+ --> tests/ui/meter_swap.rs:7:28
+  |
+7 |             std::mem::swap(meter1, meter2);
+  |                            ^^^^^^
+  = note: expected mutable reference `&mut _`
+                     found reference `&StepMeter`
+note: types differ in mutability
+ --> tests/ui/meter_swap.rs:7:36
+  |
+7 |             std::mem::swap(meter1, meter2);
+  |                                    ^^^^^^
+  = note: expected mutable reference `&mut _`
+                     found reference `&StepMeter`
+note: function defined here
+ --> $RUST/core/src/mem/mod.rs

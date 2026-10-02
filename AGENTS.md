@@ -52,6 +52,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ```sh
 ci/verify.sh              # fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
                           # manifesto, cargo deny/audit, ruff/mypy/pytest (inclui o diferencial)
+                          # smoke público do logos-core e geradores de vetores --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 

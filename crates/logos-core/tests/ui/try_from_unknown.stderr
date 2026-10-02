@@ -1,0 +1,17 @@
+error[E0277]: the trait bound `Verdict: TryFrom<CheckOutcome>` is not satisfied
+ --> tests/ui/try_from_unknown.rs:5:40
+  |
+5 |     let _verdict: Result<Verdict, _> = Verdict::try_from(outcome);
+  |                                        ^^^^^^^ the trait `From<CheckOutcome>` is not implemented for `Verdict`
+  |
+  = note: required for `CheckOutcome` to implement `Into<Verdict>`
+  = note: required for `Verdict` to implement `TryFrom<CheckOutcome>`
+
+error[E0277]: the trait bound `Verdict: From<CheckOutcome>` is not satisfied
+ --> tests/ui/try_from_unknown.rs:5:40
+  |
+5 |     let _verdict: Result<Verdict, _> = Verdict::try_from(outcome);
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<CheckOutcome>` is not implemented for `Verdict`
+  |
+  = note: required for `CheckOutcome` to implement `Into<Verdict>`
+  = note: required for `Verdict` to implement `TryFrom<CheckOutcome>`

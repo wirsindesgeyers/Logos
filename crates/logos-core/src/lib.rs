@@ -5,3 +5,13 @@
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![warn(missing_docs)]
+
+mod budget;
+mod canon;
+mod outcome;
+mod verdict;
+
+pub use budget::{Budget, StepMeter};
+pub use outcome::{CheckOutcome, Exhausted, Reason};
+pub use verdict::{Verdict, refuted_from_countermodel, verified_from_proof};

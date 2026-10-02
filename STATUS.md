@@ -7,9 +7,9 @@
 
 ## Resumo
 
-Fase 0 (Fundação): **5 de 7 etapas implementadas e verificadas localmente** (0.1–0.5).
-Há código real em `logos-canon`, `logos-crypto` e no CAS de `logos-ledger`; os outros crates
-continuam esqueletos. A CI do GitHub **ainda não foi observada** (`gh` ausente).
+Fase 0 (Fundação): **6 de 7 etapas implementadas e verificadas localmente** (0.1–0.6).
+Há código real em `logos-canon`, `logos-crypto`, `logos-core` e no CAS de `logos-ledger`;
+os outros crates continuam esqueletos. Novos jobs da CI ainda não foram observados.
 Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`.
 
 ## Etapas da Fase 0
@@ -21,7 +21,7 @@ Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`
 | 0.3 `logos-canon` (canon/v1) | ⚠ concluída, falta 1 h de fuzz | 28 testes unitários + propriedades + 77 vetores + diferencial Rust×Python (100k/direção) passam; 7 mutantes do decoder pegos. Fuzz local: 1,3 M (`canon_decode`) e 0,8 M (`canon_text`) execuções sem crash. **Falta:** ≥ 1 h por alvo no job noturno (`fuzz.yml`). |
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
 | 0.5 CAS | ⚠ implementada, falta CI/fuzz noturno | 17 testes (6 unitários + 10 públicos + 1 de vetores), smoke real e 6 mutantes mortos; 3 endereços reproduzidos só por `spec/cas.md` + `hashlib`; fuzz final `cas_domain`: 798945 execuções em 61 s sem crash. **Falta:** CI e ≥ 1 h no job noturno. ADR 0005, `spec/cas.md` e [`plano`](docs/plans/etapa-0.5.md) §7. |
-| 0.6 `logos-core` (veredictos/orçamentos) | ⏳ planejada; implementação não iniciada | [`plano`](docs/plans/etapa-0.6.md) com APIs, formato proposto, S2/S3, `trybuild` e matriz CI; depende da 0.3 (feita); runner aarch64 ainda ausente |
+| 0.6 `logos-core` (veredictos/orçamentos) | ⚠ implementada, falta CI nativa S3 | 21 testes + 7 fixtures compile-fail e controle positivo; 126 vetores independentes, smoke real e 11 mutantes mortos; fuzz `core_decode`: 224269 execuções em 61 s sem crash. ADR 0006, `spec/core.md` e [`plano`](docs/plans/etapa-0.6.md) §7. **Falta:** observar 1000 execuções por caso em x86_64/aarch64 na CI e confirmar flags crypto em ARM. |
 | 0.7 Ameaças e escopo (docs) | ⏳ | independente; só documentação |
 
 Fases 1–23: não iniciadas.
@@ -36,41 +36,40 @@ Fases 1–23: não iniciadas.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
-4. Repositório é público ou privado? Runner ARM (`ubuntu-24.04-arm`) é gratuito só em público
-   (necessário para S3 na 0.6).
+   Alvo `core_decode` da 0.6 também integrado ao smoke/noturno; log local não prova CI.
+4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
+   [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
+   repositório público (`private=false`); disponibilidade/execução do runner ARM
+   ainda depende de observar o job remoto.
 5. Arquivar relatório JSON por commit em `tcb/history/` (entregável da 0.2): diretório
    encontrado vazio na revisão de 2026-10-02; ferramentas existem, artefato versionado falta.
 
-## Próximo passo: Etapa 0.6 — veredictos, orçamentos e erros (`P`, ⚠ TCB)
+## Próximo passo: Etapa 0.7 — ameaças e escopo (`P`, documentação)
 
-Implementar o [plano da 0.6](docs/plans/etapa-0.6.md) em `logos-core`, conforme `ROADMAP.md` Etapa 0.6.
-Dependências técnicas prontas: workspace (0.1), `Canon`/`CanonDecode` e canon/v1 (0.3).
-CAS (0.5) já fornece `TooLarge`; conversão futura de excesso é `Unknown(Size)`, nunca rejeição.
+Criar plano da 0.7 e implementar `docs/threat-model.md`, `docs/guarantees.md` e
+`docs/limits.md`, conforme `ROADMAP.md` Etapa 0.7. Não há dependência técnica;
+workspace, canon, crypto, CAS e vocabulário do core já existem. Usar especificação
+conceitual §1, §5, §6, §10 e §13; manifesto da TCB separa correção/fidelidade/progresso.
 
-Entregáveis: `CheckOutcome`, `Exhausted`, `Budget`, `StepMeter`, `Verdict`,
-codificação/decodificação canônica e vetores em `spec/vectors/core/`.
-`StepMeter` precisa produzir `Unknown(Steps)` ao exceder orçamento, por construção.
-Checkers internos contam passos; `wall_ms` só para checkers externos.
-Não oferecer conversões `Unknown` → `Verified`/`Refuted` nem `Rejected` → `Refuted`.
-Checkers concretos, tentativas após `Unknown` e estados de claims ficam fora do escopo.
+Cada garantia precisa enunciar premissas e TCB explícitas; cada atacante precisa
+apontar para ameaça(s) da §10, e toda ameaça para ao menos um atacante.
+Conferir rastreabilidade completa com Apêndice B do roadmap. Declarar L1–L3,
+ameaças fundamentais 1/2/3/13/16 e parte fundamental da 10 (TOCTOU sem versão atômica
+e fatos físicos). Operador/kernel mostrando histórias diferentes também é atacante.
+Mitigações novas e modelo formal ficam fora do escopo.
 
-Registrar propostas do plano em ADR 0006 antes do código: arrays `core/v1` sobre
-`canon/v1`, `Reason(Text)`, `StepMeter::run` com latch irreversível e funções nomeadas
-para prova/contramodelo que recusam `Rejected`/`Unknown`. Roadmap pede `trybuild`;
-inventariar dev-dependency/transitivas e allowlist, sem substituir por doctests.
-Limite explícito: enum público permite construção direta de `Verdict`; compile-fail
-prova ausência de conversões, não autorização. Complementar com testes e revisão;
-garantia de checker ativo pertence à 5.4, sem alterar escopo silenciosamente.
-
-Risco de fechamento: S3 exige 1000 execuções em x86_64 **e** aarch64 na CI.
-Adicionar runner ARM se ausente; gratuidade de `ubuntu-24.04-arm` depende de repositório público.
-Confirmar nesse runner constantes `O_NOFOLLOW`/`O_NONBLOCK` do crypto.
-CI remota e fuzz longo das etapas anteriores permanecem pendentes, não demonstrados localmente.
+Decisões em aberto: separar promessas já implementadas de garantias projetadas e
+explicitar premissas de operador, SO/hardware, atestadores e confirmação humana.
+Riscos conhecidos: confundir certificado rejeitado com refutação, enum `Verdict` com
+credencial ou limites declarados com monitoramento global de memória. ADR 0006 registra
+essas fronteiras; não prometer mais que código/spec demonstram.
+Pendências remotas 0.1–0.6 (incluindo S3/flags ARM/fuzz noturno) permanecem separadas:
+não exigem implementação nova nem impedem documentação independente da 0.7.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB (execução):** 2433 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 0.5; inclui testes em `src/`.
+- **Tamanho da TCB (execução):** 2736 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), medição local após 0.6; inclui testes em `src/`.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -147,3 +146,15 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   seis seções do formato do roadmap validados; `ci/verify.sh --selftest` terminou
   com `VERIFY_OK` localmente. Nenhum teste de comportamento da 0.6 executado:
   o crate continua esqueleto; os testes descritos no plano são trabalho futuro.
+- **2026-10-02** — Implementada Etapa 0.6: tipos/medidor `logos-core`, finalização
+  com latch irreversível, funções nomeadas sem promoção de rejeição/exaustão,
+  `core/v1`, ADR 0006, 126 vetores independentes e CI nativa x86_64/aarch64.
+  21 testes (inclui harness com 7 compile-fail e controle positivo), smoke público
+  e 11 mutantes mortos/restaurados. Fuzz `core_decode`: 224269 execuções em 61 s,
+  sem crash. `ci/verify.sh --selftest` terminou com `VERIFY_OK` localmente.
+  Ruff/mypy/clippy iniciais falharam e foram corrigidos antes do run completo final.
+  API GitHub confirmou repositório público; sem push/execução ARM/CI nova observada.
+  `trybuild` trouxe `itoa` à allowlist; selftest agora usa `either` e passou pelo
+  diagnóstico certo. TCB: 2736 LOC próprios + 78287 execução (51581 compilação).
+  Alterações recebidas no manifesto CAS e log `cas_domain` preservadas fora do commit;
+  verificação completa usou a árvore com esse hunk CAS. Próximo passo: 0.7.

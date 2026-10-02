@@ -70,8 +70,8 @@ printf '\npub fn violacao() -> u8 { Some(1u8).unwrap() }\n' >> crates/logos-cano
 expect_blocked "unwrap() em crate de TCB" 'clippy::unwrap_used|used `unwrap\(\)`' cargo clippy -p logos-canon -- -D warnings
 
 fresh_copy
-add_dependency crates/logos-canon/Cargo.toml 'itoa = "1"'
-expect_blocked "dependência fora da allowlist" "crate 'itoa[^']*' is not explicitly allowed" cargo deny check bans
+add_dependency crates/logos-canon/Cargo.toml 'either = "1"'
+expect_blocked "dependência fora da allowlist" "crate 'either[^']*' is not explicitly allowed" cargo deny check bans
 
 fresh_copy
 add_dependency crates/logos-audit/Cargo.toml 'logos-kernel = { path = "../logos-kernel" }'

@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `Verdict: From<CheckOutcome>` is not satisfied
+ --> tests/ui/into_conversion_rejected.rs:7:37
+  |
+7 |     let _verdict: Verdict = outcome.into();
+  |                                     ^^^^ the trait `From<CheckOutcome>` is not implemented for `Verdict`
+  |
+  = note: required for `CheckOutcome` to implement `Into<Verdict>`
