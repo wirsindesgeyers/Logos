@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-01 · `origin/main` está em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-02 · referência local `origin/main` em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
@@ -20,7 +20,7 @@ verificado *localmente* com `ci/verify.sh --selftest`.
 | 0.2 Manifesto e contagem da TCB | ⚠ concluída, falta confirmar na CI | `cargo xtask tcb check/report` funcionam; diff e comentário de PR escritos mas **nunca executados num PR real**. |
 | 0.3 `logos-canon` (canon/v1) | ⚠ concluída, falta 1 h de fuzz | 28 testes unitários + propriedades + 77 vetores + diferencial Rust×Python (100k/direção) passam; 7 mutantes do decoder pegos. Fuzz local: 1,3 M (`canon_decode`) e 0,8 M (`canon_text`) execuções sem crash. **Falta:** ≥ 1 h por alvo no job noturno (`fuzz.yml`). |
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
-| 0.5 CAS | ⏳ próxima | ver "Próximo passo" |
+| 0.5 CAS | ⏳ próxima; plano pronto | [`docs/plans/etapa-0.5.md`](docs/plans/etapa-0.5.md); implementação não iniciada |
 | 0.6 `logos-core` (veredictos/orçamentos) | ⏳ | depende da 0.3 (feita); runner aarch64 na CI |
 | 0.7 Ameaças e escopo (docs) | ⏳ | independente; só documentação |
 
@@ -36,8 +36,13 @@ Fases 1–23: não iniciadas.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI (o workflow tinha um bug de toolchain, corrigido; nunca foi visto rodando) e deixá-lo completar ≥ 1 h por alvo (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`) e arquivar os logs (critérios da 0.3 e 0.4).
 4. Repositório é público ou privado? Runner ARM (`ubuntu-24.04-arm`) é gratuito só em público
    (necessário para S3 na 0.6).
+5. Arquivar relatório JSON por commit em `tcb/history/` (entregável da 0.2): diretório
+   encontrado vazio na revisão de 2026-10-02; ferramentas existem, artefato versionado falta.
 
 ## Próximo passo: Etapa 0.5 — CAS (`P`, ⚠ TCB)
+
+Implementar conforme [`docs/plans/etapa-0.5.md`](docs/plans/etapa-0.5.md), no módulo `cas`
+de `logos-ledger` (sem crate novo). Plano pronto; nenhum código da 0.5 implementado.
 
 Já pronto de que ela depende: `logos-crypto` (`Hash<T>`, `hash_raw`, `RawHasher` incremental,
 `tags::RESERVED`, `Domain`), `spec/domains.md`. `logos-canon` não é necessário (o CAS guarda bytes).
@@ -53,15 +58,16 @@ Critérios a provar: corromper 1 byte ⇒ erro de integridade; 16 threads fazend
 sem corromper; objeto acima do limite ⇒ `TooLarge`; **endereço de 3 objetos recalculado por um script
 Python independente a partir só de `spec/cas.md`** (idem aos vetores da 0.4: gerar com `hashlib`).
 
-Decisões em aberto / riscos (devem virar ADR 0005):
-- **Nome do diretório do domínio.** `Domain` só tem `TAG`. Derivar o nome do diretório da tag
-  (`logos/certificate/v1\0` → `certificate-v1`) num helper testado, ou acrescentar `NAME` ao trait
-  (mudança na 0.4, barata agora). Atenção: nome vindo do tag nunca pode conter `/` ou `..`.
-- **Limites por domínio** (chave = tag): definir padrões para domínios canônicos (sugestão: 16 MiB) e
-  crus; erro `TooLarge` é o que o kernel converte em `Unknown(Size)` (0.6).
-- **`put` num domínio canônico verifica que os bytes são `canon/v1`?** Sugestão: não no CAS (guarda
-  bytes); a checagem fica na camada do ledger (3.5). Registrar.
-- Sem dependências novas esperadas (só `std`: `fs`, `io`, `thread`). Unix-only como em `FileSigner`.
+Decisões propostas no plano (registrar em ADR 0005 antes do código) / riscos:
+- **Diretório por domínio:** tabela de tags reservadas exatas → `certificate-v1` etc.;
+  manter `Domain` inalterado. Tag desconhecida retorna `Io(InvalidInput)`, nunca caminho arbitrário.
+- **Limites por tag:** canônicos 16 MiB; certificate/checker crus 256 MiB; overrides configuráveis,
+  aplicados também em `get`. Excesso vira `TooLarge`, não rejeição de certificado.
+- **Bytes opacos:** CAS não valida `canon/v1`; consumidor valida codificação e semântica.
+- **Durabilidade:** tmp exclusivo + rename + fsync do arquivo, shard e pais novos;
+  erro após publicação não promete rollback. Raiz/ancestrais confiáveis; filesystem local Unix.
+- Resolver representação de `Limits` e propagação conjunta de erro primário/limpeza no ADR.
+- Sem dependências externas novas esperadas; apenas `logos-crypto` e `std`.
 - Teste de concorrência determinístico (sem `sleep`); criar diretórios temporários sem crate `tempfile`
   (ver `tests/security.rs` do crypto para o padrão usado).
 - **GC, replicação, compressão e streaming de verdade** estão fora do escopo (3.5 etc.).
@@ -108,3 +114,8 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   conhece a chave forja `R` = identidade; teste com controles e ADR 0004 corrigido; (4) `requires-python`
   agora `>=3.14,<3.15`. Lição: "equivalente" só vale com prova; e ambiente local com atalhos (`RUSTC_BOOTSTRAP`)
   não valida a CI.
+- **2026-10-02** — Revisão confirmou parada após 0.4; `ci/verify.sh --selftest` passou
+  localmente (`VERIFY_OK`). Criado plano da 0.5 em `docs/plans/etapa-0.5.md`, com APIs,
+  sequência, quatro critérios rastreados e decisões propostas para ADR 0005. Implementação
+  não iniciada; CI remota/fuzz longo continuam pendentes. Descoberta: `tcb/history/` vazio,
+  apesar do entregável de histórico JSON versionado da 0.2; não corrigido nesta etapa de planejamento.
