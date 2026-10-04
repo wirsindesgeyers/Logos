@@ -2,16 +2,17 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-02 · referência local `origin/main` em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-04 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
 
-Fase 0 (Fundação): **6 de 7 etapas implementadas e verificadas localmente** (0.1–0.6).
+Fase 0 (Fundação): **7 de 7 etapas implementadas e verificadas localmente** (0.1–0.7).
 Há código real em `logos-canon`, `logos-crypto`, `logos-core` e no CAS de `logos-ledger`;
 os outros crates continuam esqueletos. Novos jobs da CI ainda não foram observados.
-Verificação local completa: `ci/verify.sh --selftest` terminou com `VERIFY_OK`
-em árvore limpa exportada do conteúdo staged, incluindo as correções da revisão.
+Verificação local completa desta sessão: `ci/verify.sh --selftest` terminou com
+`VERIFY_OK` na árvore de trabalho; smoke público do core e smoke temporário das
+primitivas passaram. Etapa 0.7 é documentação, não implementação do kernel/gateway.
 
 ## Etapas da Fase 0
 
@@ -23,7 +24,7 @@ em árvore limpa exportada do conteúdo staged, incluindo as correções da revi
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
 | 0.5 CAS | ⚠ implementada, falta CI/fuzz noturno | 17 testes (6 unitários + 10 públicos + 1 de vetores), smoke real e 6 mutantes mortos; 3 endereços reproduzidos só por `spec/cas.md` + `hashlib`; fuzz final `cas_domain`: 798945 execuções em 61 s sem crash. **Falta:** CI e ≥ 1 h no job noturno. ADR 0005, `spec/cas.md` e [`plano`](docs/plans/etapa-0.5.md) §7. |
 | 0.6 `logos-core` (veredictos/orçamentos) | ⚠ implementada, falta CI nativa S3 | 21 testes + 7 fixtures compile-fail e controle positivo; 126 vetores independentes, smoke real e 11 mutantes mortos; fuzz `core_decode`: 224269 execuções em 61 s sem crash. ADR 0006, `spec/core.md` e [`plano`](docs/plans/etapa-0.6.md) §7. **Falta:** observar 1000 execuções por caso em x86_64/aarch64 na CI e confirmar flags crypto em ARM. |
-| 0.7 Ameaças e escopo (docs) | ⏳ | independente; só documentação |
+| 0.7 Ameaças e escopo (docs) | ✅ concluída localmente | Três documentos + plano; script reproduzível `DOCS_0_7_OK`: 18 ameaças, 8 atacantes com referências recíprocas, G1–G3 com premissas/TCB/estado, L1–L3 e links locais. Apêndice B distingue mitigação projetada de limite fundamental. Sem nova mitigação/modelo formal. |
 
 Fases 1–23: não iniciadas.
 
@@ -45,30 +46,32 @@ Fases 1–23: não iniciadas.
 5. Arquivar relatório JSON por commit em `tcb/history/` (entregável da 0.2): diretório
    encontrado vazio na revisão de 2026-10-02; ferramentas existem, artefato versionado falta.
 
-## Próximo passo: Etapa 0.7 — ameaças e escopo (`P`, documentação)
+## Próximo passo: Etapa 1.1 — sintaxe abstrata da lógica (`M`, TCB)
 
-Criar plano da 0.7 e implementar `docs/threat-model.md`, `docs/guarantees.md` e
-`docs/limits.md`, conforme `ROADMAP.md` Etapa 0.7. Não há dependência técnica;
-workspace, canon, crypto, CAS e vocabulário do core já existem. Usar especificação
-conceitual §1, §5, §6, §10 e §13; manifesto da TCB separa correção/fidelidade/progresso.
+Criar `docs/plans/etapa-1.1.md` no formato do ROADMAP §0 e implementar
+`FOL-ms-eq/v1` em `logos-air`, conforme Etapa 1.1: `Sort`, `Symbol`, `Term`,
+`Formula`, variáveis De Bruijn, `LogicId`, limites estruturais de profundidade/nós
+e codificação em `spec/air.md` com vetores. `logos-air` ainda é esqueleto, mas já
+consta no manifesto. Dependências prontas: canon/v1 (0.3), `Domain`/`Hash<T>` e
+tag reservada `logos/formula/v1` (0.4); documentação de fronteiras 0.7 disponível.
 
-Cada garantia precisa enunciar premissas e TCB explícitas; cada atacante precisa
-apontar para ameaça(s) da §10, e toda ameaça para ao menos um atacante.
-Conferir rastreabilidade completa com Apêndice B do roadmap. Declarar L1–L3,
-ameaças fundamentais 1/2/3/13/16 e parte fundamental da 10 (TOCTOU sem versão atômica
-e fatos físicos). Operador/kernel mostrando histórias diferentes também é atacante.
-Mitigações novas e modelo formal ficam fora do escopo.
+Critérios: alfa-equivalência gera bytes/hash idênticos, profundidade 10⁶ é recusada
+sem estourar pilha, formato normativo com vetores. Não incluir vocabulário (1.2),
+sort-check (1.3), parser textual (1.4), `Says` (6.6) nem lógicas não clássicas.
+Novo decoder requer fuzz target/manifesto; formato novo e decisões técnicas
+requerem spec/vetores e ADR conforme regras do projeto.
 
-Decisões em aberto: separar promessas já implementadas de garantias projetadas e
-explicitar premissas de operador, SO/hardware, atestadores e confirmação humana.
-Riscos conhecidos: confundir certificado rejeitado com refutação, enum `Verdict` com
-credencial ou limites declarados com monitoramento global de memória. ADR 0006 registra
-essas fronteiras; não prometer mais que código/spec demonstram.
-Pendências remotas 0.1–0.6 (incluindo S3/flags ARM/fuzz noturno) permanecem separadas:
-não exigem implementação nova nem impedem documentação independente da 0.7.
-Correções da revisão verificadas localmente: manifesto CAS incluído no conteúdo staged;
-gate de independência percorre grafo resolvido por `PackageId`, com todas as features.
-Verificação completa passou em árvore limpa, sem depender das alterações locais de fuzz/logs.
+Decisões para o plano/ADR: representação/identidade de sorts e símbolos,
+codificação de binders/LogicId e cobrança de limites configuráveis.
+Risco principal: rejeição de profundidade deve cobrir construção, percurso,
+codificação e descarte de entrada adversarial sem recursão descontrolada.
+Não atribuir autoridade a tipos públicos nem assumir fidelidade pela canonicidade.
+
+Pendências remotas 0.1–0.6 e histórico JSON da 0.2 permanecem separados;
+documentação 0.7 não os fecha. Revisão direta desta sessão cobriu decoder/valores
+canon Rust e referência Python, domínios/assinatura/FileSigner, medidor/veredictos/
+codificação core e publicação/leitura CAS. Nenhum bug novo identificado nesse
+recorte; não é auditoria exaustiva nem prova formal.
 
 ## Decisões em aberto para o mantenedor
 
@@ -88,6 +91,9 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Rust foi validado por compilação/clippy/testes, não por diagnósticos LSP.
 - Formatar ferramentas Python com `uv run ruff format ../tools/...` dentro de `py/`:
   a configuração usada por `ci/verify.sh` difere da descoberta ao rodar na raiz.
+- Revisores paralelos não executaram a revisão: backend retornou
+  `Named models unavailable: Free plans can only use Auto`. Revisão feita
+  diretamente; não atribuir resultados aos jobs falhos.
 
 ## Diário (apenas acrescentar)
 
@@ -172,3 +178,18 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   limpa exportada do conteúdo staged; run completo terminou com `VERIFY_OK`.
   Alterações locais de fuzz e logs ficaram fora dessa árvore e do commit.
   Sem push nem nova verificação remota. Próximo passo permanece 0.7.
+
+- **2026-10-04** — Revisadas primitivas canon/crypto/core/CAS e suas fronteiras
+  contra spec/ADRs; sem bug novo identificado no recorte. Implementada 0.7:
+  plano, threat-model (8 atacantes/18 ameaças), guarantees (G1–G3 condicionais
+  com premissas/TCB/estado), limits (L1–L3 e ameaças fundamentais/TOCTOU).
+  Apêndice B explicita que mitigação futura não resolve limites fundamentais;
+  três critérios documentais demonstrados por revisão e `DOCS_0_7_OK`.
+  `ci/verify.sh --selftest` terminou com `VERIFY_OK`, incluindo `CORE_SMOKE_OK`;
+  Python: 104 testes + 7 da TCB passaram. `cargo deny` emitiu dois avisos
+  `license-not-encountered`, sem falha. Smoke Rust temporário com arquivos reais:
+  canon estrito, separação de assinatura, latch/enums públicos e CAS com
+  reabertura, corrupção e excesso passaram (`REVIEW_SMOKE_OK`); temporários removidos.
+  Dois jobs de revisão falharam por modelo indisponível; revisão direta substituiu
+  a investigação, sem substituir modelo. Alterações locais em fuzz/logs preservadas;
+  sem push/CI remota/novo fuzz nesta sessão. Próximo passo: 1.1.

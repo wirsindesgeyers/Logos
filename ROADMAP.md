@@ -408,9 +408,15 @@ Definition of Done global ainda depende de CI remota e ≥ 1 h de fuzz noturno d
 - `docs/limits.md`: L1, L2, L3, as ameaças fundamentais (§10: 1, 2, 3, 13, 16) e a parcialmente fundamental (§10: 10, TOCTOU para fatos sem versão atômica e fatos do mundo físico, tabela da §6).
 
 **Critério de conclusão.**
-- [ ] Os três documentos existem e cada garantia lista explicitamente sua TCB.
-- [ ] Cada ameaça da tabela da §10 aparece no Apêndice B deste roadmap com a etapa que a mitiga (ou "fundamental — só declarada").
-- [ ] Cada atacante de `threat-model.md` aponta para ao menos uma ameaça da §10, e cada ameaça aponta para ao menos um atacante.
+- [x] Os três documentos existem e cada garantia lista explicitamente sua TCB.
+- [x] Cada ameaça da tabela da §10 aparece no Apêndice B deste roadmap com a etapa que a mitiga (ou "fundamental — só declarada").
+- [x] Cada atacante de `threat-model.md` aponta para ao menos uma ameaça da §10, e cada ameaça aponta para ao menos um atacante.
+
+Evidência local (2026-10-04): [plano 0.7](docs/plans/etapa-0.7.md) §4/§7,
+script `DOCS_0_7_OK` (18 ameaças, 8 atacantes, G1–G3, L1–L3 e links).
+Documentação distingue contratos projetados de primitivas implementadas.
+`ci/verify.sh --selftest` terminou com `VERIFY_OK`; pendências remotas 0.1–0.6
+não são encerradas por estes critérios documentais.
 
 ---
 
@@ -2650,26 +2656,31 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 
 ## Apêndice B — Matriz de ameaças → etapas
 
-Numeração da tabela da §10.
+Numeração da tabela da §10. Rastreabilidade bidirecional em
+[`docs/threat-model.md`](docs/threat-model.md), contratos condicionais em
+[`docs/guarantees.md`](docs/guarantees.md) e limites em
+[`docs/limits.md`](docs/limits.md). “Mitigada em” indica a etapa responsável,
+não que a mitigação já exista ou elimine limites fundamentais: nesses casos,
+as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 
 | # | Ameaça | Natureza | Mitigada em | Declarada em |
 | --- | --- | --- | --- | --- |
-| 1 | Formalização infiel | Fundamental | 9.1, 9.3, 15.1–15.6 | 0.7, 11.10 |
-| 2 | Atestador comprometido | Fundamental | 6.2, 6.4 | 0.7 |
-| 3 | Política errada | Fundamental | 7.6 | 0.7 |
+| 1 | Formalização infiel | Fundamental | 9.1, 9.3, 15.1–15.6 | 0.7 (fundamental — só declarada), 11.10 |
+| 2 | Atestador comprometido | Fundamental | 6.2, 6.4 | 0.7 (fundamental — só declarada) |
+| 3 | Política errada | Fundamental | 7.6 | 0.7 (fundamental — só declarada) |
 | 4 | Premissas inconsistentes | Engenharia | 5.5, 14.6 | — |
 | 5 | Agente escreve obrigação | Engenharia | 1.5, 1.6, 5.3 | — |
 | 6 | Bug em encoder/grounder | Engenharia | 4.2, 4.3, 13.3, 22.2 | — |
 | 7 | Bug em checker | Engenharia | 4.4, 4.5, 5.10, 14.5, 20.2 | — |
 | 8 | Chave do kernel comprometida | Engenharia | 13.1, 8.3 (vida curta) | — |
 | 9 | Ledger bifurcado | Engenharia | 13.2 | 0.7 (atacante) |
-| 10 | TOCTOU | Parcialmente fundamental | 8.5 | 0.7, 8.3 (`unprotected_pre`) |
+| 10 | TOCTOU | Parcialmente fundamental | 8.5 (recursos com versão atômica) | 0.7 (sem versão atômica/fatos físicos), 8.3 (`unprotected_pre`) |
 | 11 | Replay/roubo de token | Engenharia | 8.3, 8.4 | — |
 | 12 | Decomposição | Engenharia | 7.5, 11.6 | — |
-| 13 | Injeção escolhendo entre ações permitidas | Fundamental | 6.6, 9.2, 11.1, 11.2 | 0.7, 11.10 |
+| 13 | Injeção escolhendo entre ações permitidas | Fundamental | 6.6, 9.2, 11.1, 11.2 | 0.7 (fundamental — só declarada), 11.10 |
 | 14 | Enfraquecimento até trivialidade | Engenharia/avaliação | 10.5 (`Weakened`), 16.2 | — |
 | 15 | Excesso de `UNKNOWN` | Engenharia | 8.7, 10.8 | — |
-| 16 | Confiança excessiva no selo | Fundamental | 15.1, 16.3 | 0.7 |
+| 16 | Confiança excessiva no selo | Fundamental | 15.1, 16.3 | 0.7 (fundamental — só declarada) |
 | 17 | Certificados gigantes | Engenharia | 0.5 (`TooLarge`), 0.6 (`Unknown(Size)`), 17.3 | — |
 | 18 | Check dependente de máquina | Engenharia | 0.6 (passos determinísticos) | — |
 
