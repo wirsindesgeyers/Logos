@@ -62,7 +62,7 @@ a derivabilidade formal; são necessários para atribuir significado à conclus�
 transporte e serviços disponíveis. Podem não fornecer proposta/prova útil;
 não lhes é permitido transformar ausência de prova em aceite.
 
-**Estado.** Primitivas 0.3–0.6 implementadas; ledger de eventos, kernel,
+**Estado.** Primitivas 0.3–0.6 e sintaxe AIR 1.1 implementadas; ledger de eventos, kernel,
 checkers lógicos e emissão/execução de tokens ainda não. G1 será exercitada nos
 marcos 5.12/8.9; prova formal nas etapas 12.1–12.4. Nenhuma evidência atual
 comprova mediação completa.
@@ -175,6 +175,7 @@ influenciar qual ação permitida é escolhida (ameaça fundamental 13).
 | `logos-crypto` | Hash com domínio, assinatura Ed25519 estrita, FileSigner; não atesta verdade, não é HSM, ES256 está reservado e não implementado |
 | CAS em `logos-ledger` | Endereço/integridade/limite por objeto e publicação tmp+rename/fsync sob premissas locais; não é ledger assinado, anti-fork ou prova experimental de power loss |
 | `logos-core` | Tipos e latch de exaustão de passos; consumidor deve cobrar antes do trabalho; `mem_bytes`/`size_bytes` não monitoram RSS; sem supervisor de tempo nesta etapa |
+| `logos-air`, air/v1 | Sorts/assinaturas e sintaxe FOL-ms-eq/v1 prefixa com De Bruijn e limites agregados; não é vocabulário, sort-check, prova nem credencial; decoder canon ainda materializa Value |
 
 [ADR 0005](adr/0005-escolhas-do-cas.md) fixa filesystem local Unix e ancestrais
 confiáveis. [ADR 0006](adr/0006-veredictos-e-orcamentos.md) fixa a fronteira dos

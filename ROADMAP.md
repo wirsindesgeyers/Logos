@@ -424,6 +424,8 @@ não são encerradas por estes critérios documentais.
 
 Objetivo da fase: o kernel consegue receber uma proposta, checar que ela é bem formada, e produzir `O = canon(Γ ⊢ φ)` e `h(O)` de forma determinística. AIR (*Argument Intermediate Representation*) é a linguagem formal do LOGOS.
 
+Roteiro de fase em [`docs/plans/fase-1.md`](docs/plans/fase-1.md).
+
 ### Etapa 1.1 — Sintaxe abstrata da lógica · `M` · ⚠ TCB
 
 **Depende de (recebe pronto).** 0.3 — `Canon`; 0.4 — `Hash<Formula>`.
@@ -441,9 +443,16 @@ Objetivo da fase: o kernel consegue receber uma proposta, checar que ela é bem 
 - Limites estruturais: profundidade máxima, número de nós (configurável; rejeita acima).
 
 **Critério de conclusão.**
-- [ ] `∀x.P(x)` e `∀y.P(y)` têm a mesma codificação canônica e o mesmo hash.
-- [ ] Fórmula com profundidade acima do limite é rejeitada sem estourar a pilha (teste com profundidade 10⁶).
-- [ ] Codificação canônica de fórmulas especificada em `spec/air.md` com vetores.
+- [x] `∀x.P(x)` e `∀y.P(y)` têm a mesma codificação canônica e o mesmo hash.
+- [x] Fórmula com profundidade acima do limite é rejeitada sem estourar a pilha (teste com profundidade 10⁶).
+- [x] Codificação canônica de fórmulas especificada em `spec/air.md` com vetores.
+
+Evidência local (2026-10-04): [plano 1.1](docs/plans/etapa-1.1.md) §7,
+ADR 0007, 11 testes (inclui 10⁶ records/bytes planos em stack de 64 KiB),
+168 vetores independentes e `AIR_SMOKE_OK`. Quatro mutantes mortos/restaurados;
+fuzz `air_decode`: 182529 execuções em 61 s sem crash.
+`ci/verify.sh --selftest` terminou com `VERIFY_OK`. **Pendente:** observar CI
+e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 
 ---
 

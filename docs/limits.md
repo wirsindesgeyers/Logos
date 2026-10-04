@@ -99,3 +99,15 @@ não as torna protegidas. Contrato errado da ferramenta permanece risco de L1.
 - Testes locais, fuzz curto e código sem `unsafe` próprio não são prova formal,
   evidência de execução ARM ou job noturno. Pendências remotas permanecem no
   [STATUS](../STATUS.md); documentação não as fecha.
+
+## Sintaxe AIR implementada (Etapa 1.1)
+
+[air/v1](../spec/air.md) valida árvore prefixa e limites lógicos agregados.
+Sintaxe mal sortada, variáveis livres e assinaturas incongruentes permanecem
+representáveis até o sort-check da 1.3. Igualdade de bytes/hash não é equivalência
+lógica nem prova de verdade. Nomes de binders não participam da identidade.
+
+Prefixo plano evita recursão proporcional à profundidade lógica na construção e
+no descarte. O decoder canônico ainda materializa Value antes de converter a AST;
+limites de nós/profundidade não limitam bytes de strings/assinaturas nem RSS.
+Consumidor continua responsável por teto de frame/CAS e orçamento de execução.

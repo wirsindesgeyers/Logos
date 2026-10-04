@@ -171,6 +171,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "logos-air"
+version = "0.0.0"
+dependencies = [
+ "logos-canon",
+ "logos-crypto",
+]
+
+[[package]]
 name = "logos-canon"
 version = "0.0.0"
 dependencies = [
@@ -198,6 +206,7 @@ name = "logos-fuzz"
 version = "0.0.0"
 dependencies = [
  "libfuzzer-sys",
+ "logos-air",
  "logos-canon",
  "logos-core",
  "logos-crypto",

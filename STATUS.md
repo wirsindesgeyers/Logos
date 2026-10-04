@@ -8,11 +8,12 @@
 ## Resumo
 
 Fase 0 (Fundação): **7 de 7 etapas implementadas e verificadas localmente** (0.1–0.7).
-Há código real em `logos-canon`, `logos-crypto`, `logos-core` e no CAS de `logos-ledger`;
-os outros crates continuam esqueletos. Novos jobs da CI ainda não foram observados.
-Verificação local completa desta sessão: `ci/verify.sh --selftest` terminou com
-`VERIFY_OK` na árvore de trabalho; smoke público do core e smoke temporário das
-primitivas passaram. Etapa 0.7 é documentação, não implementação do kernel/gateway.
+Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air` e no CAS
+de `logos-ledger`; os demais crates continuam esqueletos. **Etapa 1.1 demonstrada
+localmente**, CI/fuzz noturno pendentes. Nenhum kernel/gateway implementado.
+`ci/verify.sh --selftest` desta sessão terminou com `VERIFY_OK`; smokes públicos
+core/AIR passaram, assim como 11 testes AIR, 168 vetores, milhão de nós em
+stack de 64 KiB e quatro controles de mutação. Fuzz AIR: 182529 execuções/61 s.
 
 ## Etapas da Fase 0
 
@@ -26,7 +27,18 @@ primitivas passaram. Etapa 0.7 é documentação, não implementação do kernel
 | 0.6 `logos-core` (veredictos/orçamentos) | ⚠ implementada, falta CI nativa S3 | 21 testes + 7 fixtures compile-fail e controle positivo; 126 vetores independentes, smoke real e 11 mutantes mortos; fuzz `core_decode`: 224269 execuções em 61 s sem crash. ADR 0006, `spec/core.md` e [`plano`](docs/plans/etapa-0.6.md) §7. **Falta:** observar 1000 execuções por caso em x86_64/aarch64 na CI e confirmar flags crypto em ARM. |
 | 0.7 Ameaças e escopo (docs) | ✅ concluída localmente | Três documentos + plano; script reproduzível `DOCS_0_7_OK`: 18 ameaças, 8 atacantes com referências recíprocas, G1–G3 com premissas/TCB/estado, L1–L3 e links locais. Apêndice B distingue mitigação projetada de limite fundamental. Sem nova mitigação/modelo formal. |
 
-Fases 1–23: não iniciadas.
+## Etapas da Fase 1
+
+| Etapa | Estado | Evidência / pendência |
+| --- | --- | --- |
+| 1.1 Sintaxe abstrata `FOL-ms-eq/v1` | ⚠ implementada, falta CI/fuzz noturno | Prefixo plano/De Bruijn, limites agregados, air/v1, hash Formula; 11 testes, 168 vetores independentes, `AIR_SMOKE_OK`, 4 mutantes mortos, fuzz 182529/61 s sem crash. [Plano](docs/plans/etapa-1.1.md) §7 e ADR 0007. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
+| 1.2 Vocabulário versionado com grounding | ⏳ não iniciada | Próximo passo; depende da sintaxe 1.1 pronta. |
+| 1.3 Sort-checker | ⏳ não iniciada | Depende de 1.1–1.2. |
+| 1.4 Sintaxe de superfície/parser | ⏳ não iniciada | Depende de 1.1–1.3; fora da TCB. |
+| 1.5 Gerador de obrigações | ⏳ não iniciada | Depende de 1.1–1.3; LedgerView abstrato nesta etapa. |
+| 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
+
+Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -38,7 +50,8 @@ Fases 1–23: não iniciadas.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
-   Alvo `core_decode` da 0.6 também integrado ao smoke/noturno; log local não prova CI.
+   Alvos `core_decode` (0.6) e `air_decode` (1.1) também integrados ao smoke/noturno;
+   logs locais não provam CI nem ≥ 1 h. Smoke AIR nativo ARM ainda não observado.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -46,37 +59,39 @@ Fases 1–23: não iniciadas.
 5. Arquivar relatório JSON por commit em `tcb/history/` (entregável da 0.2): diretório
    encontrado vazio na revisão de 2026-10-02; ferramentas existem, artefato versionado falta.
 
-## Próximo passo: Etapa 1.1 — sintaxe abstrata da lógica (`M`, TCB)
+## Próximo passo: Etapa 1.2 — vocabulário versionado com grounding (`M`, TCB)
 
-Criar `docs/plans/etapa-1.1.md` no formato do ROADMAP §0 e implementar
-`FOL-ms-eq/v1` em `logos-air`, conforme Etapa 1.1: `Sort`, `Symbol`, `Term`,
-`Formula`, variáveis De Bruijn, `LogicId`, limites estruturais de profundidade/nós
-e codificação em `spec/air.md` com vetores. `logos-air` ainda é esqueleto, mas já
-consta no manifesto. Dependências prontas: canon/v1 (0.3), `Domain`/`Hash<T>` e
-tag reservada `logos/formula/v1` (0.4); documentação de fronteiras 0.7 disponível.
+Criar `docs/plans/etapa-1.2.md` no formato do ROADMAP §0 e implementar em
+`logos-air`: Vocabulary versionado, SortDecl/SymbolDecl, h(V), grounding
+Defined/Anchored/Glossed, gloss_pt e compatibilidade de extensão aditiva.
+Dependências prontas: Sort/Symbol/Term/Formula/LogicId da 1.1, canon/v1 e hashes
+tipados. [Spec AIR](spec/air.md), ADR 0007 e limites do prefixo plano disponíveis.
 
-Critérios: alfa-equivalência gera bytes/hash idênticos, profundidade 10⁶ é recusada
-sem estourar pilha, formato normativo com vetores. Não incluir vocabulário (1.2),
-sort-check (1.3), parser textual (1.4), `Says` (6.6) nem lógicas não clássicas.
-Novo decoder requer fuzz target/manifesto; formato novo e decisões técnicas
-requerem spec/vetores e ADR conforme regras do projeto.
+Critérios: recusar definições circulares (incluindo A↔B/B↔A), extensão aditiva
+compatível, mudança de gloss/definição incompatível, vetores fixos de h(V).
+Não incluir sort-check (1.3), parser textual (1.4), fechamento de domínio por
+fatos (6.3), invalidação por troca de vocabulário (15.7) nem tradução de versões.
+`domain_source` é referência opaca FactRef|PolicyRef nesta etapa; Anchored guarda
+AttestorId/procedure, não implementa atestação. Definir essas referências no
+plano/ADR sem antecipar os respectivos subsistemas.
 
-Decisões para o plano/ADR: representação/identidade de sorts e símbolos,
-codificação de binders/LogicId e cobrança de limites configuráveis.
-Risco principal: rejeição de profundidade deve cobrir construção, percurso,
-codificação e descarte de entrada adversarial sem recursão descontrolada.
-Não atribuir autoridade a tipos públicos nem assumir fidelidade pela canonicidade.
+Decisões para o plano/ADR: representação de versão/referências/grounding,
+formato e tag h(V), identidade e duplicatas das declarações, definição exata
+de compatibilidade e extração do grafo de dependências do prefixo plano.
+Riscos: igualdade de bytes não prova grounding/fidelidade; não esconder ciclo
+por ordem das declarações nem aceitar redefinição como extensão aditiva.
+Novo formato exige spec/vetores, decoder exige fuzz/manifesto, sem novas
+dependências TCB externas sem ADR/allowlist.
 
-Pendências remotas 0.1–0.6 e histórico JSON da 0.2 permanecem separados;
-documentação 0.7 não os fecha. Revisão direta desta sessão cobriu decoder/valores
-canon Rust e referência Python, domínios/assinatura/FileSigner, medidor/veredictos/
-codificação core e publicação/leitura CAS. Nenhum bug novo identificado nesse
-recorte; não é auditoria exaustiva nem prova formal.
+Pendências remotas 0.1–1.1 e histórico JSON 0.2 permanecem separados; implementações
+locais não os fecham. Revisão/compilação/testes desta sessão cobriram sintaxe,
+codec, limites, vetores e fronteiras documentais AIR; não é auditoria exaustiva
+nem prova formal. Vocabulário/sort-check/semântica ainda não implementados.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB (execução):** 2736 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 0.6; inclui testes em `src/`.
+- **Tamanho da TCB de correção (execução):** 3424 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), medição local após 1.1; logos-air: 690 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -193,3 +208,17 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Dois jobs de revisão falharam por modelo indisponível; revisão direta substituiu
   a investigação, sem substituir modelo. Alterações locais em fuzz/logs preservadas;
   sem push/CI remota/novo fuzz nesta sessão. Próximo passo: 1.1.
+
+- **2026-10-04** — Etapa 1.1 implementada: Sort/Symbol/Term/Formula/LogicId
+  `FOL-ms-eq/v1`, De Bruijn, AST de prefixo plano e limites estruturais agregados.
+  ADR 0007, spec air/v1, plano de etapa/fase, 168 vetores stdlib independentes,
+  exemplo público, target air_decode e integração de CI/manifesto/documentação.
+  11 testes AIR passaram; ∀x.P(x)/∀y.P(y) com bytes/hash idênticos e milhões de
+  records/bytes recusados em stack de 64 KiB. Quatro mutantes mortos por
+  asserções, restaurados antes de `ci/verify.sh --selftest`: `VERIFY_OK`,
+  `CORE_SMOKE_OK`/`AIR_SMOKE_OK`, 104 testes Python + 7 TCB.
+  Fuzz oficial nightly-2026-09-28: 182529 execuções em 61 s sem crash.
+  Clippy/mypy/ruff iniciais corrigidos; dois avisos de licenças não encontradas
+  em cargo deny, sem erro. TCB de correção: 3424 LOC próprios/78287 runtime
+  (+51581 build-only); sem dependência externa nova. CI remota/ARM e ≥1 h
+  noturna ainda não observados; sem push. Próximo passo: 1.2.
