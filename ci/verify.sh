@@ -19,7 +19,7 @@ cargo audit
   uv run ruff check . ../tcb ../tools
   uv run ruff format --check . ../tcb ../tools
   uv run mypy
-  uv run mypy --strict ../tcb/tcb.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py
+  uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py
   uv run python ../tools/gen_unicode_assigned.py --check
   uv run python ../tools/gen_crypto_vectors.py --check
   uv run python ../tools/gen_cas_vectors.py --check

@@ -7,20 +7,25 @@
 
 ## Resumo
 
-Fase 0 (Fundação): **7 de 7 etapas implementadas e verificadas localmente** (0.1–0.7).
+Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air` e no CAS
 de `logos-ledger`; os demais crates continuam esqueletos. **Etapa 1.1 demonstrada
 localmente**, CI/fuzz noturno pendentes. Nenhum kernel/gateway implementado.
-`ci/verify.sh --selftest` desta sessão terminou com `VERIFY_OK`; smokes públicos
+Verificação completa da implementação 1.1: `ci/verify.sh --selftest` terminou com `VERIFY_OK`;
 core/AIR passaram, assim como 11 testes AIR, 168 vetores, milhão de nós em
 stack de 64 KiB e quatro controles de mutação. Fuzz AIR: 182529 execuções/61 s.
+Os dois P2 da revisão foram corrigidos: guard reconhece atributos reais do
+preâmbulo; medidor inclui closure workspace sem duplicar raízes e classifica
+runtime/build por propriedade. `ci/verify.sh --selftest`: `VERIFY_OK`, 104
+testes Python + 25 da TCB; CLI da fixture real confirmou próprio=3, deps=1,
+total=4. Snapshot limpo da TCB do commit `a568d1e` arquivado. Sem CI remota/push.
 
 ## Etapas da Fase 0
 
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
-| 0.1 Repositório, workspace e CI | ⚠ concluída, falta confirmar na CI | Build/clippy/testes/deny/audit locais passam; selftest cobre regras da TCB e independência direta/transitiva do auditor, incluindo ponte externa opcional com aliases e controle permitido. **Falta:** ver `ci.yml` verde no GitHub e os PRs de teste bloqueados de verdade. |
-| 0.2 Manifesto e contagem da TCB | ⚠ concluída, falta confirmar na CI | `cargo xtask tcb check/report` funcionam; diff e comentário de PR escritos mas **nunca executados num PR real**. |
+| 0.1 Repositório, workspace e CI | ⚠ implementada, falta CI remota | Guard corrigido: comentários, literais, nested attrs e cfg_attr não contam como lints do crate. Selftest real bloqueou forbid/deny comentados e unwrap pelo diagnóstico correto; `ci/verify.sh --selftest` passou. **Falta:** ver `ci.yml` verde e PRs deliberados bloqueados na CI. |
+| 0.2 Manifesto e contagem da TCB | ⚠ implementada, falta comentário em PR real | Closure inclui workspace fora das raízes da propriedade; roots não duplicam; dev excluído, build/proc-macro separado e uso runtime/build local por propriedade. Regressões Cargo/tokei reais e smoke CLI 3+1=4 passaram. Snapshot limpo `a568d1e` em `tcb/history/`. **Falta:** observar diff/comentário no PR e manter snapshots dos commits seguintes. |
 | 0.3 `logos-canon` (canon/v1) | ⚠ concluída, falta 1 h de fuzz | 28 testes unitários + propriedades + 77 vetores + diferencial Rust×Python (100k/direção) passam; 7 mutantes do decoder pegos. Fuzz local: 1,3 M (`canon_decode`) e 0,8 M (`canon_text`) execuções sem crash. **Falta:** ≥ 1 h por alvo no job noturno (`fuzz.yml`). |
 | 0.4 `logos-crypto` | ⚠ concluída, falta 1 h de fuzz na CI | 36 testes (RFC 8032, vetores independentes de hash/KeyId/assinatura gerados com `hashlib`/`cryptography`, separação de domínios, chaves fracas, maleabilidade, arquivo de chave 0600/symlink) + 2 doctests `compile_fail,E0308`; 13 mutantes, todos mortos (inclui `verify` frouxo × estrito e `open` sem `O_NOFOLLOW`/`O_NONBLOCK`); fuzz local 0,5 M (`crypto_decode`) e 3,7 M (`crypto_keyfile`) execuções sem crash. **Falta:** ≥ 1 h por alvo na CI e confirmar `O_NOFOLLOW` do aarch64. |
 | 0.5 CAS | ⚠ implementada, falta CI/fuzz noturno | 17 testes (6 unitários + 10 públicos + 1 de vetores), smoke real e 6 mutantes mortos; 3 endereços reproduzidos só por `spec/cas.md` + `hashlib`; fuzz final `cas_domain`: 798945 execuções em 61 s sem crash. **Falta:** CI e ≥ 1 h no job noturno. ADR 0005, `spec/cas.md` e [`plano`](docs/plans/etapa-0.5.md) §7. |
@@ -56,10 +61,54 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
    ainda depende de observar o job remoto.
-5. Arquivar relatório JSON por commit em `tcb/history/` (entregável da 0.2): diretório
-   encontrado vazio na revisão de 2026-10-02; ferramentas existem, artefato versionado falta.
+5. Snapshot JSON limpo de `a568d1e` arquivado em
+   [`tcb/history/a568d1e06eb8f2aee6b4b897f24caf038d3508c6.json`](tcb/history/a568d1e06eb8f2aee6b4b897f24caf038d3508c6.json).
+   Foi medido pelo contador corrigido num worktree isolado (dirty=false):
+   correção 3424 LOC próprios + 78287 runtime, 51581 só compilação.
+   Manter snapshots por commit; commits históricos anteriores não foram reconstituídos.
+
+## Achados da revisão — 2026-10-04 (corrigidos localmente)
+
+Evidências abaixo descrevem `a568d1e` **antes** da correção. Agora o guard
+descarta comentários/literais e módulos internos; a closure subtrai somente
+raízes da propriedade. Também corrigida consolidação runtime/build que
+classificava build-only como runtime em outra propriedade. Formatos e código
+Rust da TCB não mudaram; regressões usam Cargo/tokei reais, sem mocks.
+
+1. **P2 — atributo de lint comentado aceito.** `ci/check-tcb-lints.sh:14` procura
+   texto sem distinguir comentário de atributo ativo. Fixture com apenas
+   `// #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]` e
+   `pub fn unchecked(value: Option<u8>) -> u8 { value.unwrap() }` passou no
+   guard **e** em `cargo clippy --workspace --all-targets -- -D warnings`
+   (ambos exit 0). Controle com atributo ativo: Clippy exit 101,
+   diagnóstico `clippy::unwrap_used`. A proteção anunciada pode desaparecer
+   sem o guard perceber. Não é vulnerabilidade runtime encontrada nos crates atuais.
+2. **P2 — dependência workspace omitida do medidor.** `tcb/tcb.py:191` exclui
+   todos os membros do workspace do resultado transitivo, enquanto LOC próprio
+   usa só crates declarados para a propriedade. Fixture real com logos-canon
+   chamando logos-cli, dependência normal (`kind=None`), passou no manifesto,
+   guard e Clippy; relatório de correção retornou próprio/total=3, deps=0,
+   ignorando 1 LOC Rust da dependência. Não houve mock de cargo metadata/tokei.
+   Deve contabilizar a closure workspace por propriedade, ou recusar closure
+   que não esteja declarada na TCB; nunca excluir silenciosamente.
+
+Quatro revisores cobriram canon Rust/Python, crypto/CAS, core e AIR com specs,
+testes/vetores e fronteiras: nenhum bug runtime acionável identificado nesse
+recorte. Revisão estática não é prova formal nem auditoria exaustiva.
+Smokes executados: `CORE_SMOKE_OK`, `AIR_SMOKE_OK` e programa temporário com
+NFC/minimalidade CBOR, limites AIR entre irmãos/termos, arquivo de chave real,
+assinatura/domínio/mensagem, permissões/symlink, CAS reaberto/corrompido/reparado
+e stream acima do limite. Dependências externas do smoke conferidas contra
+Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
+symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
+run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
+
 
 ## Próximo passo: Etapa 1.2 — vocabulário versionado com grounding (`M`, TCB)
+
+Os controles 0.1/0.2 estão corrigidos e verificados localmente; nenhuma
+alteração de formatos nem implementação de etapas futuras entrou nesta correção.
+
 
 Criar `docs/plans/etapa-1.2.md` no formato do ROADMAP §0 e implementar em
 `logos-air`: Vocabulary versionado, SortDecl/SymbolDecl, h(V), grounding
@@ -83,10 +132,10 @@ por ordem das declarações nem aceitar redefinição como extensão aditiva.
 Novo formato exige spec/vetores, decoder exige fuzz/manifesto, sem novas
 dependências TCB externas sem ADR/allowlist.
 
-Pendências remotas 0.1–1.1 e histórico JSON 0.2 permanecem separados; implementações
-locais não os fecham. Revisão/compilação/testes desta sessão cobriram sintaxe,
-codec, limites, vetores e fronteiras documentais AIR; não é auditoria exaustiva
-nem prova formal. Vocabulário/sort-check/semântica ainda não implementados.
+Pendências remotas 0.1–1.1 permanecem separadas; execução local não fecha CI,
+ARM ou fuzz longo. Histórico JSON começou pelo snapshot limpo de 1.1.
+Regressões e smoke desta correção cobrem guard/contagem, não auditoria
+exaustiva ou prova formal. Vocabulário/sort-check/semântica não implementados.
 
 ## Decisões em aberto para o mantenedor
 
@@ -222,3 +271,29 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   em cargo deny, sem erro. TCB de correção: 3424 LOC próprios/78287 runtime
   (+51581 build-only); sem dependência externa nova. CI remota/ARM e ≥1 h
   noturna ainda não observados; sem push. Próximo passo: 1.2.
+
+- **2026-10-04** — Revisão da codebase implementada com quatro revisores
+  (canon, crypto/CAS, core, AIR) e inspeção direta de CI/manifesto/medidor.
+  Dois P2 reproduzidos sem alterar produção: comentário satisfaz guard de
+  deny e permite unwrap fora de testes (guard/Clippy exit 0; controle ativo
+  exit 101); dependência workspace normal fora da propriedade desaparece do
+  relatório transitivo (3 LOC reportados, 1 LOC omitido). Smokes core/AIR e
+  programa temporário com arquivos reais passaram; erro inicial da asserção
+  de symlink corrigido para KeyFileNotRegular, conforme contrato. Nenhum
+  achado runtime novo no recorte; sem full verify/testes/fuzz/CI remota
+  nesta revisão. Temporários removidos, código não corrigido nem commitado.
+  Próximo passo: corrigir guards/medição, depois retomar 1.2.
+
+- **2026-10-04** — Corrigidos os P2 pendentes dos controles 0.1/0.2:
+  scanner do preâmbulo Rust ignora comentários/literais/nested attrs/cfg_attr;
+  closure inclui dependências workspace por propriedade sem duplicar roots.
+  Classificação runtime/build deixou de vazar entre propriedades. CLI real
+  da fixture confirmou own=3/deps=1/total=4; 25 testes TCB + 104 Python e
+  selftest completo passaram (`VERIFY_OK`), incluindo bloqueios de lints
+  comentados e unwrap ativo. Primeiro run parou em E501 de literal na fixture;
+  literal repartido sem alterar os bytes e run completo final passou.
+  Dois avisos cargo-deny de licenças não encontradas, sem falha. Agente do
+  guard falhou com PROHIBITED_CONTENT; correção concluída diretamente.
+  Snapshot limpo de `a568d1e` medido/arquivado; worktree/fixtures removidos.
+  Fuzz e proposta de memória preservados fora da correção; sem push/CI remota.
+  Próximo passo: 1.2.

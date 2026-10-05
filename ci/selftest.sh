@@ -83,7 +83,21 @@ sed -i '/#!\[forbid(unsafe_code)\]/d' crates/logos-canon/src/lib.rs
 expect_blocked "remover forbid(unsafe_code)" 'logos-canon/src/lib.rs não contém #!\[forbid\(unsafe_code\)\]' ci/check-tcb-lints.sh
 
 fresh_copy
-printf '\npub fn violacao() -> u8 { Some(1u8).unwrap() }\n' >> crates/logos-canon/src/lib.rs
+sed -i '/^#!\[forbid(unsafe_code)\]/s/^/\/\/ /' crates/logos-canon/src/lib.rs
+expect_blocked "forbid em comentário não é atributo" 'logos-canon/src/lib.rs não contém #!\[forbid\(unsafe_code\)\]' ci/check-tcb-lints.sh
+
+fresh_copy
+sed -i '/^#!\[deny(/s/^/\/\/ /' crates/logos-canon/src/lib.rs
+printf '\npub fn unchecked(value: Option<u8>) -> u8 { value.unwrap() }\n' >> crates/logos-canon/src/lib.rs
+expect_blocked "deny comentado não protege unwrap" 'logos-canon/src/lib.rs não nega clippy::unwrap_used' ci/check-tcb-lints.sh
+
+fresh_copy
+sed -i '/^#!\[deny(/i /*' crates/logos-canon/src/lib.rs
+sed -i '/^#!\[deny(/a */' crates/logos-canon/src/lib.rs
+expect_blocked "deny dentro de bloco de comentário não é atributo" 'logos-canon/src/lib.rs não nega clippy::unwrap_used' ci/check-tcb-lints.sh
+
+fresh_copy
+printf '\npub fn violacao(value: Option<u8>) -> u8 { value.unwrap() }\n' >> crates/logos-canon/src/lib.rs
 expect_blocked "unwrap() em crate de TCB" 'clippy::unwrap_used|used `unwrap\(\)`' cargo clippy -p logos-canon -- -D warnings
 
 fresh_copy

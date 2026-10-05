@@ -159,8 +159,9 @@ def cargo_metadata() -> Json:
 
 
 def transitive_dependencies(tcb_crates: set[str]) -> list[Json]:
-    """Dependências externas (fora do workspace) alcançáveis a partir de `tcb_crates`.
+    """Dependências transitivas alcançáveis a partir de `tcb_crates` fora das raízes medidas.
 
+    Inclui dependências do workspace fora de `tcb_crates` e dependências externas.
     Cada uma é classificada como ``runtime`` (entra no código que roda) ou ``build`` (só roda na
     compilação: build scripts e macros procedurais). Alcançável por qualquer caminho de execução
     => ``runtime``.
@@ -173,7 +174,8 @@ def transitive_dependencies(tcb_crates: set[str]) -> list[Json]:
     def is_proc_macro(pid: str) -> bool:
         return any("proc-macro" in t["kind"] for t in packages[pid]["targets"])
 
-    stack = [(pid, False) for pid in workspace if packages[pid]["name"] in tcb_crates]
+    root_pids = {pid for pid in workspace if packages[pid]["name"] in tcb_crates}
+    stack = [(pid, False) for pid in root_pids]
     seen: set[tuple[str, bool]] = set()
     while stack:
         pid, build_only = stack.pop()
@@ -188,7 +190,7 @@ def transitive_dependencies(tcb_crates: set[str]) -> list[Json]:
             stack.append((dep["pkg"], build_only or only_build))
     runtime = {pid for pid, b in seen if not b}
     deps: list[Json] = []
-    for pid in sorted({pid for pid, _ in seen} - workspace, key=lambda i: packages[i]["name"]):
+    for pid in sorted({pid for pid, _ in seen} - root_pids, key=lambda i: packages[i]["name"]):
         pkg = packages[pid]
         base = Path(pkg["manifest_path"]).parent
         deps.append(
@@ -210,6 +212,13 @@ def git(*args: str) -> str:
 
 
 def build_report(manifest: Json) -> Json:
+    """Mede a TCB para cada propriedade e gera o relatório consolidado.
+
+    Para cada propriedade, dependências de execução (runtime) entram em ``loc_deps`` e
+    dependências de compilação (build scripts e macros procedurais) entram em
+    ``loc_build_deps``. A classificação é local por propriedade; na lista consolidada de
+    dependências, ``kind`` é ``runtime`` se ao menos uma propriedade a usar em execução.
+    """
     crates = manifest.get("crate", [])
     files = [crate_dir(c["name"]) / f for c in crates for f in c["files"]]
     loc = tokei_rust_loc(files)
@@ -228,19 +237,25 @@ def build_report(manifest: Json) -> Json:
         )
 
     # Cada dependência pertence às propriedades dos crates da TCB que (transitivamente) a usam.
+    # kind é capturado por (propriedade, chave) para que totais por propriedade distingam
+    # execução vs compilação mesmo se outra propriedade usar a dependência em execução.
     dep_props: dict[str, set[str]] = {}
     dep_info: dict[str, Json] = {}
+    prop_dep_kind: dict[tuple[str, str], str] = {}
     for prop in PROPERTIES:
         member_names = {c["name"] for c in crates if prop in c["properties"]}
         for dep in transitive_dependencies(member_names) if member_names else []:
             key = f"{dep['name']} {dep['version']}"
             dep_props.setdefault(key, set()).add(prop)
+            prop_dep_kind[(prop, key)] = dep["kind"]
             if dep_info.get(key, {}).get("kind") != "runtime":
-                dep_info[key] = dep  # runtime vence se algum crate o usa em execução
+                dep_info[key] = dep
     dep_rows: list[Json] = []
+    dep_loc_map: dict[str, int] = {}
     for key in sorted(dep_info):
         dep = dep_info[key]
         dep_loc = sum(tokei_rust_loc(dep["paths"]).values())
+        dep_loc_map[key] = dep_loc
         dep_rows.append(
             {
                 "name": dep["name"],
@@ -256,8 +271,12 @@ def build_report(manifest: Json) -> Json:
         members = [r for r in crate_rows if prop in r["properties"]]
         own = sum(r["loc"] for r in members)
         verified = sum(r["loc"] for r in members if r["verified"] != "none")
-        deps = sum(d["loc"] for d in dep_rows if prop in d["properties"] and d["kind"] == "runtime")
-        build = sum(d["loc"] for d in dep_rows if prop in d["properties"] and d["kind"] == "build")
+        deps = sum(
+            dep_loc_map[key] for key in dep_info if prop_dep_kind.get((prop, key)) == "runtime"
+        )
+        build = sum(
+            dep_loc_map[key] for key in dep_info if prop_dep_kind.get((prop, key)) == "build"
+        )
         total = own + deps
         per_property[prop] = {
             "title": manifest["properties"][prop]["title"],
@@ -277,8 +296,10 @@ def build_report(manifest: Json) -> Json:
         "unit": (
             "linhas de código Rust (tokei), cota superior: inclui #[cfg(test)] em src/ e o src/ "
             "inteiro das dependências (todos os módulos/plataformas do crate). "
-            "Total = próprio + dependências de execução; dependências só de compilação "
-            "(build scripts, macros procedurais) ficam em coluna à parte"
+            "Total por propriedade = próprio + dependências de execução daquela propriedade; "
+            "dependências só de compilação da propriedade (build scripts, macros procedurais) "
+            "ficam em coluna à parte. Na tabela consolidada de dependências, o uso reflete "
+            "execução se alguma propriedade o exigir"
         ),
         "properties": per_property,
         "crates": crate_rows,
@@ -328,7 +349,7 @@ def render_markdown(report: Json) -> str:
                 f"| {d['loc']} |"
             )
     else:
-        lines += ["", "Nenhuma dependência externa na TCB."]
+        lines += ["", "Nenhuma dependência na TCB."]
     for e in report["external"]:
         lines.append(
             f"- binário externo `{e['name']}` sha256 `{e['sha256'][:12]}…` ({e['verified']})"

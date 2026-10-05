@@ -31,10 +31,18 @@ cargo run -p logos-air --example air_smoke   # fixture/hash independentes, limit
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
-ci/selftest.sh   # prova que a CI bloqueia unsafe, unwrap e dependências fora da allowlist
+ci/selftest.sh   # bloqueios reais: unsafe, unwrap, lints comentados e dependências fora da allowlist
 ```
 
 Regras que valem para todo crate de TCB estão na §4 do roadmap. Licença: Apache-2.0 ou MIT, à sua escolha.
+
+O guard de lints lê atributos incondicionais do preâmbulo do crate; comentários,
+literais, atributos de módulo e `cfg_attr` não substituem `forbid`/`deny`.
+Rustc e Clippy continuam responsáveis pela validade e pelo enforcement.
+A contagem segue a closure Cargo de cada propriedade, incluindo dependências
+workspace fora das raízes declaradas, sem duplicar raízes já contadas como próprias.
+Uso runtime/build é calculado por propriedade; a tabela consolidada marca runtime
+se alguma propriedade o exigir. Snapshots JSON de commits estão em `tcb/history/`.
 
 ## Sintaxe disponível
 

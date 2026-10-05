@@ -1,0 +1,402 @@
+{
+  "format": 1,
+  "commit": "a568d1e06eb8f2aee6b4b897f24caf038d3508c6",
+  "dirty": false,
+  "unit": "linhas de código Rust (tokei), cota superior: inclui #[cfg(test)] em src/ e o src/ inteiro das dependências (todos os módulos/plataformas do crate). Total por propriedade = próprio + dependências de execução daquela propriedade; dependências só de compilação da propriedade (build scripts, macros procedurais) ficam em coluna à parte. Na tabela consolidada de dependências, o uso reflete execução se alguma propriedade o exigir",
+  "properties": {
+    "correctness": {
+      "title": "Correção (soundness)",
+      "crates": [
+        "logos-canon",
+        "logos-crypto",
+        "logos-core",
+        "logos-air",
+        "logos-obligation",
+        "logos-model",
+        "logos-ground",
+        "logos-lrat",
+        "logos-ledger",
+        "logos-policy",
+        "logos-token",
+        "logos-kernel",
+        "logos-gateway"
+      ],
+      "loc_own": 3424,
+      "loc_deps": 78287,
+      "loc_build_deps": 51581,
+      "loc_total": 81711,
+      "loc_verified": 0,
+      "verified_ratio": 0.0
+    },
+    "fidelity": {
+      "title": "Fidelidade",
+      "crates": [
+        "logos-seal",
+        "logos-attest"
+      ],
+      "loc_own": 3,
+      "loc_deps": 0,
+      "loc_build_deps": 0,
+      "loc_total": 3,
+      "loc_verified": 0,
+      "verified_ratio": 0.0
+    },
+    "progress": {
+      "title": "Progresso (liveness)",
+      "crates": [],
+      "loc_own": 0,
+      "loc_deps": 0,
+      "loc_build_deps": 0,
+      "loc_total": 0,
+      "loc_verified": 0,
+      "verified_ratio": 0.0
+    }
+  },
+  "crates": [
+    {
+      "name": "logos-canon",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 7,
+      "loc": 1104
+    },
+    {
+      "name": "logos-crypto",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 5,
+      "loc": 643
+    },
+    {
+      "name": "logos-core",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 5,
+      "loc": 305
+    },
+    {
+      "name": "logos-air",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 5,
+      "loc": 690
+    },
+    {
+      "name": "logos-obligation",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-model",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-ground",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-lrat",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-ledger",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 3,
+      "loc": 666
+    },
+    {
+      "name": "logos-policy",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-token",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-kernel",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-gateway",
+      "properties": [
+        "correctness"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-seal",
+      "properties": [
+        "fidelity"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 2
+    },
+    {
+      "name": "logos-attest",
+      "properties": [
+        "fidelity"
+      ],
+      "verified": "none",
+      "files": 1,
+      "loc": 1
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "block-buffer",
+      "version": "0.10.4",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 309
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.5",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 143
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.2.17",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 402
+    },
+    {
+      "name": "crypto-common",
+      "version": "0.1.7",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 188
+    },
+    {
+      "name": "curve25519-dalek",
+      "version": "4.1.3",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 26084
+    },
+    {
+      "name": "curve25519-dalek-derive",
+      "version": "0.1.1",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 421
+    },
+    {
+      "name": "digest",
+      "version": "0.10.7",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1646
+    },
+    {
+      "name": "ed25519",
+      "version": "2.2.3",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 494
+    },
+    {
+      "name": "ed25519-dalek",
+      "version": "2.2.0",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1458
+    },
+    {
+      "name": "generic-array",
+      "version": "0.14.7",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1421
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 4759
+    },
+    {
+      "name": "quote",
+      "version": "1.0.47",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1547
+    },
+    {
+      "name": "rustc_version",
+      "version": "0.4.1",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 274
+    },
+    {
+      "name": "semver",
+      "version": "1.0.28",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1313
+    },
+    {
+      "name": "sha2",
+      "version": "0.10.9",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 1869
+    },
+    {
+      "name": "signature",
+      "version": "2.2.0",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 228
+    },
+    {
+      "name": "subtle",
+      "version": "2.6.1",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 455
+    },
+    {
+      "name": "syn",
+      "version": "2.0.119",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 41996
+    },
+    {
+      "name": "tinyvec",
+      "version": "1.13.3",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 3695
+    },
+    {
+      "name": "typenum",
+      "version": "1.20.1",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 16028
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.26",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 694
+    },
+    {
+      "name": "unicode-normalization",
+      "version": "0.1.24",
+      "kind": "runtime",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 23867
+    },
+    {
+      "name": "version_check",
+      "version": "0.9.5",
+      "kind": "build",
+      "properties": [
+        "correctness"
+      ],
+      "loc": 577
+    }
+  ],
+  "external": []
+}
