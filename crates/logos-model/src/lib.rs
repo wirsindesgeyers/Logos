@@ -5,3 +5,17 @@
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![warn(missing_docs)]
+
+mod codec;
+mod data;
+mod error;
+mod exact_size;
+mod limits;
+mod model;
+mod validate;
+
+pub use data::ModelData;
+pub use error::ModelError;
+pub use limits::ModelLimits;
+pub use model::FiniteModel;

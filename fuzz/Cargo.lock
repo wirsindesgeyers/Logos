@@ -210,6 +210,17 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-model",
+]
+
+[[package]]
+name = "logos-model"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
 ]
 
 [[package]]

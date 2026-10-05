@@ -21,6 +21,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`spec/sort-check.md`](spec/sort-check.md) | Tipagem, escopo De Bruijn, precedência e caminhos de erros |
 | [`spec/air-surface.md`](spec/air-surface.md) | Texto AIR não confiável: gramática, documentos, nomes e debug reversível |
 | [`spec/obligation.md`](spec/obligation.md) | Geração TCB, citações de eventos, snapshot e obligation/v1 só de saída |
+| [`spec/model.md`](spec/model.md) | model/v1: estruturas finitas, funções totais, enumeração e limites |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -37,6 +38,7 @@ cargo run -p logos-air --example sort_check_smoke   # fórmula fechada e erros c
 cargo run -p logos-air-text --example air_text_smoke   # texto → AIR, bytes e reparse
 cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citações, rejeições e h(O)
 cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candidato → O; sem autoridade
+cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/domínio e Unknown(Size)
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
@@ -112,6 +114,14 @@ recusados; objetivo contém AIR canônico, referências têm tipos distintos e t
 Pending; h(V) ainda precisa de resolução confiável. Contrato/schema em
 [`spec/protocol.md`](spec/protocol.md), decisão em
 [`ADR 0013`](docs/adr/0013-protocolo-de-proposta.md).
+
+Etapa 2.1 oferece `logos-model::FiniteModel`: construtor/decoder contextual
+vinculado a Vocabulary real por h(V), domínios finitos, constantes, funções
+densas totais e conjuntos ordenados de tuplas. Defined não recebe tabelas;
+excesso de tamanho é Unknown(Size), nunca modelo truncado. Contrato em
+[`spec/model.md`](spec/model.md), decisão em
+[`ADR 0014`](docs/adr/0014-estruturas-finitas.md). Avaliador e checkers da
+Fase 2 ainda não implementados; estrutura válida não prova refutação.
 
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.

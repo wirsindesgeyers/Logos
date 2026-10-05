@@ -591,8 +591,8 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 - Codificação canônica e limite de tamanho (tabelas grandes = `Unknown(Size)`).
 
 **Critério de conclusão.**
-- [ ] Modelo com função parcial ou valor fora do domínio é rejeitado.
-- [ ] Vetores canônicos em `spec/vectors/model/`.
+- [x] Modelo com função parcial ou valor fora do domínio é rejeitado.
+- [x] Vetores canônicos em `spec/vectors/model/`.
 
 ---
 

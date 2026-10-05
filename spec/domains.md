@@ -47,6 +47,8 @@ mudar o conteúdo de um domínio existente é uma nova versão (`v2`), nunca uma
 Formato `obligation/v1` é definido em [`obligation.md`](obligation.md); usa a
 tag reservada sem rehashear o digest de evento das premissas. Epoch/status não
 fazem parte da codificação de O.
+Formato `model/v1` é definido em [`model.md`](model.md); usa tag reservada,
+h(V) contextual e tabelas totais. Hash de estrutura não prova satisfação de O.
 
 
 ### Digest externo
