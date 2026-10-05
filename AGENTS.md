@@ -52,7 +52,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ```sh
 ci/verify.sh              # fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
                           # manifesto, cargo deny/audit, ruff/mypy/pytest (inclui o diferencial)
-                          # smokes públicos logos-core/logos-air e geradores de vetores --check
+                          # smokes core, AIR, vocabulário e sort-check; geradores de vetores --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 
@@ -68,6 +68,13 @@ Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o 
   `RUSTC_BOOTSTRAP=1`**: ele faz o fuzz rodar na stable e esconde exatamente o erro que a CI teria
   (o `rust-toolchain.toml` da raiz fixa `stable` e vale dentro de `fuzz/`). A meta de ≥ 1 h por alvo
   roda no job noturno.
+- Cobertura de ramos da 1.3: `ci/check-sort-coverage.sh` — runner separado (também
+  no job `sort-coverage`), exige 100% dos ramos LLVM de `src/sort_check.rs`. Instale
+  `cargo install cargo-llvm-cov --version 0.9.1 --locked` e
+  `rustup component add llvm-tools-preview --toolchain nightly-2026-09-28`.
+  `COVERAGE_TOOLCHAIN` permite selecionar outra nightly; o padrão datado mantém
+  a medição reproduzível. Relatório: `target/sort-check-coverage.json`; sem
+  `RUSTC_BOOTSTRAP`. Cobertura instrumentada não é prova formal.
 - Medição da TCB: `cargo xtask tcb report` (LOC próprio + dependências transitivas por propriedade).
 
 ## 5. Git

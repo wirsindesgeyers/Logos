@@ -8,17 +8,17 @@
 ## Resumo
 
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
-Etapas **1.1 e 1.2 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
+Etapas **1.1–1.3 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air` e no CAS
 de `logos-ledger`; os demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
-1.2: Vocabulary imutável, grounding, referências opacas, grafo acíclico,
-extensão/compatibilidade e `vocabulary/v1` com h(V). 39 testes novos, 53 vetores
-independentes, `VOCABULARY_SMOKE_OK`, 4 mutantes mortos; fuzz 236898 execuções/61 s.
-`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), incluindo smokes core/AIR/vocabulário,
-104 testes Python e 25 TCB. Primeiro run parou em dois lints Clippy nos novos
-artefatos; corrigidos. TCB de correção: 4006 LOC próprios, 78287 runtime,
-51581 só compilação; sem dependências externas novas. Snapshot limpo de 1.1
-arquivado; sem CI remota/push. Grounding declarado não prova fidelidade.
+1.3: `check(V, formula)` verifica tipagem/fechamento, com caminhos exatos no
+prefixo e percurso iterativo. 24 testes novos, 2000 fórmulas bem tipadas,
+2270 mutações de entradas rejeitadas, 36/36 ramos LLVM (100%), quatro mutantes
+de implementação mortos e `SORT_CHECK_SMOKE_OK`. Fuzz: 206912 execuções/61 s.
+`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), com todos os smokes, 104 testes
+Python e 25 TCB. TCB correção: 4277 LOC próprios, 78287 runtime, 51581 build-only;
+sem dependências externas TCB nem formatos novos. Snapshot limpo de 1.1
+arquivado; sem CI remota/push. Tipagem e grounding declarado não são prova lógica/fidelidade.
 
 ## Etapas da Fase 0
 
@@ -38,8 +38,8 @@ arquivado; sem CI remota/push. Grounding declarado não prova fidelidade.
 | --- | --- | --- |
 | 1.1 Sintaxe abstrata `FOL-ms-eq/v1` | ⚠ implementada, falta CI/fuzz noturno | Prefixo plano/De Bruijn, limites agregados, air/v1, hash Formula; 11 testes, 168 vetores independentes, `AIR_SMOKE_OK`, 4 mutantes mortos, fuzz 182529/61 s sem crash. [Plano](docs/plans/etapa-1.1.md) §7 e ADR 0007. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
 | 1.2 Vocabulário versionado com grounding | ⚠ implementada, falta CI/fuzz noturno | 39 testes, 53 vetores independentes de h(V), smoke público e 4 mutantes mortos; ciclos por Pred/termos, patches revalidados e compatibilidade direcional. Fuzz 236898/61 s; `ci/verify.sh --selftest`: `VERIFY_OK`. [Plano](docs/plans/etapa-1.2.md) §7, ADR 0009 e `spec/vocabulary.md`. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
-| 1.3 Sort-checker | ⏳ não iniciada | Próximo passo; sintaxe 1.1 e vocabulário 1.2 disponíveis. |
-| 1.4 Sintaxe de superfície/parser | ⏳ não iniciada | Depende de 1.1–1.3; fora da TCB. |
+| 1.3 Sort-checker | ⚠ implementada, falta CI/fuzz noturno | 24 testes, 2000 fórmulas bem tipadas e 2270 mutações de entradas, quatro mutantes mortos, paths e stacks de 64 KiB; LLVM 36/36 ramos, 100%, sem exclusões. Smoke público e `ci/verify.sh --selftest`: `VERIFY_OK`. Fuzz 206912/61 s. [Plano](docs/plans/etapa-1.3.md) §7, ADR 0010 e `spec/sort-check.md`. **Falta:** jobs Rust/sort-coverage remotos, smoke ARM e ≥ 1 h noturna. |
+| 1.4 Sintaxe de superfície/parser | ⏳ não iniciada | Próximo passo; dependências 0.3 e 1.1–1.3 disponíveis. Parser Python/Rust fora da TCB. |
 | 1.5 Gerador de obrigações | ⏳ não iniciada | Depende de 1.1–1.3; LedgerView abstrato nesta etapa. |
 | 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
 
@@ -48,16 +48,16 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
 ## Pendências de verificação (nada disso depende de código novo)
 
 1. `git push` dos commits locais (0.4 etc.) e conferir **Actions**:
-   `ci.yml` (jobs `rust`, `tcb-rules`, `tcb-report`, `supply-chain`, `python`, `selftest`) e
+   `ci.yml` (jobs `rust`, `sort-coverage`, `tcb-rules`, `tcb-report`, `supply-chain`, `python`, `selftest`) e
    `fuzz.yml` (smoke no PR / noturno).
 2. Abrir PRs de teste deliberados e confirmar o bloqueio (`unsafe {}` em crate de TCB; dependência
    fora da allowlist; arquivo de TCB fora do manifesto) e o comentário automático de diff da TCB.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
-   Alvos `core_decode` (0.6), `air_decode` (1.1) e `vocabulary_decode` (1.2)
-   integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário nativos ARM ainda não observados.
+   Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2) e
+   `sort_check` (1.3) integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
+   Smokes AIR/vocabulário/sort-check nativos ARM ainda não observados.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -105,40 +105,40 @@ symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
 
-## Próximo passo: Etapa 1.3 — sort-checker (`P`, TCB)
+## Próximo passo: Etapa 1.4 — sintaxe de superfície e parser (`M`, fora da TCB)
 
-Dependências prontas: Sort/Symbol/Term/Formula/LogicId e prefixo plano da 1.1;
-Vocabulary/SortDecl/SymbolDecl e identidade h(V) da 1.2. Contratos em
-[`spec/air.md`](spec/air.md), [`spec/vocabulary.md`](spec/vocabulary.md) e ADRs
-0007/0009. `Vocabulary::symbols()`/`sorts()` expõem declarações imutáveis;
-`definition_order()` expõe índices Defined com dependências primeiro.
+Dependências prontas: AST/plano prefixo `FOL-ms-eq/v1` da 1.1, Vocabulary
+versionado/grounding da 1.2, `check(&Vocabulary, &Formula)` e SortError/SortPath
+da 1.3, canon/v1 e encoder Python da 0.3. Contratos em `spec/air.md`,
+`spec/vocabulary.md`, `spec/sort-check.md`; ADRs 0007/0009/0010.
 
-Implementar `check(V, formula) -> Result<(), SortError>` em logos-air:
-aridade, sorts dos argumentos, resultado/kind de aplicações, igualdade entre
-termos do mesmo sort, variáveis ligadas e símbolos declarados com assinatura
-exata. Erros incluem caminho até o nó problemático. Sem inferência de sorts
-nem mensagens em português; seguir somente ROADMAP 1.3.
+Criar plano `docs/plans/etapa-1.4.md` e gramática `spec/air-surface.md`.
+Implementar parser Python (`logos_client.air`) e parser Rust em novo crate
+`logos-air-text`, **fora da TCB**, mais pretty-printer canônico → texto para debug.
+Seguir entregáveis/exemplo do ROADMAP 1.4, sem implementar políticas 7.1,
+editor/LSP, obrigações ou kernel. Não mover parsing textual para logos-air.
 
-Critérios: 100% de cobertura de ramos no checker; property test de fórmulas
-bem tipadas que passam e mutações de tipo que falham. Decidir representação
-dos caminhos e tratamento explícito de assinaturas sintaticamente admitidas
-por air/v1 mas inadequadas ao uso; registrar decisão técnica em ADR.
-Percurso iterativo deve respeitar escopo De Bruijn entre irmãos e termos.
+Critérios: property test `parse(print(f)) == f` nos dois parsers; diferencial
+Python × Rust com bytes canônicos idênticos em corpus de 500 fórmulas.
+Decisões do plano/ADR: gramática/precedência, binders nominais → De Bruijn,
+resolução de assinaturas/grounding/version/referências opacas, escaping de
+nomes/glosas e representação Python que preserve integralmente os envelopes.
 
-Riscos: validação de Vocabulary não sort-checa aplicações/corpos nem demonstra
-grounding. Defined guarda corpo (não axioma com própria cabeça); parâmetros
-livres de definições não tornam livres variáveis de fórmulas submetidas a check.
-FactRef/PolicyRef/AttestorId continuam opacos. Não antecipar expansão de
-definições, parser 1.4, obrigações 1.5, atestação ou invalidação 15.7.
+Riscos: pretty-printer precisa representar toda sintaxe suportada sem esconder
+índices/sorts; shadowing/ordem dos argumentos não podem mudar identidade.
+Parser textual é não confiável: byte/hash emitido não prova fidelidade.
+Sort-check não expande Defined nem aceita parâmetros livres como fórmula fechada.
+FactRef/PolicyRef/AttestorId continuam opacos; citações textuais não ganham autoridade.
 
-Pendências remotas 0.1–1.2 separadas: execução local não fecha CI, ARM ou fuzz
-longo. Sem novas dependências externas na 1.2; TCB manifesto inclui os dois
-novos arquivos AIR nas propriedades de correção e fidelidade.
+Pendências remotas 0.1–1.3 separadas: execução local não fecha CI, ARM ou fuzz
+longo. Cobertura local reproduzível: `ci/check-sort-coverage.sh`, cargo-llvm-cov
+0.9.1 + nightly-2026-09-28/llvm-tools-preview; relatório em
+`target/sort-check-coverage.json`. Métrica instrumentada não é prova formal.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 4006 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 1.2; logos-air: 1272 LOC.
+- **Tamanho da TCB de correção (execução):** 4277 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), medição local após 1.3; logos-air: 1547 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -312,3 +312,30 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   4006+78287=82293 LOC; fidelidade 1275+80034=81309; build-only 51581.
   Workspaces de mutação removidos; proposta de memória preexistente preservada,
   fora do commit da implementação. Sem push/CI remota; próximo passo: 1.3.
+
+- **2026-10-05** — Etapa 1.3 implementada: checker iterativo de fórmulas
+  fechadas em logos-air, kind/result/aridades, sorts, igualdade e De Bruijn;
+  erros estruturados com record Formula/posição Term/record Term. Sem expansão
+  de Defined, inferência, formatos novos ou deps externas TCB. ADR 0010,
+  plano/spec, manifesto, smoke público, fuzz e job sort-coverage integrados.
+  24 testes (22 behavior + 2 propriedades), 2000 fórmulas bem tipadas e 2270
+  mutações de entradas rejeitadas; contagens por classe
+  [331,829,312,312,174,312], seed 0x5eedc0de123456a2. LLVM 36/36 ramos (100%),
+  179/182 linhas e 186/192 regiões, sem exclusões; quatro mutantes compilados
+  mortos pelos testes. Fuzz com 17 pares canônicos: 206912 execuções em 61 s.
+  Primeira integração falhou em dois moves E0382 de fixtures; corrigidos.
+  Primeiro full verify falhou em dois collapsible_if das propriedades;
+  corrigidos e `ci/verify.sh --selftest` terminou VERIFY_OK (exit 0), 104 Python
+  + 25 TCB. Dois avisos cargo-deny conhecidos, sem falha. Instalados
+  cargo-llvm-cov 0.9.1/llvm-tools da nightly datada para medição real.
+  Shell comprimiu stdout de --nocapture; contagens observadas por subprocess
+  direto (problema da ferramenta registrado). TCB: correção 4281+78287=82568,
+  fidelidade 1550+80034=81584, build-only 51581. Workspaces temporários removidos;
+  proposta de memória preexistente preservada fora do commit; sem push/CI remota.
+  Nova execução final expôs teste frágil preexistente no CAS (exit 101):
+  ptr::eq de dyn Error compara vtables, cuja identidade não é garantida.
+  Removido apenas esse assert incidental; verificações dos dois erros/diagnóstico
+  mantidas, sem mudar produção. Teste específico passou (exit 0) e nova
+  verificação completa terminou VERIFY_OK, exit 0 observado por subprocess.
+  Medição final após remoção: correção 4277+78287=82564; demais valores iguais.
+  Próximo passo: 1.4.

@@ -56,7 +56,7 @@ name = "logos-air"
 properties = ["correctness", "fidelity"]
 strict = true
 verified = "none"
-files = ["src/codec.rs", "src/error.rs", "src/lib.rs", "src/shape.rs", "src/syntax.rs", "src/vocabulary.rs", "src/vocabulary_codec.rs"]
+files = ["src/codec.rs", "src/error.rs", "src/lib.rs", "src/shape.rs", "src/sort_check.rs", "src/syntax.rs", "src/vocabulary.rs", "src/vocabulary_codec.rs"]
 
 [[crate]]
 name = "logos-obligation"

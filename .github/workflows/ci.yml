@@ -42,6 +42,30 @@ jobs:
         run: cargo run -p logos-air --example air_smoke
       - name: Smoke público do vocabulário
         run: cargo run -p logos-air --example vocabulary_smoke
+      - name: Smoke público do sort-checker
+        run: cargo run -p logos-air --example sort_check_smoke
+
+  sort-coverage:
+    name: Sort-checker (100% dos ramos LLVM)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-09-28
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.9.1
+      - name: Exigir cobertura integral
+        run: ci/check-sort-coverage.sh
+      - name: Arquivar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sort-check-coverage
+          path: target/sort-check-coverage.json
 
   tcb-rules:
     name: Regras da TCB e independência do auditor

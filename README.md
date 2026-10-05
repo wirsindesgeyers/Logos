@@ -18,6 +18,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`docs/adr/`](docs/adr/) | Decisões de arquitetura |
 | [`spec/air.md`](spec/air.md) | Sintaxe FOL-ms-eq/v1: formato canônico, De Bruijn e limites estruturais |
 | [`spec/vocabulary.md`](spec/vocabulary.md) | Vocabulário versionado, grounding, dependências acíclicas e compatibilidade |
+| [`spec/sort-check.md`](spec/sort-check.md) | Tipagem, escopo De Bruijn, precedência e caminhos de erros |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -30,6 +31,8 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 cargo build --workspace && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace
 cargo run -p logos-air --example air_smoke   # fixture/hash independentes, limites e erros
 cargo run -p logos-air --example vocabulary_smoke   # grounding, extensão, codec e ciclos
+cargo run -p logos-air --example sort_check_smoke   # fórmula fechada e erros com path exato
+ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
@@ -62,5 +65,11 @@ não incluem a própria cabeça; dependências também são extraídas dos termo
 Contrato em [`spec/vocabulary.md`](spec/vocabulary.md), decisão em
 [`ADR 0009`](docs/adr/0009-vocabulario-grounding.md).
 
-Grounding é declarado, não demonstrado. Sort-check, kernel e gateway continuam
-sem implementação; estado e pendências em [`STATUS.md`](STATUS.md).
+Etapa 1.3 oferece `check(&vocabulary, &formula) -> Result<(), SortError>`:
+aridade, sorts, kind/resultado, igualdade e variáveis ligadas. Percurso iterativo,
+sem clonar ASTs; erros apontam record de fórmula e posição/nó do termo embutido.
+Contrato em [`spec/sort-check.md`](spec/sort-check.md), decisão em
+[`ADR 0010`](docs/adr/0010-sort-checker.md).
+
+Grounding é declarado, não demonstrado; tipagem não é prova lógica. Parser,
+kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

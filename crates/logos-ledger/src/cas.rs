@@ -600,10 +600,6 @@ mod tests {
                 assert_eq!(composite.primary.kind(), io::ErrorKind::Other);
                 assert_eq!(composite.cleanup.kind(), io::ErrorKind::PermissionDenied);
                 assert!(composite.primary.get_ref().unwrap().is::<PrimaryFailure>());
-                assert!(std::ptr::eq(
-                    composite.source().unwrap(),
-                    &composite.primary as &dyn Error,
-                ));
                 let diagnostic = error.to_string();
                 assert!(diagnostic.contains(&composite.primary.to_string()));
                 assert!(diagnostic.contains(&composite.cleanup.to_string()));

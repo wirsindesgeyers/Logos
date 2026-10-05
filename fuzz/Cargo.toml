@@ -73,6 +73,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "sort_check"
+path = "fuzz_targets/sort_check.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "smoke"
 path = "fuzz_targets/smoke.rs"
 test = false

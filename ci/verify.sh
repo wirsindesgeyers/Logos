@@ -10,6 +10,7 @@ cargo test --workspace
 cargo run -p logos-core --example core_smoke
 cargo run -p logos-air --example air_smoke
 cargo run -p logos-air --example vocabulary_smoke
+cargo run -p logos-air --example sort_check_smoke
 ci/check-tcb-lints.sh
 ci/check-audit-independence.sh
 tcb/count.sh check

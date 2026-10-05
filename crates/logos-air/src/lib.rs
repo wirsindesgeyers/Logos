@@ -2,10 +2,10 @@
 //!
 //! `Term`/`Formula` são validados estruturalmente com limites configuráveis.
 //! Nomes de binders não entram na identidade: variáveis são índices De Bruijn.
-//! `Vocabulary` verifica declarações/ciclos; sort-check ainda não implementado.
+//! `Vocabulary` verifica declarações/ciclos; `check` verifica tipos e variáveis ligadas.
 //!
 //! **TCB** — sem unsafe, unwrap/expect/panic fora de testes.
-//! Formatos normativos: `spec/air.md`, `spec/vocabulary.md`; ADRs 0007 e 0009.
+//! Contratos: `spec/air.md`, `spec/vocabulary.md`, `spec/sort-check.md`; ADRs 0007–0010.
 
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
@@ -13,11 +13,13 @@
 mod codec;
 mod error;
 mod shape;
+mod sort_check;
 mod syntax;
 mod vocabulary;
 mod vocabulary_codec;
 
 pub use error::AirError;
+pub use sort_check::{SortError, SortErrorKind, SortPath, TermPath, TermPosition, check};
 pub use syntax::{
     Formula, FormulaNode, Limits, LogicId, Sort, Symbol, SymbolKind, SymbolResult, Term, TermNode,
 };

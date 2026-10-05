@@ -491,8 +491,8 @@ e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 - Erros com caminho até o nó problemático (para o agente corrigir).
 
 **Critério de conclusão.**
-- [ ] 100% de cobertura de ramos no checker.
-- [ ] Property test: fórmulas geradas aleatoriamente *bem tipadas* sempre passam; mutações que quebram tipo sempre falham.
+- [x] 100% de cobertura de ramos no checker.
+- [x] Property test: fórmulas geradas aleatoriamente *bem tipadas* sempre passam; mutações que quebram tipo sempre falham.
 
 ---
 
