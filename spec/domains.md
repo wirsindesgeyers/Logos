@@ -44,6 +44,10 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 Os domínios acima só são *reservados* na Etapa 0.4: os tipos que os usam nascem nas etapas
 indicadas. Um domínio novo ou uma mudança de tag exige entrada nesta tabela, ADR e novos vetores;
 mudar o conteúdo de um domínio existente é uma nova versão (`v2`), nunca uma edição da `v1`.
+Formato `obligation/v1` é definido em [`obligation.md`](obligation.md); usa a
+tag reservada sem rehashear o digest de evento das premissas. Epoch/status não
+fazem parte da codificação de O.
+
 
 ### Digest externo
 

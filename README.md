@@ -20,6 +20,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`spec/vocabulary.md`](spec/vocabulary.md) | Vocabulário versionado, grounding, dependências acíclicas e compatibilidade |
 | [`spec/sort-check.md`](spec/sort-check.md) | Tipagem, escopo De Bruijn, precedência e caminhos de erros |
 | [`spec/air-surface.md`](spec/air-surface.md) | Texto AIR não confiável: gramática, documentos, nomes e debug reversível |
+| [`spec/obligation.md`](spec/obligation.md) | Geração TCB, citações de eventos, snapshot e obligation/v1 só de saída |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -34,6 +35,7 @@ cargo run -p logos-air --example air_smoke   # fixture/hash independentes, limit
 cargo run -p logos-air --example vocabulary_smoke   # grounding, extensão, codec e ciclos
 cargo run -p logos-air --example sort_check_smoke   # fórmula fechada e erros com path exato
 cargo run -p logos-air-text --example air_text_smoke   # texto → AIR, bytes e reparse
+cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citações, rejeições e h(O)
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
@@ -93,6 +95,15 @@ formula = document.claims[0].formula
 print(canon.encode(formula).hex())  # air/v1, não hash do texto
 print(air.print_document(document))  # metadados explícitos; texto de debug
 ```
+
+Etapa 1.5 oferece `logos-obligation::generate(Proposal, &LedgerView)`: valida
+objetivo/premissas, citabilidade/época e compatibilidade; ordena/deduplica digests
+de eventos, não fórmulas. `Obligation` privado expõe somente leitura e codificação
+canônica; não tem decoder/construtor público. Época não entra em h(O); assumptions
+continuam antecedentes explícitos. LedgerView é snapshot abstrato confiável,
+não ledger/autenticação implementados. Contrato em [`spec/obligation.md`](spec/obligation.md),
+decisão em [`ADR 0012`](docs/adr/0012-geracao-de-obrigacoes.md).
+
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

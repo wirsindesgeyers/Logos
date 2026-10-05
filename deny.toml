@@ -25,7 +25,7 @@ allow = [
   { name = "logos-core" },
   { name = "logos-air" },
   { name = "logos-air-text" }, # fora da TCB, ADR 0011
-  { name = "logos-obligation" },
+  { name = "logos-obligation" }, # AIR/canon/crypto workspace, ADR 0012
   { name = "logos-model" },
   { name = "logos-ground" },
   { name = "logos-lrat" },
@@ -68,7 +68,7 @@ allow = [
   { name = "quote" },
   { name = "syn" },
   { name = "unicode-ident" },
-  # logos-core, somente desenvolvimento (ADR 0006)
+  # logos-core e logos-obligation, somente desenvolvimento (ADRs 0006/0012)
   { name = "trybuild" },
   { name = "equivalent" },
   { name = "glob" },

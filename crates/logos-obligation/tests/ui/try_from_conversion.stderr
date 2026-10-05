@@ -1,0 +1,17 @@
+error[E0277]: the trait bound `Obligation: TryFrom<&[u8]>` is not satisfied
+ --> tests/ui/try_from_conversion.rs:5:39
+  |
+5 |     let _res: Result<Obligation, _> = Obligation::try_from(&bytes[..]);
+  |                                       ^^^^^^^^^^ the trait `From<&[u8]>` is not implemented for `Obligation`
+  |
+  = note: required for `&[u8]` to implement `Into<Obligation>`
+  = note: required for `Obligation` to implement `TryFrom<&[u8]>`
+
+error[E0277]: the trait bound `Obligation: From<&[u8]>` is not satisfied
+ --> tests/ui/try_from_conversion.rs:5:39
+  |
+5 |     let _res: Result<Obligation, _> = Obligation::try_from(&bytes[..]);
+  |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<&[u8]>` is not implemented for `Obligation`
+  |
+  = note: required for `&[u8]` to implement `Into<Obligation>`
+  = note: required for `Obligation` to implement `TryFrom<&[u8]>`

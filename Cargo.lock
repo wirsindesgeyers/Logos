@@ -237,6 +237,13 @@ version = "0.0.0"
 [[package]]
 name = "logos-obligation"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-crypto",
+ "serde_json",
+ "trybuild",
+]
 
 [[package]]
 name = "logos-policy"

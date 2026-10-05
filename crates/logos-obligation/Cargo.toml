@@ -8,5 +8,14 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[dependencies]
+logos-air = { path = "../logos-air" }
+logos-canon = { path = "../logos-canon" }
+logos-crypto = { path = "../logos-crypto" }
+
+[dev-dependencies]
+trybuild = "=1.0.121"
+serde_json = "=1.0.151"
+
 [lints]
 workspace = true

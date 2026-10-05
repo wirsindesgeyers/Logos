@@ -1,0 +1,21 @@
+error[E0277]: the trait bound `Obligation: CanonDecode` is not satisfied
+ --> tests/ui/canon_decode.rs:6:39
+  |
+6 |     let _res: Result<Obligation, _> = from_canon(&bytes);
+  |                                       ^^^^^^^^^^^^^^^^^^ the trait `CanonDecode` is not implemented for `Obligation`
+  |
+  = help: the following other types implement trait `CanonDecode`:
+            Option<T>
+            Value
+            Vec<T>
+            [u8; N]
+            bool
+            i16
+            i32
+            i64
+          and $N others
+note: required by a bound in `from_canon`
+ --> $WORKSPACE/crates/logos-canon/src/traits.rs
+  |
+  | pub fn from_canon<T: CanonDecode>(bytes: &[u8]) -> Result<T, CanonError> {
+  |                      ^^^^^^^^^^^ required by this bound in `from_canon`

@@ -547,10 +547,10 @@ e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 - `h(O) = H_obligation(canon(O))`.
 
 **Critério de conclusão.**
-- [ ] Mesma proposta com citações em ordem diferente → mesmo `h(O)`.
-- [ ] Citar um hash inexistente → `Reject::UnknownCitation`; citar algo `Pending` sem marcar especulação → `Reject::NotCitable`.
-- [ ] A API pública não tem nenhuma função que aceite um `Obligation` vindo de fora (só `generate`); teste compile-fail.
-- [ ] Vetores de teste: 20 obrigações com `h(O)` fixo em `spec/vectors/obligation/`.
+- [x] Mesma proposta com citações em ordem diferente → mesmo `h(O)`.
+- [x] Citar um hash inexistente → `Reject::UnknownCitation`; citar algo `Pending` sem marcar especulação → `Reject::NotCitable`.
+- [x] A API pública não tem nenhuma função que aceite um `Obligation` vindo de fora (só `generate`); teste compile-fail.
+- [x] Vetores de teste: 20 obrigações com `h(O)` fixo em `spec/vectors/obligation/`.
 
 ---
 

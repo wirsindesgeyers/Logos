@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ObligationVectors",
+  "description": "Schema for deterministic obligation/v1 generation test vectors",
+  "type": "object",
+  "required": [
+    "$schema",
+    "version",
+    "description",
+    "vectors"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "vectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "epoch",
+          "target_vocabulary_hex",
+          "goal_hex",
+          "cites",
+          "premises",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "target_vocabulary_hex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$"
+          },
+          "goal_hex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$"
+          },
+          "cites": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "premises": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "reference",
+                "kind",
+                "epoch",
+                "retracted",
+                "formula_hex"
+              ],
+              "properties": {
+                "reference": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "Fact",
+                    "Policy",
+                    "Verified",
+                    "Assumption",
+                    "Pending",
+                    "Refuted",
+                    "Unknown",
+                    "Rejected",
+                    "Invalidated",
+                    "Proposal"
+                  ]
+                },
+                "epoch": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retracted": {
+                  "type": "boolean"
+                },
+                "origin_vocabulary_hex": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "formula_hex": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]+$"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "canonical_hex",
+              "obligation_hash",
+              "vocab_hash",
+              "canonical_premises"
+            ],
+            "properties": {
+              "canonical_hex": {
+                "type": "string",
+                "pattern": "^[0-9a-f]+$"
+              },
+              "obligation_hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "vocab_hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "canonical_premises": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "reference",
+                    "formula_hex"
+                  ],
+                  "properties": {
+                    "reference": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "formula_hex": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]+$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

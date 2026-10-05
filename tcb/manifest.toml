@@ -63,7 +63,7 @@ name = "logos-obligation"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/codec.rs", "src/error.rs", "src/generate.rs", "src/lib.rs", "src/types.rs"]
 
 [[crate]]
 name = "logos-model"

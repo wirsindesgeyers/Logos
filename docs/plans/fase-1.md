@@ -32,6 +32,6 @@ com bytes/hash reproduzíveis; ordem das citações não altera h(O), citação 
 é recusada e agente não fornece obrigação autoritativa. Critérios por etapa no
 roadmap, sem antecipar checkmarks por estes planos.
 
-1.1–1.4 foram demonstradas localmente por testes adversariais, propriedades,
+1.1–1.5 foram demonstradas localmente por testes adversariais, propriedades,
 vetores/diferenciais e smokes públicos; CI/ARM/fuzz noturno permanecem pendências.
-Próxima implementação: 1.5, gerador determinístico de obrigações com LedgerView abstrato.
+Próxima implementação: 1.6, proposta de agente com decoder estrito e fronteira P1.

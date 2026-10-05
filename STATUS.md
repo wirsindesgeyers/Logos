@@ -8,18 +8,18 @@
 ## Resumo
 
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
-Etapas **1.1–1.4 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
+Etapas **1.1–1.5 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
-`logos-air-text` e no CAS de `logos-ledger`; os demais crates continuam esqueletos.
-Nenhum kernel/gateway implementado.
-1.4: gramática air-text/v1, parsers/pretty-printers independentes Python/Rust
-fora da TCB. 31 testes Rust, 71 Python novos; round-trip de 500 ASTs em cada
-linguagem e diferencial de 500 fórmulas com AST/bytes esperados independentes.
-Pilhas explícitas, limites lógicos 128/100000 e nesting textual 4096.
-`AIR_TEXT_SMOKE_OK`, `PY_AIR_TEXT_SMOKE_OK`, `ci/verify.sh --selftest`:
-`VERIFY_OK` (exit 0), 175 Python e 25 TCB. Correção: 4277 LOC próprios,
-78287 runtime, 51581 build-only; TCB e formatos binários inalterados.
-Sem CI remota/push. Parsing e grounding declarado não são prova de fidelidade.
+`logos-air-text`, `logos-obligation` e no CAS de `logos-ledger`; demais crates
+continuam esqueletos. Nenhum kernel/gateway implementado.
+1.5: `generate(Proposal, &LedgerView)` produz obrigação privada canônica após
+tipagem, citabilidade/época e compatibilidade direcional. Refs de eventos
+ordenadas/deduplicadas; época fora de O; sem decoder/construtor público.
+19 testes Rust, 20 vetores independentes, 5 fixtures compile-fail + controle
+positivo e seis mutantes mortos. `OBLIGATION_SMOKE_OK` e
+`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), 175 Python + 25 TCB.
+TCB correção: 4610 LOC próprios, 78287 runtime, 51581 build-only; +333 próprios,
+sem nova dependência externa runtime. LedgerView é abstrato; O não concede prova/token.
 
 ## Etapas da Fase 0
 
@@ -41,7 +41,7 @@ Sem CI remota/push. Parsing e grounding declarado não são prova de fidelidade.
 | 1.2 Vocabulário versionado com grounding | ⚠ implementada, falta CI/fuzz noturno | 39 testes, 53 vetores independentes de h(V), smoke público e 4 mutantes mortos; ciclos por Pred/termos, patches revalidados e compatibilidade direcional. Fuzz 236898/61 s; `ci/verify.sh --selftest`: `VERIFY_OK`. [Plano](docs/plans/etapa-1.2.md) §7, ADR 0009 e `spec/vocabulary.md`. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
 | 1.3 Sort-checker | ⚠ implementada, falta CI/fuzz noturno | 24 testes, 2000 fórmulas bem tipadas e 2270 mutações de entradas, quatro mutantes mortos, paths e stacks de 64 KiB; LLVM 36/36 ramos, 100%, sem exclusões. Smoke público e `ci/verify.sh --selftest`: `VERIFY_OK`. Fuzz 206912/61 s. [Plano](docs/plans/etapa-1.3.md) §7, ADR 0010 e `spec/sort-check.md`. **Falta:** jobs Rust/sort-coverage remotos, smoke ARM e ≥ 1 h noturna. |
 | 1.4 Sintaxe de superfície/parser | ✅ concluída localmente | Gramática/ADR 0011, parsers independentes fora da TCB, 31 Rust + 71 Python; propriedades de 500 ASTs/lado, diferencial 500 fórmulas/bytes V+Formula e 13 oráculos de precedência/escopo. Smokes reais, limites/erros controlados e `ci/verify.sh --selftest`: `VERIFY_OK`, exit 0. [Plano](docs/plans/etapa-1.4.md) §7. CI/ARM ainda não observados. |
-| 1.5 Gerador de obrigações | ⏳ não iniciada | Depende de 1.1–1.3; LedgerView abstrato nesta etapa. |
+| 1.5 Gerador de obrigações | ✅ concluída localmente | Gerador TCB/obligation-v1 só de saída, snapshot LedgerView abstrato e refs de eventos; 19 Rust (17 behavior, vetores, UI), 20 vetores/hash independentes, 5 negativos compile-fail + controle positivo e seis mutantes mortos. OBLIGATION_SMOKE_OK, full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-1.5.md) §7/ADR 0012. CI/ARM ainda não observados. |
 | 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
 
 Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
@@ -58,7 +58,7 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
    Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2) e
    `sort_check` (1.3) integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário/sort-check/AIR textual nativos ARM ainda não observados.
+   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações ARM ainda não observados.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -105,41 +105,41 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 1.5 — gerador de obrigações (`M`, TCB)
+## Próximo passo: Etapa 1.6 — formato da proposta (`P`, protocolo)
 
-Dependências prontas: AST/plano prefixo `FOL-ms-eq/v1` (1.1), Vocabulary,
-grounding, h(V) e compatibilidade (1.2), `check(&Vocabulary, &Formula)` e
-diagnósticos SortError/SortPath (1.3). Parsers textuais 1.4 prontos, mas não são
-dependência nem fonte de autoridade para a obrigação.
+Dependências prontas: Formula FOL-ms-eq/v1 (1.1), PremiseRef de evento e gerador
+selado (1.5). Entrada emprestada `logos_obligation::Proposal` é somente o input
+mínimo resolvido do gerador; não é o wire protocol do agente. Vocabulary/hash,
+sort-check e parsers de superfície existem, mas não concedem autoridade.
 
-Criar plano `docs/plans/etapa-1.5.md`, ADR e spec normativa antes do código.
-Implementar `logos-obligation` e interface abstrata `LedgerView` nesta etapa;
-ledger real só na 3.3, fake em memória apenas nos testes conforme ROADMAP.
-`generate(proposal, ledger_view)` resolve citações, recusa inexistentes,
-retratadas, época inválida e NotCitable/Pending, verifica sorts e compatibilidade
-de Vocabulary; ordena premissas por h(PremiseRef), elimina duplicatas e produz h(O).
-Época permanece fora de O. Só o gerador constrói obrigação; sem entrada
-autoritativa/decoder/construtor público de Obligation.
+Definir `spec/protocol.md` e decisão de formato/versão/local do decoder.
+Implementar proposta transmitida `{ text_pt, goal, cites, speculative_on, vocab }`;
+text_pt é dado não confiável e nunca entra em O. Decoder rejeita campos
+desconhecidos: nenhum campo de obrigação/fato/política/dependência/status.
+ClaimId/speculative_on apenas representados; Pending continua NotCitable no
+gerador 1.5, sem implementar especulação 5.8. Resolver h(V) para Vocabulary
+pertence à integração futura, sem buscar ledger/rede nesta etapa.
 
-Critérios: ordem de citações não muda h(O); UnknownCitation e NotCitable exatos;
-compile-fail para obrigação externa; 20 vetores de h(O) fixos. Sem CNF/SMT/Lean,
-especulação, kernel/gateway ou protocolo 1.6. Proposta 1.6 depende de 1.5:
-definir aqui somente a entrada mínima do gerador, não antecipar wire protocol.
+Critérios: campos extras rejeitados, inclusive contrabando de Obligation;
+schema do único tipo de mensagem de agente não contém Obligation/Fact/Policy
+nem Signature do kernel (invariante P1 preliminar). Sem transporte/framing,
+mensagens CERTIFY/ações ou servidor 5.2. Migrar todos os callers se o input
+resolvido precisar mudar; não criar shim nem decoder autoritativo de O.
 
-Decisões/riscos: tipos de PremiseRef/visão citável e época, envelope/tag/encoder
-de O, regra de extensão compatível e rejeições determinísticas. Claims/cites
-textuais são nomes opacos, não PremiseRef nem eventos citáveis. Sort-check não
-expande Defined nem prova lógica/fidelidade. Seguir TCB: manifesto, vetores,
-parsers/decoders novos com fuzz, mutantes que demonstrem testes e full verify.
+Riscos/decisões: representação estrita de refs/ClaimId, limites de strings/arrays,
+encoding de text_pt tainted vs texto canônico e decoder fora/dentro da TCB.
+Se adicionar parser TCB: manifesto/lints, vetores/versionamento, fuzz e mutantes.
+Ledger real só na 3.3; snapshot fake e bytes/hash de O não provam autenticidade,
+consistência, fidelidade ou Verified. Ler ROADMAP 1.6 antes de ampliar escopo.
 
-Pendências remotas 0.1–1.4 separadas: execução local não fecha CI, ARM ou fuzz
-longo. Cobertura local da 1.3: `ci/check-sort-coverage.sh`, cargo-llvm-cov 0.9.1
-+ nightly-2026-09-28; relatório `target/sort-check-coverage.json`, não prova formal.
+Pendências remotas 0.1–1.5 separadas: execução local não fecha CI, ARM ou fuzz
+longo. Cobertura local da 1.3 em `target/sort-check-coverage.json` permanece
+métrica instrumentada, não prova formal.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 4277 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 1.4, sem mudança; logos-air: 1547 LOC.
+- **Tamanho da TCB de correção (execução):** 4610 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), após 1.5; logos-air: 1547 LOC, logos-obligation: 335 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -357,3 +357,22 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   TCB: correção 4277+78287=82564, fidelidade 1550+80034=81584, build-only 51581;
   nenhum formato binário/dependência externa TCB novo. Memória preexistente
   preservada fora do commit; sem push/CI remota. Próximo passo: 1.5.
+- **2026-10-05** — Etapa 1.5 implementada na TCB: generate resolve refs de
+  eventos em LedgerView snapshot abstrato, recusa desconhecidos/retratados/época
+  inválida/não citáveis, confere sorts e compatibilidade direcional, ordena/dedup
+  e produz obligation/v1 privado/imutável, canon/h(O) só de saída e sem época.
+  ADR 0012/spec/manifesto integrados; 19 testes Rust, 20 vetores Python/hashlib
+  independentes, cinco negativos compile-fail E0451/E0277 e controle positivo.
+  Seis mutantes compilados mortos: Pending aceito, época ignorada, dedup ausente,
+  compatibilidade invertida, check goal ausente e goal omitido do codec.
+  Integração inicial falhou em APIs AIR inexistentes/Result<Hash>/move parcial,
+  controle positivo UI e stderr ainda não observado; corrigidos, negativos
+  capturados do compilador real. Asserts incidentais/tautologias removidos.
+  Clone_on_copy/ruff corrigidos; smoke duplicado removido. OBLIGATION_SMOKE_OK;
+  ci/verify.sh --selftest terminou VERIFY_OK (exit 0), 175 Python + 25 TCB,
+  Rust workspace, guards, smokes e vetores completos. TCB correção:
+  4610+78287=82897 (+333 próprios), fidelidade 1550+80034=81584, build-only 51581.
+  Sem nova dependência externa runtime ou decoder de obrigação; AIR/Vocabulary
+  anteriores inalterados. Não implementa ledger real/Verified/kernel.
+  Memória/logs preexistentes preservados fora do commit; sem push/CI remota.
+  Próximo passo: 1.6.

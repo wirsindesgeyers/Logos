@@ -1,0 +1,5 @@
+error[E0277]: the trait bound `Obligation: From<Vec<u8>>` is not satisfied
+ --> tests/ui/from_conversion.rs:5:15
+  |
+5 |     let _o = <Obligation as From<Vec<u8>>>::from(bytes);
+  |               ^^^^^^^^^^ the trait `From<Vec<u8>>` is not implemented for `Obligation`
