@@ -8,17 +8,18 @@
 ## Resumo
 
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
-Etapas **1.1–1.3 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
-Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air` e no CAS
-de `logos-ledger`; os demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
-1.3: `check(V, formula)` verifica tipagem/fechamento, com caminhos exatos no
-prefixo e percurso iterativo. 24 testes novos, 2000 fórmulas bem tipadas,
-2270 mutações de entradas rejeitadas, 36/36 ramos LLVM (100%), quatro mutantes
-de implementação mortos e `SORT_CHECK_SMOKE_OK`. Fuzz: 206912 execuções/61 s.
-`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), com todos os smokes, 104 testes
-Python e 25 TCB. TCB correção: 4277 LOC próprios, 78287 runtime, 51581 build-only;
-sem dependências externas TCB nem formatos novos. Snapshot limpo de 1.1
-arquivado; sem CI remota/push. Tipagem e grounding declarado não são prova lógica/fidelidade.
+Etapas **1.1–1.4 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
+Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
+`logos-air-text` e no CAS de `logos-ledger`; os demais crates continuam esqueletos.
+Nenhum kernel/gateway implementado.
+1.4: gramática air-text/v1, parsers/pretty-printers independentes Python/Rust
+fora da TCB. 31 testes Rust, 71 Python novos; round-trip de 500 ASTs em cada
+linguagem e diferencial de 500 fórmulas com AST/bytes esperados independentes.
+Pilhas explícitas, limites lógicos 128/100000 e nesting textual 4096.
+`AIR_TEXT_SMOKE_OK`, `PY_AIR_TEXT_SMOKE_OK`, `ci/verify.sh --selftest`:
+`VERIFY_OK` (exit 0), 175 Python e 25 TCB. Correção: 4277 LOC próprios,
+78287 runtime, 51581 build-only; TCB e formatos binários inalterados.
+Sem CI remota/push. Parsing e grounding declarado não são prova de fidelidade.
 
 ## Etapas da Fase 0
 
@@ -39,7 +40,7 @@ arquivado; sem CI remota/push. Tipagem e grounding declarado não são prova ló
 | 1.1 Sintaxe abstrata `FOL-ms-eq/v1` | ⚠ implementada, falta CI/fuzz noturno | Prefixo plano/De Bruijn, limites agregados, air/v1, hash Formula; 11 testes, 168 vetores independentes, `AIR_SMOKE_OK`, 4 mutantes mortos, fuzz 182529/61 s sem crash. [Plano](docs/plans/etapa-1.1.md) §7 e ADR 0007. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
 | 1.2 Vocabulário versionado com grounding | ⚠ implementada, falta CI/fuzz noturno | 39 testes, 53 vetores independentes de h(V), smoke público e 4 mutantes mortos; ciclos por Pred/termos, patches revalidados e compatibilidade direcional. Fuzz 236898/61 s; `ci/verify.sh --selftest`: `VERIFY_OK`. [Plano](docs/plans/etapa-1.2.md) §7, ADR 0009 e `spec/vocabulary.md`. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
 | 1.3 Sort-checker | ⚠ implementada, falta CI/fuzz noturno | 24 testes, 2000 fórmulas bem tipadas e 2270 mutações de entradas, quatro mutantes mortos, paths e stacks de 64 KiB; LLVM 36/36 ramos, 100%, sem exclusões. Smoke público e `ci/verify.sh --selftest`: `VERIFY_OK`. Fuzz 206912/61 s. [Plano](docs/plans/etapa-1.3.md) §7, ADR 0010 e `spec/sort-check.md`. **Falta:** jobs Rust/sort-coverage remotos, smoke ARM e ≥ 1 h noturna. |
-| 1.4 Sintaxe de superfície/parser | ⏳ não iniciada | Próximo passo; dependências 0.3 e 1.1–1.3 disponíveis. Parser Python/Rust fora da TCB. |
+| 1.4 Sintaxe de superfície/parser | ✅ concluída localmente | Gramática/ADR 0011, parsers independentes fora da TCB, 31 Rust + 71 Python; propriedades de 500 ASTs/lado, diferencial 500 fórmulas/bytes V+Formula e 13 oráculos de precedência/escopo. Smokes reais, limites/erros controlados e `ci/verify.sh --selftest`: `VERIFY_OK`, exit 0. [Plano](docs/plans/etapa-1.4.md) §7. CI/ARM ainda não observados. |
 | 1.5 Gerador de obrigações | ⏳ não iniciada | Depende de 1.1–1.3; LedgerView abstrato nesta etapa. |
 | 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
 
@@ -57,7 +58,7 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
    Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2) e
    `sort_check` (1.3) integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário/sort-check nativos ARM ainda não observados.
+   Smokes AIR/vocabulário/sort-check/AIR textual nativos ARM ainda não observados.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -104,41 +105,41 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
+## Próximo passo: Etapa 1.5 — gerador de obrigações (`M`, TCB)
 
-## Próximo passo: Etapa 1.4 — sintaxe de superfície e parser (`M`, fora da TCB)
+Dependências prontas: AST/plano prefixo `FOL-ms-eq/v1` (1.1), Vocabulary,
+grounding, h(V) e compatibilidade (1.2), `check(&Vocabulary, &Formula)` e
+diagnósticos SortError/SortPath (1.3). Parsers textuais 1.4 prontos, mas não são
+dependência nem fonte de autoridade para a obrigação.
 
-Dependências prontas: AST/plano prefixo `FOL-ms-eq/v1` da 1.1, Vocabulary
-versionado/grounding da 1.2, `check(&Vocabulary, &Formula)` e SortError/SortPath
-da 1.3, canon/v1 e encoder Python da 0.3. Contratos em `spec/air.md`,
-`spec/vocabulary.md`, `spec/sort-check.md`; ADRs 0007/0009/0010.
+Criar plano `docs/plans/etapa-1.5.md`, ADR e spec normativa antes do código.
+Implementar `logos-obligation` e interface abstrata `LedgerView` nesta etapa;
+ledger real só na 3.3, fake em memória apenas nos testes conforme ROADMAP.
+`generate(proposal, ledger_view)` resolve citações, recusa inexistentes,
+retratadas, época inválida e NotCitable/Pending, verifica sorts e compatibilidade
+de Vocabulary; ordena premissas por h(PremiseRef), elimina duplicatas e produz h(O).
+Época permanece fora de O. Só o gerador constrói obrigação; sem entrada
+autoritativa/decoder/construtor público de Obligation.
 
-Criar plano `docs/plans/etapa-1.4.md` e gramática `spec/air-surface.md`.
-Implementar parser Python (`logos_client.air`) e parser Rust em novo crate
-`logos-air-text`, **fora da TCB**, mais pretty-printer canônico → texto para debug.
-Seguir entregáveis/exemplo do ROADMAP 1.4, sem implementar políticas 7.1,
-editor/LSP, obrigações ou kernel. Não mover parsing textual para logos-air.
+Critérios: ordem de citações não muda h(O); UnknownCitation e NotCitable exatos;
+compile-fail para obrigação externa; 20 vetores de h(O) fixos. Sem CNF/SMT/Lean,
+especulação, kernel/gateway ou protocolo 1.6. Proposta 1.6 depende de 1.5:
+definir aqui somente a entrada mínima do gerador, não antecipar wire protocol.
 
-Critérios: property test `parse(print(f)) == f` nos dois parsers; diferencial
-Python × Rust com bytes canônicos idênticos em corpus de 500 fórmulas.
-Decisões do plano/ADR: gramática/precedência, binders nominais → De Bruijn,
-resolução de assinaturas/grounding/version/referências opacas, escaping de
-nomes/glosas e representação Python que preserve integralmente os envelopes.
+Decisões/riscos: tipos de PremiseRef/visão citável e época, envelope/tag/encoder
+de O, regra de extensão compatível e rejeições determinísticas. Claims/cites
+textuais são nomes opacos, não PremiseRef nem eventos citáveis. Sort-check não
+expande Defined nem prova lógica/fidelidade. Seguir TCB: manifesto, vetores,
+parsers/decoders novos com fuzz, mutantes que demonstrem testes e full verify.
 
-Riscos: pretty-printer precisa representar toda sintaxe suportada sem esconder
-índices/sorts; shadowing/ordem dos argumentos não podem mudar identidade.
-Parser textual é não confiável: byte/hash emitido não prova fidelidade.
-Sort-check não expande Defined nem aceita parâmetros livres como fórmula fechada.
-FactRef/PolicyRef/AttestorId continuam opacos; citações textuais não ganham autoridade.
-
-Pendências remotas 0.1–1.3 separadas: execução local não fecha CI, ARM ou fuzz
-longo. Cobertura local reproduzível: `ci/check-sort-coverage.sh`, cargo-llvm-cov
-0.9.1 + nightly-2026-09-28/llvm-tools-preview; relatório em
-`target/sort-check-coverage.json`. Métrica instrumentada não é prova formal.
+Pendências remotas 0.1–1.4 separadas: execução local não fecha CI, ARM ou fuzz
+longo. Cobertura local da 1.3: `ci/check-sort-coverage.sh`, cargo-llvm-cov 0.9.1
++ nightly-2026-09-28; relatório `target/sort-check-coverage.json`, não prova formal.
 
 ## Decisões em aberto para o mantenedor
 
 - **Tamanho da TCB de correção (execução):** 4277 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 1.3; logos-air: 1547 LOC.
+  (+ 51581 só de compilação), medição local após 1.4, sem mudança; logos-air: 1547 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -339,3 +340,20 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   verificação completa terminou VERIFY_OK, exit 0 observado por subprocess.
   Medição final após remoção: correção 4277+78287=82564; demais valores iguais.
   Próximo passo: 1.4.
+- **2026-10-05** — Etapa 1.4 implementada fora da TCB: gramática air-text/v1,
+  ADR 0011, parsers/printers independentes Python e logos-air-text, metadata/
+  grounding completos, binders → De Bruijn e citações opacas sem autoridade.
+  31 Rust + 71 Python novos; propriedades 500 ASTs/lado e diferencial de 500
+  fórmulas contra AST/bytes independentes, mais 13 oráculos de precedência/escopo.
+  Integração inicial encontrou stack overflow Rust, RecursionError e perda de
+  operadores em grupos Python: pilhas explícitas substituíram recursão/fastpath.
+  Profundidade lógica 128 aceita/129 rejeitada, grupos 200/500 preservados,
+  input adversarial de 10000 controlado por LimitExceeded. Digest Unicode de
+  64 bytes causava pânico Rust; reproduzido, corrigido por byte pairs e regressão
+  passou. Erros intermediários de compilação/indentação/mypy/clippy e fixture
+  inválida corrigidos; colisão Cargo do exemplo diff eliminada por air_text_diff.
+  AIR_TEXT_SMOKE_OK e PY_AIR_TEXT_SMOKE_OK; ci/verify.sh --selftest terminou
+  VERIFY_OK (exit 0), 175 Python + 25 TCB, vetores/supply-chain/guards completos.
+  TCB: correção 4277+78287=82564, fidelidade 1550+80034=81584, build-only 51581;
+  nenhum formato binário/dependência externa TCB novo. Memória preexistente
+  preservada fora do commit; sem push/CI remota. Próximo passo: 1.5.

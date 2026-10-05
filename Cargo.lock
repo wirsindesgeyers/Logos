@@ -158,6 +158,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "logos-air-text"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+]
+
+[[package]]
 name = "logos-alethe"
 version = "0.0.0"
 

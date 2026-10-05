@@ -11,6 +11,7 @@ cargo run -p logos-core --example core_smoke
 cargo run -p logos-air --example air_smoke
 cargo run -p logos-air --example vocabulary_smoke
 cargo run -p logos-air --example sort_check_smoke
+cargo run -p logos-air-text --example air_text_smoke
 ci/check-tcb-lints.sh
 ci/check-audit-independence.sh
 tcb/count.sh check
@@ -28,7 +29,7 @@ cargo audit
   uv run python ../tools/gen_core_vectors.py --check
   uv run python ../tools/gen_air_vectors.py --check
   uv run python ../tools/gen_vocabulary_vectors.py --check
-  uv run pytest -q # inclui o diferencial Rust x Python da canon
+  uv run pytest -q # inclui diferenciais canon e AIR-text (500 fórmulas)
   uv run pytest -q ../tcb/tests
 )
 if [ "${1:-}" = "--selftest" ]; then

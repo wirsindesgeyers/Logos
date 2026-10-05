@@ -521,8 +521,8 @@ e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 - Pretty-printer reverso (forma canônica → texto) para debug.
 
 **Critério de conclusão.**
-- [ ] Round-trip `parse(print(f)) == f` em property test, nos dois parsers.
-- [ ] Teste diferencial: parser Python e Rust produzem bytes canônicos idênticos para um corpus de 500 fórmulas.
+- [x] Round-trip `parse(print(f)) == f` em property test, nos dois parsers.
+- [x] Teste diferencial: parser Python e Rust produzem bytes canônicos idênticos para um corpus de 500 fórmulas.
 
 ---
 

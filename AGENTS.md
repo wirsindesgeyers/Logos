@@ -51,8 +51,8 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 
 ```sh
 ci/verify.sh              # fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
-                          # manifesto, cargo deny/audit, ruff/mypy/pytest (inclui o diferencial)
-                          # smokes core, AIR, vocabulário e sort-check; geradores de vetores --check
+                          # manifesto, cargo deny/audit, ruff/mypy/pytest (diferenciais canon/AIR-text)
+                          # smokes core/AIR/vocabulário/sort-check/AIR-text; vetores --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 

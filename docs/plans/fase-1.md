@@ -32,6 +32,6 @@ com bytes/hash reproduzíveis; ordem das citações não altera h(O), citação 
 é recusada e agente não fornece obrigação autoritativa. Critérios por etapa no
 roadmap, sem antecipar checkmarks por estes planos.
 
-1.1–1.3 foram demonstradas localmente por testes adversariais, propriedades,
-vetores e smokes públicos; CI/fuzz noturno permanecem pendências. Próxima
-implementação: 1.4, parsers Python/Rust fora da TCB e pretty-printer de debug.
+1.1–1.4 foram demonstradas localmente por testes adversariais, propriedades,
+vetores/diferenciais e smokes públicos; CI/ARM/fuzz noturno permanecem pendências.
+Próxima implementação: 1.5, gerador determinístico de obrigações com LedgerView abstrato.

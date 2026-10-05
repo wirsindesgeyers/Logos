@@ -6,6 +6,7 @@ members = [
     "crates/logos-crypto",
     "crates/logos-core",
     "crates/logos-air",
+    "crates/logos-air-text",
     "crates/logos-obligation",
     "crates/logos-model",
     "crates/logos-ground",

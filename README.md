@@ -19,6 +19,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`spec/air.md`](spec/air.md) | Sintaxe FOL-ms-eq/v1: formato canônico, De Bruijn e limites estruturais |
 | [`spec/vocabulary.md`](spec/vocabulary.md) | Vocabulário versionado, grounding, dependências acíclicas e compatibilidade |
 | [`spec/sort-check.md`](spec/sort-check.md) | Tipagem, escopo De Bruijn, precedência e caminhos de erros |
+| [`spec/air-surface.md`](spec/air-surface.md) | Texto AIR não confiável: gramática, documentos, nomes e debug reversível |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -32,8 +33,10 @@ cargo build --workspace && cargo clippy --workspace --all-targets -- -D warnings
 cargo run -p logos-air --example air_smoke   # fixture/hash independentes, limites e erros
 cargo run -p logos-air --example vocabulary_smoke   # grounding, extensão, codec e ciclos
 cargo run -p logos-air --example sort_check_smoke   # fórmula fechada e erros com path exato
+cargo run -p logos-air-text --example air_text_smoke   # texto → AIR, bytes e reparse
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
+(cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
 ci/selftest.sh   # bloqueios reais: unsafe, unwrap, lints comentados e dependências fora da allowlist
@@ -71,5 +74,25 @@ sem clonar ASTs; erros apontam record de fórmula e posição/nó do termo embut
 Contrato em [`spec/sort-check.md`](spec/sort-check.md), decisão em
 [`ADR 0010`](docs/adr/0010-sort-checker.md).
 
-Grounding é declarado, não demonstrado; tipagem não é prova lógica. Parser,
-kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).
+Etapa 1.4 acrescenta `logos-air-text` e `logos_client.air`, **fora da TCB**:
+parsers independentes de fórmulas/documentos e pretty-printers reversíveis.
+Nomes de binders viram De Bruijn; formas explícitas preservam assinaturas,
+índices livres e sintaxe mal tipada. Parsing não invoca sort-check nem resolve ledger.
+Grounding, enum/fonte, versão e citações são preservados; texto/claims não têm
+novo envelope binário ou autoridade. Contrato em [`spec/air-surface.md`](spec/air-surface.md),
+decisão em [`ADR 0011`](docs/adr/0011-sintaxe-de-superficie.md).
+
+```python
+from logos_client import air, canon
+
+document = air.parse_document(
+    "vocab v1 { sort User pred Admin(User) } "
+    "claim C7: forall u:User. Admin(u) cites [F3]"
+)
+formula = document.claims[0].formula
+print(canon.encode(formula).hex())  # air/v1, não hash do texto
+print(air.print_document(document))  # metadados explícitos; texto de debug
+```
+
+Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
+Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

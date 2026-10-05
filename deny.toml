@@ -24,6 +24,7 @@ allow = [
   { name = "logos-crypto" },
   { name = "logos-core" },
   { name = "logos-air" },
+  { name = "logos-air-text" }, # fora da TCB, ADR 0011
   { name = "logos-obligation" },
   { name = "logos-model" },
   { name = "logos-ground" },
