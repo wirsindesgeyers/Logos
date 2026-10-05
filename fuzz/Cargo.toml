@@ -66,6 +66,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "vocabulary_decode"
+path = "fuzz_targets/vocabulary_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "smoke"
 path = "fuzz_targets/smoke.rs"
 test = false

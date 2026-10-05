@@ -472,9 +472,9 @@ e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 - Operação `Vocabulary::extend` (gera nova versão com novo hash); mudança de significado de símbolo existente é **nova versão incompatível** (dispara invalidação na Etapa 15.7).
 
 **Critério de conclusão.**
-- [ ] Definição circular (`A ↔ B`, `B ↔ A`) é rejeitada.
-- [ ] Extensão que só adiciona símbolos preserva a compatibilidade; alterar a glosa ou a definição de símbolo existente gera versão marcada como incompatível.
-- [ ] Vetores de teste com `h(V)` fixo para um vocabulário de exemplo.
+- [x] Definição circular (`A ↔ B`, `B ↔ A`) é rejeitada.
+- [x] Extensão que só adiciona símbolos preserva a compatibilidade; alterar a glosa ou a definição de símbolo existente gera versão marcada como incompatível.
+- [x] Vetores de teste com `h(V)` fixo para um vocabulário de exemplo.
 
 ---
 

@@ -2,23 +2,23 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-04 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-05 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
 
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
+Etapas **1.1 e 1.2 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air` e no CAS
-de `logos-ledger`; os demais crates continuam esqueletos. **Etapa 1.1 demonstrada
-localmente**, CI/fuzz noturno pendentes. Nenhum kernel/gateway implementado.
-Verificação completa da implementação 1.1: `ci/verify.sh --selftest` terminou com `VERIFY_OK`;
-core/AIR passaram, assim como 11 testes AIR, 168 vetores, milhão de nós em
-stack de 64 KiB e quatro controles de mutação. Fuzz AIR: 182529 execuções/61 s.
-Os dois P2 da revisão foram corrigidos: guard reconhece atributos reais do
-preâmbulo; medidor inclui closure workspace sem duplicar raízes e classifica
-runtime/build por propriedade. `ci/verify.sh --selftest`: `VERIFY_OK`, 104
-testes Python + 25 da TCB; CLI da fixture real confirmou próprio=3, deps=1,
-total=4. Snapshot limpo da TCB do commit `a568d1e` arquivado. Sem CI remota/push.
+de `logos-ledger`; os demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
+1.2: Vocabulary imutável, grounding, referências opacas, grafo acíclico,
+extensão/compatibilidade e `vocabulary/v1` com h(V). 39 testes novos, 53 vetores
+independentes, `VOCABULARY_SMOKE_OK`, 4 mutantes mortos; fuzz 236898 execuções/61 s.
+`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), incluindo smokes core/AIR/vocabulário,
+104 testes Python e 25 TCB. Primeiro run parou em dois lints Clippy nos novos
+artefatos; corrigidos. TCB de correção: 4006 LOC próprios, 78287 runtime,
+51581 só compilação; sem dependências externas novas. Snapshot limpo de 1.1
+arquivado; sem CI remota/push. Grounding declarado não prova fidelidade.
 
 ## Etapas da Fase 0
 
@@ -37,8 +37,8 @@ total=4. Snapshot limpo da TCB do commit `a568d1e` arquivado. Sem CI remota/push
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 1.1 Sintaxe abstrata `FOL-ms-eq/v1` | ⚠ implementada, falta CI/fuzz noturno | Prefixo plano/De Bruijn, limites agregados, air/v1, hash Formula; 11 testes, 168 vetores independentes, `AIR_SMOKE_OK`, 4 mutantes mortos, fuzz 182529/61 s sem crash. [Plano](docs/plans/etapa-1.1.md) §7 e ADR 0007. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
-| 1.2 Vocabulário versionado com grounding | ⏳ não iniciada | Próximo passo; depende da sintaxe 1.1 pronta. |
-| 1.3 Sort-checker | ⏳ não iniciada | Depende de 1.1–1.2. |
+| 1.2 Vocabulário versionado com grounding | ⚠ implementada, falta CI/fuzz noturno | 39 testes, 53 vetores independentes de h(V), smoke público e 4 mutantes mortos; ciclos por Pred/termos, patches revalidados e compatibilidade direcional. Fuzz 236898/61 s; `ci/verify.sh --selftest`: `VERIFY_OK`. [Plano](docs/plans/etapa-1.2.md) §7, ADR 0009 e `spec/vocabulary.md`. **Falta:** CI, smoke ARM e ≥ 1 h noturna. |
+| 1.3 Sort-checker | ⏳ não iniciada | Próximo passo; sintaxe 1.1 e vocabulário 1.2 disponíveis. |
 | 1.4 Sintaxe de superfície/parser | ⏳ não iniciada | Depende de 1.1–1.3; fora da TCB. |
 | 1.5 Gerador de obrigações | ⏳ não iniciada | Depende de 1.1–1.3; LedgerView abstrato nesta etapa. |
 | 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
@@ -55,8 +55,9 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
-   Alvos `core_decode` (0.6) e `air_decode` (1.1) também integrados ao smoke/noturno;
-   logs locais não provam CI nem ≥ 1 h. Smoke AIR nativo ARM ainda não observado.
+   Alvos `core_decode` (0.6), `air_decode` (1.1) e `vocabulary_decode` (1.2)
+   integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
+   Smokes AIR/vocabulário nativos ARM ainda não observados.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -104,43 +105,40 @@ symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
 
-## Próximo passo: Etapa 1.2 — vocabulário versionado com grounding (`M`, TCB)
+## Próximo passo: Etapa 1.3 — sort-checker (`P`, TCB)
 
-Os controles 0.1/0.2 estão corrigidos e verificados localmente; nenhuma
-alteração de formatos nem implementação de etapas futuras entrou nesta correção.
+Dependências prontas: Sort/Symbol/Term/Formula/LogicId e prefixo plano da 1.1;
+Vocabulary/SortDecl/SymbolDecl e identidade h(V) da 1.2. Contratos em
+[`spec/air.md`](spec/air.md), [`spec/vocabulary.md`](spec/vocabulary.md) e ADRs
+0007/0009. `Vocabulary::symbols()`/`sorts()` expõem declarações imutáveis;
+`definition_order()` expõe índices Defined com dependências primeiro.
 
+Implementar `check(V, formula) -> Result<(), SortError>` em logos-air:
+aridade, sorts dos argumentos, resultado/kind de aplicações, igualdade entre
+termos do mesmo sort, variáveis ligadas e símbolos declarados com assinatura
+exata. Erros incluem caminho até o nó problemático. Sem inferência de sorts
+nem mensagens em português; seguir somente ROADMAP 1.3.
 
-Criar `docs/plans/etapa-1.2.md` no formato do ROADMAP §0 e implementar em
-`logos-air`: Vocabulary versionado, SortDecl/SymbolDecl, h(V), grounding
-Defined/Anchored/Glossed, gloss_pt e compatibilidade de extensão aditiva.
-Dependências prontas: Sort/Symbol/Term/Formula/LogicId da 1.1, canon/v1 e hashes
-tipados. [Spec AIR](spec/air.md), ADR 0007 e limites do prefixo plano disponíveis.
+Critérios: 100% de cobertura de ramos no checker; property test de fórmulas
+bem tipadas que passam e mutações de tipo que falham. Decidir representação
+dos caminhos e tratamento explícito de assinaturas sintaticamente admitidas
+por air/v1 mas inadequadas ao uso; registrar decisão técnica em ADR.
+Percurso iterativo deve respeitar escopo De Bruijn entre irmãos e termos.
 
-Critérios: recusar definições circulares (incluindo A↔B/B↔A), extensão aditiva
-compatível, mudança de gloss/definição incompatível, vetores fixos de h(V).
-Não incluir sort-check (1.3), parser textual (1.4), fechamento de domínio por
-fatos (6.3), invalidação por troca de vocabulário (15.7) nem tradução de versões.
-`domain_source` é referência opaca FactRef|PolicyRef nesta etapa; Anchored guarda
-AttestorId/procedure, não implementa atestação. Definir essas referências no
-plano/ADR sem antecipar os respectivos subsistemas.
+Riscos: validação de Vocabulary não sort-checa aplicações/corpos nem demonstra
+grounding. Defined guarda corpo (não axioma com própria cabeça); parâmetros
+livres de definições não tornam livres variáveis de fórmulas submetidas a check.
+FactRef/PolicyRef/AttestorId continuam opacos. Não antecipar expansão de
+definições, parser 1.4, obrigações 1.5, atestação ou invalidação 15.7.
 
-Decisões para o plano/ADR: representação de versão/referências/grounding,
-formato e tag h(V), identidade e duplicatas das declarações, definição exata
-de compatibilidade e extração do grafo de dependências do prefixo plano.
-Riscos: igualdade de bytes não prova grounding/fidelidade; não esconder ciclo
-por ordem das declarações nem aceitar redefinição como extensão aditiva.
-Novo formato exige spec/vetores, decoder exige fuzz/manifesto, sem novas
-dependências TCB externas sem ADR/allowlist.
-
-Pendências remotas 0.1–1.1 permanecem separadas; execução local não fecha CI,
-ARM ou fuzz longo. Histórico JSON começou pelo snapshot limpo de 1.1.
-Regressões e smoke desta correção cobrem guard/contagem, não auditoria
-exaustiva ou prova formal. Vocabulário/sort-check/semântica não implementados.
+Pendências remotas 0.1–1.2 separadas: execução local não fecha CI, ARM ou fuzz
+longo. Sem novas dependências externas na 1.2; TCB manifesto inclui os dois
+novos arquivos AIR nas propriedades de correção e fidelidade.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 3424 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), medição local após 1.1; logos-air: 690 LOC.
+- **Tamanho da TCB de correção (execução):** 4006 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), medição local após 1.2; logos-air: 1272 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -297,3 +295,20 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Snapshot limpo de `a568d1e` medido/arquivado; worktree/fixtures removidos.
   Fuzz e proposta de memória preservados fora da correção; sem push/CI remota.
   Próximo passo: 1.2.
+
+- **2026-10-05** — Etapa 1.2 implementada em logos-air: Vocabulary versionado
+  imutável, SortDecl/SymbolDecl, Defined/Anchored/Glossed, refs opacas,
+  enumerações/fonte, Kahn iterativo e extensão com compatibilidade direcional.
+  Novo formato vocabulary/v1 e h(V) com tag reservada; ADR 0009/plano/spec,
+  manifesto correção+fidelidade, decoder/fuzz e CI integrados. 39 testes
+  (38 behavior + 53 vetores em um leitor), cadeia de 1000 em stack 64 KiB,
+  smoke público e quatro mutantes mortos. Fuzz: 236898 execuções em 61 s.
+  Primeiro run de vetores falhou por nome incorreto NonCanonicalInt; fixture
+  corrigida para NonMinimalHead do canon/v1. Primeiro full verify falhou em
+  op_ref/manual_is_multiple_of dos artefatos novos; corrigidos e
+  `ci/verify.sh --selftest` terminou VERIFY_OK (exit 0), 104 Python + 25 TCB.
+  Dois avisos cargo-deny de licenças não encontradas, sem falha. LSP novamente
+  falhou ao inicializar; compilação/Clippy/testes usados. Medição: correção
+  4006+78287=82293 LOC; fidelidade 1275+80034=81309; build-only 51581.
+  Workspaces de mutação removidos; proposta de memória preexistente preservada,
+  fora do commit da implementação. Sem push/CI remota; próximo passo: 1.3.

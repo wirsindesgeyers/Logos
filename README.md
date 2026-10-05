@@ -17,6 +17,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`docs/plans/`](docs/plans/) | Planos de fase e de etapa |
 | [`docs/adr/`](docs/adr/) | Decisões de arquitetura |
 | [`spec/air.md`](spec/air.md) | Sintaxe FOL-ms-eq/v1: formato canônico, De Bruijn e limites estruturais |
+| [`spec/vocabulary.md`](spec/vocabulary.md) | Vocabulário versionado, grounding, dependências acíclicas e compatibilidade |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -28,6 +29,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 ```sh
 cargo build --workspace && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace
 cargo run -p logos-air --example air_smoke   # fixture/hash independentes, limites e erros
+cargo run -p logos-air --example vocabulary_smoke   # grounding, extensão, codec e ciclos
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
@@ -53,5 +55,12 @@ Exemplo público: `crates/logos-air/examples/air_smoke.rs`; contrato em
 [`spec/air.md`](spec/air.md), decisão em
 [`ADR 0007`](docs/adr/0007-sintaxe-air.md).
 
-Etapa 1.1 é **sintaxe**, não vocabulário, sort-check ou prova lógica. Kernel e
-gateway continuam sem implementação; estado e pendências em [`STATUS.md`](STATUS.md).
+Etapa 1.2 acrescenta `Vocabulary`, `SortDecl`, `SymbolDecl` e grounding
+`Defined`/`Anchored`/`Glossed`. `hash(&v)` identifica versão, declarações e glosas;
+`extend` revalida patches e marca mudanças incompatíveis. Corpos definidores
+não incluem a própria cabeça; dependências também são extraídas dos termos.
+Contrato em [`spec/vocabulary.md`](spec/vocabulary.md), decisão em
+[`ADR 0009`](docs/adr/0009-vocabulario-grounding.md).
+
+Grounding é declarado, não demonstrado. Sort-check, kernel e gateway continuam
+sem implementação; estado e pendências em [`STATUS.md`](STATUS.md).

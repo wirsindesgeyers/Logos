@@ -9,7 +9,7 @@ on:
         description: "Segundos por target"
         default: "3600"
   pull_request:
-    paths: ["fuzz/**", "crates/**", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py"] # smoke de poucos minutos
+    paths: ["fuzz/**", "crates/**", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py"] # smoke de poucos minutos
 
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
       - name: Fuzz de todos os targets
         # ci/fuzz.sh fixa RUSTUP_TOOLCHAIN=nightly: o rust-toolchain.toml da raiz (stable) tem
         # precedência sobre a toolchain padrão instalada pela action e o cargo-fuzz exige nightly.
-        # Inclui core_decode/air_decode via descoberta automática de cargo fuzz list.
+        # Inclui core_decode/air_decode/vocabulary_decode via descoberta de cargo fuzz list.
         run: ci/fuzz.sh "$SECONDS_PER_TARGET"
       - name: Arquivar logs e corpus
         if: always()

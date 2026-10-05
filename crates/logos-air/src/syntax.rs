@@ -35,7 +35,7 @@ impl LogicId {
     }
 }
 
-/// Identidade nominal de sort; declaração/domínio pertencem ao vocabulário futuro.
+/// Identidade nominal de sort; declaração/domínio pertencem ao vocabulário.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Sort {
     /// Nome canônico (UTF-8 NFC, Unicode 16).

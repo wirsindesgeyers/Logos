@@ -53,10 +53,10 @@ files = ["src/budget.rs", "src/canon.rs", "src/lib.rs", "src/outcome.rs", "src/v
 
 [[crate]]
 name = "logos-air"
-properties = ["correctness"]
+properties = ["correctness", "fidelity"]
 strict = true
 verified = "none"
-files = ["src/codec.rs", "src/error.rs", "src/lib.rs", "src/shape.rs", "src/syntax.rs"]
+files = ["src/codec.rs", "src/error.rs", "src/lib.rs", "src/shape.rs", "src/syntax.rs", "src/vocabulary.rs", "src/vocabulary_codec.rs"]
 
 [[crate]]
 name = "logos-obligation"
