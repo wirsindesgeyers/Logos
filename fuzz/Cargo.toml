@@ -88,6 +88,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "model_eval"
+path = "fuzz_targets/model_eval.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "smoke"
 path = "fuzz_targets/smoke.rs"
 test = false

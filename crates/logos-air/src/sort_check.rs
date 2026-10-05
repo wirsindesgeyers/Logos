@@ -109,6 +109,22 @@ impl Error for SortError {}
 /// Primeiro erro de declaração, assinatura, kind/resultado, aridade, sort ou
 /// ligação de variável em pré-ordem, com coordenada exata na árvore plana.
 pub fn check(vocabulary: &Vocabulary, formula: &Formula) -> Result<(), SortError> {
+    check_with_binders(vocabulary, formula, &[])
+}
+
+/// Confere uma fórmula sob parâmetros externos, sem copiar ou envolver a AST.
+///
+/// `binders` está em ordem externo → interno: o último sort corresponde ao
+/// índice De Bruijn 0. Quantificadores da fórmula acrescentam binders internos.
+/// Como em [`check`], apenas declarações efetivamente usadas são conferidas.
+///
+/// # Errors
+/// Os mesmos erros de [`check`], considerando os parâmetros como binders ativos.
+pub fn check_with_binders(
+    vocabulary: &Vocabulary,
+    formula: &Formula,
+    binders: &[&Sort],
+) -> Result<(), SortError> {
     let mut checker = Checker {
         sorts: vocabulary.sorts().iter().map(|decl| &decl.name).collect(),
         symbols: vocabulary
@@ -119,7 +135,7 @@ pub fn check(vocabulary: &Vocabulary, formula: &Formula) -> Result<(), SortError
         term_frames: Vec::new(),
     };
     let mut frames: Vec<FormulaFrame> = Vec::new();
-    let mut binders = Vec::new();
+    let mut binders = binders.to_vec();
     for (index, node) in formula.nodes().iter().enumerate() {
         while let Some(frame) = frames.last() {
             if frame.remaining != 0 {

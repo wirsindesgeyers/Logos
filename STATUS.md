@@ -12,15 +12,16 @@ Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model` e CAS de `logos-ledger`;
 demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
-2.1: FiniteModel privado/contextual, h(V) conferido, domínios não vazios,
-enumeração ordinal, funções densas totais e predicados como conjuntos ordenados.
-model/v1 canônico, funções packed big-endian; limites inclusivos e overflow
-retornam Unknown(Size), nunca modelo parcial. Defined não recebe tabelas.
-15 testes Rust, 32 vetores independentes, quatro mutantes mortos;
-MODEL_SMOKE_OK e fuzz final 212019 execuções/61 s sem crash.
-ci/verify.sh --selftest: VERIFY_OK (exit 0), 175 Python + 25 TCB.
-TCB correção: 5538+78287=83825, build-only 51581; logos-model 930 LOC.
-Sem dependência externa runtime nova. Estrutura válida não prova M ⊨ φ/refutação.
+2.1–2.2: FiniteModel contextual/model-v1 e avaliador real M ⊨ φ na TCB.
+Termos, conectivos e quantificadores integrais; Defined com parâmetros De Bruijn
+isolados e relações de valores totais/únicas; enumeração conferida pela expansão.
+Unknown(Steps) e erros de entrada nunca viram booleanos. Somente steps é imposto;
+mem_bytes/size_bytes não prometem tetos físicos. Nenhum checker/Verdict novo.
+30 regressões de avaliação, 10k pares × Z3 sem divergências, cinco mutantes mortos;
+EVAL_SMOKE_OK e fuzz final model_eval 13591 execuções/61 s sem crash.
+ci/verify.sh --selftest: VERIFY_OK (exit 0), 176 Python + 25 TCB.
+TCB correção: 6207+78287=84494, build-only 51581; logos-model 1590 LOC.
+Núcleo 537 LOC, acima do alvo <400; explicado em ADR 0015. Sem runtime externo novo.
 
 ## Etapas da Fase 0
 
@@ -52,7 +53,8 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 2.1 Estruturas finitas | ✅ concluída localmente | FiniteModel/model-v1 contextual, totalidade/domínios/enumeração/Defined/tuplas/limites; 15 testes Rust, 32 vetores/hash independentes e quatro mutantes mortos. MODEL_SMOKE_OK, fuzz final 212019/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.1.md) §7, ADR 0014 e spec/model.md. CI/ARM/fuzz noturno ainda não observados. |
-| 2.2 Avaliador M ⊨ φ | ⏳ não iniciada | Próximo passo; FiniteModel e Budget prontos. |
+| 2.2 Avaliador M ⊨ φ | ⚠ implementada, falta S3 remota | 30 testes Rust, 10k pares Z3 (5783 true/4217 false), zero divergências; EVAL_SMOKE_OK, cinco mutantes mortos, fuzz final 13591/61 s e full verify/selftest VERIFY_OK. Núcleo 537 LOC (alvo <400 excedido); logos-model 1590. [Plano](docs/plans/etapa-2.2.md) §7, ADR 0015 e spec/evaluation.md. **Falta:** observar 1000 repetições S3 x86_64/aarch64 na CI e fuzz longo. |
+| 2.3 Checkers de refutação/consistência | ⏳ não iniciada | Próximo passo; avaliador 2.2, obrigação 1.5 e CAS 0.5 disponíveis. Decoder contextual da obrigação ainda precisa ser fixado. |
 
 Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.3–2.6 e Fases 3–23 não iniciadas.
 
@@ -67,10 +69,10 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.3–2.6 e Fases 3–23 nã
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
    Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2),
-   `sort_check` (1.3) e `model_decode` (2.1) integrados ao smoke/noturno;
+   `sort_check` (1.3), `model_decode` (2.1) e `model_eval` (2.2) integrados ao smoke/noturno;
    logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações/protocolo/modelo ARM ainda não observados.
-4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
+   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações/protocolo/modelo/avaliador ARM ainda não observados.
+4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
    ainda depende de observar o job remoto.
@@ -116,36 +118,35 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 2.2 — avaliador M ⊨ φ (`M`, TCB)
+## Próximo passo: Etapa 2.3 — checkers de refutação e consistência (`P`, TCB)
 
-Dependências prontas: FiniteModel validado/model-v1 (2.1), AIR/Vocabulary
-(1.1/1.2) e Budget/Exhausted com latch (0.6). Ler ROADMAP 2.2 e plano da fase 2;
-preparar docs/plans/etapa-2.2.md antes de implementar.
+Dependências prontas: eval contextual/Budget/Defined (2.2), Obligation e
+obligation/v1 só de saída (1.5), CAS e limites de bytes (0.5). Ler ROADMAP 2.3
+e plano da fase 2; resumir plano em STATUS ou criar plano se houver decisões.
 
-Implementar avaliador deliberadamente simples: termos, igualdade, predicados,
-conectivos e quantificadores com passos cobrados pelo Budget. Usar tabelas densas
-com último eixo mais rápido e verificar vínculo ao V real. Exaustão permanece
-erro/Unknown, nunca valor booleano padrão. Alvo <400 LOC para avaliador.
+Implementar check_refutation e check_consistency sem ledger/roteamento:
+refutação aceita sse todas as premissas são verdadeiras em M e goal é falso;
+consistência aceita sse todas as premissas são verdadeiras. Exaustão/entrada
+inválida nunca produz aceite ou Refuted. Consumir obrigação dos mesmos bytes
+cujo H é conferido: API recebe (bytes, h), recusa hash divergente antes de uso.
 
-Decisões em aberto: passagem contextual de V (FiniteModel guarda h(V), não V),
-parâmetros De Bruijn de Defined e denotação de Const/Func definidos por Formula
-(spec/vocabulary.md não fixa expansão); compatibilidade da expansão com rótulos
-intrínsecos das constantes Enumerated. Fixar semântica em ADR; não inventar
-denotação nem interpretar fórmula mal tipada como valor válido.
+Decisões abertas: localização/API do decoder contextual de obligation/v1
+(1.5 deliberadamente só oferece encoder), passagem/resolução de Vocabulary real
+e recuperação de artefatos no CAS. Definir essas fronteiras antes de implementar;
+não confiar em objeto apartado dos bytes, nem inventar ledger ausente.
+Se for preciso parser TCB novo: manifesto, fuzz, spec/vetores e ADR correspondentes.
 
-Critérios: diferencial Z3 em 10k pares (M, φ), zero divergências; propriedades
-S2/S3 do orçamento; LOC reportado. Sendo TCB: manifesto/lints, mutantes, smoke
-público e full verify/selftest. Z3 nessa etapa é oráculo diferencial, não produtor
-2.4; checkers de refutação/consistência (2.3), ledger e kernel fora do escopo.
-Otimizações/avaliação incremental também fora.
+Critérios: teste P2 com bytes de outra obrigação/hash trocado; cargo mutants,
+100% dos mutantes mortos no checker, smoke público e full verify/selftest.
+Produtor Z3 (2.4), ledger e kernel fora do escopo.
 
-Pendências remotas 0.1–2.1 separadas: execução local não fecha CI/ARM/fuzz longo.
-Cobertura 1.3 em target/sort-check-coverage.json é métrica instrumentada, não prova formal.
+Pendências remotas 0.1–2.2 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Cobertura sort-check permanece 36/36 LLVM, instrumentada, não prova formal.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 5538 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), após 2.1; logos-air: 1547 LOC, logos-obligation: 335 LOC, logos-model: 930 LOC.
+- **Tamanho da TCB de correção (execução):** 6207 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), após 2.2; logos-air: 1556 LOC, logos-obligation: 335 LOC, logos-model: 1590 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -163,6 +164,8 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - Revisores paralelos não executaram a revisão: backend retornou
   `Named models unavailable: Free plans can only use Auto`. Revisão feita
   diretamente; não atribuir resultados aos jobs falhos.
+- Z3 binário não estava disponível; diferencial usa z3-solver 5.1.0.0 dev
+  Python, fora da TCB. Quantificadores são nativos; modelo finito explicitamente fixado.
 
 ## Diário (apenas acrescentar)
 
@@ -421,3 +424,29 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   TCB correção 5538+78287=83825 (+928 próprios), build-only 51581; logos-model 930.
   Memória/logs/adições preexistentes ao STATUS preservados fora do commit.
   Sem push/CI remota; próximo: 2.2, com expansão Defined/Const/Func ainda a especificar.
+- **2026-10-05** — Etapa 2.2 implementada: eval(M,V,φ,Budget) contextual
+  na TCB, pilhas explícitas compartilhadas, sem recursão/cópia de AST/tabelas
+  Defined. ADR 0015 fixa Pred argumento i no índice i; Const/Func resultado 0,
+  argumentos 1+; todos corpos tipados, valores globais totais/únicos inclusive
+  não usados, constantes enumeradas compatíveis. Unknown(Steps)/erros tipados
+  nunca viram bool; mem_bytes/size_bytes não são tetos físicos desta API.
+  30 regressões Rust; 500 níveis de termos/fórmulas e 250 Defined em 64 KiB.
+  Dois bugs de integração reproduzidos e corrigidos com regressões: função
+  nulária buscando consts e f(g(c)) pulando f após expansão. Máquina única
+  removeu Vec/máquina por termo/candidato. Cinco mutantes compilados mortos:
+  Eq/Iff invertido, eixo funcional errado, múltiplos resultados aceitos,
+  passos de nó omitidos, h(V) ignorado. Fontes restauradas.
+  Z3 5.1.0.0 dev: 100 modelos, 10k pares com quantificadores nativos,
+  5783 true/4217 false, zero divergências; oráculo não é produtor 2.4.
+  EVAL_SMOKE_OK. Fuzz final model_eval 13591/61 s sem crash; anterior39145/61 s.
+  Cobertura sort-check 36/36 ramos LLVM, 100%, sem exclusões.
+  Full verify parou primeiro em collapsible_if/chunks_exact/is_multiple_of;
+  ruff/mypy detectaram import obsoleto e tuplas canon invariantes. Corrigidos,
+  sem allow. ci/verify.sh --selftest final: VERIFY_OK, exit 0; workspace,
+  smokes/guards/vetores/supply-chain/selftest, 176 Python + 25 TCB.
+  Avisos deny já presentes (duas licenças não encontradas e syn 2/3), sem erro.
+  TCB correção6207+78287=84494, fidelidade1559+80034=81593, build-only51581.
+  logos-model1590; núcleo537 vs. alvo<400, desvio explícito em ADR.
+  Nenhum formato/domínio/dependência runtime novo. Memória/logs/adições prévias
+  ao STATUS preservados fora do commit. Sem push/CI remota; S3 ARM pendente.
+  Próximo: 2.3, fixar decoder contextual da obrigação e checkers P2.

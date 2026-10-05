@@ -70,7 +70,7 @@ name = "logos-model"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/codec.rs", "src/data.rs", "src/error.rs", "src/exact_size.rs", "src/lib.rs", "src/limits.rs", "src/model.rs", "src/validate.rs"]
+files = ["src/codec.rs", "src/data.rs", "src/error.rs", "src/eval.rs", "src/eval_error.rs", "src/evaluate.rs", "src/exact_size.rs", "src/lib.rs", "src/limits.rs", "src/model.rs", "src/validate.rs"]
 
 [[crate]]
 name = "logos-ground"

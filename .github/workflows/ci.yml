@@ -52,6 +52,8 @@ jobs:
         run: cargo run -p logos-protocol --example protocol_smoke
       - name: Smoke público das estruturas finitas
         run: cargo run -p logos-model --example model_smoke
+      - name: Smoke público do avaliador finito
+        run: cargo run -p logos-model --example eval_smoke
 
   sort-coverage:
     name: Sort-checker (100% dos ramos LLVM)

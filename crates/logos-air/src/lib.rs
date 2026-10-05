@@ -19,7 +19,9 @@ mod vocabulary;
 mod vocabulary_codec;
 
 pub use error::AirError;
-pub use sort_check::{SortError, SortErrorKind, SortPath, TermPath, TermPosition, check};
+pub use sort_check::{
+    SortError, SortErrorKind, SortPath, TermPath, TermPosition, check, check_with_binders,
+};
 pub use syntax::{
     Formula, FormulaNode, Limits, LogicId, Sort, Symbol, SymbolKind, SymbolResult, Term, TermNode,
 };

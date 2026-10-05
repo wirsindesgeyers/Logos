@@ -15,6 +15,7 @@ cargo run -p logos-air-text --example air_text_smoke
 cargo run -p logos-obligation --example obligation_smoke
 cargo run -p logos-protocol --example protocol_smoke
 cargo run -p logos-model --example model_smoke
+cargo run -p logos-model --example eval_smoke
 ci/check-tcb-lints.sh
 ci/check-audit-independence.sh
 tcb/count.sh check

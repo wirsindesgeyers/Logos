@@ -28,8 +28,9 @@ listadas. Constante na posição i da enumeração denota elemento i; uma consta
 primitiva listada MUST ter interpretação i. Isso fixa representantes distintos e
 cobre todo domínio. Outras constantes desse sort podem denotar qualquer elemento.
 Enumeração vazia não tem modelo clássico não vazio. Constantes Defined listadas
-não ganham tabela: têm rótulo ordinal intrínseco; verificar se expansão respeita
-esse rótulo pertence à 2.2. Estrutura não demonstra tal compatibilidade.
+não ganham tabela: têm rótulo ordinal intrínseco; a avaliação contextual
+([evaluation.md](evaluation.md), 2.2) verifica se a expansão respeita esse
+rótulo. Estrutura isolada não demonstra tal compatibilidade.
 
 Assinaturas MUST ser semanticamente válidas, inclusive Defined:
 
@@ -126,4 +127,5 @@ Vetores: [vectors/model/vectors.json](vectors/model/vectors.json).
 Gerador independente stdlib: `tools/gen_model_vectors.py --check`.
 Smoke público: `cargo run -p logos-model --example model_smoke`.
 Fuzz: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 model_decode`.
-Avaliação de fórmulas/expansão Defined, solver e ledger estão fora desta etapa.
+Avaliação/expansão Defined é especificada em [evaluation.md](evaluation.md);
+solver e ledger permanecem fora desta etapa de estruturas.

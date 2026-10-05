@@ -18,5 +18,6 @@ Interfaces: posições de sorts/símbolos referem-se ao vocabulário exato hashe
 funções densas usam último eixo mais rápido; predicados são conjuntos de tuplas.
 Unknown(Size/Memory) permanece exaustão, nunca Refuted ou aceitação parcial.
 
-2.1 implementada nesta sessão; 2.2–2.6 não iniciadas. Memória de longo prazo
+2.1 e 2.2 implementadas localmente; S3 do avaliador em duas arquiteturas da CI
+ainda precisa ser observado. 2.3–2.6 não iniciadas. Memória de longo prazo
 continua proposta separada, sem alteração de escopo ou dependências desta fase.

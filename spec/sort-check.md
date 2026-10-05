@@ -34,10 +34,12 @@ assegura que:
 8. Os termos comparados por igualdade (`Eq`) e os argumentos passados a predicados e funções
    possuem sorts idênticos aos esperados pelo contexto.
 
-O sort-checker NÃO realiza inferência de tipos, NÃO expande corpos definidores (`Defined`),
-NÃO valida fórmulas abertas com parâmetros livres, e NÃO emite provas lógicas ou veredictos de
-satisfatibilidade. Apenas os símbolos e sorts efetivamente empregados na fórmula sob exame são
-validados; declarações não utilizadas presentes no vocabulário não são avaliadas.
+O sort-checker NÃO realiza inferência de tipos, NÃO expande corpos definidores
+(`Defined`) e NÃO emite provas lógicas ou veredictos de satisfatibilidade.
+`check` exige fórmula fechada; `check_with_binders` admite parâmetros externos
+explícitos para os consumidores da 2.2. Apenas símbolos e sorts efetivamente
+empregados na fórmula sob exame são validados; declarações não utilizadas
+presentes no vocabulário não são avaliadas.
 
 ---
 
@@ -55,6 +57,12 @@ A função recebe referências imutáveis ao vocabulário e à fórmula. Se todo
 estiverem em estrita conformidade de tipos e fechamento, a função DEVE retornar `Ok(())`.
 Caso contrário, DEVE retornar imediatamente `Err(SortError)` apontando para a primeira
 inconformidade encontrada na ordem determinística de percurso.
+
+Consumidores com parâmetros explícitos usam
+`check_with_binders(vocabulary, formula, binders: &[&Sort])` com mesmos erros e
+percurso. Binders estão em ordem externo → interno; último corresponde a índice
+De Bruijn 0. Quantificadores locais acrescentam binders; ao sair do corpo,
+restauram contexto inicial. Não se copia AST nem se infere sort de parâmetro.
 
 ### 2.2. Tipos de erro e localização
 

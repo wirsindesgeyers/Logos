@@ -105,9 +105,10 @@ O *grounding* explicita como o símbolo adquire significado semântico:
 1. **Defined (`[0, Formula]`)**: símbolo definido formalmente em termos de outros símbolos.
    - O corpo da definição guarda **exclusivamente a fórmula definidora**, e NÃO o axioma
      completo `P(x) ↔ corpo`.
-   - Para predicados, variáveis livres De Bruijn representam parâmetros; sua
-     substituição e tipagem serão fixadas nas etapas consumidoras.
-     Const/Func também podem carregar Formula; esta etapa não define sua expansão.
+   - Parâmetros livres e expansão de Pred/Const/Func são fixados em
+     [evaluation.md](evaluation.md): Pred usa argumento i no índice i;
+     Const/Func usa resultado no índice 0 e argumento i no índice i+1.
+     Corpos de valores definem relações totais com resultado único no modelo.
    - Auto-referência é expressamente proibida: o símbolo que está sendo definido
      NÃO DEVE aparecer no corpo definidor (seja como predicado, função ou constante).
    - Todo símbolo e todo sort referenciado no corpo da fórmula DEVE estar declarado

@@ -10,6 +10,9 @@
 mod codec;
 mod data;
 mod error;
+mod eval;
+mod eval_error;
+mod evaluate;
 mod exact_size;
 mod limits;
 mod model;
@@ -17,5 +20,7 @@ mod validate;
 
 pub use data::ModelData;
 pub use error::ModelError;
+pub use eval::eval;
+pub use eval_error::EvalError;
 pub use limits::ModelLimits;
 pub use model::FiniteModel;

@@ -604,13 +604,17 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 
 **Entregáveis.**
 - `eval(M, φ, budget) -> Result<bool, Exhausted>`, com contador de passos (quantificadores multiplicam passos pelo tamanho do domínio).
+  API contextual concreta: `eval(M, V, φ, budget) -> Result<bool, EvalError>`;
+  `Unknown(Exhausted)` preserva exaustão; entradas inválidas são erros tipados,
+  não booleanos. Semântica dos parâmetros/totalidade Defined: ADR 0015 e
+  `spec/evaluation.md`; model/v1 e vocabulary/v1 não mudam.
 - Implementação deliberadamente ingênua e curta (alvo: < 400 LOC). Clareza > desempenho.
 - Avaliação de `Defined` símbolos por expansão da definição.
 
 **Critério de conclusão.**
-- [ ] Teste diferencial contra Z3 (`(eval φ)` num modelo exportado) em 10k pares (M, φ) aleatórios: 0 divergências.
-- [ ] Teste de orçamento: S2 e S3 (da Etapa 0.6) valem para o avaliador.
-- [ ] LOC do crate reportado no manifesto da TCB.
+- [x] Teste diferencial contra Z3 (`(eval φ)` num modelo exportado) em 10k pares (M, φ) aleatórios: 0 divergências. Evidência local: `py/tests/test_model_differential.py`, seed 20261005, 5783 true/4217 false; modelos finitos explícitos e quantificadores Z3 nativos.
+- [ ] Teste de orçamento: S2 e S3 (da Etapa 0.6) valem para o avaliador. **Local:** limites exatos, Unknown preservado e 1000 repetições true/false/Unknown passaram. **Falta:** observar mesma suíte em x86_64/aarch64 nativos na CI.
+- [x] LOC do crate reportado no manifesto da TCB. `cargo xtask tcb report`: logos-model 1590 LOC, núcleo formatado 537 (alvo <400 excedido; ADR 0015); sem dependência runtime externa nova.
 
 ---
 

@@ -22,6 +22,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`spec/air-surface.md`](spec/air-surface.md) | Texto AIR não confiável: gramática, documentos, nomes e debug reversível |
 | [`spec/obligation.md`](spec/obligation.md) | Geração TCB, citações de eventos, snapshot e obligation/v1 só de saída |
 | [`spec/model.md`](spec/model.md) | model/v1: estruturas finitas, funções totais, enumeração e limites |
+| [`spec/evaluation.md`](spec/evaluation.md) | M ⊨ φ contextual, expansão Defined, erros e passos determinísticos |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -39,9 +40,11 @@ cargo run -p logos-air-text --example air_text_smoke   # texto → AIR, bytes e 
 cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citações, rejeições e h(O)
 cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candidato → O; sem autoridade
 cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/domínio e Unknown(Size)
+cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
+(cd py && uv run pytest -q -s tests/test_model_differential.py)   # 10k pares (M, φ) × Z3
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
 ci/selftest.sh   # bloqueios reais: unsafe, unwrap, lints comentados e dependências fora da allowlist
@@ -120,8 +123,17 @@ vinculado a Vocabulary real por h(V), domínios finitos, constantes, funções
 densas totais e conjuntos ordenados de tuplas. Defined não recebe tabelas;
 excesso de tamanho é Unknown(Size), nunca modelo truncado. Contrato em
 [`spec/model.md`](spec/model.md), decisão em
-[`ADR 0014`](docs/adr/0014-estruturas-finitas.md). Avaliador e checkers da
-Fase 2 ainda não implementados; estrutura válida não prova refutação.
+[`ADR 0014`](docs/adr/0014-estruturas-finitas.md). Estrutura válida não prova refutação.
+
+Etapa 2.2 oferece `logos-model::eval(&model, &vocabulary, &formula, &budget)`:
+termos, conectivos e quantificadores integrais, expansão Defined com parâmetros
+De Bruijn isolados e relações Const/Func totais com resultado único. Conferência
+de h(V), tipagem de todos os corpos e compatibilidade ordinal antecedem fórmula.
+Erros de entrada e Unknown(Steps) nunca viram booleano; somente steps é imposto,
+wall ignorado e mem_bytes/size_bytes não são tetos físicos nesta API.
+Contrato em [`spec/evaluation.md`](spec/evaluation.md), decisão em
+[`ADR 0015`](docs/adr/0015-avaliacao-finita-defined.md). Checkers 2.3 ainda não
+implementados; avaliador não emite Verdict.
 
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
