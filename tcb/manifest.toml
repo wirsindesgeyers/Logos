@@ -63,14 +63,14 @@ name = "logos-obligation"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/codec.rs", "src/error.rs", "src/generate.rs", "src/lib.rs", "src/types.rs"]
+files = ["src/codec.rs", "src/decode.rs", "src/error.rs", "src/generate.rs", "src/lib.rs", "src/types.rs"]
 
 [[crate]]
 name = "logos-model"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/codec.rs", "src/data.rs", "src/error.rs", "src/eval.rs", "src/eval_error.rs", "src/evaluate.rs", "src/exact_size.rs", "src/lib.rs", "src/limits.rs", "src/model.rs", "src/validate.rs"]
+files = ["src/checker.rs", "src/checker_context.rs", "src/codec.rs", "src/data.rs", "src/error.rs", "src/eval.rs", "src/eval_error.rs", "src/evaluate.rs", "src/exact_size.rs", "src/lib.rs", "src/limits.rs", "src/model.rs", "src/validate.rs"]
 
 [[crate]]
 name = "logos-ground"

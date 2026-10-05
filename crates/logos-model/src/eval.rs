@@ -2,7 +2,7 @@
 
 use logos_air::{Formula, Grounding, SymbolResult, Vocabulary, check, check_with_binders};
 use logos_core::{Budget, CheckOutcome, Exhausted, StepMeter};
-use logos_crypto::hash;
+use logos_crypto::{Hash, hash};
 
 use crate::{EvalError, FiniteModel};
 
@@ -29,7 +29,7 @@ pub fn eval(
 ) -> Result<bool, EvalError> {
     let mut result = Err(EvalError::Unknown(Exhausted::Steps));
     let outcome = StepMeter::run(budget, |meter| {
-        result = contextual_run(model, vocabulary, formula, meter);
+        result = eval_on_meter(model, vocabulary, formula, meter);
         match &result {
             Err(EvalError::Unknown(reason)) => CheckOutcome::Unknown(*reason),
             // Accepted finaliza apenas o medidor; nunca é exposto como prova.
@@ -48,7 +48,14 @@ fn charge_nodes(meter: &StepMeter, nodes: usize) -> Result<(), EvalError> {
     Ok(())
 }
 
-fn contextual_run(
+/// Avalia sob um medidor existente, sem restaurar seu saldo entre chamadas.
+///
+/// Mesmas validações e cobranças de [`eval`]; o chamador deve finalizar pelo
+/// latch de [`StepMeter::run`] e preservar erros `Unknown`.
+///
+/// # Errors
+/// Retorna os mesmos erros contextuais e de exaustão de [`eval`].
+pub fn eval_on_meter(
     model: &FiniteModel,
     vocabulary: &Vocabulary,
     formula: &Formula,
@@ -60,6 +67,11 @@ fn contextual_run(
     }
     charge_nodes(meter, formula.node_count())?;
     check(vocabulary, formula)?;
+    check_definitions(vocabulary, meter)?;
+    crate::evaluate::run(model, vocabulary, formula, meter)
+}
+
+fn check_definitions(vocabulary: &Vocabulary, meter: &StepMeter) -> Result<(), EvalError> {
     for declaration in vocabulary.symbols() {
         meter.charge(1)?;
         if let Grounding::Defined(body) = &declaration.grounding {
@@ -81,5 +93,30 @@ fn contextual_run(
             check_with_binders(vocabulary, body, &binders)?;
         }
     }
-    crate::evaluate::run(model, vocabulary, formula, meter)
+    Ok(())
+}
+
+pub(crate) fn validate_model_context<'a>(
+    model: &'a FiniteModel,
+    vocabulary: &'a Vocabulary,
+    expected_vocabulary: Hash<Vocabulary>,
+    meter: &'a StepMeter,
+) -> Result<crate::evaluate::Machine<'a>, EvalError> {
+    meter.charge(1)?;
+    if model.data().vocab != expected_vocabulary {
+        return Err(EvalError::VocabularyMismatch);
+    }
+    check_definitions(vocabulary, meter)?;
+    let mut machine = crate::evaluate::Machine::new(model, vocabulary, meter);
+    machine.validate_definitions()?;
+    Ok(machine)
+}
+
+pub(crate) fn eval_checked<'a>(
+    machine: &mut crate::evaluate::Machine<'a>,
+    formula: &'a Formula,
+    meter: &StepMeter,
+) -> Result<bool, EvalError> {
+    charge_nodes(meter, formula.node_count())?;
+    machine.evaluate_formula(formula)
 }

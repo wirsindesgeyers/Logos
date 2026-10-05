@@ -238,6 +238,8 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-ledger",
+ "logos-obligation",
  "serde_json",
 ]
 
@@ -247,6 +249,7 @@ version = "0.0.0"
 dependencies = [
  "logos-air",
  "logos-canon",
+ "logos-core",
  "logos-crypto",
  "serde_json",
  "trybuild",

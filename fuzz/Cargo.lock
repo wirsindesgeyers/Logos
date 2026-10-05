@@ -211,10 +211,30 @@ dependencies = [
  "logos-core",
  "logos-crypto",
  "logos-model",
+ "logos-obligation",
+]
+
+[[package]]
+name = "logos-ledger"
+version = "0.0.0"
+dependencies = [
+ "logos-crypto",
 ]
 
 [[package]]
 name = "logos-model"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ledger",
+ "logos-obligation",
+]
+
+[[package]]
+name = "logos-obligation"
 version = "0.0.0"
 dependencies = [
  "logos-air",

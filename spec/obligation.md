@@ -1,7 +1,7 @@
-# obligation/v1 — geração determinística de obrigações
+# obligation/v1 — geração selada e leitura contextual
 
-Etapa 1.5; ADR 0012. Transporte canon/v1, AIR FOL-ms-eq/v1, Vocabulary/v1.
-Gerador pertence à TCB de correção. Objeto lógico não é Verified, prova,
+Etapas 1.5/2.3; ADRs 0012/0016. Transporte canon/v1, AIR FOL-ms-eq/v1, Vocabulary/v1.
+Gerador e reader pertencem à TCB de correção. Objeto lógico não é Verified, prova,
 autorização, evento ou atestado de fidelidade.
 
 ## 1. Fronteira e entrada
@@ -47,7 +47,7 @@ lookup ao evento pedido e valida autenticidade/proveniência/escopo no leitor.
 Sem acesso a relógio ou rede pelo gerador. Getter da época é lido uma vez.
 Implementação real depende da 3.3, ausente; testes/smoke usam snapshot em memória.
 Unavailable/InvalidRecord são erros, nunca ausência. Formula/Vocabulary já têm
-construtores estruturais validados; nada de decoder de Obligation nesta etapa.
+construtores estruturais validados; decoder 2.3 produz tipo distinto (§6), não Obligation.
 `LedgerEntry.epoch` é a época de aplicabilidade resolvida pelo snapshot, não
 necessariamente a época de emissão imutável do evento. O reader futuro decide
 se o evento ainda é válido; o gerador exige aplicabilidade na época corrente.
@@ -129,5 +129,41 @@ identidade das referências testam canonização. Rejeições cobrem todos os ki
 época, retratação, falhas da view, sorts e compatibilidade direcional.
 Compile-fail externo cobre struct literal, decoder, Default e conversão; controle
 positivo só usa generate. Smoke público e mutantes de TCB demonstram comportamento.
-Sem parser/decoder novo na TCB => não há alvo de fuzz de decoder de Obligation;
-inputs AIR continuam cobertos pelos alvos existentes.
+Etapa 1.5 não introduziu parser; Etapa 2.3 acrescenta reader contextual e alvo
+obligation_decode, sem abrir a construção selada de Obligation.
+
+## 6. Reader contextual para checkers (Etapa 2.3)
+
+`decode_for_check(bytes, Hash<Obligation>, &Vocabulary, DecodeLimits)`
+retorna `Result<CheckedObligation,DecodeError>`. Campos privados e accessors
+vocab/premises/goal; CheckedObligation MUST NOT implementar Canon, Domain,
+CanonDecode ou conversão para Obligation. Não é objeto emitido por generate.
+
+Ordem de processamento MUST ser: teto de bytes, hash_raw::<Obligation> dos
+bytes originais comparado ao esperado, Decoder canônico com finish exato,
+envelope §2 exato, h(V) real, referências estritamente crescentes, AIR e
+sort-check de cada fórmula fechada (incluindo goal). Hash divergente MUST
+recusar antes de parsing; MUST NOT hashear apenas um reencoding da AST.
+Duplicatas/ordem inválida MUST ser InvalidPremises, nunca normalizadas.
+
+DecodeLimits inclusivos: max_bytes (padrão 1.048.576), max_premises (4.096) e
+air=Limits padrão (depth=128 por fórmula, nodes=100.000 agregados entre todas
+as premissas e goal, inclusive termos). Bytes antes de materializar Value;
+quantidade de premissas antes da reserva tipada. Decoder canônico conserva
+MAX_DEPTH independente; excedê-lo é Canon(DepthExceeded). Limites AIR/bytes/
+premissas produzem Unknown(Size); falhas de reserva tipada Unknown(Memory).
+Materialização Value não promete hard RSS. Demais erros preservam Canon/Air/
+Sort, HashMismatch ou VocabularyMismatch; nunca objeto parcial/padrão.
+
+Reader MUST NOT afirmar que uma referência é citável/autêntica ou válida na
+época atual. h(O) esperado MUST ser obtido de obrigação gerada pelo monitor:
+um atacante que fornece bytes e recalcula hash não obtém proveniência. P1
+permanece em generate/LedgerView; P2 liga dados lógicos ao hash esperado.
+
+Reprodução: `cargo test -p logos-obligation --test decoding`; positivos
+reutilizam os 20 vetores independentes da geração; negativos fixos adicionais
+em [vectors/obligation/decoder.json](vectors/obligation/decoder.json), com
+hashes SHA-256 dos bytes originais. Sem alteração de versão/layout/domain.
+Fuzz: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 obligation_decode`.
+Checkers/limites compartilhados: [evaluation.md](evaluation.md) §5.
+

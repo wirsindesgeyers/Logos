@@ -86,7 +86,7 @@ enum Job<'a> {
     },
 }
 
-struct Machine<'a> {
+pub(crate) struct Machine<'a> {
     model: &'a FiniteModel,
     vocabulary: &'a Vocabulary,
     meter: &'a StepMeter,
@@ -97,7 +97,11 @@ struct Machine<'a> {
 }
 
 impl<'a> Machine<'a> {
-    fn new(model: &'a FiniteModel, vocabulary: &'a Vocabulary, meter: &'a StepMeter) -> Self {
+    pub(crate) fn new(
+        model: &'a FiniteModel,
+        vocabulary: &'a Vocabulary,
+        meter: &'a StepMeter,
+    ) -> Self {
         Self {
             model,
             vocabulary,
@@ -107,6 +111,12 @@ impl<'a> Machine<'a> {
             env: Vec::new(),
             end: 0,
         }
+    }
+
+    pub(crate) fn evaluate_formula(&mut self, formula: &'a Formula) -> Result<bool, EvalError> {
+        self.end = 0;
+        push(&mut self.jobs, Job::Formula(formula.nodes(), 0))?;
+        self.drive().map(|value| value != 0)
     }
 
     fn domain(&self, sort: &Sort) -> Result<u32, EvalError> {
@@ -479,7 +489,7 @@ impl<'a> Machine<'a> {
         self.values.pop().ok_or(EvalError::VocabularyMismatch)
     }
 
-    fn validate_definitions(&mut self) -> Result<(), EvalError> {
+    pub(crate) fn validate_definitions(&mut self) -> Result<(), EvalError> {
         let mut tuple = Vec::new();
         let mut cards = Vec::new();
         for (id, declaration) in self.vocabulary.symbols().iter().enumerate() {

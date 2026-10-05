@@ -54,9 +54,9 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | --- | --- | --- |
 | 2.1 Estruturas finitas | ✅ concluída localmente | FiniteModel/model-v1 contextual, totalidade/domínios/enumeração/Defined/tuplas/limites; 15 testes Rust, 32 vetores/hash independentes e quatro mutantes mortos. MODEL_SMOKE_OK, fuzz final 212019/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.1.md) §7, ADR 0014 e spec/model.md. CI/ARM/fuzz noturno ainda não observados. |
 | 2.2 Avaliador M ⊨ φ | ⚠ implementada, falta S3 remota | 30 testes Rust, 10k pares Z3 (5783 true/4217 false), zero divergências; EVAL_SMOKE_OK, cinco mutantes mortos, fuzz final 13591/61 s e full verify/selftest VERIFY_OK. Núcleo 537 LOC (alvo <400 excedido); logos-model 1590. [Plano](docs/plans/etapa-2.2.md) §7, ADR 0015 e spec/evaluation.md. **Falta:** observar 1000 repetições S3 x86_64/aarch64 na CI e fuzz longo. |
-| 2.3 Checkers de refutação/consistência | ⏳ não iniciada | Próximo passo; avaliador 2.2, obrigação 1.5 e CAS 0.5 disponíveis. Decoder contextual da obrigação ainda precisa ser fixado. |
+| 2.3 Checkers de refutação/consistência | ✅ concluída localmente | ModelChecker/P2, reader não autoritativo de obligation/v1 e CAS real; 21 testes de checker + 15 de decoder, 20 vetores positivos/10 negativos. cargo-mutants: 12/12 viáveis capturados no checker (8 inviáveis), 17/17 no reader (4 inviáveis), zero sobreviventes. CHECKER_SMOKE_OK; fuzz final 10297/3909 execuções por alvo em 61 s, full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.3.md) §7/ADR 0016. CI/ARM/fuzz longo ainda não observados. |
 
-Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.3–2.6 e Fases 3–23 não iniciadas.
+Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.4–2.6 e Fases 3–23 não iniciadas.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -69,10 +69,13 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.3–2.6 e Fases 3–23 nã
    (`canon_decode`, `canon_text`, `crypto_decode`, `crypto_keyfile`, `cas_domain`), com logs
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
    Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2),
-   `sort_check` (1.3), `model_decode` (2.1) e `model_eval` (2.2) integrados ao smoke/noturno;
-   logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações/protocolo/modelo/avaliador ARM ainda não observados.
+   `sort_check` (1.3), `model_decode` (2.1), `model_eval` (2.2) e
+   `obligation_decode` (2.3) integrados ao smoke/noturno; logs locais não provam
+   CI nem ≥ 1 h. Smokes AIR/vocabulário/sort-check/AIR textual/obrigações/protocolo/
+   modelo/avaliador/checker ARM ainda não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
+   Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
+   dois runners nativos foi ligada ao workflow, ainda sem observação remota.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
    ainda depende de observar o job remoto.
@@ -118,35 +121,36 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 2.3 — checkers de refutação e consistência (`P`, TCB)
+## Próximo passo: Etapa 2.4 — produtor Z3 de modelos (fora da TCB, `M`)
 
-Dependências prontas: eval contextual/Budget/Defined (2.2), Obligation e
-obligation/v1 só de saída (1.5), CAS e limites de bytes (0.5). Ler ROADMAP 2.3
-e plano da fase 2; resumir plano em STATUS ou criar plano se houver decisões.
+Dependências prontas: formatos model/v1 (2.1), obligation/v1 gerado (1.5),
+encoder canônico Python (0.3), evaluator/Defined (2.2) e ModelChecker com
+bytes/hash/CAS (2.3). Z3 5.1.0.0 já é dependência dev usada no diferencial 2.2,
+não produtor. Ler ROADMAP 2.4 e criar docs/plans/etapa-2.4.md antes do código.
 
-Implementar check_refutation e check_consistency sem ledger/roteamento:
-refutação aceita sse todas as premissas são verdadeiras em M e goal é falso;
-consistência aceita sse todas as premissas são verdadeiras. Exaustão/entrada
-inválida nunca produz aceite ou Refuted. Consumir obrigação dos mesmos bytes
-cujo H é conferido: API recebe (bytes, h), recusa hash divergente antes de uso.
+Implementar logos_provers.z3_models: O → SMT-LIB, refute busca Γ ∧ ¬goal;
+witness busca Γ. Emitir modelo model/v1 canônico contra V exato, preservando
+posições, tabelas densas/tuplas ordenadas e convenções De Bruijn/Defined da
+ADR 0015. Modelo produzido é certificado não confiável, não Refuted/Verified.
+Reusar checker real 2.3 para aceitação; não simular verifier com booleano Python.
 
-Decisões abertas: localização/API do decoder contextual de obligation/v1
-(1.5 deliberadamente só oferece encoder), passagem/resolução de Vocabulary real
-e recuperação de artefatos no CAS. Definir essas fronteiras antes de implementar;
-não confiar em objeto apartado dos bytes, nem inventar ledger ausente.
-Se for preciso parser TCB novo: manifesto, fuzz, spec/vetores e ADR correspondentes.
+Decisões abertas: limites/timeout e busca 1..k em Open, transporte SMT-LIB para
+Z3, fechamento Enumerated e expansão/relações Defined compatíveis com 2.2.
+Unknown/timeout não produz certificado; formatos/hashes permanecem v1.
 
-Critérios: teste P2 com bytes de outra obrigação/hash trocado; cargo mutants,
-100% dos mutantes mortos no checker, smoke público e full verify/selftest.
-Produtor Z3 (2.4), ledger e kernel fora do escopo.
+Critérios: corpus de 200 obrigações refutáveis, ≥95% com contramodelo aceito;
+Z3 falso com modelos aleatórios em 10k tentativas nunca obtém Accepted indevido;
+negação invertida no tradutor gera rejeição, nunca refutação falsa. Nenhuma
+prova de Verified ou integração ao farm (10.2).
 
-Pendências remotas 0.1–2.2 separadas: local não fecha S3/ARM/CI/fuzz longo.
-Cobertura sort-check permanece 36/36 LLVM, instrumentada, não prova formal.
+Pendências remotas 0.1–2.3 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Reader 2.3 não verifica proveniência/época: h(O) esperado deve vir do monitor.
+Budget não promete hard RSS/wall; CAS impõe seus limites próprios. Sem ledger.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 6207 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), após 2.2; logos-air: 1556 LOC, logos-obligation: 335 LOC, logos-model: 1590 LOC.
+- **Tamanho da TCB de correção (execução):** 6677 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), após 2.3; logos-air: 1556 LOC, logos-obligation: 550 LOC, logos-model: 1845 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -450,3 +454,32 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Nenhum formato/domínio/dependência runtime novo. Memória/logs/adições prévias
   ao STATUS preservados fora do commit. Sem push/CI remota; S3 ARM pendente.
   Próximo: 2.3, fixar decoder contextual da obrigação e checkers P2.
+- **2026-10-05** — Etapa 2.3 implementada: ModelChecker com refutação/consistência,
+  decoder contextual de obrigação dos mesmos bytes/h(O), CheckedObligation
+  separado de Obligation gerado (P1), refs estritas e limite agregado de nós.
+  Budget compartilhado: bytes/contexto/Defined globais/premissas/goal; uma máquina
+  e pilhas por execução, sem reset nem sort-check/rehash de V no evaluator.
+  Consistência valida goal mas ignora verdade; Contexto inválido nunca aceita
+  mesmo com Γ vazio. CAS real verifica bytes/h(M); ausência Rejected, I/O/
+  integridade/teto do CAS Err explícito, exaustão preserva Unknown.
+  Reasons canônicos preparados uma vez por processo, sem fallback de encoding.
+  ADR 0016/plano/specs, manifesto, deps workspace/deny e workflows atualizados;
+  nenhum formato/domain/dependência externa runtime novo. Sem ledger/roteamento.
+  21 novos testes de checker + 15 decoder, 20 vetores positivos + 10 negativos;
+  100 Rust seletivos passaram, incluindo controle de geração selada. 1000
+  repetições S3 locais e predicado Defined quantificado em domínios 1/2.
+  Fixtures inicialmente tinham SortDecl/Array incompatíveis e predicado ausente;
+  corrigidos, inclusive lowercase que mascarava erro de tipagem. Clippy detectou
+  collapsible_if/is_multiple_of/onze clones para slices; corrigidos sem allow.
+  CHECKER_SMOKE_OK. cargo-mutants 27.1.0 final: checker 20 gerados, 12/12 viáveis
+  capturados e 8 inviáveis; reader 21 gerados, 17/17 capturados e 4 inviáveis.
+  Zero sobreviventes/timeouts, sem exclusões no checker. Inviáveis não contam
+  como mortos/cobertura; não foi inventado Default para tipos selados/resultados.
+  Fuzz final nightly datado: obligation_decode 10297/61 s, model_eval 3909/61 s,
+  sem crash; primeiro parser23582/61 s. Sem RUSTC_BOOTSTRAP.
+  ci/verify.sh --selftest: VERIFY_OK, exit 0, workspace Rust, smokes/guards/
+  manifesto/independência/supply-chain/vetores, 176 Python + 25 TCB, selftest
+  negativo completo; avisos deny preexistentes de licenças e syn 2/3, sem erro.
+  TCB correção6677+78287=84964 (+470 próprios), build-only51581; obrigação550,
+  modelo1845. Memória/diário/logs preexistentes preservados fora do commit.
+  Sem push/CI remota; S3 ARM e fuzz ≥1h pendentes. Próximo: produtor Z3 2.4.

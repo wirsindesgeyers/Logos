@@ -630,8 +630,8 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 - Ambos consomem o `Obligation` decodificado **dos mesmos bytes** que foram hasheados (P2): a API recebe `(bytes, h)` e recusa se `H(bytes) ≠ h`.
 
 **Critério de conclusão.**
-- [ ] Teste de P2: passar bytes de uma obrigação com hash de outra → recusa.
-- [ ] Mutation testing (`cargo mutants`) no checker: 100% dos mutantes mortos.
+- [x] Teste de P2: passar bytes de uma obrigação com hash de outra → recusa.
+- [x] Mutation testing (`cargo mutants`) no checker: 100% dos mutantes mortos. Evidência local: 12/12 viáveis capturados; 20 gerados, 8 inviáveis (não contam como mortos/cobertura), zero sobreviventes/timeouts, sem exclusões. [Plano 2.3](docs/plans/etapa-2.3.md) §7.
 
 ---
 

@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 logos-air = { path = "../logos-air" }
 logos-canon = { path = "../logos-canon" }
+logos-core = { path = "../logos-core" }
 logos-crypto = { path = "../logos-crypto" }
 
 [dev-dependencies]
