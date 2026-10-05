@@ -26,6 +26,7 @@ allow = [
   { name = "logos-air" },
   { name = "logos-air-text" }, # fora da TCB, ADR 0011
   { name = "logos-obligation" }, # AIR/canon/crypto workspace, ADR 0012
+  { name = "logos-protocol" }, # JSON fora da TCB, ADR 0013
   { name = "logos-model" },
   { name = "logos-ground" },
   { name = "logos-lrat" },
@@ -68,7 +69,7 @@ allow = [
   { name = "quote" },
   { name = "syn" },
   { name = "unicode-ident" },
-  # logos-core e logos-obligation, somente desenvolvimento (ADRs 0006/0012)
+  # logos-core/obligation dev (ADRs 0006/0012); serde/JSON runtime só fora da TCB (0013)
   { name = "trybuild" },
   { name = "equivalent" },
   { name = "glob" },

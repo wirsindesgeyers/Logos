@@ -19,7 +19,7 @@ A 1.5 recebe a sintaxe canônica, não depende do parser textual da 1.4.
 | Conferência contra Vocabulary | 1.3 → 1.4/1.5 |
 | Texto → sintaxe canônica; pretty-printer de debug, fora da TCB | 1.4 → consumidores humanos/LLM; não concede autoridade |
 | PremiseRef, Obligation, generate(proposal, LedgerView), h(O) | 1.5 → 1.6, Fases 2/3/5 |
-| Proposal sem campo autoritativo de obrigação/fato/política/status | 1.6 → servidor futuro 5.2 |
+| logos-protocol::Proposal/UntrustedText, JSON proposal/v1/schema P1 fora da TCB | 1.6 → servidor futuro 5.2; não resolve V nem autoriza especulação |
 
 Na 1.2, `domain_source` é referência opaca, não implementação de fatos/políticas.
 Na 1.5, `LedgerView` é interface abstrata; armazenamento real somente na 3.3.
@@ -32,6 +32,10 @@ com bytes/hash reproduzíveis; ordem das citações não altera h(O), citação 
 é recusada e agente não fornece obrigação autoritativa. Critérios por etapa no
 roadmap, sem antecipar checkmarks por estes planos.
 
-1.1–1.5 foram demonstradas localmente por testes adversariais, propriedades,
+1.1–1.6 demonstradas localmente por testes adversariais, propriedades,
 vetores/diferenciais e smokes públicos; CI/ARM/fuzz noturno permanecem pendências.
-Próxima implementação: 1.6, proposta de agente com decoder estrito e fronteira P1.
+1.6 fechou decoder estrito/P1 preliminar e taint sem alterar TCB; schema e seis
+vetores independentes preservam formato. PROTOCOL_SMOKE_OK exercitou candidato
+transmitido → gerador real, sem aceitar autoridade ou Pending.
+Próxima implementação: Fase 2, Etapa 2.1, estruturas finitas; não há checker de
+modelo, ledger assinado ou kernel implementado nesta fase.

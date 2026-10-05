@@ -8,6 +8,7 @@ members = [
     "crates/logos-air",
     "crates/logos-air-text",
     "crates/logos-obligation",
+    "crates/logos-protocol",
     "crates/logos-model",
     "crates/logos-ground",
     "crates/logos-lrat",

@@ -36,6 +36,7 @@ cargo run -p logos-air --example vocabulary_smoke   # grounding, extensão, code
 cargo run -p logos-air --example sort_check_smoke   # fórmula fechada e erros com path exato
 cargo run -p logos-air-text --example air_text_smoke   # texto → AIR, bytes e reparse
 cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citações, rejeições e h(O)
+cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candidato → O; sem autoridade
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
@@ -103,6 +104,14 @@ canônica; não tem decoder/construtor público. Época não entra em h(O); assu
 continuam antecedentes explícitos. LedgerView é snapshot abstrato confiável,
 não ledger/autenticação implementados. Contrato em [`spec/obligation.md`](spec/obligation.md),
 decisão em [`ADR 0012`](docs/adr/0012-geracao-de-obrigacoes.md).
+
+Etapa 1.6 oferece `logos-protocol::{decode, encode}` fora da TCB, JSON versionado
+com um único payload `Proposal`. Campos extras/duplicados e tipos inválidos são
+recusados; objetivo contém AIR canônico, referências têm tipos distintos e texto
+é `UntrustedText`, preservado mas excluído de O. `speculative_on` não habilita
+Pending; h(V) ainda precisa de resolução confiável. Contrato/schema em
+[`spec/protocol.md`](spec/protocol.md), decisão em
+[`ADR 0013`](docs/adr/0013-protocolo-de-proposta.md).
 
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.

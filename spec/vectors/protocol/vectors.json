@@ -1,0 +1,82 @@
+{
+  "format": "proposal/v1",
+  "vectors": [
+    {
+      "id": "true",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"objetivo verdadeiro\",\"goal\":\"8401036c464f4c2d6d732d65712f7631818100\",\"cites\":[],\"speculative_on\":[],\"vocab\":\"0000000000000000000000000000000000000000000000000000000000000000\"}}",
+      "expected": {
+        "text_pt": "objetivo verdadeiro",
+        "goal": "8401036c464f4c2d6d732d65712f7631818100",
+        "cites": [],
+        "speculative_on": [],
+        "vocab": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "id": "false",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"objetivo falso\",\"goal\":\"8401036c464f4c2d6d732d65712f7631818101\",\"cites\":[],\"speculative_on\":[],\"vocab\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}}",
+      "expected": {
+        "text_pt": "objetivo falso",
+        "goal": "8401036c464f4c2d6d732d65712f7631818101",
+        "cites": [],
+        "speculative_on": [],
+        "vocab": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "id": "tainted_nfd",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"não\\u0000\\n\\\"status\\\":\\\"Verified\\\"\",\"goal\":\"8401036c464f4c2d6d732d65712f7631818100\",\"cites\":[],\"speculative_on\":[],\"vocab\":\"1212121212121212121212121212121212121212121212121212121212121212\"}}",
+      "expected": {
+        "text_pt": "não\u0000\n\"status\":\"Verified\"",
+        "goal": "8401036c464f4c2d6d732d65712f7631818100",
+        "cites": [],
+        "speculative_on": [],
+        "vocab": "1212121212121212121212121212121212121212121212121212121212121212"
+      }
+    },
+    {
+      "id": "ordered_duplicates",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"premissas de eventos, não de fórmulas\",\"goal\":\"8401036c464f4c2d6d732d65712f763183810781008101\",\"cites\":[\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"],\"speculative_on\":[],\"vocab\":\"3434343434343434343434343434343434343434343434343434343434343434\"}}",
+      "expected": {
+        "text_pt": "premissas de eventos, não de fórmulas",
+        "goal": "8401036c464f4c2d6d732d65712f763183810781008101",
+        "cites": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "speculative_on": [],
+        "vocab": "3434343434343434343434343434343434343434343434343434343434343434"
+      }
+    },
+    {
+      "id": "speculation_only_represented",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"candidato\",\"goal\":\"8401036c464f4c2d6d732d65712f76318281048101\",\"cites\":[],\"speculative_on\":[\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\"],\"vocab\":\"5656565656565656565656565656565656565656565656565656565656565656\"}}",
+      "expected": {
+        "text_pt": "candidato",
+        "goal": "8401036c464f4c2d6d732d65712f76318281048101",
+        "cites": [],
+        "speculative_on": [
+          "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        ],
+        "vocab": "5656565656565656565656565656565656565656565656565656565656565656"
+      }
+    },
+    {
+      "id": "quantified",
+      "wire": "{\"version\":1,\"proposal\":{\"text_pt\":\"∀ S, candidato sem autoridade\",\"goal\":\"8401036c464f4c2d6d732d65712f763182820983010061538100\",\"cites\":[\"abababababababababababababababababababababababababababababababab\"],\"speculative_on\":[\"efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef\",\"efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef\"],\"vocab\":\"7878787878787878787878787878787878787878787878787878787878787878\"}}",
+      "expected": {
+        "text_pt": "∀ S, candidato sem autoridade",
+        "goal": "8401036c464f4c2d6d732d65712f763182820983010061538100",
+        "cites": [
+          "abababababababababababababababababababababababababababababababab"
+        ],
+        "speculative_on": [
+          "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+          "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"
+        ],
+        "vocab": "7878787878787878787878787878787878787878787878787878787878787878"
+      }
+    }
+  ]
+}

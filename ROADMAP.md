@@ -125,6 +125,7 @@ logos/
 │   ├── logos-core       ⚠ TCB     CheckOutcome, Verdict, Budget, StepMeter (vocabulário comum dos checkers)
 │   ├── logos-air        ⚠ TCB     sorts, termos, fórmulas, vocabulário, sort-check, normalização
 │   ├── logos-obligation ⚠ TCB     gerador de obrigações canônicas
+│   ├── logos-protocol     (fora)   mensagem candidata Proposal, decoder JSON estrito (ADR 0013)
 │   ├── logos-model      ⚠ TCB     modelos finitos + avaliador (camada 0)
 │   ├── logos-ground     ⚠ TCB     grounder + Tseitin + mapa cláusula→premissa
 │   ├── logos-lrat       ⚠ TCB     checker LRAT próprio + wrapper do cake_lpr
@@ -566,10 +567,11 @@ e ≥ 1 h de fuzz noturno com log arquivado; não demonstrados localmente.
 - `Proposal { text_pt: String, goal: Formula, cites: [PremiseRef], speculative_on: [ClaimId], vocab: h(V) }`.
 - **Não existe** campo para obrigação, fato, política, dependência ou status. `spec/protocol.md` lista isso explicitamente.
 - `text_pt` é armazenado como dado não confiável (taint), nunca entra na obrigação.
+- `proposal/v1`: JSON versionado/schema estrito em `logos-protocol` fora da TCB; ADR 0013 e `spec/protocol.md`.
 
 **Critério de conclusão.**
-- [ ] Decoder da proposta rejeita campos desconhecidos (um agente não pode "contrabandear" uma obrigação).
-- [ ] Teste de invariante P1 preliminar: nenhum tipo de mensagem do agente contém `Obligation`, `Fact`, `Policy` ou `Signature` do kernel (verificado por teste que inspeciona o schema).
+- [x] Decoder da proposta rejeita campos desconhecidos (um agente não pode "contrabandear" uma obrigação).
+- [x] Teste de invariante P1 preliminar: nenhum tipo de mensagem do agente contém `Obligation`, `Fact`, `Policy` ou `Signature` do kernel (verificado por teste que inspeciona o schema).
 
 ---
 

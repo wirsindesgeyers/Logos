@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:logos:proposal:v1",
+  "title": "AgentMessage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "proposal"],
+  "properties": {
+    "version": {"type": "integer", "const": 1},
+    "proposal": {"$ref": "#/$defs/Proposal"}
+  },
+  "$defs": {
+    "Proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text_pt", "goal", "cites", "speculative_on", "vocab"],
+      "properties": {
+        "text_pt": {"type": "string", "maxLength": 65536},
+        "goal": {"$ref": "#/$defs/Formula"},
+        "cites": {
+          "type": "array", "maxItems": 1024,
+          "items": {"$ref": "#/$defs/PremiseRef"}
+        },
+        "speculative_on": {
+          "type": "array", "maxItems": 1024,
+          "items": {"$ref": "#/$defs/ClaimId"}
+        },
+        "vocab": {"$ref": "#/$defs/VocabularyHash"}
+      }
+    },
+    "Formula": {
+      "type": "string", "minLength": 2, "maxLength": 2097152,
+      "pattern": "^(?:[0-9a-f]{2})+$",
+      "description": "Full canonical air/v1 Formula CBOR encoded as lowercase hex."
+    },
+    "PremiseRef": {"$ref": "#/$defs/Digest"},
+    "ClaimId": {"$ref": "#/$defs/Digest"},
+    "VocabularyHash": {"$ref": "#/$defs/Digest"},
+    "Digest": {
+      "type": "string", "minLength": 64, "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -8,18 +8,19 @@
 ## Resumo
 
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
-Etapas **1.1–1.5 demonstradas localmente**, CI/ARM/fuzz noturno pendentes.
+Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
-`logos-air-text`, `logos-obligation` e no CAS de `logos-ledger`; demais crates
-continuam esqueletos. Nenhum kernel/gateway implementado.
-1.5: `generate(Proposal, &LedgerView)` produz obrigação privada canônica após
-tipagem, citabilidade/época e compatibilidade direcional. Refs de eventos
-ordenadas/deduplicadas; época fora de O; sem decoder/construtor público.
-19 testes Rust, 20 vetores independentes, 5 fixtures compile-fail + controle
-positivo e seis mutantes mortos. `OBLIGATION_SMOKE_OK` e
-`ci/verify.sh --selftest`: `VERIFY_OK` (exit 0), 175 Python + 25 TCB.
-TCB correção: 4610 LOC próprios, 78287 runtime, 51581 build-only; +333 próprios,
-sem nova dependência externa runtime. LedgerView é abstrato; O não concede prova/token.
+`logos-air-text`, `logos-obligation`, `logos-protocol` e CAS de `logos-ledger`;
+demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
+1.6: JSON proposal/v1 estrito fora da TCB, somente Proposal, objetivo air/v1,
+refs de eventos/ClaimId distintos e UntrustedText preservado, excluído de O.
+Extras/duplicatas/tipos/versões/limites recusados; schema sem campos de autoridade.
+17 testes Rust, seis vetores independentes e dois mutantes mortos.
+PROTOCOL_SMOKE_OK: JSON → candidato → gerador real com snapshot em memória;
+texto/ordem não alteram h(O), speculative_on não torna Pending citável.
+ci/verify.sh --selftest: VERIFY_OK (exit 0), 175 Python + 25 TCB.
+TCB inalterada: correção 4610+78287=82897, build-only 51581. Sem pacote externo
+novo no lockfile; serde/JSON runtime somente fora da TCB. O não concede prova/token.
 
 ## Etapas da Fase 0
 
@@ -42,7 +43,7 @@ sem nova dependência externa runtime. LedgerView é abstrato; O não concede pr
 | 1.3 Sort-checker | ⚠ implementada, falta CI/fuzz noturno | 24 testes, 2000 fórmulas bem tipadas e 2270 mutações de entradas, quatro mutantes mortos, paths e stacks de 64 KiB; LLVM 36/36 ramos, 100%, sem exclusões. Smoke público e `ci/verify.sh --selftest`: `VERIFY_OK`. Fuzz 206912/61 s. [Plano](docs/plans/etapa-1.3.md) §7, ADR 0010 e `spec/sort-check.md`. **Falta:** jobs Rust/sort-coverage remotos, smoke ARM e ≥ 1 h noturna. |
 | 1.4 Sintaxe de superfície/parser | ✅ concluída localmente | Gramática/ADR 0011, parsers independentes fora da TCB, 31 Rust + 71 Python; propriedades de 500 ASTs/lado, diferencial 500 fórmulas/bytes V+Formula e 13 oráculos de precedência/escopo. Smokes reais, limites/erros controlados e `ci/verify.sh --selftest`: `VERIFY_OK`, exit 0. [Plano](docs/plans/etapa-1.4.md) §7. CI/ARM ainda não observados. |
 | 1.5 Gerador de obrigações | ✅ concluída localmente | Gerador TCB/obligation-v1 só de saída, snapshot LedgerView abstrato e refs de eventos; 19 Rust (17 behavior, vetores, UI), 20 vetores/hash independentes, 5 negativos compile-fail + controle positivo e seis mutantes mortos. OBLIGATION_SMOKE_OK, full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-1.5.md) §7/ADR 0012. CI/ARM ainda não observados. |
-| 1.6 Formato da proposta | ⏳ não iniciada | Depende de 1.1 e 1.5. |
+| 1.6 Formato da proposta | ✅ concluída localmente | logos-protocol fora da TCB, proposal/v1 estrito/schema P1, texto tainted sem entrar em O; 17 Rust, seis vetores independentes, dois mutantes mortos. PROTOCOL_SMOKE_OK e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-1.6.md) §7/ADR 0013. CI/ARM ainda não observados. |
 
 Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
 
@@ -58,7 +59,7 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md). Fases 2–23 não iniciadas.
    arquivados (critérios da 0.3–0.5). Smoke local não fecha essa pendência.
    Alvos `core_decode` (0.6), `air_decode` (1.1), `vocabulary_decode` (1.2) e
    `sort_check` (1.3) integrados ao smoke/noturno; logs locais não provam CI nem ≥ 1 h.
-   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações ARM ainda não observados.
+   Smokes AIR/vocabulário/sort-check/AIR textual/obrigações/protocolo ARM ainda não observados.
 4. S3 da 0.6 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    [API do GitHub](https://api.github.com/repos/wirsindesgeyers/Logos) confirmou
    repositório público (`private=false`); disponibilidade/execução do runner ARM
@@ -105,36 +106,32 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 1.6 — formato da proposta (`P`, protocolo)
+## Próximo passo: Etapa 2.1 — estruturas finitas (`P`, TCB)
 
-Dependências prontas: Formula FOL-ms-eq/v1 (1.1), PremiseRef de evento e gerador
-selado (1.5). Entrada emprestada `logos_obligation::Proposal` é somente o input
-mínimo resolvido do gerador; não é o wire protocol do agente. Vocabulary/hash,
-sort-check e parsers de superfície existem, mas não concedem autoridade.
+Fase 1 demonstrada localmente. Dependências da 2.1 prontas: sintaxe Formula/Term/
+Sort/Symbol (1.1) e Vocabulary com domínios/grounding versionados (1.2).
+Ler ROADMAP 2.1, preparar plano curto de fase 2 e plano 2.1 conforme decisões.
 
-Definir `spec/protocol.md` e decisão de formato/versão/local do decoder.
-Implementar proposta transmitida `{ text_pt, goal, cites, speculative_on, vocab }`;
-text_pt é dado não confiável e nunca entra em O. Decoder rejeita campos
-desconhecidos: nenhum campo de obrigação/fato/política/dependência/status.
-ClaimId/speculative_on apenas representados; Pending continua NotCitable no
-gerador 1.5, sem implementar especulação 5.8. Resolver h(V) para Vocabulary
-pertence à integração futura, sem buscar ledger/rede nesta etapa.
+Implementar logos-model: FiniteModel com h(V), tamanhos por sort, constantes,
+tabelas totais de funções e conjuntos de tuplas de predicados. Validar aridades,
+sorts, totalidade e valores no domínio; Enumerated deve refletir exatamente
+elementos declarados. Definir spec/model.md, formato/versionamento, limites e
+vetores canônicos em spec/vectors/model/; excesso de tamanho é Unknown(Size),
+nunca modelo parcial aceito ou truncado.
 
-Critérios: campos extras rejeitados, inclusive contrabando de Obligation;
-schema do único tipo de mensagem de agente não contém Obligation/Fact/Policy
-nem Signature do kernel (invariante P1 preliminar). Sem transporte/framing,
-mensagens CERTIFY/ações ou servidor 5.2. Migrar todos os callers se o input
-resolvido precisar mudar; não criar shim nem decoder autoritativo de O.
+Decisões em aberto: representação de tabelas/ordem dos eixos, identificação de
+símbolos/sorts no formato, domínios vazios, produto de cardinalidades/overflow e
+limites antes de alocar. Resolver em ADR sem antecipar semântica de 2.2.
+Fora do escopo: modelos infinitos, tabelas de símbolos Defined (expansão 2.2),
+avaliador M ⊨ φ (2.2), busca Z3 (2.4), ledger real ou kernel.
 
-Riscos/decisões: representação estrita de refs/ClaimId, limites de strings/arrays,
-encoding de text_pt tainted vs texto canônico e decoder fora/dentro da TCB.
-Se adicionar parser TCB: manifesto/lints, vetores/versionamento, fuzz e mutantes.
-Ledger real só na 3.3; snapshot fake e bytes/hash de O não provam autenticidade,
-consistência, fidelidade ou Verified. Ler ROADMAP 1.6 antes de ampliar escopo.
+Critérios: função parcial e valor fora do domínio rejeitados; vetores canônicos
+fixos reproduzíveis. Sendo TCB, atualizar manifesto/lints, dependências só via
+ADR/deny, fuzz de parser novo, mutantes e smoke público além de full verify.
+P1 preliminar 1.6 está demonstrado, não autentica refs nem executa especulação.
 
-Pendências remotas 0.1–1.5 separadas: execução local não fecha CI, ARM ou fuzz
-longo. Cobertura local da 1.3 em `target/sort-check-coverage.json` permanece
-métrica instrumentada, não prova formal.
+Pendências remotas 0.1–1.6 separadas: execução local não fecha CI/ARM/fuzz longo.
+Cobertura 1.3 em target/sort-check-coverage.json é métrica instrumentada, não prova formal.
 
 ## Decisões em aberto para o mantenedor
 
@@ -376,3 +373,22 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   anteriores inalterados. Não implementa ledger real/Verified/kernel.
   Memória/logs preexistentes preservados fora do commit; sem push/CI remota.
   Próximo passo: 1.6.
+- **2026-10-05** — Etapa 1.6 implementada sem subagentes: logos-protocol fora
+  da TCB, JSON proposal/v1 versionado com campos obrigatórios, extras/duplicatas/
+  tipos/hex recusados; Formula por AIR canônico, PremiseRef/ClaimId distintos,
+  texto UntrustedText preservado inclusive NFD/controles e excluído de O.
+  spec/protocol.md/schema, ADR 0013, seis vetores independentes e smoke integrados.
+  17 regressões Rust passaram. Teste antes da correção revelou derive serde
+  aceitando structs como arrays; decoder agora exige mapas em ambos os níveis,
+  regressão falhou antes/passou depois. Clippy chunks_exact/ruff corrigidos;
+  exemplo normativo de hex alinhado ao envelope AIR real. Dois mutantes
+  compilados mortos (decoder permissivo e Fact no schema), fontes restauradas.
+  PROTOCOL_SMOKE_OK: JSON → candidato → geração real com snapshot em memória,
+  h(O) invariável frente a texto/ordem, Pending recusado mesmo marcado especulativo.
+  ci/verify.sh --selftest terminou VERIFY_OK, exit 0: workspace Rust, smokes,
+  guards, vetores e supply-chain, 175 Python + 25 TCB. Avisos cargo-deny:
+  duas licenças não encontradas e versões syn 2/3, sem falha; versões já estavam
+  no lockfile, nenhum pacote externo novo. TCB correção 4610+78287=82897,
+  fidelidade 1550+80034=81584, build-only 51581, inalterada. Sem parser TCB novo,
+  sem transporte/ledger/especulação/kernel. Memória/logs preexistentes preservados
+  fora do commit; sem push/CI remota. Fase 1 demonstrada localmente; próximo: 2.1.
