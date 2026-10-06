@@ -702,8 +702,8 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 - `spec/events.md` normativo.
 
 **Critério de conclusão.**
-- [ ] Vetores canônicos para cada tipo de evento.
-- [ ] Teste: alterar qualquer campo de um evento invalida a assinatura.
+- [x] Vetores canônicos para cada tipo de evento.
+- [x] Teste: alterar qualquer campo de um evento invalida a assinatura.
 
 ---
 

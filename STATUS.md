@@ -10,7 +10,7 @@
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
 Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
-`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model` e CAS de `logos-ledger`;
+`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model` e CAS/eventos de `logos-ledger`;
 demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
@@ -34,8 +34,15 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB correção: 6677+78287=84964, build-only51581; logos-model1845 LOC, inalterada.
-Nenhum Verdict/kernel/gateway/farm. Formatos e dependências Rust inalterados.
+TCB atual: 7892+78287=86179 LOC de correção, build-only51581; logos-ledger1877.
+2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
+3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
+autoridade separados. CheckRecord preserva Budget/outcome; consistência
+Witness/Unknown explícita, used ⊆ cited e texto tainted não NFC preservado.
+18 vetores independentes, 15 regressões, 599 adulterações e 18 mutantes
+capturados. EVENTS_SMOKE_OK; fuzz final 123392/61 s sem crash.
+Full ci/verify.sh --selftest: VERIFY_OK, 227 Python + 25 TCB.
+Nenhum appender/persistência/índice; assinatura não prova lógica/cadeia/admin.
 
 ## Etapas da Fase 0
 
@@ -73,7 +80,13 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | 2.5 Model finder alternativo | ✅ concluída localmente | 296 obrigações distintas contra enumeração independente dos 682 modelos ≤3; 201/201 refutáveis encontrados e aceitos, 95 negativos. Limites/trabalho/timeout distinguem EXHAUSTED. MODEL_FINDER_SMOKE_OK com unknown nativo/fallback/checker; runtime-only e sem import Z3 passaram. 22 regressões novas + 19 da 2.4 passaram; full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.5.md) §7/ADR 0018. CI ainda não observada; TCB inalterada. |
 | 2.6 Tradução de contramodelos | ✅ concluída localmente | explain_model com h(M)/gloss_pt/ordinais e relevância sintática de O; Defined sem vazamento, valorações verdadeiras/falsas preservadas. Checker Rust aceitou 20/20; 10 regressões, MODEL_EXPLAIN_SMOKE_OK e runtime-only passaram. Full verify/selftest VERIFY_OK, exit 0, 227 Python + 25 TCB. [Plano](docs/plans/etapa-2.6.md)/ADR 0019. CI ainda não observada; TCB e formatos inalterados. |
 
-Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 3–23 não iniciadas.
+Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
+
+## Etapas da Fase 3
+
+| Etapa | Estado | Evidência / pendência |
+| --- | --- | --- |
+| 3.1 Catálogo de eventos v1 | ✅ concluída localmente | 13 tipos/event-v1, 18 vetores independentes, 15 regressões/599 adulterações e 18 mutantes capturados. EVENTS_SMOKE_OK, fuzz final 123392/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-3.1.md) §7, ADR 0020 e spec/events.md. CI/ARM/fuzz longo não observados; sem persistência/appender. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -96,6 +109,9 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 3–23 não iniciadas.
    execução remota ainda não observada; sem novo requisito ARM nesta etapa.
    Apresentação 2.6: corpus de 20 refutações/checker e smoke PT ligados ao mesmo
    job Python; execução remota ainda não observada. Sem alteração da TCB.
+   Eventos 3.1: smoke nativo, vetores --check e event_decode ligados aos
+   workflows; runner de fuzz semeia 18 wires válidos também na CI limpa.
+   Execução remota/ARM e ≥ 1 h de event_decode ainda não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -165,36 +181,36 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.1 — catálogo de eventos v1 (`M`, TCB)
+## Próximo passo: Etapa 3.2 — appender com hash chain (`M`, TCB)
 
-Dependências prontas: canon/v1 (0.3), hash/assinatura/KeyId/Signer (0.4),
-Budget/CheckOutcome (0.6) e obrigação/h(O) (1.5). Fase 2 possui modelos,
-avaliador/checkers, produtores e apresentação não autoritativa.
-Ler ROADMAP 3.1, Apêndice C e spec conceitual; registrar plano de etapa
-e ADR antes de definir wire. Criar `spec/events.md` normativo.
+Dependências prontas: catálogo `EventBody`/`Event` e event/v1 assinável da
+3.1, CAS da 0.5 e Signer/KeyId da 0.4. Wire/limites/autoridade em
+spec/events.md e ADR 0020; read/verify não demonstram cadeia ou lógica.
+Ler ROADMAP 3.2; registrar plano e ADR das decisões de persistência.
 
-Implementar em logos-ledger o catálogo mínimo: Genesis, VocabPublished,
-Proposed, ObligationCreated, Verified, Refuted, UnknownRecorded,
-AssumptionDeclared, Retracted, Invalidated, EpochAdvanced,
-CheckerRegistered e CheckerRevoked. Event contém seq/epoch/prev/body/
-kernel_key/sig; checks carregam h(O)/h(cert)/h(checker)/budget/outcome.
-Não implementar persistência/appender (3.2), índices, kernel/gateway
-ou eventos introduzidos nas fases 5–17.
+Implementar em logos-ledger appender único `Ledger::append(body)` que
+calcula seq/prev e assina, SQLite transacional (`BEGIN IMMEDIATE`), WAL,
+durabilidade/fsync e lock de arquivo de escritor. Abertura verifica cadeia
+inteira (ou checkpoint assinado válido) antes de aceitar appends.
+Não implementar índices (3.3), HSM (13.1), transparência (13.2),
+kernel/gateway nem políticas administrativas futuras.
 
-Critério: vetores canônicos de cada tipo e teste de adulteração de todos
-os campos invalidando assinatura. Aplicar regras TCB, manifesto e fuzz
-para cada decoder novo; demonstrar mutantes negativos e smoke público.
+Critérios: processo morto por SIGKILL em pontos aleatórios durante 10k
+appends, reabertura sempre com cadeia válida/sem buracos; segundo escritor
+em outro processo falha ao abrir. Demonstrar runtime/crash, regressões,
+mutantes e full verify antes de marcar conclusão.
 
-Decisões abertas: envelope/tags e payloads mínimos de cada evento,
-domínio de hash/assinatura e representação de checks por rota, sem
-inferir Refuted de Rejected/Unknown. Reutilizar formatos existentes.
-Pendências remotas 0.1–2.6 separadas: local não fecha S3/ARM/CI/fuzz longo.
-h(O) esperado deve vir do monitor; fixtures/readers não autenticam proveniência.
+Decisões abertas: driver SQLite e dependências/allowlist TCB; layout,
+transação/lock/durabilidade e estratégia de recuperação/checkpoints.
+Riscos: crash entre assinatura e commit, seq duplicado, publicação de
+evento não durável, elo/chave/epoch adulterados. Não inferir validade
+lógica de CheckRecord nem privilégio de uma assinatura.
+Pendências remotas 0.1–3.1 separadas: local não fecha S3/ARM/CI/fuzz longo.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 6677 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), após 2.3; logos-air: 1556 LOC, logos-obligation: 550 LOC, logos-model: 1845 LOC.
+- **Tamanho da TCB de correção (execução):** 7892 LOC próprios vs. 78287 LOC de dependências de execução
+  (+ 51581 só de compilação), após 3.1; logos-air: 1556 LOC, logos-obligation: 550 LOC, logos-model: 1845 LOC, logos-ledger: 1877 LOC.
   Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
@@ -640,3 +656,33 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   alterações fuzz-src e logs preexistentes preservados fora do commit.
   Sem push/CI remota; pendências S3/ARM/fuzz longo continuam separadas.
   Próximo: 3.1, catálogo de eventos v1, sem persistência da 3.2.
+- **2026-10-05** — Etapa 3.1 implementada: catálogo assinado event/v1 (13
+  tipos), Envelope/CheckRecord/Consistency/Authority/Route/EventProposal,
+  texto tainted UTF-8 sem normalização. Signature/KeyId externos vinculados;
+  recibos administrativos verificáveis separadamente, sem inferir privilégio.
+  Verified/Refuted exigem Accepted, UnknownRecorded exige Unknown; used
+  subconjunto ordenado de cited, testemunha com mesmo h(O), Unknown explícito.
+  Caps wire 16 MiB, texto 64 KiB, refs 1024 e AIR padrão, erros explícitos.
+  Python canon/hashlib/cryptography produziu 18 vetores para todas as tags
+  e variantes; Rust decode/encode/hash/verify e Signer real coincidiram.
+  15 regressões passaram; EVENT_FIELDS_TAMPER_OK vectors=18 mutations=599.
+  EVENTS_SMOKE_OK, autoridade real, chave errada/adulteração rejeitadas,
+  consistência Unknown preservada. Fixtures não demonstram validade lógica.
+  Cargo-mutants: 18/18 viáveis capturados em assinatura/KeyId/outcome/
+  consistência/validação, zero sobreviventes; limiares de tamanho excluídos.
+  Fuzz event_decode cobre oito decoders: 55 seeds iniciais, 98154/61 s;
+  runner permanente passou a semear 18 wires válidos da spec também na CI,
+  execução final 123392/61 s sem crash. max_len padrão 4096 neste smoke;
+  limites maiores têm regressões, não prova de fuzz longo.
+  Compilação inicial falhou em acesso privado a Reason e helper sombreado;
+  corrigidos. Ruff/mypy/clippy iniciais tiveram erros, corrigidos;
+  verificações finais passaram. Full ci/verify.sh --selftest: VERIFY_OK,
+  exit 0, 249,58s; 227 Python (130,40s) + 25 TCB (1,52s).
+  Autoteste concorrente avisou tar por corpus alterado pelo fuzz; execução
+  isolada final passou sem esses avisos (14,26s). Avisos deny preexistentes.
+  TCB: 7892+78287=86179 correção, build-only51581; ledger1877, +1215 próprios;
+  dependências novas diretas só crates TCB locais, serde_json apenas dev.
+  ADR 0020/spec/plano/vetores/manifesto/allowlist e CI/docs/STATUS atualizados.
+  Sem appender/persistência/índices/kernel; formatos antigos inalterados.
+  Memória, fuzz-src e logs preexistentes preservados fora do commit.
+  Sem push/CI remota; próximo: 3.2, appender SQLite durável e recuperação.

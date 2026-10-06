@@ -223,7 +223,12 @@ version = "0.0.0"
 name = "logos-ledger"
 version = "0.0.0"
 dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
  "logos-crypto",
+ "logos-obligation",
+ "serde_json",
 ]
 
 [[package]]

@@ -15,6 +15,7 @@ logos-core = { path = "../crates/logos-core" }
 logos-air = { path = "../crates/logos-air" }
 logos-model = { path = "../crates/logos-model" }
 logos-obligation = { path = "../crates/logos-obligation" }
+logos-ledger = { path = "../crates/logos-ledger" }
 
 # Um target por parser/decoder de TCB (roadmap §4). O job noturno roda todos os targets listados
 # por `cargo fuzz list`.
@@ -98,6 +99,13 @@ bench = false
 [[bin]]
 name = "obligation_decode"
 path = "fuzz_targets/obligation_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "event_decode"
+path = "fuzz_targets/event_decode.rs"
 test = false
 doc = false
 bench = false

@@ -23,6 +23,7 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`spec/obligation.md`](spec/obligation.md) | Geração TCB, citações de eventos, snapshot e obligation/v1 só de saída |
 | [`spec/model.md`](spec/model.md) | model/v1: estruturas finitas, funções totais, enumeração e limites |
 | [`spec/evaluation.md`](spec/evaluation.md) | M ⊨ φ contextual, expansão Defined, erros e passos determinísticos |
+| [`spec/events.md`](spec/events.md) | event/v1: catálogo, assinatura, checks e consistência explícita |
 | `crates/` | Rust: TCB (`⚠`) e componentes de apoio |
 | `py/` | Python: agente, MCP, prover farm e avaliação (tudo não confiável) |
 | `ci/` | Verificações de CI reproduzíveis localmente |
@@ -42,6 +43,7 @@ cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candid
 cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/domínio e Unknown(Size)
 cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
 cargo run -p logos-model --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
+cargo run -p logos-ledger --example events_smoke   # eventos/autoridade reais, adulteração rejeitada
 (cd py && uv run python -m logos_provers.z3_models_smoke)   # produtor Z3 → checker Rust real
 (cd py && uv run python -m logos_provers.model_explain_smoke)   # 20 refutações → português + h(M)
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
@@ -208,8 +210,22 @@ e [`ADR 0019`](docs/adr/0019-apresentacao-de-contramodelos.md).
 `uv run python -m logos_provers.model_explain_smoke` em `py/` confere
 20 refutações pelo checker Rust real e imprime exemplo legível.
 
+## Eventos assinados disponíveis
 
+Etapa 3.1 acrescenta `logos_ledger::Event`/`EventBody`: 13 tipos, codificação
+canônica e `Hash<Event>` que inclui assinatura. `Event::sign` recebe
+seq/epoch/prev/body e um `Signer`; `Event::decode` rejeita wire inválido;
+`Event::verify` vincula assinatura e KeyId à chave pública fornecida pelo consumidor.
+Checks preservam h(O)/h(cert)/h(checker)/Budget/CheckOutcome;
+Verified registra used ⊆ cited e consistência Witness ou Unknown.
 
+Recibos administrativos são verificados separadamente por
+`EventBody::verify_authority`; chave assinante não implica privilégio.
+Propostas preservam texto tainted UTF-8, inclusive não NFC, sem normalização.
+Assinatura não demonstra lógica, continuidade da cadeia ou autorização.
+Nenhum appender, persistência ou índice implementado nesta etapa.
+Contrato em [`spec/events.md`](spec/events.md), decisão em
+[`ADR 0020`](docs/adr/0020-catalogo-assinado-de-eventos.md).
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).
