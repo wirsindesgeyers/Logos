@@ -22,6 +22,12 @@ refute/witness, Enum/Open, Defined globais e timeout compartilhado.
 200/200 contramodelos aceitos; Z3 falso10k com zero aceitação indevida;
 negação invertida rejeitada pelo checker. Z3_MODELS_SMOKE_OK, 19 regressões.
 ci/verify.sh --selftest: VERIFY_OK, 195 Python + 25 TCB.
+2.5: finder exaustivo independente de Z3, domínios ≤4, status FOUND/
+NO_MODEL_WITHIN_BOUND/EXHAUSTED e fallback após unknown nativo.
+296 obrigações contra 682 modelos ≤3: 201/201 contramodelos aceitos e 95
+ausências limitadas. Smokes público, sem import Z3 e runtime-only passaram;
+41 testes dos produtores passaram; ci/verify.sh --selftest: VERIFY_OK, exit 0,
+217 Python + 25 TCB. Smoke runtime-only sem dependências dev também passou.
 TCB correção: 6677+78287=84964, build-only51581; logos-model1845 LOC, inalterada.
 Nenhum Verdict/kernel/gateway/farm. Formatos e dependências Rust inalterados.
 
@@ -58,8 +64,9 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | 2.2 Avaliador M ⊨ φ | ⚠ implementada, falta S3 remota | 30 testes Rust, 10k pares Z3 (5783 true/4217 false), zero divergências; EVAL_SMOKE_OK, cinco mutantes mortos, fuzz final 13591/61 s e full verify/selftest VERIFY_OK. Núcleo 537 LOC (alvo <400 excedido); logos-model 1590. [Plano](docs/plans/etapa-2.2.md) §7, ADR 0015 e spec/evaluation.md. **Falta:** observar 1000 repetições S3 x86_64/aarch64 na CI e fuzz longo. |
 | 2.3 Checkers de refutação/consistência | ✅ concluída localmente | ModelChecker/P2, reader não autoritativo de obligation/v1 e CAS real; 21 testes de checker + 15 de decoder, 20 vetores positivos/10 negativos. cargo-mutants: 12/12 viáveis capturados no checker (8 inviáveis), 17/17 no reader (4 inviáveis), zero sobreviventes. CHECKER_SMOKE_OK; fuzz final 10297/3909 execuções por alvo em 61 s, full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.3.md) §7/ADR 0016. CI/ARM/fuzz longo ainda não observados. |
 | 2.4 Produtor Z3 de modelos | ✅ concluída localmente | refute/witness por SMT-LIB real, extração model/v1 contextual e limites; 200/200 contramodelos aceitos, Z3 falso10k (2100 legítimos/7900 rejeitados/zero indevidos), negação invertida rejeitada. Z3_MODELS_SMOKE_OK; 19 regressões, full verify/selftest VERIFY_OK. [Plano](docs/plans/etapa-2.4.md) §7/ADR 0017. CI ainda não observada; TCB inalterada. |
+| 2.5 Model finder alternativo | ✅ concluída localmente | 296 obrigações distintas contra enumeração independente dos 682 modelos ≤3; 201/201 refutáveis encontrados e aceitos, 95 negativos. Limites/trabalho/timeout distinguem EXHAUSTED. MODEL_FINDER_SMOKE_OK com unknown nativo/fallback/checker; runtime-only e sem import Z3 passaram. 22 regressões novas + 19 da 2.4 passaram; full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.5.md) §7/ADR 0018. CI ainda não observada; TCB inalterada. |
 
-Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.5–2.6 e Fases 3–23 não iniciadas.
+Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.6 e Fases 3–23 não iniciadas.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -78,6 +85,8 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.5–2.6 e Fases 3–23 nã
    modelo/avaliador/checker ARM ainda não observados.
    Produtor 2.4 tem smoke/corpus/adversário/mutação ligados ao job Python existente;
    execução remota ainda não observada, sem exigir checker ARM novo nesta etapa.
+   Finder/fallback 2.5 e enumeração independente também ligados ao job Python;
+   execução remota ainda não observada; sem novo requisito ARM nesta etapa.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -126,32 +135,31 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 2.5 — model finder alternativo (fora da TCB, `P`)
+## Próximo passo: Etapa 2.6 — tradução de contramodelos para português (fora da TCB, `P`)
 
-Dependências prontas: FiniteModel/model-v1 contextual (2.1) e ModelChecker/P2/CAS
-(2.3). Produtor Z3 2.4, canon Python, AIR/vocabulary/obligation e ponte real
-checker_diff também existem. Ler ROADMAP 2.5; preferência conservadora: busca
-exaustiva Python para domínios minúsculos (≤4), sem depender de Mace4/Paradox.
+Dependências prontas: FiniteModel/model-v1 contextual (2.1) e vocabulary/v1
+com gloss_pt (1.2). Reader de O, checker Rust real, produtores 2.4/2.5 e
+fixtures/ponte batch também existem. Ler ROADMAP 2.6 e formatos existentes.
 
-Implementar segundo produtor independente de Z3, usado como fallback quando Z3
-dá unknown. Retornar candidato canônico, nunca Accepted/Refuted/Verified; manter
-posições, enumeração, tabelas densas/tuplas e Defined conforme ADRs 0014–0017.
-Aceitação continua no checker real, não booleano Python. Não integrar farm 10.2
-nem implementar finders para domínios grandes.
+Implementar explain_model(M, V, O) -> String usando gloss_pt: domínio,
+fatos verdadeiros relevantes e objetivo falsificado; incluir hash do modelo.
+Restringir símbolos exibidos aos presentes em O, inclusive na presença de
+Defined: não vazar símbolos de dependências/fora da obrigação na explicação.
+Não alegar fidelidade, Verified ou aceitação porque texto parece plausível.
+Modelo de refutação aceito satisfaz todas as premissas; não inventar premissa
+falsa. A apresentação continua fora da TCB e não substitui o checker.
 
-Critério: para domínios ≤3, encontrar contramodelo em 100% dos casos em que existe,
-comparado com enumeração independente e aceitação do checker; provar também
-casos sem contramodelo e esgotamento sem falsa ausência/aceitação.
+Critério: 20 refutações de exemplo aceitas pelo checker real; cada explicação
+menciona objetivo falsificado e somente símbolos que aparecem em O. Smoke
+público legível e verificação integral, com artefatos/casos reproduzíveis.
 
-Decisões abertas: API/limite de trabalho da enumeração combinatória e composição
-do fallback. API 2.4 retorna None para unknown/timeout/unsat finito sem distinguir
-causa; fallback conservador pode tratar ausência de candidato sem alegar unsat.
-Registrar decisão em ADR/plano, reusar formatos e remover duplicação se fatorar
-helpers comuns. Crescimento exponencial é risco conhecido, não ampliar domínio.
+Decisões abertas: entrada Python bytes/contexto, representação portuguesa de
+elementos/funções/tuplas, fallback para gloss_pt ausente e limites de apresentação.
+Registrar escolha em ADR/plano; não alterar formato model/v1 nem integrar
+paráfrase determinística de fórmulas (9.1), ledger, farm ou memória proposta.
 
-Pendências remotas 0.1–2.4 separadas: local não fecha S3/ARM/CI/fuzz longo.
-h(O) esperado deve vir do monitor; reader não verifica proveniência/época.
-Sem ledger real, credenciais Python, memória de longo prazo ou farm.
+Pendências remotas 0.1–2.5 separadas: local não fecha S3/ARM/CI/fuzz longo.
+h(O) esperado deve vir do monitor; fixtures/readers não autenticam proveniência.
 
 ## Decisões em aberto para o mantenedor
 
@@ -177,6 +185,11 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - Z3 binário não estava disponível; usa-se z3-solver 5.1.0.0 Python, fora da TCB.
   Desde 2.4 é dependência runtime, não apenas diferencial dev. Transporte SMT-LIB
   passa por Solver.from_string; quantificadores nativos e contextos isolados.
+- Python não tem servidor LSP configurado: consulta de referências retornou
+  No language server found. Fatoração validada por AST, mypy e regressões reais.
+- Desde 2.5, ProducerError/AST/validação dos produtores ficam em model_context;
+  z3_models não reexporta os símbolos movidos. Fallback usa ausência de candidato
+  (None), pois API Z3 não distingue unknown/timeout/unsat finito.
 
 ## Diário (apenas acrescentar)
 
@@ -523,3 +536,35 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Sem push/CI remota; S3 ARM/fuzz longo anteriores pendentes. Próximo: 2.5.
   Smoke runtime adicional: uv run --isolated --no-dev --locked executou o produtor
   e checker real com somente dois pacotes instalados; Z3_MODELS_SMOKE_OK.
+
+- **2026-10-05** — Etapa 2.5 implementada: segundo produtor exaustivo Python,
+  domínio 1..4, sem importar Z3; enumeração lazy das interpretações primitivas
+  e cardinalidades Open, Enum ordinal fixo e Defined global em ordem de
+  dependência. Resultado FOUND/NO_MODEL_WITHIN_BOUND/EXHAUSTED distingue
+  busca completa e recursos, sem autoridade ou conclusão geral de validade.
+  API model_fallback tenta Z3 e, sem candidato, usa finder; timeout separado
+  por produtor e erros propagados. AST/validação/ProducerError migrados para
+  model_context sem alias/reexport legado; consumidores da 2.4 atualizados.
+  Corpus 296 obrigações distintas (256 pares booleanos + 40 quantificadas/
+  funcionais) contra enumeração independente de 682 modelos ≤3: 201/201
+  contramodelos encontrados e aceitos pelo checker Rust real, 95 negativos
+  completados. Smokes sem import Z3 e público passaram: native rlimit=1
+  produziu unknown real, fallback Accepted e wrong h(O) Rejected.
+  uv run --isolated --no-dev --locked executou smoke com dois pacotes;
+  MODEL_FINDER_SMOKE_OK, exit 0. 22 regressões novas cobrem limites 3/4,
+  sorts mistos, Enum Defined ordinal, nulários, tabela retangular 2×3,
+  binder isolado, definições globais inválidas e orçamento/clock/cap de saída.
+  Primeiro alvo: 12 passed/1 failed por fixture que supunha não unicidade de
+  defined(true) em singleton; produtor estava correto. Fixture exige ≥2 agora
+  e singleton tem controle positivo. Removidos wiring/texto incidental e
+  timeout não determinístico; Ruff inicial 30/mypy 17 corrigidos, sem allow
+  global. Ruff/format/mypy finais passaram (29 arquivos); alvos 41 passed
+  em 37,13s, preservando corpus Z3 200/200, adversário 10k sem indevidos e
+  mutação da negação rejeitada. Full ci/verify.sh --selftest: VERIFY_OK, exit 0,
+  147,04s; 217 Python (93,66s) + 25 TCB (1,34s), vetores/smokes e controles
+  de CI bloqueando pelos motivos corretos. Avisos deny preexistentes apenas.
+  Formatos/dependências/TCB Rust inalterados; sem novo fuzz nesta etapa
+  não-TCB. ADR0018/plano/API/README/STATUS/ROADMAP e verify/job Python
+  atualizados. Memória/diário/fuzz-src/logs preexistentes preservados fora
+  do commit. Sem push/CI remota; S3/ARM/fuzz longo anteriores pendentes.
+  Próximo: 2.6, apresentação portuguesa sem garantia de fidelidade.

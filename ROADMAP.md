@@ -664,7 +664,7 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 - Usado como fallback quando Z3 dá `unknown`.
 
 **Critério de conclusão.**
-- [ ] Para domínios ≤ 3, encontra contramodelo em 100% dos casos em que existe (teste contra enumeração).
+- [x] Para domínios ≤ 3, encontra contramodelo em 100% dos casos em que existe (teste contra enumeração).
 
 ---
 

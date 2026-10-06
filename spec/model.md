@@ -150,3 +150,29 @@ Reprodução: em `py/`, `uv run python -m logos_provers.z3_models_smoke` e
 `uv run pytest -q -s tests/test_z3_models.py`. Decisões em
 [ADR 0017](../docs/adr/0017-produtor-z3-de-modelos.md).
 
+## 7. Produtor exaustivo não confiável (Etapa 2.5)
+
+`logos_provers.model_finder.refute(O_bytes, V_bytes, limits=...)` enumera
+cardinalidades Open 1..k e interpretações primitivas, com k entre 1 e 4.
+Enum fixa cardinalidade/ordinais. Funções e predicados seguem §§2–3; Defined
+é derivado em ordem de dependência e checado globalmente conforme evaluation.md,
+inclusive totalidade/unicidade e ordinal, mas não recebe tabelas no certificado.
+
+`Limits(max_domain=4, max_steps=1_000_000, timeout_ms=5000)` impõe limite
+cooperativo de trabalho/tempo e preserva caps padrão de saída do checker.
+`SearchResult.status` distingue FOUND (model bytes), NO_MODEL_WITHIN_BOUND
+(enumerou completamente o espaço autorizado), EXHAUSTED (tempo/trabalho/tamanho
+insuficiente). Apenas FOUND contém bytes. Nenhum status é Verdict ou prova de
+validade; NO_MODEL_WITHIN_BOUND não significa ausência em domínios maiores.
+
+`logos_provers.model_fallback.refute` tenta Z3 e, se recebe None, tenta
+enumeração; retorna somente candidato bytes/None. Portanto unknown nativo
+aciona fallback, mas timeout/unsat finito também podem acioná-lo: API 2.4 não
+distingue causa. Timeout por produtor, não SLA conjunto. Erros não viram None.
+`model_context.ProducerError` e validação AIR são compartilhados, não reexportados
+por Z3; avaliação/busca não usa Z3. Sem novo formato, dependência ou autoridade.
+
+Reprodução em `py/`: `uv run python -m logos_provers.model_finder_smoke`,
+`uv run pytest -q -s tests/test_model_finder.py tests/test_model_fallback.py`.
+[ADR 0018](../docs/adr/0018-model-finder-exaustivo.md).
+

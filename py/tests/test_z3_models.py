@@ -13,7 +13,8 @@ import z3  # type: ignore[import-untyped]
 
 from logos_client import air, canon
 from logos_provers import z3_models as producer
-from logos_provers.z3_models import Limits, ProducerError, refute, witness
+from logos_provers.model_context import ProducerError
+from logos_provers.z3_models import Limits, refute, witness
 from tests.z3_models_cases import (
     Case,
     case,

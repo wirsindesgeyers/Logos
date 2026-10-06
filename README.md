@@ -162,6 +162,34 @@ consistent_model = witness(o_bytes, v_bytes)
 # Nenhum dos retornos é um veredicto; rejeição/Unknown continuam no checker Rust.
 ```
 
+Etapa 2.5 oferece `logos_provers.model_finder`, independente de Z3 e **fora
+da TCB**. Enumera interpretações primitivas e cardinalidades até 4; deriva
+Defined globalmente antes de procurar Γ verdadeira e goal falso.
+`Limits(max_domain=4, max_steps=1_000_000, timeout_ms=5000)` limita trabalho
+e tempo cooperativamente. Resultado distingue `FOUND`, `NO_MODEL_WITHIN_BOUND`
+(busca finita completa) e `EXHAUSTED` (sem conclusão). Ausência limitada nunca
+prova validade geral; mesmo `FOUND` precisa do checker Rust.
+
+```python
+from logos_provers import model_fallback, model_finder
+from logos_provers.model_context import ProducerError
+
+limits = model_finder.Limits(max_domain=3, max_steps=1_000_000, timeout_ms=2000)
+result = model_finder.refute(o_bytes, v_bytes, limits=limits)
+if result.status is model_finder.SearchStatus.FOUND:
+    countermodel = result.model  # ainda não aceito; conferir no checker contextual
+fallback_candidate = model_fallback.refute(o_bytes, v_bytes, limits=limits)
+# Z3 primeiro; None (inclusive unknown) aciona enumeração. Erros são ProducerError.
+# Timeout é por produtor; nenhum dos dois recebe credenciais ou emite Verdict.
+```
+
+AST/contexto compartilhado e `ProducerError` ficam em `model_context`, não
+reexportados pelo módulo Z3. Decisão em
+[`ADR 0018`](docs/adr/0018-model-finder-exaustivo.md), provas no
+[`plano 2.5`](docs/plans/etapa-2.5.md). Smoke, em `py/`:
+`uv run python -m logos_provers.model_finder_smoke`.
+
+
 
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
