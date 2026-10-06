@@ -175,6 +175,8 @@ jobs:
       - run: uv run python ../tools/gen_obligation_vectors.py --check
       - run: uv run python ../tools/gen_protocol_vectors.py --check
       - run: uv run python ../tools/gen_model_vectors.py --check
+      - name: Smoke público do produtor Z3 com checker Rust
+        run: uv run python -m logos_provers.z3_models_smoke
       - run: uv run pytest -q # canon 100k/direção e AIR-text 500 fórmulas
       - run: uv run pytest -q ../tcb/tests
 

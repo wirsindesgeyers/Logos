@@ -224,6 +224,9 @@ wheels = [
 name = "logos"
 version = "0.0.0"
 source = { editable = "." }
+dependencies = [
+    { name = "z3-solver" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -231,10 +234,10 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
-    { name = "z3-solver" },
 ]
 
 [package.metadata]
+requires-dist = [{ name = "z3-solver", specifier = "==5.1.0.0" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -242,7 +245,6 @@ dev = [
     { name = "mypy", specifier = ">=1.13" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.8" },
-    { name = "z3-solver", specifier = "==5.1.0.0" },
 ]
 
 [[package]]

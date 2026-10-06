@@ -6,7 +6,9 @@ description = "LOGOS — lado Python (agente, MCP, prover farm, avaliação). Tu
 # Unicode 17: subir esta faixa exige canon/v2 (ADR 0003).
 requires-python = ">=3.14,<3.15"
 license = "MIT OR Apache-2.0"
-dependencies = []
+dependencies = [
+    "z3-solver==5.1.0.0",
+]
 
 [dependency-groups]
 dev = [
@@ -14,7 +16,6 @@ dev = [
     "mypy>=1.13",
     "pytest>=8",
     "ruff>=0.8",
-    "z3-solver==5.1.0.0",
 ]
 
 [build-system]

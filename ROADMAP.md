@@ -647,9 +647,9 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 - Limite de tamanho de domínio e timeout; `unknown`/timeout → nada (não produz certificado).
 
 **Critério de conclusão.**
-- [ ] Em 200 obrigações refutáveis de um corpus de teste, ≥ 95% recebem contramodelo aceito pelo checker.
-- [ ] **Teste adversarial**: um "Z3 falso" que devolve modelos aleatórios nunca consegue um `Accepted` indevido em 10k tentativas.
-- [ ] Um bug introduzido de propósito no tradutor (ex.: inverte uma negação) produz modelos *rejeitados*, nunca refutações falsas.
+- [x] Em 200 obrigações refutáveis de um corpus de teste, ≥ 95% recebem contramodelo aceito pelo checker.
+- [x] **Teste adversarial**: um "Z3 falso" que devolve modelos aleatórios nunca consegue um `Accepted` indevido em 10k tentativas.
+- [x] Um bug introduzido de propósito no tradutor (ex.: inverte uma negação) produz modelos *rejeitados*, nunca refutações falsas.
 
 ---
 

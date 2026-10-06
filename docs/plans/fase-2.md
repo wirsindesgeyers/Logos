@@ -18,7 +18,11 @@ Interfaces: posições de sorts/símbolos referem-se ao vocabulário exato hashe
 funções densas usam último eixo mais rápido; predicados são conjuntos de tuplas.
 Unknown(Size/Memory) permanece exaustão, nunca Refuted ou aceitação parcial.
 
-2.1–2.3 implementadas localmente; detalhes dos checkers em
-[etapa-2.3.md](etapa-2.3.md)/ADR 0016. S3 do avaliador em duas arquiteturas da CI
-ainda precisa ser observado. 2.4–2.6 não iniciadas. Memória de longo prazo
-continua proposta separada, sem alteração de escopo ou dependências desta fase.
+2.1–2.4 implementadas localmente; detalhes dos checkers em
+[etapa-2.3.md](etapa-2.3.md)/ADR 0016 e produtor em
+[etapa-2.4.md](etapa-2.4.md)/ADR 0017: 200/200 contramodelos aceitos, adversário
+10k sem aceitação indevida e negação invertida rejeitada. TCB inalterada na 2.4.
+S3 do avaliador em duas arquiteturas da CI ainda precisa ser observado.
+Próximo: 2.5, segundo finder para domínios minúsculos, sem farm. 2.5–2.6
+não iniciadas. Memória de longo prazo continua proposta separada, sem alteração
+de escopo ou dependências desta fase.

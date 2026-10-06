@@ -41,10 +41,13 @@ cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citaçõ
 cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candidato → O; sem autoridade
 cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/domínio e Unknown(Size)
 cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
+cargo run -p logos-model --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
+(cd py && uv run python -m logos_provers.z3_models_smoke)   # produtor Z3 → checker Rust real
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
 (cd py && uv run pytest -q -s tests/test_model_differential.py)   # 10k pares (M, φ) × Z3
+(cd py && uv run pytest -q -s tests/test_z3_models.py)   # corpus 200, Z3 falso 10k, negação invertida
 ci/check-tcb-lints.sh && ci/check-audit-independence.sh
 cargo xtask tcb check && cargo xtask tcb report   # manifesto e contagem da TCB (tcb/)
 ci/selftest.sh   # bloqueios reais: unsafe, unwrap, lints comentados e dependências fora da allowlist
@@ -132,8 +135,33 @@ de h(V), tipagem de todos os corpos e compatibilidade ordinal antecedem fórmula
 Erros de entrada e Unknown(Steps) nunca viram booleano; somente steps é imposto,
 wall ignorado e mem_bytes/size_bytes não são tetos físicos nesta API.
 Contrato em [`spec/evaluation.md`](spec/evaluation.md), decisão em
-[`ADR 0015`](docs/adr/0015-avaliacao-finita-defined.md). Checkers 2.3 ainda não
-implementados; avaliador não emite Verdict.
+[`ADR 0015`](docs/adr/0015-avaliacao-finita-defined.md). Avaliador não emite Verdict.
+
+Etapa 2.3 oferece `ModelChecker`: refutação exige Γ verdadeira e goal falso;
+consistência exige Γ verdadeira, mas valida goal. Um orçamento cobre bytes,
+contexto e avaliação. Reader contextual de O não abre o tipo gerado pelo monitor;
+h(O) esperado confere os bytes originais. CAS verifica h(M) e preserva erros de
+integridade/I/O. Contrato em [`spec/evaluation.md`](spec/evaluation.md), decisão em
+[`ADR 0016`](docs/adr/0016-checkers-contextuais-de-modelos.md).
+
+Etapa 2.4 oferece `logos_provers.z3_models`, **fora da TCB**: traduz O para
+SMT-LIB, busca estruturas finitas limitadas e extrai candidatos model/v1.
+`refute(o_bytes, v_bytes)` busca Γ ∧ ¬goal; `witness(o_bytes, v_bytes)` busca Γ.
+`Limits(max_domain=4, timeout_ms=5000)` limita domínio e tempo compartilhado.
+Retorno `None` não prova Verified/unsat geral; bytes retornados ainda precisam
+passar pelo checker real contra h(O) vindo do monitor. Sem farm/claims/ledger.
+Decisão/API em [`ADR 0017`](docs/adr/0017-produtor-z3-de-modelos.md) e
+[`plano 2.4`](docs/plans/etapa-2.4.md). Uso:
+
+```python
+from logos_provers.z3_models import Limits, refute, witness
+
+# o_bytes e v_bytes vêm do contexto do monitor; não são texto livre do agente.
+countermodel = refute(o_bytes, v_bytes, limits=Limits(max_domain=3, timeout_ms=2000))
+consistent_model = witness(o_bytes, v_bytes)
+# Nenhum dos retornos é um veredicto; rejeição/Unknown continuam no checker Rust.
+```
+
 
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.

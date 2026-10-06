@@ -129,3 +129,24 @@ Smoke público: `cargo run -p logos-model --example model_smoke`.
 Fuzz: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 model_decode`.
 Avaliação/expansão Defined é especificada em [evaluation.md](evaluation.md);
 solver e ledger permanecem fora desta etapa de estruturas.
+
+## 6. Produtor não confiável (Etapa 2.4)
+
+`logos_provers.z3_models.refute(O_bytes, V_bytes)` traduz Γ ∧ ¬goal para
+SMT-LIB; `witness(O_bytes, V_bytes)` traduz somente Γ. Ambos retornam bytes
+canônicos model/v1 ou None. Nenhum retorno é CheckOutcome, Refuted ou Verified.
+`Limits(max_domain=4, timeout_ms=5000)` limita cada domínio e compartilha tempo
+entre consultas; None inclui busca finita sem sat, unknown e timeout, não prova
+insatisfatibilidade geral. Sem hard RSS/isolamento físico de timeout.
+
+Enumerated fixa cardinalidade/ordinais; Open busca todos vetores 1..k. Defined
+é globalmente restringido como predicado ou relação total com resultado único,
+inclusive símbolos não usados; somente primitivos recebem tabelas model/v1.
+Contexto, posições e ordens continuam §§1–3; nenhum formato/domínio/versionamento
+é alterado. Cada candidato MUST passar pelo checker contextual real contra os
+bytes/hash esperado de O fornecidos pelo monitor antes de ganhar autoridade.
+
+Reprodução: em `py/`, `uv run python -m logos_provers.z3_models_smoke` e
+`uv run pytest -q -s tests/test_z3_models.py`. Decisões em
+[ADR 0017](../docs/adr/0017-produtor-z3-de-modelos.md).
+

@@ -37,6 +37,7 @@ cargo audit
   uv run python ../tools/gen_obligation_vectors.py --check
   uv run python ../tools/gen_protocol_vectors.py --check
   uv run python ../tools/gen_model_vectors.py --check
+  uv run python -m logos_provers.z3_models_smoke
   uv run pytest -q # inclui diferenciais canon e AIR-text (500 fórmulas)
   uv run pytest -q ../tcb/tests
 )
