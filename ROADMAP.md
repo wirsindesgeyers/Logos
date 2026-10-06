@@ -681,7 +681,7 @@ Objetivo da fase: o checker mais simples do sistema (§9). Com ele, `REFUTED` e 
 - Fora da TCB de correção (é só apresentação); o hash do modelo vai junto da explicação.
 
 **Critério de conclusão.**
-- [ ] Para 20 refutações de exemplo, a explicação menciona o objetivo falsificado e só símbolos que aparecem em `O`.
+- [x] Para 20 refutações de exemplo, a explicação menciona o objetivo falsificado e só símbolos que aparecem em `O`. Demonstração local: `logos_provers.model_explain_smoke` e `tests/test_model_explain.py`; checker Rust real aceita 20/20.
 
 ---
 

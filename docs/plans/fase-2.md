@@ -26,6 +26,11 @@ Unknown(Size/Memory) permanece exaustão, nunca Refuted ou aceitação parcial.
 de 682 modelos ≤3, 201/201 contramodelos aceitos, 95 ausências limitadas;
 fallback após unknown nativo. TCB inalterada na 2.4/2.5.
 S3 do avaliador em duas arquiteturas da CI ainda precisa ser observado.
-Próximo: 2.6, apresentação portuguesa do contramodelo, sem garantia de fidelidade.
-2.6 não iniciada. Memória de longo prazo continua proposta separada, sem alteração
+2.6 demonstrada localmente: [plano](etapa-2.6.md)/ADR 0019,
+explain_model com glosas/h(M)/ordinais e símbolos sintáticos de O;
+20/20 refutações aceitas pelo checker real, 10 regressões, smoke público
+e runtime-only passaram. Full verify/selftest VERIFY_OK, 227 Python + 25 TCB.
+Nenhuma garantia de fidelidade ou autoridade; TCB/formatos inalterados.
+Próximo: 3.1, catálogo de eventos. CI remota 2.6 não observada.
+Memória de longo prazo continua proposta separada, sem alteração
 de escopo ou dependências desta fase.

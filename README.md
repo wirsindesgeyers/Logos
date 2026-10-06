@@ -43,6 +43,7 @@ cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/
 cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
 cargo run -p logos-model --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
 (cd py && uv run python -m logos_provers.z3_models_smoke)   # produtor Z3 → checker Rust real
+(cd py && uv run python -m logos_provers.model_explain_smoke)   # 20 refutações → português + h(M)
 ci/check-sort-coverage.sh   # 100% ramos LLVM; cargo-llvm-cov 0.9.1 + nightly/llvm-tools
 (cd py && uv sync && uv run ruff check . && uv run mypy && uv run pytest)
 (cd py && uv run pytest -q tests/test_air_differential.py)   # 500 fórmulas com AST esperada
@@ -188,6 +189,24 @@ reexportados pelo módulo Z3. Decisão em
 [`ADR 0018`](docs/adr/0018-model-finder-exaustivo.md), provas no
 [`plano 2.5`](docs/plans/etapa-2.5.md). Smoke, em `py/`:
 `uv run python -m logos_provers.model_finder_smoke`.
+
+Etapa 2.6 oferece apresentação portuguesa **fora da TCB**, sem garantia de
+fidelidade ou aceitação. Glosas descrevem somente símbolos presentes em O;
+dependências Defined são avaliadas sem aparecer no texto. Domínios usam
+ordinais; fatos/valores limitados a 100 entradas com omissão explícita.
+Premissas falsas e objetivo verdadeiro não são mascarados.
+
+```python
+from logos_provers.model_explain import explain_model
+
+text = explain_model(m_bytes, v_bytes, o_bytes)  # inclui h(M), não emite Verdict
+print(text)
+```
+
+Contrato/limites em [`spec/model.md`](spec/model.md#8-apresentação-não-autoritativa-etapa-26)
+e [`ADR 0019`](docs/adr/0019-apresentacao-de-contramodelos.md).
+`uv run python -m logos_provers.model_explain_smoke` em `py/` confere
+20 refutações pelo checker Rust real e imprime exemplo legível.
 
 
 

@@ -176,3 +176,29 @@ Reprodução em `py/`: `uv run python -m logos_provers.model_finder_smoke`,
 `uv run pytest -q -s tests/test_model_finder.py tests/test_model_fallback.py`.
 [ADR 0018](../docs/adr/0018-model-finder-exaustivo.md).
 
+
+## 8. Apresentação não autoritativa (Etapa 2.6)
+
+`logos_provers.model_explain.explain_model(M_bytes, V_bytes, O_bytes) -> str`
+apresenta domínio, valores/fatos relevantes, valoração das premissas e objetivo
+AIR, junto de h(M). Usa `gloss_pt` entre aspas escapadas; sem glosa, usa nome.
+Elementos são `Sort#ordinal`, sem introduzir representantes Enum ausentes de O.
+
+Somente símbolos/sorts sintáticos de O e suas assinaturas são apresentados;
+Defined é avaliado internamente sem exibir dependências ou expandir fórmulas.
+Objetivo verdadeiro e premissa falsa permanecem visíveis, não são convertidos
+em refutação. Texto não atesta aceitação, proveniência ou fidelidade.
+
+Entradas inválidas e exaustão da avaliação produzem `ProducerError`. Apresentação
+usa até 100 entradas de fatos/valores com omissão explícita, domínios compactos
+e orçamento cooperativo 1M passos/5s. Além dos caps de model/v1, a representação
+densa do intérprete é limitada a 100k células agregadas, inclusive predicados e
+Defined; um certificado esparso válido pode exceder esse limite de apresentação.
+Limite de apresentação não muda validade do modelo ou resultado do checker.
+
+Reprodução em `py/`: `uv run python -m logos_provers.model_explain_smoke`
+confere 20 fixtures de refutação pelo checker Rust real e imprime exemplo PT;
+`uv run pytest -q -s tests/test_model_explain.py` cobre relevância e valoração.
+Corpus público em `logos_provers.model_explain_examples.corpus_20`.
+[ADR 0019](../docs/adr/0019-apresentacao-de-contramodelos.md) e
+[plano 2.6](../docs/plans/etapa-2.6.md). Nenhuma mudança no formato model/v1.

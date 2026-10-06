@@ -28,6 +28,12 @@ NO_MODEL_WITHIN_BOUND/EXHAUSTED e fallback após unknown nativo.
 ausências limitadas. Smokes público, sem import Z3 e runtime-only passaram;
 41 testes dos produtores passaram; ci/verify.sh --selftest: VERIFY_OK, exit 0,
 217 Python + 25 TCB. Smoke runtime-only sem dependências dev também passou.
+2.6: explain_model(M,V,O) em português fora da TCB: glosas, domínios
+ordinais, valores/fatos apenas de O, premissas/objetivo e h(M).
+Defined é derivado internamente sem revelar dependências; omissão após
+100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
+10 regressões e smoke runtime-only passaram. Full verify/selftest:
+VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
 TCB correção: 6677+78287=84964, build-only51581; logos-model1845 LOC, inalterada.
 Nenhum Verdict/kernel/gateway/farm. Formatos e dependências Rust inalterados.
 
@@ -65,8 +71,9 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | 2.3 Checkers de refutação/consistência | ✅ concluída localmente | ModelChecker/P2, reader não autoritativo de obligation/v1 e CAS real; 21 testes de checker + 15 de decoder, 20 vetores positivos/10 negativos. cargo-mutants: 12/12 viáveis capturados no checker (8 inviáveis), 17/17 no reader (4 inviáveis), zero sobreviventes. CHECKER_SMOKE_OK; fuzz final 10297/3909 execuções por alvo em 61 s, full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.3.md) §7/ADR 0016. CI/ARM/fuzz longo ainda não observados. |
 | 2.4 Produtor Z3 de modelos | ✅ concluída localmente | refute/witness por SMT-LIB real, extração model/v1 contextual e limites; 200/200 contramodelos aceitos, Z3 falso10k (2100 legítimos/7900 rejeitados/zero indevidos), negação invertida rejeitada. Z3_MODELS_SMOKE_OK; 19 regressões, full verify/selftest VERIFY_OK. [Plano](docs/plans/etapa-2.4.md) §7/ADR 0017. CI ainda não observada; TCB inalterada. |
 | 2.5 Model finder alternativo | ✅ concluída localmente | 296 obrigações distintas contra enumeração independente dos 682 modelos ≤3; 201/201 refutáveis encontrados e aceitos, 95 negativos. Limites/trabalho/timeout distinguem EXHAUSTED. MODEL_FINDER_SMOKE_OK com unknown nativo/fallback/checker; runtime-only e sem import Z3 passaram. 22 regressões novas + 19 da 2.4 passaram; full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.5.md) §7/ADR 0018. CI ainda não observada; TCB inalterada. |
+| 2.6 Tradução de contramodelos | ✅ concluída localmente | explain_model com h(M)/gloss_pt/ordinais e relevância sintática de O; Defined sem vazamento, valorações verdadeiras/falsas preservadas. Checker Rust aceitou 20/20; 10 regressões, MODEL_EXPLAIN_SMOKE_OK e runtime-only passaram. Full verify/selftest VERIFY_OK, exit 0, 227 Python + 25 TCB. [Plano](docs/plans/etapa-2.6.md)/ADR 0019. CI ainda não observada; TCB e formatos inalterados. |
 
-Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.6 e Fases 3–23 não iniciadas.
+Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 3–23 não iniciadas.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -87,6 +94,8 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). 2.6 e Fases 3–23 não inic
    execução remota ainda não observada, sem exigir checker ARM novo nesta etapa.
    Finder/fallback 2.5 e enumeração independente também ligados ao job Python;
    execução remota ainda não observada; sem novo requisito ARM nesta etapa.
+   Apresentação 2.6: corpus de 20 refutações/checker e smoke PT ligados ao mesmo
+   job Python; execução remota ainda não observada. Sem alteração da TCB.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -135,30 +144,51 @@ Cargo.lock do projeto. Primeira tentativa do smoke falhou por esperar Io em
 symlink; contrato retorna KeyFileNotRegular. Asserção temporária corrigida,
 run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 
-## Próximo passo: Etapa 2.6 — tradução de contramodelos para português (fora da TCB, `P`)
+## Extensão arquitetural proposta — Long-Term Memory
 
-Dependências prontas: FiniteModel/model-v1 contextual (2.1) e vocabulary/v1
-com gloss_pt (1.2). Reader de O, checker Rust real, produtores 2.4/2.5 e
-fixtures/ponte batch também existem. Ler ROADMAP 2.6 e formatos existentes.
+[Extensão](docs/spec/LOGOS-long-term-memory.md) com 24 seções, schemas,
+pseudocódigo, M1–M12, 20 critérios concretos, benchmarks e mudanças cirúrgicas
+para a spec original. [ADR 0008](docs/adr/0008-memoria-de-longo-prazo.md)
+**proposto**, não aceito/implementado. Kernel/gateway/harness continuam ausentes;
+nenhum checkmark do ROADMAP ou etapa de implementação foi criado.
 
-Implementar explain_model(M, V, O) -> String usando gloss_pt: domínio,
-fatos verdadeiros relevantes e objetivo falsificado; incluir hash do modelo.
-Restringir símbolos exibidos aos presentes em O, inclusive na presença de
-Defined: não vazar símbolos de dependências/fora da obrigação na explicação.
-Não alegar fidelidade, Verified ou aceitação porque texto parece plausível.
-Modelo de refutação aceito satisfaz todas as premissas; não inventar premissa
-falsa. A apresentação continua fora da TCB e não substitui o checker.
+Smoke estrutural descartável: 1M eventos, 1.999.993 nodes, 161 parts,
+frame máximo 8.192/8.192 bytes, original #42 não NFC em 16 descidas.
+Folding adversarial terminou em 8.123 bytes apesar de 236 merges que
+aumentaram bytes privados; floresta extrema de 63 raízes ficou em 98.794 bytes.
+Fixture SQLite WAL/FULL com três SIGKILLs preservou inbox/ID; resolver nativo
+recusou fonte alterada/ausente. Isso não verifica módulos reais, LLM/recall,
+PDF/OCR, ACL/providers ou kernel. Dois runners iniciais atingiram 300s/90s;
+versões indexada e de comparação menor passaram; temporários removidos.
 
-Critério: 20 refutações de exemplo aceitas pelo checker real; cada explicação
-menciona objetivo falsificado e somente símbolos que aparecem em O. Smoke
-público legível e verificação integral, com artefatos/casos reproduzíveis.
+Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
+dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
+Sem full verify/CI/commit/push nesta entrega documental.
 
-Decisões abertas: entrada Python bytes/contexto, representação portuguesa de
-elementos/funções/tuplas, fallback para gloss_pt ausente e limites de apresentação.
-Registrar escolha em ADR/plano; não alterar formato model/v1 nem integrar
-paráfrase determinística de fórmulas (9.1), ledger, farm ou memória proposta.
+## Próximo passo: Etapa 3.1 — catálogo de eventos v1 (`M`, TCB)
 
-Pendências remotas 0.1–2.5 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Dependências prontas: canon/v1 (0.3), hash/assinatura/KeyId/Signer (0.4),
+Budget/CheckOutcome (0.6) e obrigação/h(O) (1.5). Fase 2 possui modelos,
+avaliador/checkers, produtores e apresentação não autoritativa.
+Ler ROADMAP 3.1, Apêndice C e spec conceitual; registrar plano de etapa
+e ADR antes de definir wire. Criar `spec/events.md` normativo.
+
+Implementar em logos-ledger o catálogo mínimo: Genesis, VocabPublished,
+Proposed, ObligationCreated, Verified, Refuted, UnknownRecorded,
+AssumptionDeclared, Retracted, Invalidated, EpochAdvanced,
+CheckerRegistered e CheckerRevoked. Event contém seq/epoch/prev/body/
+kernel_key/sig; checks carregam h(O)/h(cert)/h(checker)/budget/outcome.
+Não implementar persistência/appender (3.2), índices, kernel/gateway
+ou eventos introduzidos nas fases 5–17.
+
+Critério: vetores canônicos de cada tipo e teste de adulteração de todos
+os campos invalidando assinatura. Aplicar regras TCB, manifesto e fuzz
+para cada decoder novo; demonstrar mutantes negativos e smoke público.
+
+Decisões abertas: envelope/tags e payloads mínimos de cada evento,
+domínio de hash/assinatura e representação de checks por rota, sem
+inferir Refuted de Rejected/Unknown. Reutilizar formatos existentes.
+Pendências remotas 0.1–2.6 separadas: local não fecha S3/ARM/CI/fuzz longo.
 h(O) esperado deve vir do monitor; fixtures/readers não autenticam proveniência.
 
 ## Decisões em aberto para o mantenedor
@@ -315,6 +345,21 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   achado runtime novo no recorte; sem full verify/testes/fuzz/CI remota
   nesta revisão. Temporários removidos, código não corrigido nem commitado.
   Próximo passo: corrigir guards/medição, depois retomar 1.2.
+
+- **2026-10-04** — Especificada extensão proposta de memória de longo prazo
+  após leitura integral da spec e referência OptChat: Episodic/Knowledge/Router,
+  24 seções, schemas/algoritmos, M1–M12, 20 acceptance cases, benchmarks/ordem
+  e alterações cirúrgicas. ADR 0008 proposto; sem módulos, novos formatos
+  implementados, checkmarks ou correção dos P2 anteriores. Smoke estrutural
+  de 1M eventos passou; #42 original não NFC recuperado, frame <=8192,
+  folding com aumento privado terminou bounded. Fixture real SQLite/SIGKILL
+  e fonte nativa corrompida/ausente passaram. Tentativas iniciais de runner
+  atingiram deadlines 300s/90s; runners ajustados passaram, temporários removidos.
+  Sem full verify/CI/commit/push; próximo passo de código continua 0.1/0.2.
+- **2026-10-04** — Smoke adicional da proposta de memória: SIGKILL real após
+  commit event+turn; retomada usou snapshot anterior à entrada atual.
+  Receipt Delivered retornou resposta salva sem novo evento/chamada.
+  Fixture removida; continua verificação de referência, não módulo implementado.
 
 - **2026-10-04** — Corrigidos os P2 pendentes dos controles 0.1/0.2:
   scanner do preâmbulo Rust ignora comentários/literais/nested attrs/cfg_attr;
@@ -568,3 +613,30 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   atualizados. Memória/diário/fuzz-src/logs preexistentes preservados fora
   do commit. Sem push/CI remota; S3/ARM/fuzz longo anteriores pendentes.
   Próximo: 2.6, apresentação portuguesa sem garantia de fidelidade.
+- **2026-10-05** — Etapa 2.6 implementada: explain_model(M_bytes,V_bytes,O_bytes)
+  fora da TCB, com glosas escapadas/fallback nome, elementos Sort#ordinal,
+  valores funcionais e tuplas verdadeiras só de símbolos sintáticos de O.
+  Defined é derivado globalmente via intérprete não confiável existente,
+  sem mostrar dependências; representantes Enum ausentes de O ficam ocultos.
+  Cada premissa e objetivo AIR têm valoração real; texto inclui h(M) e aviso
+  não autoritativo. Até 100 entradas com omissão explícita; domínios compactos,
+  tabelas densas ≤100k agregadas e orçamento cooperativo 1M passos/5s.
+  Certificado válido esparso pode não caber na apresentação; ProducerError
+  não muda validade ou resultado do checker. Sem paráfrase da 9.1.
+  Corpus público reproduzível de 20 refutações distintas, todas Accepted pelo
+  checker Rust real; 10 regressões passaram em 0,72s. Smoke público e
+  uv run --isolated --no-dev --locked passaram (2 pacotes), com
+  MODEL_EXPLAIN_SMOKE_OK accepted=20/20 false_goals=20 hashes=20.
+  Primeiro alvo: 8 passed/1 failed por asserção incidental proibindo sintaxe
+  AIR legítima app(symbol(...)); teste redundante removido, sem re-pin.
+  Fixture de tuplas invertidas inicialmente não exercitava caminho porque
+  selecionava caso funcional sem predicados; substituída por tuplas explícitas.
+  Ruff inicial 11 linhas longas/mypy 1 erro de lista corrigidos;
+  Ruff/format/mypy finais passaram. Full ci/verify.sh --selftest:
+  VERIFY_OK, exit 0, 150,71s; 227 Python (95,39s) + 25 TCB (1,48s).
+  Smokes/vetores/controles de CI passaram; avisos deny preexistentes apenas.
+  ADR 0019, plano, API/spec/README, ROADMAP/STATUS e verify/job Python
+  atualizados. TCB/formato/dependências Rust inalterados. Memória/diário,
+  alterações fuzz-src e logs preexistentes preservados fora do commit.
+  Sem push/CI remota; pendências S3/ARM/fuzz longo continuam separadas.
+  Próximo: 3.1, catálogo de eventos v1, sem persistência da 3.2.

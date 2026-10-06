@@ -179,6 +179,8 @@ jobs:
         run: uv run python -m logos_provers.z3_models_smoke
       - name: Smoke público do finder e fallback com unknown nativo
         run: uv run python -m logos_provers.model_finder_smoke
+      - name: Smoke público de 20 contramodelos em português
+        run: uv run python -m logos_provers.model_explain_smoke
       - run: uv run pytest -q # canon 100k/direção e AIR-text 500 fórmulas
       - run: uv run pytest -q ../tcb/tests
 
