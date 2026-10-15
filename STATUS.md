@@ -10,7 +10,8 @@
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
 Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
-`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model` e CAS/eventos de `logos-ledger`;
+`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`
+e CAS/eventos/índices de `logos-ledger`;
 demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
@@ -34,8 +35,8 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 8235+105199=113434 LOC de correção, build-only64508;
-logos-ledger2220. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+TCB atual Rust: 8974+105199=114173 LOC de correção, build-only64508;
+logos-ledger2937, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
@@ -55,6 +56,19 @@ commit sem resposta observado e preservado. Segundo processo recusado.
 Full ci/verify.sh --selftest: VERIFY_OK, exit 0; autoteste final isolado
 sem avisos. Fuzz final event_decode: 139749 execuções/61 s, exit 0, sem crash.
 CI/ARM/fuzz longo não observados; sem índices, integração CAS ou kernel.
+3.3: claims/deps/citable e LedgerView reais, derivados de replay autenticado;
+cache index.sqlite3 separado, comparado integralmente e publicado por backup/
+sync/rename, nunca autoridade. Consultas em SQLite privado na memória, com
+lock do writer; snapshot resolve V/O no CAS, tipagem e scope opaco exato.
+Used define deps; retratação/invalidação/revogação retiram citabilidade do
+fechamento de dependentes. Unknown/Pending/Refuted nunca viram premissa.
+CLI logos ledger rebuild-index usa somente chave pública, compara cache.
+14 testes índices +1 header/contexto +2 CLI; onze mutantes capturados.
+100k eventos: cinco tabelas idênticas após apagar/reconstruir cache.
+1M eventos assinados/conferidos, 20000 consultas: p99=36573ns (<1ms),
+build252133ms fora da medida. Full verify/selftest VERIFY_OK, exit0;
+227 Python +25 TCB, autoteste sem avisos. Fuzz92653/61s, exit0, sem crash.
+Nenhum pacote externo novo; CI/ARM/fuzz longo não observados.
 
 ## Etapas da Fase 0
 
@@ -100,6 +114,7 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
 | --- | --- | --- |
 | 3.1 Catálogo de eventos v1 | ✅ concluída localmente | 13 tipos/event-v1, 18 vetores independentes, 15 regressões/599 adulterações e 18 mutantes capturados. EVENTS_SMOKE_OK, fuzz final 123392/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-3.1.md) §7, ADR 0020 e spec/events.md. CI/ARM/fuzz longo não observados; sem persistência/appender. |
 | 3.2 Appender com hash chain | ✅ concluída localmente | SQLite WAL/FULL, lock de escritor, replay integral, 16 testes novos/48 no crate e nove mutantes capturados. LEDGER_CRASH_OK: 10k eventos/24 SIGKILLs, zero perdas de appends reconhecidos; segundo processo recusado. Full verify/selftest VERIFY_OK, exit 0; autoteste isolado sem avisos; fuzz final 139749/61 s, exit 0. [Plano](docs/plans/etapa-3.2.md) §7, ADR 0021 e spec/ledger.md. CI/ARM/fuzz longo não observados. |
+| 3.3 Índices e consultas | ✅ concluída localmente | LedgerView/CAS/escopo e claims/deps/citable reais, cache derivado sem autoridade, CLI com chave pública. 17 testes novos e onze mutantes capturados; reconstrução100k preservou todas as cinco tabelas. 1M/20000 consultas: p99=36573ns, build252133ms fora da latência. Full verify/selftest VERIFY_OK, exit0; fuzz92653/61s, exit0, sem crash. [Plano](docs/plans/etapa-3.3.md) §7, ADR 0022 e spec/ledger-index.md. CI/ARM/fuzz longo não observados. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -128,6 +143,11 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
    Appender 3.2: testes e ci/check-ledger-crash.sh ligados aos dois runners
    Rust nativos, com worker release/oráculo Python/10k eventos/24 SIGKILLs.
    Demonstração local passou; execução remota/ARM ainda não observada.
+   Índices 3.3: check-ledger-index.sh ligado ao mesmo job nativo; compara
+   reconstrução100k e p99 de20000 consultas com1M, artefato JSON por arquitetura.
+   Execução local passou; remoto/ARM ainda não observado. Novo acesso ao h(V)
+   de O é exercitado pelo alvo obligation_decode existente, sem desativar
+   sanitizers; ≥1h remota continua pendente.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -197,37 +217,36 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.3 — índices e consultas (`M`)
+## Próximo passo: Etapa 3.4 — épocas (`P`, TCB), começando pelo contrato
 
-Dependências prontas: appender exclusivo/SQLite/replay integral da 3.2,
-catálogo assinado da 3.1, CAS da 0.5 e LedgerView/lookup/PremiseRef/LedgerEntry
-da 1.5. Contratos em spec/ledger.md, spec/events.md, spec/obligation.md e
-ADRs 0012/0020/0021. Ler ROADMAP 3.3 e registrar plano/ADR antes do código.
+Dependências declaradas prontas: EventBody/EpochAdvanced da 3.1 e índices/
+LedgerView/snapshot da 3.3. Appender 3.2 já calcula epoch crescente; índice
+preserva u64 inteiro e atualmente exige emissão na época corrente, sem janela.
+Ler ROADMAP 3.4 e spec/events.md/spec/ledger-index.md/ADRs0020–0022.
 
-Implementar tabelas derivadas/reconstruíveis claims, deps e citable;
-consultas de estado/fórmula/dependentes/citabilidade e implementação da
-LedgerView para o gerador. Acrescentar `logos ledger rebuild-index`.
-Demonstrar igualdade após reconstruir índices de 100k eventos e p99 <1ms
-em is_citable com 1M eventos. Consultas específicas de UI e índices de ações
-ficam fora, assim como kernel, fatos/políticas de fases futuras e CAS/GC 3.5.
+Planejar validade genérica por época, campos opcionais policy_root/vocab de
+EpochAdvanced e vetores/bump dos formatos que mudarem. Épocas de política da
+7.2 e efeitos de ações ficam fora; não antecipar esses mecanismos.
 
-Decisões abertas: v1 recusa tabelas extras; escolher base derivada separada
-ou versão/migração explícita, com vetores; resolução de V/O pelo CAS,
-snapshot de referências e tratamento de objetos ausentes; atualização
-transacional/rebuild sem confundir bytes assinados com dados derivados.
-A fronteira LedgerView é confiável: erro/Unknown/Rejected não vira citável.
-Sem inventar autoridade lógica/admin a partir de assinaturas. Mecanismo
-de janelas/épocas da 3.4 continua separado.
+Decisão de contrato antes do código: critério 3.4 cita fato válido nas épocas
+3–5, citável em4 e recusado em6, mas objeto Fact/FactRegistered/EpochRange da
+6.1 ainda não existe (só FactRef e EntryKind::Fact abstratos). Não implementar
+6.1 para contornar isso. Fixar em plano/ADR a fronteira do mecanismo genérico
+e como demonstrar o critério sem fingir integração de fatos; se depender do
+objeto ausente, registrar bloqueio conforme AGENTS.md §1.3. Qualquer mudança
+de escopo/ordem exige ADR/ROADMAP explícitos.
 
-Riscos conhecidos: custo linear de replay na abertura, TCB C do SQLite não
-incluída no contador Rust e falta de âncora externa contra sufixo truncado.
-Pendências remotas 0.1–3.2 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Riscos conhecidos: citabilidade não pode promover Unknown/Invalidated ou
+confundir época de emissão com época de aplicabilidade. Snapshots mantêm lock
+do writer e reconstrução completa tem custo alto (252s com1M nesta máquina);
+consulta p99 em memória não representa abertura. Sem âncora contra rollback.
+Pendências remotas 0.1–3.3 separadas: local não fecha S3/ARM/CI/fuzz longo.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 8235 LOC Rust próprios + 105199
-  de dependências Rust = 113434 (+64508 só de compilação), após 3.2;
-  logos-air1556, logos-obligation550, logos-model1845, logos-ledger2220.
+- **Tamanho da TCB de correção (execução):** 8974 LOC Rust próprios + 105199
+  de dependências Rust = 114173 (+64508 só de compilação), após 3.3;
+  logos-air1556, logos-obligation572, logos-model1845, logos-ledger2937.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -745,3 +764,44 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   fora do medidor Rust. Sem índices/citabilidade/CAS-integrado/kernel/HSM/
   transparência. Memória, fuzz-src, mutants.out e logs preexistentes fora
   do commit. Sem push/CI remota; próximo: 3.3, índices e LedgerView reais.
+- **2026-10-15** — Etapa 3.3 implementada sem subagentes: LedgerIndex privado
+  em memória reconstruído de cadeia conferida, claims/deps/citable/metadata/
+  revoked em cache index.sqlite3 derivado, comparação integral e backup/sync/
+  rename atômicos. Cache adulterado não é autoridade. Borrow de Ledger::index
+  mantém writer emprestado; Index standalone usa somente chave pública e
+  mantém lock. Snapshots preparados resolvem V/O pelo CAS e reader completo,
+  sort-check e scope opaco exato inclusive ancestors usados. Deps só de used;
+  invalidação conservadora fecha dependentes, sem criar eventos de kernel.
+  CLI logos ledger rebuild-index compara Missing/Equal/Different/Invalid e
+  não lê chave privada. Novo vocabulary_for_check compartilha envelope/hash/
+  caps do reader, sem abrir Obligation selada; wire anterior inalterado.
+  ADR0022/plano/spec/novo vetor layout/manifesto/CLI/CI/README atualizados.
+  Só feature rusqlite backup; cache de statements descartado por depender de
+  hashlink. Nenhum pacote externo novo ou mudança da base ledger-sqlite/v1.
+  14 regressões índices +1 header independente20 vetores +2 processos CLI
+  passaram. Onze mutantes compilados capturados por asserções; fontes
+  restauradas, nenhum erro de compilação contado como morto. Logs locais
+  em target/index-mutations; receita no plano. Erros iniciais de API
+  DatabaseName/FromSql u64, fixture canon_hex/canonical_hex e três Clippy
+  needless_borrows corrigidos antes do full verify.
+  Dataset realmente assinado/conferido: rebuild100k apagou cache e comparou
+  todas as colunas/linhas ordenadas das cinco tabelas, cabeça preservada.
+  1M/20000 consultas (5142 positivas/14858 negativas), p99 inicial27042ns;
+  full verify36573ns, p5015580ns, máximo81136ns, build252133ms excluído da
+  latência. Snapshot privado em memória, não cold start; fixture agrupa
+  INSERTs somente para preparar dados, sem alegação de throughput do appender.
+  Artefato target/ledger-index-scale.json ligado a upload por arquitetura na CI.
+  Fuzz oficial obligation_decode/nightly-2026-09-28:92653 execuções/61s,
+  exit0, sem crash, sanitizers ativos, max_len4096; fora do sandbox por ptrace
+  já conhecido. Log anterior restaurado, novo em target/obligation-decode-3.3.log.
+  ci/verify.sh --selftest: VERIFY_OK, exit0; workspace Rust, smokes/crash10k
+  (24 SIGKILLs/9998 ACKs/zero perda), escala, manifesto/independência/lints/
+  supply-chain/vetores,227 Python89,58s +25 TCB1,34s e autoteste sem avisos de
+  tar, com bloqueios pelos diagnósticos corretos. Só avisos deny preexistentes.
+  TCB Rust8974+105199=114173 (+739 próprios), build-only64508; ledger2937 e
+  obrigação572. SQLite C176466 continua separado do contador Rust.
+  Sem kernel/auditor/fatos/políticas/janelas de épocas/UI/ações novos.
+  Descoberta para 3.4: critério de janela de fato antecede o objeto Fact da
+  6.1; exige contrato/plano e bloqueio se depender desse objeto ausente,
+  sem antecipar 6.1. Memória, fuzz-src alheios, logs e mutants.out preexistentes
+  fora do commit. Sem push/CI remota; próximo: contrato da 3.4.

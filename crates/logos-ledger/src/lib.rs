@@ -11,6 +11,10 @@ pub(crate) mod cas_domain;
 mod event;
 mod event_body;
 mod event_body_codec;
+mod index;
+mod index_project;
+mod index_resolve;
+mod index_store;
 mod ledger;
 mod ledger_error;
 mod ledger_store;
@@ -21,5 +25,7 @@ pub use event_body::{
     Authority, Certificate, CheckRecord, Checker, Consistency, EventBody, EventProposal,
     ModelObject, Route, TaintedText,
 };
+pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot};
+pub use index_store::{IndexComparison, RebuildReport};
 pub use ledger::{Ledger, LedgerHead};
 pub use ledger_error::LedgerError;

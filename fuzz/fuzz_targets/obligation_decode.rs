@@ -20,7 +20,7 @@ use logos_canon::{Text, to_canon};
 use logos_crypto::{Hash, hash, hash_raw};
 use logos_obligation::{
     DecodeError, DecodeLimits, EntryKind, LedgerEntry, LedgerError, LedgerView, Obligation,
-    PremiseRef, Proposal, decode_for_check, generate,
+    PremiseRef, Proposal, decode_for_check, generate, vocabulary_for_check,
 };
 use std::sync::LazyLock;
 
@@ -127,10 +127,15 @@ fuzz_target!(|data: &[u8]| {
 
     // 2. Decodificação de bytes arbitrários com hash recalculado
     let recomputed_h = hash_raw::<Obligation>(data);
+    let context = vocabulary_for_check(data, recomputed_h, tight_limits);
     let res = decode_for_check(data, recomputed_h, &FIXED_VOCAB, tight_limits);
 
     // Se aceito, valida invariantes normativas do CheckedObligation
     if let Ok(checked) = res {
+        assert_eq!(
+            context.expect("full decoder requires valid envelope"),
+            checked.vocab()
+        );
         let expected_vocab_h = hash(&*FIXED_VOCAB).expect("vocab hash");
         assert_eq!(
             checked.vocab(),
@@ -176,6 +181,10 @@ fuzz_target!(|data: &[u8]| {
 
     let res_wrong = decode_for_check(data, wrong_h, &FIXED_VOCAB, tight_limits);
     if data.len() <= tight_limits.max_bytes {
+        assert!(matches!(
+            vocabulary_for_check(data, wrong_h, tight_limits),
+            Err(DecodeError::HashMismatch)
+        ));
         assert!(
             matches!(res_wrong, Err(DecodeError::HashMismatch)),
             "entrada com hash incorreto deve ser rejeitada com HashMismatch: {res_wrong:?}"
@@ -198,6 +207,7 @@ fuzz_target!(|data: &[u8]| {
 
         // Com hash recalculado sobre a mutação: exercita o parser em estruturas quase válidas
         let mutated_h = hash_raw::<Obligation>(&mutated);
+        let _ = vocabulary_for_check(&mutated, mutated_h, tight_limits);
         let _ = decode_for_check(&mutated, mutated_h, &FIXED_VOCAB, tight_limits);
 
         // Com hash original da fixture: se os bytes mudaram e cabem no limite, deve falhar com HashMismatch

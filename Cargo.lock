@@ -232,6 +232,10 @@ dependencies = [
 [[package]]
 name = "logos-cli"
 version = "0.0.0"
+dependencies = [
+ "logos-crypto",
+ "logos-ledger",
+]
 
 [[package]]
 name = "logos-core"

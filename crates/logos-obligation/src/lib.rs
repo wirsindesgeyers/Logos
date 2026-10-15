@@ -21,7 +21,9 @@ mod error;
 mod generate;
 mod types;
 
-pub use decode::{CheckedObligation, DecodeError, DecodeLimits, decode_for_check};
+pub use decode::{
+    CheckedObligation, DecodeError, DecodeLimits, decode_for_check, vocabulary_for_check,
+};
 pub use error::Reject;
 pub use generate::generate;
 pub use types::{

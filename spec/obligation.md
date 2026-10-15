@@ -45,7 +45,8 @@ pub trait LedgerView {
 LedgerView é fronteira confiável: representa um snapshot consistente, associa
 lookup ao evento pedido e valida autenticidade/proveniência/escopo no leitor.
 Sem acesso a relógio ou rede pelo gerador. Getter da época é lido uma vez.
-Implementação real depende da 3.3, ausente; testes/smoke usam snapshot em memória.
+Implementação real na 3.3: `logos_ledger::LedgerIndex::snapshot`, com cadeia,
+CAS, escopo e fórmulas conferidos; ver [ledger-index.md](ledger-index.md).
 Unavailable/InvalidRecord são erros, nunca ausência. Formula/Vocabulary já têm
 construtores estruturais validados; decoder 2.3 produz tipo distinto (§6), não Obligation.
 `LedgerEntry.epoch` é a época de aplicabilidade resolvida pelo snapshot, não
@@ -159,6 +160,13 @@ Reader MUST NOT afirmar que uma referência é citável/autêntica ou válida na
 época atual. h(O) esperado MUST ser obtido de obrigação gerada pelo monitor:
 um atacante que fornece bytes e recalcula hash não obtém proveniência. P1
 permanece em generate/LedgerView; P2 liga dados lógicos ao hash esperado.
+
+Etapa 3.3 acrescenta `vocabulary_for_check(bytes, expected_hO, limits)`:
+confere teto/hash/canon/fim exato e envelope/discriminadores, devolvendo apenas
+h(V) para resolver o contexto no CAS. Não valida premissas/goal nem constrói
+Obligation. MUST chamar decode_for_check completo após carregar V; header
+válido não permite usar corpo inválido como premissa. Ambos reutilizam o mesmo
+leitor do envelope, sob fuzz obligation_decode. Wire/domínio/versão não mudam.
 
 Reprodução: `cargo test -p logos-obligation --test decoding`; positivos
 reutilizam os 20 vetores independentes da geração; negativos fixos adicionais

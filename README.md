@@ -112,8 +112,8 @@ Etapa 1.5 oferece `logos-obligation::generate(Proposal, &LedgerView)`: valida
 objetivo/premissas, citabilidade/época e compatibilidade; ordena/deduplica digests
 de eventos, não fórmulas. `Obligation` privado expõe somente leitura e codificação
 canônica; não tem decoder/construtor público. Época não entra em h(O); assumptions
-continuam antecedentes explícitos. LedgerView é snapshot abstrato confiável,
-não ledger/autenticação implementados. Contrato em [`spec/obligation.md`](spec/obligation.md),
+continuam antecedentes explícitos. A interface LedgerView recebe implementação
+autenticada na 3.3. Contrato em [`spec/obligation.md`](spec/obligation.md),
 decisão em [`ADR 0012`](docs/adr/0012-geracao-de-obrigacoes.md).
 
 Etapa 1.6 oferece `logos-protocol::{decode, encode}` fora da TCB, JSON versionado
@@ -231,10 +231,23 @@ SQLite WAL/FULL, lock exclusivo de escritor e replay integral de
 seq/prev/assinaturas antes de aceitar novas entradas. O appender calcula
 cabeçalho e só devolve o evento após commit/sync. Falha de persistência
 exige reabertura. Teste `ci/check-ledger-crash.sh`: SIGKILL durante 10k
-appends, com oráculo Python independente. Sem índices/citabilidade da 3.3,
-integração CAS da 3.5 ou proteção contra truncamento de sufixo válido (13.2).
+appends, com oráculo Python independente. Integração CAS antes do append é da
+3.5; proteção contra truncamento de sufixo válido é da 13.2.
 Contrato em [`spec/ledger.md`](spec/ledger.md), decisão em
 [`ADR 0021`](docs/adr/0021-appender-sqlite-duravel.md).
+
+Etapa 3.3 acrescenta `LedgerIndex::open(directory, public_key)` e
+`Ledger::index()`: claims/deps/citable derivados da cadeia conferida,
+consultas de estado/época/dependentes e `snapshot(cas, refs, scope)` para
+gerar novas obrigações com Formula/Vocabulary autenticados. Deps vêm de used;
+retratação/invalidação/revogação retiram citabilidade dos dependentes.
+Cache index.sqlite3 é comparado e reconstruído, sem servir como autoridade;
+consultas usam snapshot SQLite privado em memória, com lock de escritor.
+`logos ledger rebuild-index DIR --public-key HEX` usa somente chave pública.
+`ci/check-ledger-index.sh` demonstra reconstrução de 100k eventos e p99<1ms
+para is_citable com 1M, excluindo o custo de reconstrução.
+Contrato em [`spec/ledger-index.md`](spec/ledger-index.md), decisão em
+[`ADR 0022`](docs/adr/0022-indices-e-ledgerview.md).
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

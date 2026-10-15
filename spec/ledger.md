@@ -20,6 +20,8 @@ CREATE TABLE events (seq INTEGER PRIMARY KEY CHECK (seq >= 0), wire BLOB NOT NUL
 Nenhuma outra tabela/view/trigger/índice nesta versão. Base sem objetos,
 application_id=0 e user_version=0 pode ser inicializada transacionalmente.
 Outra versão/schema MUST ser recusada. Não converter base desconhecida.
+Índices da 3.3 ficam em index.sqlite3 separado ([ledger-index.md](ledger-index.md));
+não acrescentar tabelas derivadas a este formato v1.
 wire contém exatamente canon(Event) segundo spec/events.md, até 16 MiB.
 Coluna seq MUST coincidir com event.seq, no intervalo 0..i64::MAX.
 Sem hash/assinatura duplicado no banco: a fonte são os bytes de wire.

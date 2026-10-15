@@ -39,7 +39,7 @@ allow = [
   { name = "logos-gateway" },
   { name = "logos-attest" },
   { name = "logos-audit" },
-  { name = "logos-cli" },
+  { name = "logos-cli" }, # ledger/crypto locais; fora da TCB, ADR 0022
   { name = "logos-tui" },
   { name = "xtask" },
   # logos-canon (ADR 0003)

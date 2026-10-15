@@ -19,6 +19,7 @@ cargo run -p logos-model --example eval_smoke
 cargo run -p logos-model --example checker_smoke
 cargo run -p logos-ledger --example events_smoke
 ci/check-ledger-crash.sh
+ci/check-ledger-index.sh
 ci/check-tcb-lints.sh
 ci/check-audit-independence.sh
 tcb/count.sh check

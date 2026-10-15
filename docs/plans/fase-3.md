@@ -17,5 +17,8 @@ Proposta preserva texto tainted como UTF-8 bytes, não política/fórmula confi�
 
 3.1 demonstrada localmente: [plano](etapa-3.1.md),
 [ADR 0020](../adr/0020-catalogo-assinado-de-eventos.md),
-[spec](../../spec/events.md). 3.2–3.6 não iniciadas.
+[spec](../../spec/events.md). 3.2 demonstrada localmente:
+[plano](etapa-3.2.md)/[spec](../../spec/ledger.md). 3.3 demonstrada localmente:
+[plano](etapa-3.3.md)/[ADR 0022](../adr/0022-indices-e-ledgerview.md).
+3.4–3.6 não iniciadas.
 CI remota/S3/ARM/fuzz longo anteriores continuam pendências separadas.

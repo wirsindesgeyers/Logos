@@ -8,5 +8,13 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[[bin]]
+name = "logos"
+path = "src/main.rs"
+
+[dependencies]
+logos-ledger = { path = "../logos-ledger" }
+logos-crypto = { path = "../logos-crypto" }
+
 [lints]
 workspace = true

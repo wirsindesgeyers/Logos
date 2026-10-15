@@ -59,9 +59,10 @@ fn advance(
     })
 }
 
-fn replay(
+pub(crate) fn scan(
     connection: &Connection,
     public_key: &PublicKey,
+    mut visit: impl FnMut(&Event, LedgerHead) -> Result<(), LedgerError>,
 ) -> Result<Option<LedgerHead>, LedgerError> {
     let mut head = None;
     let mut statement = connection.prepare("SELECT seq, wire FROM events ORDER BY seq")?;
@@ -77,7 +78,9 @@ fn replay(
                 "row sequence differs from signed sequence",
             ));
         }
-        head = Some(advance(head, &event, public_key)?);
+        let next = advance(head, &event, public_key)?;
+        visit(&event, next)?;
+        head = Some(next);
     }
     Ok(head)
 }
@@ -90,6 +93,7 @@ fn replay(
 pub struct Ledger<'a, S: Signer> {
     connection: Connection,
     directory: File,
+    directory_path: std::path::PathBuf,
     _writer_lock: File,
     signer: &'a S,
     public_key: PublicKey,
@@ -119,20 +123,7 @@ impl<'a, S: Signer> Ledger<'a, S> {
         if !directory.metadata()?.is_dir() {
             return Err(LedgerError::Invalid("ledger directory"));
         }
-        let writer_lock = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(path.join("writer.lock"))?;
-        if !writer_lock.metadata()?.is_file() {
-            return Err(LedgerError::Invalid("writer lock is not a regular file"));
-        }
-        match writer_lock.try_lock() {
-            Ok(()) => {}
-            Err(TryLockError::WouldBlock) => return Err(LedgerError::WriterBusy),
-            Err(TryLockError::Error(error)) => return Err(error.into()),
-        }
+        let writer_lock = writer_lock(&path)?;
         let mut connection = Connection::open_with_flags(
             path.join("ledger.sqlite3"),
             OpenFlags::SQLITE_OPEN_READ_WRITE
@@ -144,12 +135,13 @@ impl<'a, S: Signer> Ledger<'a, S> {
         let public_key = signer.public_key().clone();
         let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         ledger_store::schema(&transaction)?;
-        let head = replay(&transaction, &public_key)?;
+        let head = scan(&transaction, &public_key, |_, _| Ok(()))?;
         transaction.commit()?;
         directory.sync_all()?;
         Ok(Self {
             connection,
             directory,
+            directory_path: path,
             _writer_lock: writer_lock,
             signer,
             public_key,
@@ -167,6 +159,15 @@ impl<'a, S: Signer> Ledger<'a, S> {
             return Err(LedgerError::Poisoned);
         }
         Ok(self.head)
+    }
+
+    /// Constrói índices conferidos, mantendo o writer emprestado pelo snapshot.
+    ///
+    /// # Errors
+    /// Handle envenenado, histórico/índice/I/O inválidos.
+    pub fn index(&self) -> Result<crate::LedgerIndex<'_>, LedgerError> {
+        self.head()?;
+        crate::LedgerIndex::from_writer(&self.directory_path, &self.public_key, &self._writer_lock)
     }
 
     /// Única operação de escrita de eventos: calcula cabeçalho, assina e commita.
@@ -205,6 +206,23 @@ impl<'a, S: Signer> Ledger<'a, S> {
         self.head = Some(head);
         self.poisoned = false;
         Ok(event)
+    }
+}
+
+pub(crate) fn writer_lock(path: &Path) -> Result<File, LedgerError> {
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(path.join("writer.lock"))?;
+    if !lock.metadata()?.is_file() {
+        return Err(LedgerError::Invalid("writer lock is not a regular file"));
+    }
+    match lock.try_lock() {
+        Ok(()) => Ok(lock),
+        Err(TryLockError::WouldBlock) => Err(LedgerError::WriterBusy),
+        Err(TryLockError::Error(error)) => Err(error.into()),
     }
 }
 

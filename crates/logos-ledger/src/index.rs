@@ -1,0 +1,290 @@
+//! Snapshot de índices derivados exclusivamente de uma cadeia conferida.
+
+use std::collections::BTreeMap;
+use std::fs::File;
+use std::marker::PhantomData;
+use std::path::Path;
+
+use logos_air::Formula;
+use logos_crypto::{Hash, PublicKey};
+use logos_obligation::{EntryKind, LedgerEntry, LedgerView, PremiseRef};
+use rusqlite::{Connection, OpenFlags, OptionalExtension, params};
+
+use crate::index_resolve::{ResolvedEntry, Resolver};
+use crate::{
+    Cas, Event, LedgerError, LedgerHead, RebuildReport, index_project, index_store, ledger,
+    ledger_store,
+};
+
+/// Estado efetivo da referência de evento, sem inferir validade da prova.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ClaimStatus {
+    /// Categoria projetada; invalidação inclui dependentes usados.
+    pub kind: EntryKind,
+    /// Época imutável da emissão (sem promoção silenciosa).
+    pub epoch: u64,
+    /// O próprio evento foi alvo de Retracted.
+    pub retracted: bool,
+}
+
+/// Índices privados e imutáveis de um histórico autenticado.
+///
+/// Mantém o lock de escritor até Drop. index.sqlite3 é somente cópia derivada;
+/// consultas usam SQLite em memória reconstruído, nunca o cache anterior.
+pub struct LedgerIndex<'a> {
+    connection: Connection,
+    head: Option<LedgerHead>,
+    report: RebuildReport,
+    _owned_lock: Option<File>,
+    _borrowed_lock: Option<&'a File>,
+}
+
+impl LedgerIndex<'static> {
+    /// Abre um ledger existente com chave pública, confere e reconstrói índices.
+    ///
+    /// # Errors
+    /// Lock ocupado, cadeia/schema/chave inválidos ou falha de armazenamento.
+    pub fn open(directory: &Path, public_key: &PublicKey) -> Result<Self, LedgerError> {
+        let path = std::fs::canonicalize(directory)?;
+        let lock = ledger::writer_lock(&path)?;
+        Self::build(&path, public_key, Some(lock), None)
+    }
+}
+
+impl<'a> LedgerIndex<'a> {
+    pub(crate) fn from_writer(
+        path: &Path,
+        public_key: &PublicKey,
+        lock: &'a File,
+    ) -> Result<Self, LedgerError> {
+        Self::build(path, public_key, None, Some(lock))
+    }
+
+    fn build(
+        path: &Path,
+        public_key: &PublicKey,
+        owned: Option<File>,
+        borrowed: Option<&'a File>,
+    ) -> Result<Self, LedgerError> {
+        let mut source = Connection::open_with_flags(
+            path.join("ledger.sqlite3"),
+            OpenFlags::SQLITE_OPEN_READ_ONLY
+                | OpenFlags::SQLITE_OPEN_NO_MUTEX
+                | OpenFlags::SQLITE_OPEN_NOFOLLOW,
+        )?;
+        source.execute_batch("PRAGMA trusted_schema=OFF; PRAGMA query_only=ON")?;
+        source.set_limit(
+            rusqlite::limits::Limit::SQLITE_LIMIT_LENGTH,
+            (crate::MAX_EVENT_BYTES + 1024) as i32,
+        )?;
+        source.busy_timeout(std::time::Duration::ZERO)?;
+        let source_transaction = source.transaction()?;
+        ledger_store::schema(&source_transaction)?;
+        let mut connection = Connection::open_in_memory()?;
+        index_store::create(&connection)?;
+        let transaction = connection.transaction()?;
+        let head = ledger::scan(&source_transaction, public_key, |event, head| {
+            index_project::apply(&transaction, event, head)
+        })?;
+        let seq = head.map(|h| h.seq as i64);
+        let epoch = head.map(|h| h.epoch.to_be_bytes().to_vec());
+        let hash = head.map(|h| h.hash.as_bytes().to_vec());
+        transaction.execute(
+            "INSERT INTO metadata(singleton,seq,epoch,hash) VALUES(1,?1,?2,?3)",
+            params![seq, epoch, hash],
+        )?;
+        transaction.commit()?;
+        source_transaction.commit()?;
+        let report = index_store::publish(path, &connection, head)?;
+        connection.execute_batch("PRAGMA query_only=ON")?;
+        Ok(Self {
+            connection,
+            head,
+            report,
+            _owned_lock: owned,
+            _borrowed_lock: borrowed,
+        })
+    }
+
+    /// Cabeça que identifica exatamente o histórico deste snapshot.
+    #[must_use]
+    pub fn head(&self) -> Option<LedgerHead> {
+        self.head
+    }
+
+    /// Resultado da reconstrução/comparação com o cache anterior.
+    #[must_use]
+    pub fn report(&self) -> RebuildReport {
+        self.report
+    }
+
+    /// Categoria/época/retratação de uma referência; None somente sem claim.
+    ///
+    /// # Errors
+    /// Falha SQL ou estado privado incoerente.
+    pub fn status(&self, reference: Hash<Event>) -> Result<Option<ClaimStatus>, LedgerError> {
+        let fields = self
+            .connection
+            .prepare("SELECT status,epoch,retracted FROM claims WHERE id=?1")?
+            .query_row([reference.as_bytes().as_slice()], |r| {
+                Ok((
+                    r.get::<_, i64>(0)?,
+                    r.get::<_, Vec<u8>>(1)?,
+                    r.get::<_, bool>(2)?,
+                ))
+            })
+            .optional()?;
+        let Some((status, epoch, retracted)) = fields else {
+            return Ok(None);
+        };
+        let kind = match status {
+            index_project::PROPOSAL => EntryKind::Proposal,
+            index_project::PENDING => EntryKind::Pending,
+            index_project::VERIFIED => EntryKind::Verified,
+            index_project::REFUTED => EntryKind::Refuted,
+            index_project::UNKNOWN => EntryKind::Unknown,
+            index_project::ASSUMPTION => EntryKind::Assumption,
+            index_project::INVALIDATED => EntryKind::Invalidated,
+            _ => return Err(LedgerError::Invalid("index status")),
+        };
+        let epoch = u64::from_be_bytes(
+            epoch
+                .as_slice()
+                .try_into()
+                .map_err(|_| LedgerError::Invalid("index epoch"))?,
+        );
+        Ok(Some(ClaimStatus {
+            kind,
+            epoch,
+            retracted,
+        }))
+    }
+
+    /// Citabilidade de estado na época corrente; scope é conferido no snapshot.
+    ///
+    /// # Errors
+    /// Falha SQL, nunca convertida em false.
+    pub fn is_citable(&self, reference: Hash<Event>, epoch: u64) -> Result<bool, LedgerError> {
+        if self.head.is_none_or(|head| head.epoch != epoch) {
+            return Ok(false);
+        }
+        Ok(self
+            .connection
+            .prepare("SELECT 1 FROM citable WHERE ref=?1 AND epoch=?2")?
+            .query_row(
+                params![
+                    reference.as_bytes().as_slice(),
+                    epoch.to_be_bytes().as_slice()
+                ],
+                |_| Ok(()),
+            )
+            .optional()?
+            .is_some())
+    }
+
+    /// Dependentes diretos ordenados por h(Event), exclusivamente dos used.
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn dependents(&self, reference: Hash<Event>) -> Result<Vec<Hash<Event>>, LedgerError> {
+        let mut statement = self
+            .connection
+            .prepare("SELECT claim FROM deps WHERE premise=?1 ORDER BY claim")?;
+        let mut rows = statement.query([reference.as_bytes().as_slice()])?;
+        let mut result = Vec::new();
+        while let Some(row) = rows.next()? {
+            let bytes: Vec<u8> = row.get(0)?;
+            let digest = bytes
+                .as_slice()
+                .try_into()
+                .map_err(|_| LedgerError::Invalid("dependency digest"))?;
+            result.push(Hash::from_bytes(digest));
+        }
+        Ok(result)
+    }
+
+    /// Resolve a fórmula real/contextual da referência, sem conferir certificado.
+    ///
+    /// # Errors
+    /// CAS ausente/corrompido, envelope/hash/tipagem/limites ou I/O inválidos.
+    pub fn formula_of(
+        &self,
+        reference: Hash<Event>,
+        cas: &Cas,
+    ) -> Result<Option<Formula>, LedgerError> {
+        let Some(status) = self.status(reference)? else {
+            return Ok(None);
+        };
+        let entry =
+            Resolver::default().resolve(&self.connection, cas, reference.as_bytes(), status)?;
+        Ok(Some((*entry.formula).clone()))
+    }
+
+    /// Prepara referências exatas para o gerador, sob um scope opaco explícito.
+    ///
+    /// # Errors
+    /// Resolução CAS/tipagem inválida ou scope de assumption incompatível,
+    /// inclusive em dependências transitivas usadas. Unknown nunca é promovido.
+    pub fn snapshot<'v>(
+        &'v self,
+        cas: &Cas,
+        references: &[PremiseRef],
+        scope: &str,
+    ) -> Result<LedgerSnapshot<'v>, LedgerError> {
+        let mut entries = BTreeMap::new();
+        let mut resolver = Resolver::default();
+        for reference in references {
+            if entries.contains_key(reference) {
+                continue;
+            }
+            let hash = Hash::from_bytes(*reference.event_hash());
+            let entry = match self.status(hash)? {
+                None => None,
+                Some(status) => {
+                    let mismatch = self.connection.prepare("WITH RECURSIVE ancestors(id) AS (VALUES(?1) UNION SELECT deps.premise FROM deps JOIN ancestors ON deps.claim=ancestors.id) SELECT 1 FROM claims JOIN ancestors ON claims.id=ancestors.id WHERE scope IS NOT NULL AND scope<>?2 LIMIT 1")?
+                        .query_row(params![reference.event_hash().as_slice(), scope], |_| Ok(())).optional()?.is_some();
+                    if mismatch {
+                        return Err(LedgerError::Invalid("assumption scope mismatch"));
+                    }
+                    Some(resolver.resolve(&self.connection, cas, reference.event_hash(), status)?)
+                }
+            };
+            entries.insert(*reference, entry);
+        }
+        Ok(LedgerSnapshot {
+            epoch: self.head.map_or(0, |h| h.epoch),
+            entries,
+            _index: PhantomData,
+        })
+    }
+}
+
+/// LedgerView de referências preparadas e objetos contextualizados/conferidos.
+pub struct LedgerSnapshot<'a> {
+    epoch: u64,
+    entries: BTreeMap<PremiseRef, Option<ResolvedEntry>>,
+    _index: PhantomData<&'a ()>,
+}
+
+impl LedgerView for LedgerSnapshot<'_> {
+    fn current_epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    fn lookup(
+        &self,
+        reference: PremiseRef,
+    ) -> Result<Option<LedgerEntry<'_>>, logos_obligation::LedgerError> {
+        let entry = self
+            .entries
+            .get(&reference)
+            .ok_or(logos_obligation::LedgerError::Unavailable)?;
+        Ok(entry.as_ref().map(|entry| LedgerEntry {
+            kind: entry.status.kind,
+            epoch: entry.status.epoch,
+            retracted: entry.status.retracted,
+            vocabulary: &entry.vocabulary,
+            formula: &entry.formula,
+        }))
+    }
+}

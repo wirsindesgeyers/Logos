@@ -26,6 +26,10 @@ pub enum LedgerError {
     Canon(logos_canon::CanonError),
     /// Identidade de chave inválida.
     Crypto(logos_crypto::CryptoError),
+    /// CAS ausente/corrompido/limitado durante resolução de premissa.
+    Cas(crate::CasError),
+    /// Obrigação contextual inválida ou acima dos limites.
+    Obligation(logos_obligation::DecodeError),
 }
 
 impl fmt::Display for LedgerError {
@@ -40,6 +44,8 @@ impl fmt::Display for LedgerError {
             Self::Event(error) => write!(f, "ledger event: {error}"),
             Self::Canon(error) => write!(f, "ledger canon: {error}"),
             Self::Crypto(error) => write!(f, "ledger crypto: {error}"),
+            Self::Cas(error) => write!(f, "ledger CAS: {error}"),
+            Self::Obligation(error) => write!(f, "ledger obligation: {error}"),
         }
     }
 }
@@ -52,8 +58,21 @@ impl std::error::Error for LedgerError {
             Self::Event(error) => Some(error),
             Self::Canon(error) => Some(error),
             Self::Crypto(error) => Some(error),
+            Self::Cas(error) => Some(error),
+            Self::Obligation(error) => Some(error),
             _ => None,
         }
+    }
+}
+
+impl From<crate::CasError> for LedgerError {
+    fn from(error: crate::CasError) -> Self {
+        Self::Cas(error)
+    }
+}
+impl From<logos_obligation::DecodeError> for LedgerError {
+    fn from(error: logos_obligation::DecodeError) -> Self {
+        Self::Obligation(error)
     }
 }
 

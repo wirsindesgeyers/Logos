@@ -137,25 +137,13 @@ impl From<Exhausted> for DecodeError {
     }
 }
 
-/// Decodifica e valida estritamente uma obrigação em bytes contra um vocabulário.
-///
-/// # Algoritmo
-/// 1. Confere limite de bytes `limits.max_bytes` -> [`DecodeError::Unknown(Exhausted::Size)`].
-/// 2. Confere `hash_raw::<Obligation>(bytes) == expected` -> [`DecodeError::HashMismatch`].
-/// 3. Decodifica valor canônico CBOR via [`logos_canon::Decoder`] e exige fim exato de entrada.
-/// 4. Confere envelope exato `[1, 0, "FOL-ms-eq/v1", 1, bytes32_hV, premises, goal]`.
-/// 5. Confere hash do vocabulário alvo contra `logos_crypto::hash(vocabulary)`.
-/// 6. Confere limites e ordenação estritamente crescente das referências de premissas.
-/// 7. Decodifica e faz sort-check de cada premissa e da meta, agregando nós de fórmulas.
-///
-/// # Errors
-/// Retorna [`DecodeError`] se qualquer conferência falhar.
-pub fn decode_for_check(
+/// Confere teto/hash/canon/fim exato e os discriminadores do envelope comum.
+/// Contexto h(V), premissas e meta são tratados pelos leitores abaixo.
+fn read_envelope(
     bytes: &[u8],
     expected: Hash<Obligation>,
-    vocabulary: &Vocabulary,
     limits: DecodeLimits,
-) -> Result<CheckedObligation, DecodeError> {
+) -> Result<logos_canon::Array, DecodeError> {
     // 1. Limite de tamanho de entrada verificado antes de qualquer processamento
     if bytes.len() > limits.max_bytes {
         return Err(DecodeError::Unknown(Exhausted::Size));
@@ -206,13 +194,46 @@ pub fn decode_for_check(
         _ => return Err(DecodeError::Canon(CanonError::WrongType)),
     }
 
-    // Item 4: Digest do vocabulário alvo == 32 bytes
+    Ok(arr)
+}
+
+fn vocabulary_field(items: &[Value]) -> Result<Hash<Vocabulary>, DecodeError> {
     let vocab_hash_bytes = match &items[4] {
         Value::Bytes(b) => <[u8; 32]>::try_from(b.as_slice())
             .map_err(|_| DecodeError::Canon(CanonError::WrongType))?,
         _ => return Err(DecodeError::Canon(CanonError::WrongType)),
     };
-    let vocab_hash = Hash::<Vocabulary>::from_bytes(vocab_hash_bytes);
+    Ok(Hash::<Vocabulary>::from_bytes(vocab_hash_bytes))
+}
+
+/// Lê h(V) para resolver o contexto de O, após conferir teto/hash/envelope.
+/// Não valida as fórmulas nem confere proveniência; chamar decode_for_check
+/// completo depois de carregar o vocabulário correspondente.
+///
+/// # Errors
+/// Limite/hash/canonicidade/envelope ou campo h(V) inválido.
+pub fn vocabulary_for_check(
+    bytes: &[u8],
+    expected: Hash<Obligation>,
+    limits: DecodeLimits,
+) -> Result<Hash<Vocabulary>, DecodeError> {
+    let envelope = read_envelope(bytes, expected, limits)?;
+    vocabulary_field(envelope.items())
+}
+
+/// Decodifica O completo contra o hash esperado e o vocabulário autenticado.
+///
+/// # Errors
+/// Hash/envelope/tipagem/contexto ou limite inválido; nunca cria Obligation selada.
+pub fn decode_for_check(
+    bytes: &[u8],
+    expected: Hash<Obligation>,
+    vocabulary: &Vocabulary,
+    limits: DecodeLimits,
+) -> Result<CheckedObligation, DecodeError> {
+    let envelope = read_envelope(bytes, expected, limits)?;
+    let items = envelope.items();
+    let vocab_hash = vocabulary_field(items)?;
     let actual_vocab_hash = logos_crypto::hash(vocabulary).map_err(DecodeError::Canon)?;
     if vocab_hash != actual_vocab_hash {
         return Err(DecodeError::VocabularyMismatch);

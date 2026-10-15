@@ -61,6 +61,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Crash do ledger (SIGKILL, 10k appends, segundo escritor)
         run: ci/check-ledger-crash.sh
+      - name: Índices do ledger (rebuild 100k, citabilidade p99 com 1M)
+        run: ci/check-ledger-index.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ledger-index-${{ matrix.arch }}
+          path: target/ledger-index-scale.json
 
   sort-coverage:
     name: Sort-checker (100% dos ramos LLVM)

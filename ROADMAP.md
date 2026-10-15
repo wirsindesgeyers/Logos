@@ -736,8 +736,8 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 - Comando `logos ledger rebuild-index` que recria tudo a partir dos eventos e compara.
 
 **Critério de conclusão.**
-- [ ] Apagar os índices e reconstruir produz exatamente o mesmo estado (teste com ledger de 100k eventos).
-- [ ] `is_citable` em < 1 ms p99 com 1M eventos.
+- [x] Apagar os índices e reconstruir produz exatamente o mesmo estado (teste com ledger de 100k eventos). `ci/check-ledger-index.sh`: cadeia assinada real, cache removido, todas as colunas/linhas ordenadas das cinco tabelas idênticas; cabeça preservada.
+- [x] `is_citable` em < 1 ms p99 com 1M eventos. Demonstração local pelo mesmo script: 20000 consultas (5142 positivas/14858 negativas), p99=36573ns; snapshot SQLite privado em memória, reconstrução inicial252133ms fora da latência. Artefato target/ledger-index-scale.json; CI/ARM ainda não observadas.
 
 ---
 
