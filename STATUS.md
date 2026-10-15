@@ -10,8 +10,8 @@
 Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigidos localmente**.
 Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
-`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`
-e CAS/eventos/índices de `logos-ledger`;
+`logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`,
+`logos-audit` e CAS/eventos/índices de `logos-ledger`;
 demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
@@ -35,7 +35,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 9285+105199=114484 LOC de correção, build-only64508;
+TCB atual Rust: 9287+105199=114486 LOC de correção, build-only64508;
 logos-core344, logos-ledger3209, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -82,6 +82,14 @@ chave pública, candidatos conservadores/temporários e preservação de objetos
 antes do Signer/SQL. Nove mutantes capturados, fontes restauradas; fuzz99066/61s,
 exit0 sem crash. Full verify/selftest VERIFY_OK, exit0,227 Python +25 TCB,
 autoteste sem avisos. ADR0024/plano/spec registram contrato e sidecars SQLite.
+3.6: auditor independente demonstrado localmente, full verify/selftest VERIFY_OK,
+exit0;227 Python +25 TCB, autoteste sem avisos.
+ModelChecker recebe fonte falível sem ledger; h(O)/h(M), O+M, erros e medidor
+preservados. Decoder próprio/SQLite-WAL/CAS, verify/export audit-stream/v1 e
+relatório de provas sem LRAT.11 regressões novas,22 vetores históricos e
+fixture Python; recheck4/4 e1 Witness antes/depois do export sem banco.
+Dez mutantes capturados; fuzz model_eval10486/61s, exit0 sem crash.
+Árvore sem ledger/kernel passou localmente; CI remota ainda não observada.
 
 ## Etapas da Fase 0
 
@@ -130,6 +138,7 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
 | 3.3 Índices e consultas | ✅ concluída localmente | LedgerView/CAS/escopo e claims/deps/citable reais, cache derivado sem autoridade, CLI com chave pública. 17 testes novos e onze mutantes capturados; reconstrução100k preservou todas as cinco tabelas. 1M/20000 consultas: p99=36573ns, build252133ms fora da latência. Full verify/selftest VERIFY_OK, exit0; fuzz92653/61s, exit0, sem crash. [Plano](docs/plans/etapa-3.3.md) §7, ADR 0022 e spec/ledger-index.md. CI/ARM/fuzz longo não observados. |
 | 3.4 Épocas | ✅ concluída localmente | Divisão A adotada pelo mantenedor (ADR0023): EpochRange genérico e opcionais com epoch-body/v2; teste integrado Fact preservado na6.1. Seis regressões novas,22 vetores (18 idênticos), oito mutantes e fuzz core/event172375/107491 execuções sem crash. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-3.4.md)/[spec](spec/epochs.md). CI/ARM/fuzz longo pendentes. |
 | 3.5 CAS integrado ao ledger | ✅ concluída localmente | Appender sem bypass, inventário completo do catálogo, CLI gc somente dry-run. Dez testes novos,28 omissões individuais,78 testes ledger/CLI e nove mutantes passaram; fuzz99066/61s sem crash. Full verify/selftest VERIFY_OK, exit0,227 Python +25 TCB. [Plano](docs/plans/etapa-3.5.md)/[spec](spec/ledger-cas.md)/ADR0024. CI/ARM/fuzz longo pendentes. |
+| 3.6 Auditor independente | ⚠ implementada, falta CI remota de independência | verify/export, decoder e leitores próprios,4/4 Refuted e1 Witness rechecada com Budget original;11 regressões novas e dez mutantes capturados. Smoke SQLite/export sem banco e independência passaram localmente; full verify/selftest VERIFY_OK, exit0. Terceiro critério aguarda CI remota. [Plano](docs/plans/etapa-3.6.md)/[spec](spec/audit.md)/ADR0025. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -170,6 +179,11 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
    Integração3.5: dez testes novos no workspace nativo, worker/oráculo de
    crash confere objetos CAS e inventário do body exercitado em event_decode.
    Demonstração local passou; CI/ARM e fuzz longo ainda não observados.
+   Auditor3.6: novos testes do workspace e ci/check-audit.sh ligados aos dois
+   runners Rust; vetores independentes --check/lints ligados ao job Python.
+   cargo tree e guard metadata all-features/dev passaram localmente. Falta
+   observar a independência na CI para marcar o terceiro critério da3.6.
+   API de leitura de modelos exercitada em model_eval; ≥1h remota pendente.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -239,39 +253,32 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.6 — auditor independente (`M`), começando pelo contrato
+## Próximo passo: Etapa 4.1 — contrato do fragmento de domínio finito (`P`, ⚠ TCB)
 
-Prontos: canon/crypto0.3/0.4, ModelChecker/FiniteModel/reader de O da2.3,
-spec/events.md (inclui epoch-body/v2), spec/cas.md e spec/ledger.md com layout
-SQLite. `logos-audit` ainda é esqueleto sem dependências. Ler ROADMAP3.6 e
-criar plano/ADR antes do código. Não implementar LRAT4.5 ou transparência13.2.
+A3.6 está implementada e verificada localmente; o critério de independência
+na CI ainda aguarda execução remota, sem alegação de conclusão desse item.
+Para4.1, prontos: Enumerated/DomainSource da1.2, gerador selado de Obligation
+(P1) da1.5, leitor contextual/checkers da2.3 e índices/deps/citabilidade da3.3.
+Ler ROADMAP4.1 e criar plano antes do código, pois há decisões de contrato.
 
-Resolver primeiro a fronteira de independência: `logos-model/Cargo.toml`
-ainda depende de logos-ledger para helpers check_*_from_cas; métodos puros de
-ModelChecker já existem, mas importar o crate inteiro hoje cria dependência
-transitiva proibida. `ci/check-audit-independence.sh` percorre todas as arestas
-de metadata --all-features, inclusive dev; mover uma aresta para dev ou
-ocultá-la em feature não basta. Registrar no plano como disponibilizar o
-checker sem ledger/kernel, preservando P2 e sem contornar o guard por aliases.
-Se a interface necessária não estiver pronta, registrar bloqueio por §1.3.
+Conferir primeiro a disponibilidade das interfaces exigidas pelos critérios:
+axiomas explícitos de fecho/nomes únicos devem entrar em O e deps; fechamento
+negativo exige compromisso de completude com fonte, e teste exige used real.
+O roadmap remete a4.7/5.4/6.1/7.2/7.5 ainda não implementadas. Não fabricar
+fato, política, certificado ou claim para fechar esse critério. Se necessário
+algo ausente, registrar bloqueio conforme AGENTS.md §1.3 e preparar ADR de
+contrato/ordem antes de implementar. O classificador isolado não encerra4.1.
 
-Auditor reimplementa envelope/cadeia/assinatura e leitura CAS a partir da spec,
-sem usar LedgerIndex, ledger_references ou appender. Comandos verify/export
-usam chave pública externa; verify recheca100% dos Refuted por modelos e
-relata falhas, export entrega eventos canônicos sem depender de SQLite no
-consumidor. Demonstrar ≥10 adulterações e árvore sem ledger/kernel; observar
-CI onde o critério exigir. Nunca confundir assinatura válida com prova lógica.
-
-Riscos: adulteração de sufixo válido sem âncora continua indetectável;
-checker não pode confiar em bytes só porque veio de outro transporte CAS.
-GC3.5 é diagnóstico dependente do ledger, não auditor independente.
-Pendências remotas0.1–3.5 continuam separadas de implementação nova.
+Fora do escopo: domínios Open na camada1, grounding lazy e antecipar grounder4.2,
+LRAT4.4/4.5 ou kernel. Auditor3.6 não demonstra proveniência/autoridade do
+kernel futuro; Verified sem checker permanece contado como não rechecado.
+Pendências remotas0.1–3.6 continuam separadas de código novo.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 9285 LOC Rust próprios + 105199
-  de dependências Rust = 114484 (+64508 só de compilação), após3.5;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1845, logos-ledger3209.
+- **Tamanho da TCB de correção (execução):** 9287 LOC Rust próprios + 105199
+  de dependências Rust = 114486 (+64508 só de compilação), após3.6;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ledger3209.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -925,3 +932,44 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   resolver a dependência transitiva antes de usar o checker no auditor,
   preservando o guard que inclui all-features/dev. Nenhuma refatoração da3.6
   antecipada. Sem push/CI remota; próximo: contrato do auditor independente.
+- **2026-10-15** — Etapa3.6 implementada: ModelChecker recebe fonte falível
+  para bytes de M, sem dependência runtime/dev em logos-ledger. h(M) recalculado
+  na TCB, P2 para O, O+M, medidor e erros da fonte preservados.21 regressões
+  anteriores e smoke de CAS real transferidos para ledger, com model só dev.
+  Auditor fora da TCB de autorização implementa decoder próprio do catálogo,
+  cadeia/assinatura externa/épocas e leitores SQLite/CAS derivados das specs.
+  SQLite read-only/query_only sob lock existente inclui WAL confirmado;
+  integridade de todos os objetos e recheck de Refuted/Witness com Budget
+  original. Artefato h(checker) não é executado; Verified sem LRAT é relatado
+  explicitamente. Chave externa obrigatória em verify/export; audit-stream/v1
+  preserva bytes assinados, spool exclusivo0600 e sem saída parcial por erro
+  de autenticação. Consumidor verifica export após remover banco original.
+  Nove regressões novas no auditor (inclui22 vetores históricos) e duas de
+  fonte no checker;16 adulterações de histórico, mais CAS/schema/locks/limites/
+  framing. Fixture Python independente de8 eventos/4 refutações distintas;
+  smoke appender/CAS reais e export:4/4 Refuted e1 Witness rechecada. Cada
+  posição Refuted recebe controle semântico inválido assinado e orçamento0.
+  Dez mutantes compilados capturados, fontes restauradas; logs/comandos em
+  target/audit-mutations. Fuzz oficial model_eval/nightly-2026-09-28:
+  10486 execuções/61s, exit0 sem crash, sanitizers ativos/max_len4096; fonte
+  falível/h(M) errado exercitados. Log anterior preservado byte a byte.
+  Erros iniciais de DecodeLimits, &Path e Clippy as_chunks corrigidos. Fixture
+  semântica inicialmente falhava antes no vínculo certificate/model; corrigida
+  para exercitar recheck de goal True. Mypy exigiu listas heterogêneas anotadas;
+  primeira verificação completa falhou no Ruff/E501 depois da anotação,
+  antes de Python/selftest. Formatado e repetida a verificação completa.
+  Rodada final ci/verify.sh --selftest: VERIFY_OK, exit0; workspace Rust,
+  smokes/manifesto/lints/independência/supply-chain/vetores,227 Python90,01s
+  +25 TCB1,38s; autoteste sem avisos, controles bloqueados pelo diagnóstico
+  correto. Crash10k/24 SIGKILLs/9999 ACKs/62,40s sem perdas; rebuild100k/
+  cinco tabelas exatas;1M/20000 consultas, p99=19003ns, cold build264109ms
+  excluído da latência. Primeira tentativa tinha p99=18896ns/build252870ms;
+  não foi contada como full verify bem-sucedida. TCB Rust9287+105199=114486
+  (+2 próprios), model1847, ledger3209, build-only64508; SQLite C176466
+  separado. Nenhum pacote externo novo; nenhum parser novo dentro da TCB.
+  ADR0025/plano/spec/vetor/README/CI/allowlist/STATUS atualizados; sem esconder
+  arestas por features/dev/aliases. Dois primeiros critérios3.6 demonstrados;
+  terceiro permanece desmarcado até observar independência na CI remota.
+  Memória, fontes fuzz alheias, logs e mutants.out preexistentes preservados
+  fora do commit. Sem push; próximo: contrato4.1, verificando dependências
+  futuras de used/deps/fontes/completude antes de implementar.

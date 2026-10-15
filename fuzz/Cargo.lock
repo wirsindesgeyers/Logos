@@ -264,7 +264,6 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
- "logos-ledger",
  "logos-obligation",
 ]
 

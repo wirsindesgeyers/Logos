@@ -42,7 +42,8 @@ cargo run -p logos-obligation --example obligation_smoke   # Γ ⊢ φ, citaçõ
 cargo run -p logos-protocol --example protocol_smoke   # JSON estrito → candidato → O; sem autoridade
 cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/domínio e Unknown(Size)
 cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
-cargo run -p logos-model --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
+cargo run -p logos-ledger --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
+ci/check-audit.sh                                # auditor independente,4 refutações e export sem banco
 cargo run -p logos-ledger --example events_smoke   # eventos/autoridade reais, adulteração rejeitada
 (cd py && uv run python -m logos_provers.z3_models_smoke)   # produtor Z3 → checker Rust real
 (cd py && uv run python -m logos_provers.model_explain_smoke)   # 20 refutações → português + h(M)
@@ -146,6 +147,8 @@ contexto e avaliação. Reader contextual de O não abre o tipo gerado pelo moni
 h(O) esperado confere os bytes originais. CAS verifica h(M) e preserva erros de
 integridade/I/O. Contrato em [`spec/evaluation.md`](spec/evaluation.md), decisão em
 [`ADR 0016`](docs/adr/0016-checkers-contextuais-de-modelos.md).
+Desde3.6, métodos *_from_source recebem leitura falível por closure; o checker
+confere h(M) novamente e logos-model independe de logos-ledger (ADR0025).
 
 Etapa 2.4 oferece `logos_provers.z3_models`, **fora da TCB**: traduz O para
 SMT-LIB, busca estruturas finitas limitadas e extrai candidatos model/v1.
@@ -268,6 +271,14 @@ lista candidatos a órfãos e temporários e conserva links canônicos de forma
 conservadora; não remove arquivos. SQLite pode manter sidecars de coordenação
 durante leitura. Contrato em [`spec/ledger-cas.md`](spec/ledger-cas.md), decisão
 em [`ADR 0024`](docs/adr/0024-cas-antes-do-append-e-gc-dry-run.md).
+
+Etapa3.6 oferece `logos-audit verify DIR --cas CAS --public-key HEX`:
+decoder independente, cadeia/assinaturas/épocas, integridade dos objetos e
+recheck de todas as refutações e testemunhas de consistência. Relatório
+separa provas Verified ainda sem checker LRAT. `logos-audit export DIR
+--public-key HEX` exporta audit-stream/v1 autenticado; o mesmo verify aceita
+esse arquivo sem banco original. Chave externa obrigatória, sem kernel/ledger
+na árvore de dependências; contrato em [`spec/audit.md`](spec/audit.md).
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

@@ -6,10 +6,10 @@ use logos_air::{
     Formula, FormulaNode, Grounding, Limits, Sort, SortDecl, SortDomain, Symbol, SymbolDecl,
     SymbolKind, SymbolResult, Term, TermNode, Vocabulary,
 };
-use logos_canon::{Text, from_canon};
-use logos_core::{Budget, Exhausted};
-use logos_crypto::hash;
-use logos_model::{EvalError, FiniteModel, ModelData, ModelLimits, eval};
+use logos_canon::{Text, from_canon, to_canon};
+use logos_core::{Budget, CheckOutcome, Exhausted};
+use logos_crypto::{Hash, hash, hash_raw};
+use logos_model::{EvalError, FiniteModel, ModelChecker, ModelData, ModelLimits, eval};
 use std::sync::LazyLock;
 
 fn sort() -> Sort {
@@ -94,7 +94,51 @@ static VOCAB: LazyLock<Vocabulary> = LazyLock::new(|| {
     .expect("vocab")
 });
 
+struct EmptyView;
+impl logos_obligation::LedgerView for EmptyView {
+    fn current_epoch(&self) -> u64 {
+        0
+    }
+    fn lookup(
+        &self,
+        _: logos_obligation::PremiseRef,
+    ) -> Result<Option<logos_obligation::LedgerEntry<'_>>, logos_obligation::LedgerError> {
+        Ok(None)
+    }
+}
+
 fn probe(model: &FiniteModel, formula: &Formula, steps: u64) {
+    // Exercita também a fonte de bytes não confiável do checker (ADR0025).
+    let obligation = logos_obligation::generate(
+        logos_obligation::Proposal {
+            vocabulary: &VOCAB,
+            goal: formula,
+            cites: &[],
+        },
+        &EmptyView,
+    )
+    .expect("generated obligation");
+    let wire = to_canon(&obligation).expect("O");
+    let h = obligation.hash().expect("hO");
+    let model_bytes = to_canon(model).expect("M");
+    let mh = hash_raw::<FiniteModel>(&model_bytes);
+    let checker = ModelChecker::new(&VOCAB).expect("checker");
+    let source_budget = Budget::new(steps * 4, 0, 1_000_000, 0);
+    let run = |expected| {
+        checker
+            .check_refutation_from_source(
+                &wire,
+                h,
+                |_: &Hash<FiniteModel>| Ok::<_, ()>(Some(model_bytes.clone())),
+                expected,
+                &source_budget,
+            )
+            .expect("source")
+    };
+    assert_eq!(run(mh), run(mh));
+    let mut bad = *mh.as_bytes();
+    bad[0] ^= 1;
+    assert_ne!(run(Hash::from_bytes(bad)), CheckOutcome::Accepted);
     let budget = Budget::new(steps, 0, 0, 0);
     let first = eval(model, &VOCAB, formula, &budget);
     assert_eq!(first, eval(model, &VOCAB, formula, &budget));

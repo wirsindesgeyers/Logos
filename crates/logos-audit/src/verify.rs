@@ -1,0 +1,187 @@
+//! Autenticação histórica e composição com checkers, sem executar artefatos CAS.
+
+use std::fs::{self, File, OpenOptions};
+use std::io::{Seek, Write};
+use std::os::unix::fs::OpenOptionsExt;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use logos_air::Vocabulary;
+use logos_canon::from_canon;
+use logos_core::CheckOutcome;
+use logos_crypto::{Hash, PublicKey};
+use logos_model::{FiniteModel, ModelChecker};
+use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
+
+use crate::event::{Certificate, Checker, Parsed, Recheck};
+use crate::{AuditError, Report, Result, event, fail, source};
+
+pub(crate) fn walk(
+    path: &Path,
+    key: &PublicKey,
+    mut visit: impl FnMut(&Parsed, &[u8]) -> Result<()>,
+) -> Result<Report> {
+    let mut report = Report::default();
+    let mut epoch = 0;
+    source::visit(path, |sql_seq, wire| {
+        let p =
+            event::parse(wire, key).map_err(|e| fail(format!("event {}: {e}", report.events)))?;
+        if p.seq != report.events
+            || p.seq > i64::MAX as u64
+            || sql_seq.is_some_and(|s| s != p.seq)
+            || p.prev != report.head
+        {
+            return Err(fail(format!("event {}: seq/prev mismatch", report.events)));
+        }
+        if p.advance {
+            if p.epoch <= epoch {
+                return Err(fail("epoch did not advance strictly"));
+            }
+        } else if p.epoch != epoch {
+            return Err(fail("epoch changed without EpochAdvanced"));
+        }
+        visit(&p, wire).map_err(|e| fail(format!("event {}: {e}", p.seq)))?;
+        epoch = p.epoch;
+        report.events += 1;
+        report.head = Some(p.digest);
+        report.unchecked_proofs += u64::from(p.proof);
+        Ok(())
+    })?;
+    Ok(report)
+}
+
+/// Confere cadeia, estrutura, assinaturas, objetos e todas as refutações/modelos.
+///
+/// # Errors
+/// Falha explícita em entrada ausente/adulterada, recheck Rejected/Unknown ou I/O.
+pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<Report, AuditError> {
+    let mut refutations = 0;
+    let mut consistencies = 0;
+    let mut report = walk(path, key, |p, _| {
+        for (domain, digest) in &p.refs {
+            match *domain {
+                "vocab" => {
+                    source::cas::<Vocabulary>(cas, Hash::from_bytes(*digest))?;
+                }
+                "obligation" => {
+                    source::cas::<Obligation>(cas, Hash::from_bytes(*digest))?;
+                }
+                "model" => {
+                    source::cas::<FiniteModel>(cas, Hash::from_bytes(*digest))?;
+                }
+                "certificate" => {
+                    source::cas::<Certificate>(cas, Hash::from_bytes(*digest))?;
+                }
+                "checker" => {
+                    source::cas::<Checker>(cas, Hash::from_bytes(*digest))?;
+                }
+                _ => return Err(fail("unhandled CAS reference domain")),
+            }
+        }
+        for r in &p.rechecks {
+            recheck(cas, r)?;
+            if r.consistency {
+                consistencies += 1;
+            } else {
+                refutations += 1;
+            }
+        }
+        Ok(())
+    })?;
+    report.refutations = refutations;
+    report.consistencies = consistencies;
+    Ok(report)
+}
+
+fn recheck(root: &Path, r: &Recheck) -> Result<()> {
+    let c = &r.check;
+    let obligation = source::cas(root, c.obligation)?;
+    let vocabulary_hash = vocabulary_for_check(&obligation, c.obligation, DecodeLimits::default())
+        .map_err(|e| fail(format!("obligation header: {e}")))?;
+    let vocab = from_canon::<Vocabulary>(&source::cas(root, vocabulary_hash)?)?;
+    let model_hash = Hash::<FiniteModel>::from_bytes(r.model);
+    let model_bytes = source::cas(root, model_hash)?;
+    let certificate = source::cas(root, c.certificate)?;
+    if certificate != model_bytes {
+        return Err(fail("certificate/model bytes differ"));
+    }
+    let checker = ModelChecker::new(&vocab)?;
+    let load = |_: &Hash<FiniteModel>| Ok::<_, AuditError>(Some(model_bytes));
+    let outcome = if r.consistency {
+        checker.check_consistency_from_source(
+            &obligation,
+            c.obligation,
+            load,
+            model_hash,
+            &c.budget,
+        )?
+    } else {
+        checker.check_refutation_from_source(
+            &obligation,
+            c.obligation,
+            load,
+            model_hash,
+            &c.budget,
+        )?
+    };
+    if outcome != CheckOutcome::Accepted {
+        return Err(fail(format!("model recheck: {outcome:?}")));
+    }
+    Ok(())
+}
+
+static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
+struct Spool {
+    path: PathBuf,
+    file: File,
+}
+impl Spool {
+    fn new() -> Result<Self> {
+        loop {
+            let n = NEXT_TEMP.fetch_add(1, Ordering::Relaxed);
+            let path =
+                std::env::temp_dir().join(format!("logos-audit-{}-{n}.tmp", std::process::id()));
+            match OpenOptions::new()
+                .read(true)
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(&path)
+            {
+                Ok(file) => return Ok(Self { path, file }),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(e) => return Err(e.into()),
+            }
+        }
+    }
+}
+impl Drop for Spool {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+/// Exporta eventos autenticados byte a byte em audit-stream/v1, sem recheck CAS.
+/// Só escreve no consumidor após conferir todo o histórico; erro de saída pode
+/// naturalmente deixar stream parcial, que o consumidor deve descartar.
+///
+/// # Errors
+/// Propaga autenticação, leitura e escrita sem publicar prefixo como sucesso.
+pub fn export(
+    path: &Path,
+    key: &PublicKey,
+    output: &mut impl Write,
+) -> std::result::Result<Report, AuditError> {
+    let mut spool = Spool::new()?;
+    spool.file.write_all(source::MAGIC)?;
+    // A mesma passagem valida e copia: nenhuma segunda leitura mutável da origem.
+    let report = walk(path, key, |_, wire| {
+        spool.file.write_all(&(wire.len() as u32).to_be_bytes())?;
+        spool.file.write_all(wire)?;
+        Ok(())
+    })?;
+    spool.file.rewind()?;
+    std::io::copy(&mut spool.file, output)?;
+    output.flush()?;
+    Ok(report)
+}

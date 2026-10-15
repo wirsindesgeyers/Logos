@@ -969,23 +969,47 @@ fn test_cas_integration_put_reopen_and_checks() {
     let (_, wire, h) = generate_obligation(&vocab, &[f_true], &f_false);
 
     // Refutação e consistência a partir do CAS
-    let res_ref = checker.check_refutation_from_cas(&wire, h, &cas_reopened, model_hash, &budget);
+    let res_ref = checker.check_refutation_from_source(
+        &wire,
+        h,
+        |h| cas_reopened.get(h),
+        model_hash,
+        &budget,
+    );
     assert_eq!(res_ref.expect("success"), CheckOutcome::Accepted);
 
-    let res_cons = checker.check_consistency_from_cas(&wire, h, &cas_reopened, model_hash, &budget);
+    let res_cons = checker.check_consistency_from_source(
+        &wire,
+        h,
+        |h| cas_reopened.get(h),
+        model_hash,
+        &budget,
+    );
     assert_eq!(res_cons.expect("success"), CheckOutcome::Accepted);
 
     let truth = form(vec![FormulaNode::True]);
     let (_, true_wire, true_h) = generate_obligation(&vocab, std::slice::from_ref(&truth), &truth);
     assert!(matches!(
         checker
-            .check_refutation_from_cas(&true_wire, true_h, &cas_reopened, model_hash, &budget)
+            .check_refutation_from_source(
+                &true_wire,
+                true_h,
+                |h| cas_reopened.get(h),
+                model_hash,
+                &budget
+            )
             .unwrap(),
         CheckOutcome::Rejected(_)
     ));
     assert_eq!(
         checker
-            .check_consistency_from_cas(&true_wire, true_h, &cas_reopened, model_hash, &budget)
+            .check_consistency_from_source(
+                &true_wire,
+                true_h,
+                |h| cas_reopened.get(h),
+                model_hash,
+                &budget
+            )
             .unwrap(),
         CheckOutcome::Accepted
     );
@@ -1005,14 +1029,25 @@ fn test_cas_missing_model_hash_is_rejected() {
     // Hash inexistente no CAS
     let missing_hash = Hash::<FiniteModel>::from_bytes([0xAA; 32]);
 
-    let res = checker.check_refutation_from_cas(&wire, h, &temp_cas.cas, missing_hash, &budget);
+    let res = checker.check_refutation_from_source(
+        &wire,
+        h,
+        |h| temp_cas.cas.get(h),
+        missing_hash,
+        &budget,
+    );
     assert!(matches!(
         res.expect("check outcome"),
         CheckOutcome::Rejected(_)
     ));
 
-    let res_cons =
-        checker.check_consistency_from_cas(&wire, h, &temp_cas.cas, missing_hash, &budget);
+    let res_cons = checker.check_consistency_from_source(
+        &wire,
+        h,
+        |h| temp_cas.cas.get(h),
+        missing_hash,
+        &budget,
+    );
     assert!(matches!(
         res_cons.expect("check outcome"),
         CheckOutcome::Rejected(_)
@@ -1058,10 +1093,22 @@ fn test_cas_tampered_model_object_returns_integrity_error() {
     let f_false = form(vec![FormulaNode::False]);
     let (_, wire, h) = generate_obligation(&vocab, &[f_true], &f_false);
 
-    let res = checker.check_refutation_from_cas(&wire, h, &cas_reopened, model_hash, &budget);
+    let res = checker.check_refutation_from_source(
+        &wire,
+        h,
+        |h| cas_reopened.get(h),
+        model_hash,
+        &budget,
+    );
     assert!(matches!(res, Err(CasError::Integrity)));
 
-    let res_cons = checker.check_consistency_from_cas(&wire, h, &cas_reopened, model_hash, &budget);
+    let res_cons = checker.check_consistency_from_source(
+        &wire,
+        h,
+        |h| cas_reopened.get(h),
+        model_hash,
+        &budget,
+    );
     assert!(matches!(res_cons, Err(CasError::Integrity)));
 }
 
@@ -1103,7 +1150,13 @@ fn test_cas_too_large_error_vs_budget_unknown_size() {
         .expect("domain limit");
     let small_cas = Cas::open(&temp_cas.path, small_limits).expect("open restricted cas");
     assert!(matches!(
-        checker.check_refutation_from_cas(&wire, h, &small_cas, model_hash, &generous_budget()),
+        checker.check_refutation_from_source(
+            &wire,
+            h,
+            |h| small_cas.get(h),
+            model_hash,
+            &generous_budget()
+        ),
         Err(CasError::TooLarge { .. })
     ));
 
@@ -1112,17 +1165,23 @@ fn test_cas_too_large_error_vs_budget_unknown_size() {
         let budget = Budget::new(10_000_000, 10_000_000, size, 0);
         assert_eq!(
             checker
-                .check_refutation_from_cas(&wire, h, &temp_cas.cas, model_hash, &budget)
+                .check_refutation_from_source(
+                    &wire,
+                    h,
+                    |h| temp_cas.cas.get(h),
+                    model_hash,
+                    &budget
+                )
                 .unwrap(),
             CheckOutcome::Accepted
         );
     }
     let budget_insufficient_size = Budget::new(10_000_000, 10_000_000, total_bytes - 1, 0);
 
-    let res = checker.check_refutation_from_cas(
+    let res = checker.check_refutation_from_source(
         &wire,
         h,
-        &temp_cas.cas,
+        |h| temp_cas.cas.get(h),
         model_hash,
         &budget_insufficient_size,
     );
@@ -1155,13 +1214,23 @@ fn test_cas_shared_budget_model_bytes_step_accounting() {
     let exact_cas_steps = wire.len() as u64 + model_wire.len() as u64 + 1 + 2 * 2;
 
     let budget_exact = Budget::new(exact_cas_steps, 10_000_000, 10_000_000, 0);
-    let res_ok =
-        checker.check_refutation_from_cas(&wire, h, &temp_cas.cas, model_hash, &budget_exact);
+    let res_ok = checker.check_refutation_from_source(
+        &wire,
+        h,
+        |h| temp_cas.cas.get(h),
+        model_hash,
+        &budget_exact,
+    );
     assert_eq!(res_ok.expect("outcome"), CheckOutcome::Accepted);
 
     let budget_short = Budget::new(exact_cas_steps - 1, 10_000_000, 10_000_000, 0);
-    let res_exhausted =
-        checker.check_refutation_from_cas(&wire, h, &temp_cas.cas, model_hash, &budget_short);
+    let res_exhausted = checker.check_refutation_from_source(
+        &wire,
+        h,
+        |h| temp_cas.cas.get(h),
+        model_hash,
+        &budget_short,
+    );
     assert_eq!(
         res_exhausted.expect("outcome"),
         CheckOutcome::Unknown(Exhausted::Steps)
@@ -1182,7 +1251,7 @@ fn cas_contextual_decode_preserves_invalid_and_size_outcomes() {
     let trailing_h = temp_cas.cas.put::<FiniteModel>(&trailing).unwrap();
     assert!(matches!(
         checker
-            .check_refutation_from_cas(&wire, h, &temp_cas.cas, trailing_h, &budget)
+            .check_refutation_from_source(&wire, h, |h| temp_cas.cas.get(h), trailing_h, &budget)
             .unwrap(),
         CheckOutcome::Rejected(_)
     ));
@@ -1196,7 +1265,7 @@ fn cas_contextual_decode_preserves_invalid_and_size_outcomes() {
     let oversized_h = temp_cas.cas.put::<FiniteModel>(&oversized).unwrap();
     assert_eq!(
         checker
-            .check_consistency_from_cas(&wire, h, &temp_cas.cas, oversized_h, &budget)
+            .check_consistency_from_source(&wire, h, |h| temp_cas.cas.get(h), oversized_h, &budget)
             .unwrap(),
         CheckOutcome::Unknown(Exhausted::Size)
     );
@@ -1265,4 +1334,59 @@ fn quantified_defined_predicate_reuses_context_across_premises_and_goal() {
             assert_eq!(refutation, CheckOutcome::Accepted);
         }
     }
+}
+
+#[test]
+fn source_hash_is_checked_even_when_transport_lies() {
+    let (vocab, model) = standard_setup();
+    let checker = ModelChecker::new(&vocab).unwrap();
+    let (_, wire, h) = generate_obligation(&vocab, &[], &form(vec![FormulaNode::False]));
+    let bytes = to_canon(&model).unwrap();
+    let expected = hash_raw::<FiniteModel>(&bytes);
+    let budget = generous_budget();
+    for consistency in [false, true] {
+        let run = |digest| {
+            let load = |_: &Hash<FiniteModel>| Ok::<_, &'static str>(Some(bytes.clone()));
+            if consistency {
+                checker.check_consistency_from_source(&wire, h, load, digest, &budget)
+            } else {
+                checker.check_refutation_from_source(&wire, h, load, digest, &budget)
+            }
+        };
+        assert_eq!(run(expected), Ok(CheckOutcome::Accepted));
+        assert!(matches!(
+            run(Hash::from_bytes([0; 32])),
+            Ok(CheckOutcome::Rejected(_))
+        ));
+    }
+}
+
+#[test]
+fn source_errors_are_preserved_and_invalid_obligation_does_not_call_source() {
+    let (vocab, model) = standard_setup();
+    let checker = ModelChecker::new(&vocab).unwrap();
+    let (_, wire, h) = generate_obligation(&vocab, &[], &form(vec![FormulaNode::False]));
+    let model_hash = hash(&model).unwrap();
+    let load = |_: &Hash<FiniteModel>| Err::<Option<Vec<u8>>, _>("source unavailable");
+    assert_eq!(
+        checker.check_refutation_from_source(&wire, h, load, model_hash, &generous_budget()),
+        Err("source unavailable")
+    );
+    assert_eq!(
+        checker.check_consistency_from_source(&wire, h, load, model_hash, &generous_budget()),
+        Err("source unavailable")
+    );
+    let unreachable = |_: &Hash<FiniteModel>| -> Result<Option<Vec<u8>>, &'static str> {
+        panic!("source called for invalid O")
+    };
+    assert!(matches!(
+        checker.check_refutation_from_source(
+            &wire,
+            Hash::from_bytes([0; 32]),
+            unreachable,
+            model_hash,
+            &generous_budget()
+        ),
+        Ok(CheckOutcome::Rejected(_))
+    ));
 }

@@ -2,6 +2,9 @@
 # logos-audit não pode depender (nem transitivamente) de logos-kernel ou logos-ledger (roadmap §2, S1).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Artefato legível também na CI; metadata abaixo cobre inclusive dev/aliases/features.
+mkdir -p target
+cargo tree -p logos-audit > target/audit-dependencies.txt
 deps=$(cargo metadata --format-version 1 --all-features | python3 -c '
 import json, sys
 meta = json.load(sys.stdin)

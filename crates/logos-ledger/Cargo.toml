@@ -16,6 +16,7 @@ logos-obligation = { path = "../logos-obligation" }
 rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "limits", "backup"] }
 
 [dev-dependencies]
+logos-model = { path = "../logos-model" }
 serde_json = "=1.0.151"
 
 

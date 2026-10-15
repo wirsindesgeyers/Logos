@@ -1,6 +1,6 @@
 # Plano de fase — Fase 3: ledger assinado
 
-Fonte: ROADMAP Fase 3 e Apêndice C; dependências locais prontas até a 3.3.
+Fonte: ROADMAP Fase 3 e Apêndice C; dependências locais implementadas até a3.6 (CI remota pendente).
 
 1. **3.1**: catálogo event/v1, assinatura/envelope e vetores; não escreve ledger.
 2. **3.2**: appender único e SQLite transacional/durável, cadeia/recuperação/crash.
@@ -25,5 +25,7 @@ Proposta preserva texto tainted como UTF-8 bytes, não política/fórmula confi�
 e teste integrado de fatos preservado na6.1 com dependência explícita de3.4.
 [Plano](etapa-3.4.md). 3.5 demonstrada localmente: CAS obrigatório antes de assinar,
 inventário do catálogo e GC somente dry-run, [plano](etapa-3.5.md)/
-[ADR0024](../adr/0024-cas-antes-do-append-e-gc-dry-run.md). 3.6 não iniciada.
+[ADR0024](../adr/0024-cas-antes-do-append-e-gc-dry-run.md). 3.6 demonstrada localmente, com independência remota ainda pendente:
+checker independente do transporte (ADR0025), auditor/catálogo/leitores próprios,
+recheck de modelos e export audit-stream/v1. [Plano](etapa-3.6.md).
 CI remota/S3/ARM/fuzz longo anteriores continuam pendências separadas.

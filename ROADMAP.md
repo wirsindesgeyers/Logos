@@ -778,7 +778,7 @@ Estimativa revisada de P para M (ADR0024): inventário completo, migração de f
 
 ---
 
-### Etapa 3.6 ★ — Auditor independente (`logos-audit`) · `M`
+### Etapa 3.6 ★ — Auditor independente (`logos-audit`) · `M` · ⚠ TCB (separação do transporte do checker)
 
 **Depende de (recebe pronto).** 0.3, 0.4, 2.3 e `spec/events.md` (3.1). **Não** depende de 3.2 em código (só do formato).
 
@@ -793,9 +793,9 @@ Estimativa revisada de P para M (ADR0024): inventário completo, migração de f
 - Relatório: eventos verificados, certificados rechecados, falhas.
 
 **Critério de conclusão.**
-- [ ] Em um ledger de exemplo, o auditor rechecou 100% dos `Refuted`.
-- [ ] Ledgers adulterados (evento removido, reordenado, assinatura trocada, certificado trocado no CAS) são todos detectados — suíte com ≥ 10 adulterações.
-- [ ] `cargo tree -p logos-audit` não contém `logos-kernel` nem `logos-ledger` (teste de CI).
+- [x] Em um ledger de exemplo, o auditor rechecou 100% dos `Refuted`. ci/check-audit.sh usa appender/CAS reais e fixture Python independente:4/4 refutações e1 Witness, também após export e remoção do banco; proofs_unchecked explícito para LRAT futuro. [Plano](docs/plans/etapa-3.6.md)/[spec](spec/audit.md)/ADR0025.
+- [x] Ledgers adulterados (evento removido, reordenado, assinatura trocada, certificado trocado no CAS) são todos detectados — suíte com ≥ 10 adulterações. tests/audit.rs cobre16 alterações de histórico/estrutura, mais corrupção/ausência/links/limites CAS, schema/coluna/lock e truncamento; provas de recheck em todas as posições. Sufixo inteiro válido exige âncora13.2, não contado como detectável.
+- [ ] `cargo tree -p logos-audit` não contém `logos-kernel` nem `logos-ledger` (teste de CI). Passou localmente, inclusive metadata all-features/dev/aliases; guard e smoke ligados aos jobs nativos. Falta observar execução remota para marcar este item.
 
 ---
 

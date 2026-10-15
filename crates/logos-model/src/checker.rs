@@ -1,8 +1,7 @@
 //! P2 e aceitação lógica sob um orçamento compartilhado.
 
 use logos_core::{Budget, CheckOutcome, Exhausted, StepMeter};
-use logos_crypto::Hash;
-use logos_ledger::{Cas, CasError};
+use logos_crypto::{Hash, hash_raw};
 use logos_obligation::{
     CheckedObligation, DecodeError, DecodeLimits, Obligation, decode_for_check,
 };
@@ -50,39 +49,39 @@ impl ModelChecker<'_> {
         self.check(bytes, expected, model, budget, Mode::Consistency)
     }
 
-    /// Checa refutação com certificado de modelo lido e verificado pelo CAS.
+    /// Checa refutação com modelo obtido por uma fonte falível, sem confiar nela.
     ///
-    /// Impõe soma dos bytes O+M em `size_bytes`; o CAS também tem limites próprios.
-    /// Modelo ausente é Rejected; falha de I/O/integridade/teto do CAS é erro.
+    /// Impõe soma dos bytes O+M em `size_bytes`; a fonte deve impor seu próprio limite de leitura.
+    /// Modelo ausente/hash divergente é Rejected; erro da fonte é propagado.
     ///
     /// # Errors
-    /// Propaga CasError sem convertê-lo em falsidade ou exaustão inventada.
-    pub fn check_refutation_from_cas(
+    /// Propaga E sem convertê-lo em falsidade ou exaustão inventada.
+    pub fn check_refutation_from_source<E>(
         &self,
         bytes: &[u8],
         expected: Hash<Obligation>,
-        cas: &Cas,
+        load: impl FnOnce(&Hash<FiniteModel>) -> Result<Option<Vec<u8>>, E>,
         model_hash: Hash<FiniteModel>,
         budget: &Budget,
-    ) -> Result<CheckOutcome, CasError> {
-        self.check_from_cas(bytes, expected, cas, model_hash, budget, Mode::Refutation)
+    ) -> Result<CheckOutcome, E> {
+        self.check_from_source(bytes, expected, load, model_hash, budget, Mode::Refutation)
     }
 
-    /// Checa consistência com certificado de modelo verificado pelo CAS.
+    /// Checa consistência com modelo obtido por fonte falível e h(M) conferido.
     ///
-    /// Mesmos limites e fronteiras de erro de [`Self::check_refutation_from_cas`].
+    /// Mesmos limites e fronteiras de erro de [`Self::check_refutation_from_source`].
     ///
     /// # Errors
-    /// Propaga CasError sem convertê-lo em falsidade ou exaustão inventada.
-    pub fn check_consistency_from_cas(
+    /// Propaga E sem convertê-lo em falsidade ou exaustão inventada.
+    pub fn check_consistency_from_source<E>(
         &self,
         bytes: &[u8],
         expected: Hash<Obligation>,
-        cas: &Cas,
+        load: impl FnOnce(&Hash<FiniteModel>) -> Result<Option<Vec<u8>>, E>,
         model_hash: Hash<FiniteModel>,
         budget: &Budget,
-    ) -> Result<CheckOutcome, CasError> {
-        self.check_from_cas(bytes, expected, cas, model_hash, budget, Mode::Consistency)
+    ) -> Result<CheckOutcome, E> {
+        self.check_from_source(bytes, expected, load, model_hash, budget, Mode::Consistency)
     }
 
     fn prepare(
@@ -118,28 +117,28 @@ impl ModelChecker<'_> {
         })
     }
 
-    fn check_from_cas(
+    fn check_from_source<E>(
         &self,
         bytes: &[u8],
         expected: Hash<Obligation>,
-        cas: &Cas,
+        load: impl FnOnce(&Hash<FiniteModel>) -> Result<Option<Vec<u8>>, E>,
         model_hash: Hash<FiniteModel>,
         budget: &Budget,
         mode: Mode,
-    ) -> Result<CheckOutcome, CasError> {
-        let mut cas_error = None;
+    ) -> Result<CheckOutcome, E> {
+        let mut source_error = None;
         let outcome = StepMeter::run(budget, |meter| {
             let obligation = match self.prepare(bytes, expected, budget, meter) {
                 Ok(obligation) => obligation,
                 Err(DecodeError::Unknown(reason)) => return CheckOutcome::Unknown(reason),
                 Err(_) => return self.reject_invalid(),
             };
-            let model_bytes = match cas.get(&model_hash) {
+            let model_bytes = match load(&model_hash) {
                 Ok(Some(bytes)) => bytes,
                 Ok(None) => return CheckOutcome::Rejected(self.missing_model.clone()),
                 Err(error) => {
-                    cas_error = Some(error);
-                    // O erro é preservado fora da closure do medidor.
+                    source_error = Some(error);
+                    // O erro da fonte é preservado fora da closure do medidor.
                     return self.reject_invalid();
                 }
             };
@@ -154,6 +153,10 @@ impl ModelChecker<'_> {
             if let Err(reason) = meter.charge(model_size) {
                 return CheckOutcome::Unknown(reason);
             }
+            // A fonte não é confiável: conferir os mesmos bytes a serem decodificados.
+            if hash_raw::<FiniteModel>(&model_bytes) != model_hash {
+                return self.reject_invalid();
+            }
             let model = match FiniteModel::decode_with_limits(
                 &model_bytes,
                 self.vocabulary,
@@ -165,7 +168,7 @@ impl ModelChecker<'_> {
             };
             self.run_model(&obligation, &model, meter, mode)
         });
-        match cas_error {
+        match source_error {
             Some(error) => Err(error),
             None => Ok(outcome),
         }

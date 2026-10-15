@@ -6,7 +6,7 @@
 //! 1. Geração de obrigação real `O` via `logos_obligation::generate` com `MemoryLedgerView`;
 //! 2. Codificação canônica de modelo finito `M` e persistência/reabertura em `Cas` real;
 //! 3. Checagem em memória (`check_refutation` e `check_consistency`);
-//! 4. Checagem com modelo no CAS (`check_refutation_from_cas` e `check_consistency_from_cas`);
+//! 4. Checagem com modelo no CAS (`check_refutation_from_source` e `check_consistency_from_source`);
 //! 5. Rejeição determinística por premissa falsa;
 //! 6. Rejeição determinística por violação de P2 (hash incorreto);
 //! 7. Detecção de corrupção em disco com erro de integridade (`CasError::Integrity`);
@@ -199,15 +199,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     // 8. Ambas as APIs a partir do CAS
-    let outcome_cas_ref =
-        checker.check_refutation_from_cas(&o_bytes, o_hash, &cas, model_hash, &generous)?;
+    let outcome_cas_ref = checker.check_refutation_from_source(
+        &o_bytes,
+        o_hash,
+        |h| cas.get(h),
+        model_hash,
+        &generous,
+    )?;
     require(
         outcome_cas_ref == CheckOutcome::Accepted,
         "refutação a partir do CAS deve ser aceita",
     )?;
 
-    let outcome_cas_cons =
-        checker.check_consistency_from_cas(&o_bytes, o_hash, &cas, model_hash, &generous)?;
+    let outcome_cas_cons = checker.check_consistency_from_source(
+        &o_bytes,
+        o_hash,
+        |h| cas.get(h),
+        model_hash,
+        &generous,
+    )?;
     require(
         outcome_cas_cons == CheckOutcome::Accepted,
         "consistência a partir do CAS deve ser aceita",
@@ -287,8 +297,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         data[0] ^= 0xFF;
         fs::write(&files[0], &data)?;
     }
-    let corrupt_res =
-        checker.check_refutation_from_cas(&o_bytes, o_hash, &cas, model_hash, &generous);
+    let corrupt_res = checker.check_refutation_from_source(
+        &o_bytes,
+        o_hash,
+        |h| cas.get(h),
+        model_hash,
+        &generous,
+    );
     require(
         matches!(corrupt_res, Err(CasError::Integrity)),
         "objeto corrompido no CAS deve retornar CasError::Integrity",

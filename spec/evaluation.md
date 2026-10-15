@@ -84,13 +84,13 @@ ADR [0016](../docs/adr/0016-checkers-contextuais-de-modelos.md). API:
 let checker = ModelChecker::new(&vocabulary)?;
 checker.check_refutation(&bytes_o, hash_o, &model, &budget);
 checker.check_consistency(&bytes_o, hash_o, &model, &budget);
-checker.check_refutation_from_cas(&bytes_o, hash_o, &cas, hash_model, &budget)?;
-checker.check_consistency_from_cas(&bytes_o, hash_o, &cas, hash_model, &budget)?;
+checker.check_refutation_from_source(&bytes_o, hash_o, |h| cas.get(h), hash_model, &budget)?;
+checker.check_consistency_from_source(&bytes_o, hash_o, |h| cas.get(h), hash_model, &budget)?;
 ```
 
 `ModelChecker::new` MUST preparar Reasons canônicos de forma falível, sem
-fallback ou panic. Métodos em memória retornam CheckOutcome; métodos CAS
-retornam Result<CheckOutcome,CasError>. Nenhum emite Verdict/claim/evento.
+fallback ou panic. Métodos em memória retornam CheckOutcome; métodos de fonte
+retornam Result<CheckOutcome,E> (CasError ao usar cas.get). Nenhum emite Verdict/claim/evento.
 
 Refutação MUST aceitar sse todas as premissas são verdadeiras e goal falso.
 Consistência MUST aceitar sse todas as premissas são verdadeiras: não avalia
@@ -131,13 +131,19 @@ Reservas falíveis tipadas MUST preservar Unknown(Memory).
 ### 5.2. Artefatos e erros
 
 CAS MUST carregar M por Hash<FiniteModel>, verificando integridade dos bytes.
+O checker MUST recalcular h(M) dos mesmos bytes independentemente da fonte.
 Modelo ausente é Rejected. CasError::Integrity/TooLarge/Io MUST permanecer Err,
 nunca falsidade lógica nem Unknown arbitrário. Depois da leitura, decoder de
 modelo MUST usar o mesmo V do checker. Envelope inválido produz Rejected;
 limites estruturais do modelo produzem Unknown(Size).
 
-Reprodução: `cargo test -p logos-model --test checker` e
-`cargo run -p logos-model --example checker_smoke` → CHECKER_SMOKE_OK.
+Desde3.6 (ADR0025), métodos *_from_source recebem closure falível de leitura;
+o checker recalcula h(M) e preserva soma O+M, medidor e erros da fonte. A crate
+logos-model não depende do ledger, inclusive em dev; os testes com CAS real
+vivem em logos-ledger. Sem mudança de wire ou resultados lógicos.
+
+Reprodução: `cargo test -p logos-ledger --test model_checker` e
+`cargo run -p logos-ledger --example checker_smoke` → CHECKER_SMOKE_OK.
 Mutação completa do arquivo checker.rs: comandos/resultados no
 [plano 2.3](../docs/plans/etapa-2.3.md). Sem ledger, roteamento ou produtor Z3.
 
