@@ -35,8 +35,8 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 8974+105199=114173 LOC de correção, build-only64508;
-logos-ledger2937, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+TCB atual Rust: 9056+105199=114255 LOC de correção, build-only64508;
+logos-core344, logos-ledger2980, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
@@ -69,6 +69,12 @@ CLI logos ledger rebuild-index usa somente chave pública, compara cache.
 build252133ms fora da medida. Full verify/selftest VERIFY_OK, exit0;
 227 Python +25 TCB, autoteste sem avisos. Fuzz92653/61s, exit0, sem crash.
 Nenhum pacote externo novo; CI/ARM/fuzz longo não observados.
+3.4: divisão A adotada pelo mantenedor (ADR0023), contrato ajustado antes do
+código. EpochRange inclusivo u64 e opcionais de EpochAdvanced com corpo v2;
+18 vetores históricos preservados e4 adicionados. Seis regressões novas,
+49 testes direcionados/Clippy e oito mutantes passaram. Fuzz core172375/61s
+e event107491/61s, exit0 sem crash. Full verify/selftest VERIFY_OK, exit0,
+227 Python +25 TCB, autoteste sem avisos. Integração Fact fica na6.1.
 
 ## Etapas da Fase 0
 
@@ -115,6 +121,7 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
 | 3.1 Catálogo de eventos v1 | ✅ concluída localmente | 13 tipos/event-v1, 18 vetores independentes, 15 regressões/599 adulterações e 18 mutantes capturados. EVENTS_SMOKE_OK, fuzz final 123392/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-3.1.md) §7, ADR 0020 e spec/events.md. CI/ARM/fuzz longo não observados; sem persistência/appender. |
 | 3.2 Appender com hash chain | ✅ concluída localmente | SQLite WAL/FULL, lock de escritor, replay integral, 16 testes novos/48 no crate e nove mutantes capturados. LEDGER_CRASH_OK: 10k eventos/24 SIGKILLs, zero perdas de appends reconhecidos; segundo processo recusado. Full verify/selftest VERIFY_OK, exit 0; autoteste isolado sem avisos; fuzz final 139749/61 s, exit 0. [Plano](docs/plans/etapa-3.2.md) §7, ADR 0021 e spec/ledger.md. CI/ARM/fuzz longo não observados. |
 | 3.3 Índices e consultas | ✅ concluída localmente | LedgerView/CAS/escopo e claims/deps/citable reais, cache derivado sem autoridade, CLI com chave pública. 17 testes novos e onze mutantes capturados; reconstrução100k preservou todas as cinco tabelas. 1M/20000 consultas: p99=36573ns, build252133ms fora da latência. Full verify/selftest VERIFY_OK, exit0; fuzz92653/61s, exit0, sem crash. [Plano](docs/plans/etapa-3.3.md) §7, ADR 0022 e spec/ledger-index.md. CI/ARM/fuzz longo não observados. |
+| 3.4 Épocas | ✅ concluída localmente | Divisão A adotada pelo mantenedor (ADR0023): EpochRange genérico e opcionais com epoch-body/v2; teste integrado Fact preservado na6.1. Seis regressões novas,22 vetores (18 idênticos), oito mutantes e fuzz core/event172375/107491 execuções sem crash. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-3.4.md)/[spec](spec/epochs.md). CI/ARM/fuzz longo pendentes. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -148,6 +155,10 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
    Execução local passou; remoto/ARM ainda não observado. Novo acesso ao h(V)
    de O é exercitado pelo alvo obligation_decode existente, sem desativar
    sanitizers; ≥1h remota continua pendente.
+   Épocas3.4: testes de intervalo e ledger/snapshot reais entram no workspace;
+   event_decode recebe os22 vetores (incluindo corpo v2) pelo runner existente,
+   core_decode exercita limites do intervalo. Smokes locais de61s passaram;
+   remoto/ARM e ≥1h continuam pendentes, sem integração de Fact antecipada.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -217,36 +228,37 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.4 — épocas (`P`, TCB), começando pelo contrato
+## Próximo passo: Etapa 3.5 — CAS integrado ao ledger (`P`)
 
-Dependências declaradas prontas: EventBody/EpochAdvanced da 3.1 e índices/
-LedgerView/snapshot da 3.3. Appender 3.2 já calcula epoch crescente; índice
-preserva u64 inteiro e atualmente exige emissão na época corrente, sem janela.
-Ler ROADMAP 3.4 e spec/events.md/spec/ledger-index.md/ADRs0020–0022.
+Dependências prontas: appender durável/replay/lock da3.2 e Cas put/get com
+integridade da0.5. Catálogo atual inclui EpochAdvanced com opcionais da3.4;
+índices/CLI com chave pública da3.3 podem apoiar consultas, sem virar autoridade.
+Ler ROADMAP3.5, spec/cas.md, spec/events.md e spec/ledger.md; criar plano/ADR
+antes de fixar decisões abertas. Não implementar auditor3.6 ou fatos6.1.
 
-Planejar validade genérica por época, campos opcionais policy_root/vocab de
-EpochAdvanced e vetores/bump dos formatos que mudarem. Épocas de política da
-7.2 e efeitos de ações ficam fora; não antecipar esses mecanismos.
+Garantir put → append: evento que referencia objeto inexistente/corrompido
+no CAS falha antes de persistir/assinar reconhecimento, sem consumir seq/head.
+Inventariar referências diretas e aninhadas (h(O), certificado, modelo,
+vocabulário etc.) e seus domínios. policy_root da3.4 é compromisso Merkle
+opaco, não hash de objeto Policy; não inventar esse objeto para verificá-lo.
+Adicionar `logos ledger gc --dry-run` para listar órfãos, sem apagar nada.
+Demonstrar falha com hash ausente e preservação de todos os referenciados.
 
-Decisão de contrato antes do código: critério 3.4 cita fato válido nas épocas
-3–5, citável em4 e recusado em6, mas objeto Fact/FactRegistered/EpochRange da
-6.1 ainda não existe (só FactRef e EntryKind::Fact abstratos). Não implementar
-6.1 para contornar isso. Fixar em plano/ADR a fronteira do mecanismo genérico
-e como demonstrar o critério sem fingir integração de fatos; se depender do
-objeto ausente, registrar bloqueio conforme AGENTS.md §1.3. Qualquer mudança
-de escopo/ordem exige ADR/ROADMAP explícitos.
+Decisões abertas: vínculo obrigatório entre Ledger e CAS que impeça bypass
+por append antigo; distinguir hashes de objetos de digests crus de binários/
+artefatos e compromissos; validar leitura histórica sem reescrever eventos;
+enumerar objetos temporários/domínios sem seguir symlinks ou ocultar erros.
 
-Riscos conhecidos: citabilidade não pode promover Unknown/Invalidated ou
-confundir época de emissão com época de aplicabilidade. Snapshots mantêm lock
-do writer e reconstrução completa tem custo alto (252s com1M nesta máquina);
-consulta p99 em memória não representa abertura. Sem âncora contra rollback.
-Pendências remotas 0.1–3.3 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Riscos: falha após put e antes de append deixa órfão legítimo; dry-run apenas
+informa. Não converter I/O em ausência ou ignorar referências de consistência.
+Snapshots mantêm lock e replay integral (250s com1M nesta máquina), sem
+âncora contra rollback. Pendências remotas0.1–3.4 continuam separadas.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 8974 LOC Rust próprios + 105199
-  de dependências Rust = 114173 (+64508 só de compilação), após 3.3;
-  logos-air1556, logos-obligation572, logos-model1845, logos-ledger2937.
+- **Tamanho da TCB de correção (execução):** 9056 LOC Rust próprios + 105199
+  de dependências Rust = 114255 (+64508 só de compilação), após3.4;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1845, logos-ledger2980.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -805,3 +817,53 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   6.1; exige contrato/plano e bloqueio se depender desse objeto ausente,
   sem antecipar 6.1. Memória, fuzz-src alheios, logs e mutants.out preexistentes
   fora do commit. Sem push/CI remota; próximo: contrato da 3.4.
+- **2026-10-15** — Contrato da Etapa 3.4 examinado. Confirmada ausência de
+  Fact/FactRegistered/EpochRange em fontes reais; FactRef e EntryKind::Fact
+  são abstratos. O critério de fato válido em3–5/citável em4/recusado em6
+  depende da 6.1, que também recebe citação da5.3 ainda ausente. Implementação
+  parada por AGENTS.md §1.3; nenhuma view falsa usada para fechar o critério.
+  Plano3.4 e ADR0023 proposto registram evidência e opção A: mecanismo genérico
+  na3.4, teste integrado preservado na6.1 com dependência explícita. Opção B
+  conserva critério bloqueado e exige plano de ordem. Decisão do mantenedor
+  pendente; ROADMAP recebeu apenas nota de bloqueio, sem mudar entregáveis/
+  ordem/checkbox. Plano da fase e próximo passo atualizados. Nenhuma mudança
+  de código, formato, dependência, manifesto ou vetor; sem novo fuzz/mutação.
+  Links locais dos planos/ADR conferidos. Full ci/verify.sh: VERIFY_OK, exit0;
+  Rust/smokes/guards/manifesto/independência/auditorias/vetores,227 Python88,90s
+  +25 TCB1,28s. Crash10k/24 SIGKILLs/9998 ACKs sem perda; rebuild100k exato;
+  1M/20000 consultas p99=29711ns, cold build253313ms excluído da latência.
+  Só avisos deny anteriores, sem falha. --selftest não repetido nesta entrega
+  documental; última execução verde permanece a da3.3. Alterações fuzz-src,
+  memória, logs e mutants.out preexistentes preservados fora do commit.
+  Sem push/CI remota; próximo: decidir contrato do ADR0023 antes de codificar.
+- **2026-10-15** — Mantenedor adotou explicitamente proposta A do ADR0023;
+  bloqueio inicial da3.4 resolvido antes do código por ajuste dos critérios
+  ROADMAP3.4/6.1. Teste integrado Fact3–5/4/6 e dependência explícita de3.4
+  preservados na6.1; nenhuma antecipação de fatos, políticas ou ações.
+  EpochRange genérico em logos-core, limites privados inclusivos u64,
+  construtor falível/getters/contains; sem Canon/Domain ou novo wire de intervalo.
+  EpochAdvanced recebe policy_root opaco Option<bytes32> e vocab Option<h(V)>.
+  Novo epoch-body/v2 exige algum opcional; ambos ausentes usam somente v1,
+  rejeitando forma duplicada v2. Envelope/domínios/schema anteriores iguais.
+  22 vetores Python/canon/hashlib/Ed25519 independentes; comparação com e46ebed
+  comprovou18 anteriores idênticos em todos os campos. Quatro novos cobrem
+  opcionais isolados/ambos e u64::MAX/digests zero; replay preserva22 wires.
+  Seis regressões novas (intervalo×enumeração81 pares, codec/assinatura e
+  Ledger/CAS/snapshot/generate reais nas épocas3/4/6);49 alvos passaram.
+  Oito mutantes compilados capturados, fontes restauradas; nenhum erro de
+  compilação contado como detecção. Logs/comandos target/epoch-mutations.
+  Clippy passou. Ruff avulso inicial usou configuração errada fora de py/;
+  na pasta correta apontou linha longa nova, formatada; Ruff final passou.
+  Fuzz oficial nightly-2026-09-28: core_decode172375/61s e event_decode107491/61s,
+  exit0 sem crash, sanitizers ativos/max_len4096. Fora do sandbox por ptrace
+  conhecido; logs anteriores restaurados byte a byte, novos em target/*-3.4.log.
+  Full ci/verify.sh --selftest: VERIFY_OK, exit0, Rust/smokes/guards/manifesto/
+  independência/supply-chain/vetores,227 Python85,88s +25 TCB1,80s; autoteste
+  sem avisos, bloqueios pelos diagnósticos corretos. Só avisos deny anteriores.
+  Crash10k/24 SIGKILLs/9999 ACKs sem perda; rebuild100k/tabelas5 exatas;
+  1M/20000 consultas p99=17756ns, cold build250150ms excluído da medida.
+  TCB Rust9056+105199=114255 (+82 próprios), build-only64508; core344 e
+  ledger2980, sem dependências novas. SQLite C176466 continua separado.
+  ADR/plano/spec/README/ROADMAP/manifesto/STATUS atualizados. Memória, fontes
+  fuzz alheias, logs e mutants.out preexistentes preservados fora do commit.
+  Sem push/CI remota; próximo:3.5, integração CAS/append e GC só dry-run.

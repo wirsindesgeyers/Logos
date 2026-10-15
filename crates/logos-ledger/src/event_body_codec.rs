@@ -1,7 +1,7 @@
 //! Codificação e decodificação estritas de corpos de eventos e tipos associados conforme `canon/v1`.
 //!
 //! Todas as representações utilizam arrays de comprimento fixo e discriminadores
-//! numéricos sem campos opcionais ou codificações genéricas ambíguas.
+//! numéricos; opcionais estritos usam []/[bytes32], nunca null.
 
 use logos_air::{Formula, Vocabulary};
 use logos_canon::{Array, Canon, CanonDecode, CanonError, Decoder, Text, Value};
@@ -370,12 +370,30 @@ impl Canon for EventBody {
                     array(causes_vals)?,
                 ])
             }
-            Self::EpochAdvanced { new_epoch, reason } => array(vec![
-                Value::Unsigned(1),
-                Value::Unsigned(10),
-                Value::Unsigned(*new_epoch),
-                reason.to_value()?,
-            ]),
+            Self::EpochAdvanced {
+                new_epoch,
+                reason,
+                policy_root,
+                vocab,
+            } => {
+                if policy_root.is_none() && vocab.is_none() {
+                    array(vec![
+                        Value::Unsigned(1),
+                        Value::Unsigned(10),
+                        Value::Unsigned(*new_epoch),
+                        reason.to_value()?,
+                    ])
+                } else {
+                    array(vec![
+                        Value::Unsigned(2),
+                        Value::Unsigned(10),
+                        Value::Unsigned(*new_epoch),
+                        reason.to_value()?,
+                        policy_root.to_value()?,
+                        vocab.map(|h| *h.as_bytes()).to_value()?,
+                    ])
+                }
+            }
             Self::CheckerRegistered {
                 checker,
                 format,
@@ -409,6 +427,25 @@ impl CanonDecode for EventBody {
         let fields = items(value)?;
         if fields.len() < 2 {
             return Err(CanonError::WrongType);
+        }
+        if fields[0] == Value::Unsigned(2) {
+            let [_, Value::Unsigned(10), epoch, reason, root, vocab] = fields else {
+                return Err(CanonError::WrongType);
+            };
+            let policy_root = Option::<[u8; 32]>::from_value(root)?;
+            let vocab = Option::<[u8; 32]>::from_value(vocab)?.map(Hash::from_bytes);
+            // O corpo v1 é a única codificação quando ambos estão ausentes.
+            if policy_root.is_none() && vocab.is_none() {
+                return Err(CanonError::WrongType);
+            }
+            let body = Self::EpochAdvanced {
+                new_epoch: u64::from_value(epoch)?,
+                reason: Text::from_value(reason)?,
+                policy_root,
+                vocab,
+            };
+            body.validate().map_err(|_| CanonError::WrongType)?;
+            return Ok(body);
         }
         if fields[0] != Value::Unsigned(1) {
             return Err(CanonError::WrongType);
@@ -541,7 +578,12 @@ impl CanonDecode for EventBody {
                 if reason.as_str().len() > MAX_TEXT_BYTES {
                     return Err(CanonError::WrongType);
                 }
-                Self::EpochAdvanced { new_epoch, reason }
+                Self::EpochAdvanced {
+                    new_epoch,
+                    reason,
+                    policy_root: None,
+                    vocab: None,
+                }
             }
             (11, [checker_val, format_val, auth_val]) => {
                 let checker = digest::<Checker>(checker_val)?;

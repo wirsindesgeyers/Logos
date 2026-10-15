@@ -439,6 +439,144 @@ fn epochs_do_not_truncate_u64_or_promote_old_premises() {
 }
 
 #[test]
+fn advanced_epoch_rejects_old_verified_and_assumption_in_real_generation() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    ledger.append(epoch(3)).unwrap();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let ho = fixture.obligation(&ledger, &[a], &falsity());
+    let verified = hash(&ledger.append(verified(ho, vec![a], vec![a])).unwrap()).unwrap();
+    let refs = [premise(a), premise(verified)];
+    let old_head = ledger.head().unwrap();
+    {
+        let index = ledger.index().unwrap();
+        for reference in [a, verified] {
+            assert!(index.is_citable(reference, 3).unwrap());
+        }
+        let view = index.snapshot(&fixture.cas, &refs, "local").unwrap();
+        assert!(
+            generate(
+                Proposal {
+                    vocabulary: &fixture.vocabulary,
+                    goal: &truth(),
+                    cites: &refs
+                },
+                &view
+            )
+            .is_ok()
+        );
+    }
+    for new_epoch in [4, 6] {
+        let event = ledger
+            .append(EventBody::EpochAdvanced {
+                new_epoch,
+                reason: Text::new("contexto genérico").unwrap(),
+                policy_root: Some([new_epoch as u8; 32]),
+                vocab: Some(fixture.hv),
+            })
+            .unwrap();
+        assert_eq!(event.epoch, new_epoch);
+        {
+            let index = ledger.index().unwrap();
+            assert_eq!(index.status(a).unwrap().unwrap().epoch, 3);
+            assert_eq!(
+                index.status(verified).unwrap().unwrap().kind,
+                EntryKind::Verified
+            );
+            assert_eq!(index.status(verified).unwrap().unwrap().epoch, 3);
+            for reference in [a, verified] {
+                assert!(!index.is_citable(reference, new_epoch).unwrap());
+                let cites = [premise(reference)];
+                let view = index.snapshot(&fixture.cas, &cites, "local").unwrap();
+                assert!(
+                    matches!(generate(Proposal { vocabulary: &fixture.vocabulary, goal: &truth(), cites: &cites }, &view),
+                    Err(Reject::InvalidEpoch { expected, actual: 3, .. }) if expected == new_epoch)
+                );
+            }
+            assert_eq!(
+                index.formula_of(verified, &fixture.cas).unwrap(),
+                Some(falsity())
+            );
+        }
+        let head = ledger.head().unwrap();
+        assert_ne!(head, old_head);
+        drop(ledger);
+        ledger = Ledger::open(&fixture.temp.0, &fixture.signer).unwrap();
+        assert_eq!(ledger.head().unwrap(), head);
+    }
+    // A época nova permite premissa nova, sem promover os eventos anteriores.
+    let current = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let cites = [premise(current)];
+    let index = ledger.index().unwrap();
+    assert!(index.is_citable(current, 6).unwrap());
+    let view = index.snapshot(&fixture.cas, &cites, "local").unwrap();
+    assert!(
+        generate(
+            Proposal {
+                vocabulary: &fixture.vocabulary,
+                goal: &truth(),
+                cites: &cites
+            },
+            &view
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn advancing_epoch_never_promotes_unknown_or_invalidated_records() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    ledger.append(epoch(3)).unwrap();
+    let ho = fixture.obligation(&ledger, &[], &truth());
+    let invalid = hash(&ledger.append(verified(ho, vec![], vec![])).unwrap()).unwrap();
+    ledger
+        .append(EventBody::Invalidated {
+            claim: invalid,
+            causes: vec![invalid],
+        })
+        .unwrap();
+    let unknown = hash(
+        &ledger
+            .append(EventBody::UnknownRecorded {
+                check: CheckRecord {
+                    outcome: CheckOutcome::Unknown(Exhausted::Memory),
+                    ..check(ho)
+                },
+                machine: Text::new("fixture").unwrap(),
+            })
+            .unwrap(),
+    )
+    .unwrap();
+    for current_epoch in [3, 4, 6] {
+        if current_epoch != 3 {
+            ledger.append(epoch(current_epoch)).unwrap();
+        }
+        let index = ledger.index().unwrap();
+        for (reference, kind) in [
+            (invalid, EntryKind::Invalidated),
+            (unknown, EntryKind::Unknown),
+        ] {
+            assert_eq!(index.status(reference).unwrap().unwrap().kind, kind);
+            assert!(!index.is_citable(reference, current_epoch).unwrap());
+            let cites = [premise(reference)];
+            let view = index.snapshot(&fixture.cas, &cites, "local").unwrap();
+            assert!(
+                generate(
+                    Proposal {
+                        vocabulary: &fixture.vocabulary,
+                        goal: &truth(),
+                        cites: &cites
+                    },
+                    &view
+                )
+                .is_err()
+            );
+        }
+    }
+}
+
+#[test]
 fn missing_or_corrupt_cas_never_creates_placeholder_formulas() {
     let fixture = Fixture::new();
     let mut ledger = fixture.ledger();

@@ -1,9 +1,9 @@
-# event/v1 — catálogo e assinaturas de eventos
+# event/v1 — catálogo, assinaturas e extensão epoch-body/v2
 
-Normativo para ROADMAP 3.1; ADR 0020. MUST/MUST NOT conforme RFC 2119.
-Consome canon/v1, air/v1, core/v1 e domínios existentes. Novo formato começa
-em v1; formatos anteriores não mudam. Persistência/appender/índices/kernel
-não fazem parte desta etapa.
+Normativo para ROADMAP 3.1/3.4; ADRs 0020/0023. MUST/MUST NOT conforme RFC 2119.
+Consome canon/v1, air/v1, core/v1 e domínios existentes. A extensão de corpo
+mantém os formatos anteriores. O catálogo valida estrutura; verificação de
+histórico pertence ao appender/replay e não prova execução lógica do kernel.
 
 ## 1. Envelope, identidade e assinatura
 
@@ -68,9 +68,38 @@ Demais conjuntos de refs MUST estar estritamente ordenados e sem duplicatas;
 | 7 | AssumptionDeclared | hV, Formula, scope_Text, author_KeyId |
 | 8 | Retracted | target_hEvent, reason_Text, authority |
 | 9 | Invalidated | claim_hEvent, causes_refs |
-| 10 | EpochAdvanced | new_epoch_u64, reason_Text |
+| 10 | EpochAdvanced (corpo v1 sem opcionais) | new_epoch_u64, reason_Text |
 | 11 | CheckerRegistered | hChecker, format_Text, authority |
 | 12 | CheckerRevoked | hChecker, reason_Text, authority |
+
+### Extensão epoch-body/v2 (Etapa 3.4)
+
+```text
+body = [2, 10, new_epoch_u64, reason_Text, policy_root, vocab]
+policy_root = [] | [bytes32_Merkle_root]
+vocab = [] | [bytes32_hV]
+```
+
+Pelo menos um opcional MUST estar presente. Quando ambos estão ausentes,
+somente `[1,10,new_epoch,reason]` é válido: não existem duas codificações para
+o mesmo corpo. Decoder v2 MUST recusar outra tag, aridade, null, digest fora
+de 32 bytes, listas de opção com mais de um item e texto além dos limites.
+Encoder/decode do corpo v1 preenchem None somente porque campos não existem
+nessa versão, sem descartar bytes/campos de entrada.
+
+`policy_root` é compromisso opaco, não assinatura administrativa nem hash
+de um objeto Policy. `vocab` identifica um vocabulário, sem implicar tipagem,
+compatibilidade ou presença no CAS. Essa transição não autoriza efeitos nem
+implementa política da 7.2. New_epoch continua igual ao envelope; append/replay
+exigem avanço estrito. Sem ambos opcionais, sign/encode preservam os bytes
+históricos, incluindo assinaturas e h(Event).
+
+O bump pertence ao corpo versionado; envelope event/v1, domínios de hash/
+assinatura e ledger-sqlite/v1 permanecem iguais. A versão do corpo também
+está nos bytes autenticados. Leitor antigo recusa v2 em vez de ignorar seus
+campos. Nenhum evento armazenado é migrado ou reassinado implicitamente.
+API Rust acrescenta `policy_root: Option<[u8;32]>` e
+`vocab: Option<Hash<Vocabulary>>` à variante EpochAdvanced.
 
 Genesis ledger_version MUST ser 1. Verified/Refuted check.outcome MUST ser
 Accepted; UnknownRecorded check.outcome MUST ser Unknown, nunca Rejected.
@@ -116,8 +145,10 @@ EventBody/CheckRecord/Consistency/EventProposal implementam Canon/CanonDecode.
 Event fornece `sign(seq, epoch, prev, body, signer)`, `verify(public_key)`,
 `decode(bytes)`, Canon/CanonDecode e campos públicos para leitores; sign e verify
 validam estrutura. Decodificar não produz autoridade.
-Vetores independentes: spec/vectors/events/vectors.json, 18 fixtures públicas
-para 13 tags e variantes de consistência/outcome/texto não NFC.
+Vetores independentes: spec/vectors/events/vectors.json, 22 fixtures públicas
+para 13 tags e variantes de consistência/outcome/texto não NFC/opcionais de
+época. Os 18 vetores anteriores permanecem byte a byte; quatro novos exercitam
+raiz isolada, vocabulário isolado, ambos e época u64::MAX/digests zero.
 
 ```sh
 (cd py && uv run python ../tools/gen_event_vectors.py --check)

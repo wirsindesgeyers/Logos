@@ -55,7 +55,8 @@ MUST apontar para claim anterior citável na época desse evento; caso contrári
 reconstrução falha. Citável em estado: Assumption/Verified, não retratado nem
 invalidado, época da emissão igual à época corrente do snapshot. Unknown/
 Refuted/Pending/Proposal MUST NOT ser promovidos. is_citable só responde sobre
-a época corrente, não oferece consultas históricas nem janelas da 3.4.
+a época corrente, não oferece citabilidade histórica. EpochRange genérico
+da 3.4 não prolonga essas entradas; janelas de Fact serão integradas na 6.1.
 
 Retracted/Invalidated MUST ter alvo lógico anterior. Invalidar alvo e fechamento
 transitivo por deps, remover citable; Retracted marca retracted só no alvo.

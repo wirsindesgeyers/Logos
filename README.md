@@ -249,5 +249,14 @@ para is_citable com 1M, excluindo o custo de reconstrução.
 Contrato em [`spec/ledger-index.md`](spec/ledger-index.md), decisão em
 [`ADR 0022`](docs/adr/0022-indices-e-ledgerview.md).
 
+Etapa 3.4 oferece `logos_core::EpochRange`, intervalo inclusivo u64 com
+construtor falível, sem autenticar entradas. `EpochAdvanced` acrescenta
+`policy_root`/`vocab` opcionais; o corpo estendido usa epoch-body/v2 e os bytes
+históricos continuam iguais. LedgerView/gerador reais recusam premissas
+anteriores após avanço da época. Fatos com janela serão integrados na 6.1.
+Contrato em [`spec/epochs.md`](spec/epochs.md) e
+[`spec/events.md`](spec/events.md), decisão em
+[`ADR0023`](docs/adr/0023-contrato-de-epocas-e-fatos.md).
+
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

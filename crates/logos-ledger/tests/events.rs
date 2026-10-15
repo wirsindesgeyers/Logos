@@ -589,6 +589,8 @@ fn test_invariants_envelope_rules() {
 
     // 7. EpochAdvanced com new_epoch != epoch do envelope -> REJEITADO
     let epoch_body = EventBody::EpochAdvanced {
+        policy_root: None,
+        vocab: None,
         new_epoch: 2,
         reason: Text::new("avanco").unwrap(),
     };
@@ -832,6 +834,135 @@ fn unknown_versions_tags_routes_and_extra_fields_are_not_accepted() {
         .is_err()
     );
     assert!(Route::from_value(&Value::Unsigned(4)).is_err());
+}
+
+#[test]
+fn extended_epoch_body_has_one_strict_encoding_and_preserves_legacy_bytes() {
+    let root: JsonValue =
+        serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json")).unwrap();
+    let mut cases = 0;
+    for vector in root["vectors"].as_array().unwrap() {
+        if vector["body_tag"] != 10 {
+            continue;
+        }
+        let wire = unhex(vector["event_wire_hex"].as_str().unwrap());
+        let event = Event::decode(&wire).unwrap();
+        let value = event.body.to_value().unwrap();
+        let Value::Array(fields) = &value else {
+            unreachable!()
+        };
+        let EventBody::EpochAdvanced {
+            policy_root, vocab, ..
+        } = event.body
+        else {
+            unreachable!()
+        };
+        let extended = policy_root.is_some() || vocab.is_some();
+        assert_eq!(
+            fields.items()[0],
+            Value::Unsigned(if extended { 2 } else { 1 })
+        );
+        assert_eq!(fields.items().len(), if extended { 6 } else { 4 });
+        assert_eq!(
+            to_canon(&EventBody::from_value(&value).unwrap()).unwrap(),
+            to_canon(&value).unwrap()
+        );
+        if !extended {
+            assert_eq!(to_canon(&event).unwrap(), wire);
+        }
+        cases += 1;
+    }
+    assert_eq!(cases, 5); // v1, root, vocab, ambos, limites máximos.
+
+    let array = |fields| Value::Array(Array::new(fields).unwrap());
+    let empty = array(vec![]);
+    let some = array(vec![Value::Bytes(vec![7; 32])]);
+    let fields = vec![
+        Value::Unsigned(2),
+        Value::Unsigned(10),
+        Value::Unsigned(4),
+        Text::new("época").unwrap().to_value().unwrap(),
+        some.clone(),
+        some.clone(),
+    ];
+    for slot in [4, 5] {
+        for bad in [
+            Value::Null,
+            Value::Bool(false),
+            Value::Unsigned(0),
+            Value::Bytes(vec![7; 32]),
+            array(vec![Value::Bytes(vec![7; 31])]),
+            array(vec![Value::Bytes(vec![7; 33])]),
+            array(vec![some.clone(), some.clone()]),
+        ] {
+            let mut malformed = fields.clone();
+            malformed[slot] = bad;
+            assert!(EventBody::from_value(&array(malformed)).is_err());
+        }
+    }
+    let mut absent = fields.clone();
+    absent[4] = empty.clone();
+    absent[5] = empty;
+    assert!(EventBody::from_value(&array(absent)).is_err());
+    for version in [0, 1, 3, u64::MAX] {
+        let mut malformed = fields.clone();
+        malformed[0] = Value::Unsigned(version);
+        assert!(EventBody::from_value(&array(malformed)).is_err());
+    }
+    for tag in 0..=13 {
+        if tag == 10 {
+            continue;
+        }
+        let mut malformed = fields.clone();
+        malformed[1] = Value::Unsigned(tag);
+        assert!(EventBody::from_value(&array(malformed)).is_err());
+    }
+    for length in 0..fields.len() {
+        assert!(EventBody::from_value(&array(fields[..length].to_vec())).is_err());
+    }
+    let mut extra = fields.clone();
+    extra.push(Value::Null);
+    assert!(EventBody::from_value(&array(extra)).is_err());
+    let mut huge = fields;
+    huge[3] = Text::new("x".repeat(65537)).unwrap().to_value().unwrap();
+    assert!(EventBody::from_value(&array(huge)).is_err());
+}
+
+#[test]
+fn epoch_commitments_are_bound_to_signature_without_conferring_authority() {
+    let signer = FileSigner::from_seed(&[0x11; 32]).unwrap();
+    let event = Event::sign(
+        1,
+        4,
+        Some(Hash::from_bytes([1; 32])),
+        EventBody::EpochAdvanced {
+            new_epoch: 4,
+            reason: Text::new("contexto").unwrap(),
+            policy_root: Some([2; 32]),
+            vocab: Some(Hash::from_bytes([3; 32])),
+        },
+        &signer,
+    )
+    .unwrap();
+    event.verify(signer.public_key()).unwrap();
+    assert!(event.body.authority_message().unwrap().is_none());
+    for slot in 0..4 {
+        let mut tampered = event.clone();
+        let EventBody::EpochAdvanced {
+            policy_root, vocab, ..
+        } = &mut tampered.body
+        else {
+            unreachable!()
+        };
+        match slot {
+            0 => *policy_root = Some([9; 32]),
+            1 => *vocab = Some(Hash::from_bytes([9; 32])),
+            2 => *policy_root = None,
+            _ => *vocab = None,
+        }
+        assert_ne!(hash(&tampered).unwrap(), hash(&event).unwrap());
+        assert!(tampered.verify(signer.public_key()).is_err());
+    }
 }
 
 #[test]

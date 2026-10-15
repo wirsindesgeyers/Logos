@@ -241,6 +241,10 @@ pub enum EventBody {
         new_epoch: u64,
         /// Motivo textual canônico da transição.
         reason: Text,
+        /// Compromisso Merkle opaco; não autentica ou publica uma política.
+        policy_root: Option<[u8; 32]>,
+        /// Vocabulário associado à transição; não implica compatibilidade.
+        vocab: Option<Hash<Vocabulary>>,
     },
     /// Registro e habilitação de um verificador de provas.
     CheckerRegistered {

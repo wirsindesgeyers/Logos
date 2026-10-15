@@ -56,6 +56,8 @@ pub fn ordinary(id: u8) -> EventBody {
 
 pub fn epoch(new_epoch: u64) -> EventBody {
     EventBody::EpochAdvanced {
+        policy_root: None,
+        vocab: None,
         new_epoch,
         reason: Text::new("fixture").unwrap(),
     }

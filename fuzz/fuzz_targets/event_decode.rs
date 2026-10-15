@@ -1,4 +1,4 @@
-//! event/v1: todo decoder novo deve preservar bytes canônicos e invariantes.
+//! event/v1 + epoch-body/v2: preservar bytes canônicos e invariantes.
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
@@ -32,6 +32,8 @@ fuzz_target!(|data: &[u8]| {
     roundtrip::<TaintedText>(data);
     roundtrip::<Route>(data);
     if let Ok(event) = Event::decode(data) {
+        // Seeds de envelope também exercitam o decoder isolado do corpo v2.
+        roundtrip::<EventBody>(&to_canon(&event.body).expect("body encodes"));
         event
             .body
             .validate()

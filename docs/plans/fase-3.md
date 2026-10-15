@@ -1,6 +1,6 @@
 # Plano de fase — Fase 3: ledger assinado
 
-Fonte: ROADMAP Fase 3 e Apêndice C; dependências locais prontas.
+Fonte: ROADMAP Fase 3 e Apêndice C; dependências locais prontas até a 3.3.
 
 1. **3.1**: catálogo event/v1, assinatura/envelope e vetores; não escreve ledger.
 2. **3.2**: appender único e SQLite transacional/durável, cadeia/recuperação/crash.
@@ -20,5 +20,8 @@ Proposta preserva texto tainted como UTF-8 bytes, não política/fórmula confi�
 [spec](../../spec/events.md). 3.2 demonstrada localmente:
 [plano](etapa-3.2.md)/[spec](../../spec/ledger.md). 3.3 demonstrada localmente:
 [plano](etapa-3.3.md)/[ADR 0022](../adr/0022-indices-e-ledgerview.md).
-3.4–3.6 não iniciadas.
+3.4 demonstrada localmente: mantenedor adotou divisão A do
+[ADR0023](../adr/0023-contrato-de-epocas-e-fatos.md), mecanismo genérico agora
+e teste integrado de fatos preservado na6.1 com dependência explícita de3.4.
+[Plano](etapa-3.4.md). 3.5/3.6 não iniciadas.
 CI remota/S3/ARM/fuzz longo anteriores continuam pendências separadas.

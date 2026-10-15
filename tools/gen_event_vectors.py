@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vetores event/v1 independentes do Rust: canon, hashlib e Ed25519 real.
+"""Vetores event/v1 + epoch-body/v2: canon, hashlib e Ed25519 independentes do Rust.
 
 Sementes públicas de fixture, nunca credenciais de produção. --check confere
 spec/vectors/events/vectors.json sem regravar.
@@ -126,6 +126,10 @@ def build_vectors() -> list[dict[str, Any]]:
     add("Proposed-tainted-nfd-duplicates", [1, 2, nfd_proposal, author.key_id], 1)
     steps = [obligation, certificate, checker, budget, [1, 2, [1, 1]]]
     add("UnknownRecorded-steps", [1, 6, steps, "aarch64-linux"], 1)
+    add("EpochAdvanced-root", [2, 10, 2, "raiz opaca", [b"\x71" * 32], []], 2)
+    add("EpochAdvanced-vocab", [2, 10, 3, "vocabulário", [], [vocabulary]], 3)
+    add("EpochAdvanced-both", [2, 10, 4, "ambos", [b"\x72" * 32], [vocabulary]], 4)
+    add("EpochAdvanced-max", [2, 10, 2**64 - 1, "limite", [bytes(32)], [bytes(32)]], 2**64 - 1)
     return vectors
 
 
@@ -135,7 +139,10 @@ def main() -> None:
     args = parser.parse_args()
     vectors = build_vectors()
     rendered = (
-        json.dumps({"format": "event/v1", "vectors": vectors}, ensure_ascii=False, indent=2) + "\n"
+        json.dumps(
+            {"format": "event/v1+epoch-body/v2", "vectors": vectors}, ensure_ascii=False, indent=2
+        )
+        + "\n"
     )
     if args.check:
         if not OUT.exists() or OUT.read_text(encoding="utf-8") != rendered:

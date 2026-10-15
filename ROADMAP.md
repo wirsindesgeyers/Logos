@@ -745,14 +745,19 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 
 **Depende de (recebe pronto).** 3.1, 3.3.
 
+**Contrato ajustado (2026-10-15).** Mantenedor adotou a divisão do [ADR 0023](docs/adr/0023-contrato-de-epocas-e-fatos.md): mecanismo genérico nesta etapa, integração de fatos na 6.1. Bloqueio anterior por Fact/FactRegistered ausentes foi resolvido por essa decisão, sem antecipar sua implementação.
+
 **Fora do escopo.** épocas de política (7.2): aqui só o mecanismo genérico.
 
 **Entregáveis.**
 - `EpochAdvanced { new_epoch, reason, policy_root?, vocab? }`.
-- Semântica: citabilidade é por época; fatos têm janela de validade em épocas; provas sobre política anterior deixam de autorizar ações (uso real na Fase 7).
+- `EpochRange` genérico inclusivo em u64, construtor falível para limites invertidos e consulta de pertinência. Integração de fatos com a janela fica na 6.1.
+- Semântica: citabilidade é por época; Verified/Assumption de época anterior não entram em obrigações correntes. Uso de política para autorizar ações continua na Fase 7.
 
 **Critério de conclusão.**
-- [ ] Teste: fato válido nas épocas 3–5 é citável em 4 e recusado em 6.
+- [x] Intervalo genérico [3,5] contém 3/4/5 e recusa 2/6; limites invertidos são recusados; testes incluem 0/u64::MAX. `logos-core/tests/epochs.rs`: limites e enumeração independente de81 pares; três mutantes de intervalo capturados.
+- [x] Ledger/snapshot/gerador reais recusam Verified/Assumption anteriores após avanço de época; Unknown/Invalidated continuam não citáveis. Duas regressões em `logos-ledger/tests/index.rs`, épocas3/4/6 com CAS real; mutantes de consulta/gerador capturados.
+- [x] Opcionais de EpochAdvanced têm vetores independentes, hash/assinatura vinculados, leitura estrita e bump de formato; histórico anterior preserva bytes/hash/assinatura. epoch-body/v2, 22 vetores (18 anteriores idênticos), testes de codec/assinatura/replay e fuzz oficial core/event sem crash; full verify/selftest VERIFY_OK local. CI/ARM/fuzz longo não observados.
 
 ---
 
@@ -1135,7 +1140,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 
 ### Etapa 6.1 — Objeto `Fact` · `P` · ⚠ TCB
 
-**Depende de (recebe pronto).** 1.1, 1.2; 0.4 — assinatura; 3.1 — eventos; 5.3 — citação.
+**Depende de (recebe pronto).** 1.1, 1.2; 0.4 — assinatura; 3.1 — eventos; 3.4 — EpochRange e mecanismo de épocas; 5.3 — citação.
 
 **Fora do escopo.** confiança por tópico (6.2).
 
@@ -1147,6 +1152,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 **Critério de conclusão.**
 - [ ] Fato com assinatura de emissor desconhecido → recusado.
 - [ ] Fato expirado → não citável.
+- [ ] Fato assinado por emissor reconhecido, registrado no ledger real com validade [3,5], é citável em 4 e recusado em 6 pela LedgerView/gerador reais. Critério integrado preservado da 3.4 por decisão do mantenedor (ADR 0023); sem view falsa ou janela confiada ao cache.
 
 ---
 

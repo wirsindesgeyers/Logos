@@ -9,9 +9,11 @@
 
 mod budget;
 mod canon;
+mod epoch;
 mod outcome;
 mod verdict;
 
 pub use budget::{Budget, StepMeter};
+pub use epoch::{EpochError, EpochRange};
 pub use outcome::{CheckOutcome, Exhausted, Reason};
 pub use verdict::{Verdict, refuted_from_countermodel, verified_from_proof};

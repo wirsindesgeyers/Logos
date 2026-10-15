@@ -91,7 +91,7 @@ fn every_catalog_vector_is_stored_byte_for_byte() {
         actual.verify(signer.public_key()).unwrap();
         assert_eq!(to_canon(&actual).unwrap(), to_canon(&expected).unwrap());
     }
-    assert_eq!(ledger.head().unwrap().unwrap().seq, 17);
+    assert_eq!(ledger.head().unwrap().unwrap().seq, 21);
     drop(ledger);
     Ledger::open(&temp.0, &signer).unwrap();
 }
