@@ -31,7 +31,7 @@ allow = [
   { name = "logos-ground" },
   { name = "logos-lrat" },
   { name = "logos-alethe" },
-  { name = "logos-ledger" }, # crypto/canon/core/air/obligation, serde_json dev; ADR 0020
+  { name = "logos-ledger" }, # ADRs 0020/0021: eventos e SQLite bundled
   { name = "logos-seal" },
   { name = "logos-policy" },
   { name = "logos-token" },
@@ -69,6 +69,18 @@ allow = [
   { name = "quote" },
   { name = "syn" },
   { name = "unicode-ident" },
+  # logos-ledger SQLite bundled/limits (ADR 0021); cc/pkg-config/vcpkg só build
+  { name = "rusqlite" },
+  { name = "libsqlite3-sys" },
+  { name = "fallible-iterator" },
+  { name = "fallible-streaming-iterator" },
+  { name = "bitflags" },
+  { name = "smallvec" },
+  { name = "cc" },
+  { name = "find-msvc-tools" },
+  { name = "shlex" },
+  { name = "pkg-config" },
+  { name = "vcpkg" },
   # logos-core/obligation dev (ADRs 0006/0012); serde/JSON runtime só fora da TCB (0013)
   { name = "trybuild" },
   { name = "equivalent" },

@@ -1,0 +1,7 @@
+{
+  "format": "ledger-sqlite/v1",
+  "application_id": 1280264019,
+  "user_version": 1,
+  "schema": "CREATE TABLE events (seq INTEGER PRIMARY KEY CHECK (seq >= 0), wire BLOB NOT NULL CHECK (length(wire) BETWEEN 1 AND 16777216)) STRICT",
+  "event_vectors": "../events/vectors.json"
+}

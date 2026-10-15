@@ -719,8 +719,8 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 - Recuperação após crash: na abertura, verifica a cadeia inteira (ou desde o último checkpoint assinado) antes de aceitar novos eventos.
 
 **Critério de conclusão.**
-- [ ] Teste de crash: matar o processo (`SIGKILL`) em pontos aleatórios durante 10k appends; ao reabrir, a cadeia é sempre válida e sem buracos.
-- [ ] Dois processos tentando ser escritores: o segundo falha ao abrir.
+- [x] Teste de crash: matar o processo (`SIGKILL`) em pontos aleatórios durante 10k appends; ao reabrir, a cadeia é sempre válida e sem buracos. Demonstração local: `ci/check-ledger-crash.sh`, 24 SIGKILLs, oráculo Python independente de bytes/hashes/assinaturas e preservação de todos os appends reconhecidos.
+- [x] Dois processos tentando ser escritores: o segundo falha ao abrir. `second_process_fails_to_open_writer` e worker real do script de crash; lock mantido entre transações, liberado após Drop/SIGKILL. CI/ARM ainda não observadas.
 
 ---
 

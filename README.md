@@ -223,9 +223,18 @@ Recibos administrativos são verificados separadamente por
 `EventBody::verify_authority`; chave assinante não implica privilégio.
 Propostas preservam texto tainted UTF-8, inclusive não NFC, sem normalização.
 Assinatura não demonstra lógica, continuidade da cadeia ou autorização.
-Nenhum appender, persistência ou índice implementado nesta etapa.
 Contrato em [`spec/events.md`](spec/events.md), decisão em
 [`ADR 0020`](docs/adr/0020-catalogo-assinado-de-eventos.md).
+
+Etapa 3.2 acrescenta `Ledger::open(directory, &signer)` e `append(body)`:
+SQLite WAL/FULL, lock exclusivo de escritor e replay integral de
+seq/prev/assinaturas antes de aceitar novas entradas. O appender calcula
+cabeçalho e só devolve o evento após commit/sync. Falha de persistência
+exige reabertura. Teste `ci/check-ledger-crash.sh`: SIGKILL durante 10k
+appends, com oráculo Python independente. Sem índices/citabilidade da 3.3,
+integração CAS da 3.5 ou proteção contra truncamento de sufixo válido (13.2).
+Contrato em [`spec/ledger.md`](spec/ledger.md), decisão em
+[`ADR 0021`](docs/adr/0021-appender-sqlite-duravel.md).
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

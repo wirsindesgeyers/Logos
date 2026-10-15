@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-05 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-15 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
@@ -34,7 +34,9 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual: 7892+78287=86179 LOC de correção, build-only51581; logos-ledger1877.
+TCB atual Rust: 8235+105199=113434 LOC de correção, build-only64508;
+logos-ledger2220. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
 autoridade separados. CheckRecord preserva Budget/outcome; consistência
@@ -43,6 +45,16 @@ Witness/Unknown explícita, used ⊆ cited e texto tainted não NFC preservado.
 capturados. EVENTS_SMOKE_OK; fuzz final 123392/61 s sem crash.
 Full ci/verify.sh --selftest: VERIFY_OK, 227 Python + 25 TCB.
 Nenhum appender/persistência/índice; assinatura não prova lógica/cadeia/admin.
+3.2: appender real em logos-ledger, SQLite WAL/FULL, BEGIN IMMEDIATE,
+lock de escritor e replay integral. Seq/prev/epoch calculados; assinatura
+conferida antes de persistir. Falha SQL/sync exige reabertura, sem head ambíguo.
+48 testes no crate (16 novos, incluindo entrada de subprocesso), 18 vetores
+event/v1 persistidos byte a byte e nove mutantes compilados capturados.
+10k eventos/24 SIGKILLs: cadeia íntegra, nenhum append reconhecido perdido;
+commit sem resposta observado e preservado. Segundo processo recusado.
+Full ci/verify.sh --selftest: VERIFY_OK, exit 0; autoteste final isolado
+sem avisos. Fuzz final event_decode: 139749 execuções/61 s, exit 0, sem crash.
+CI/ARM/fuzz longo não observados; sem índices, integração CAS ou kernel.
 
 ## Etapas da Fase 0
 
@@ -87,6 +99,7 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 3.1 Catálogo de eventos v1 | ✅ concluída localmente | 13 tipos/event-v1, 18 vetores independentes, 15 regressões/599 adulterações e 18 mutantes capturados. EVENTS_SMOKE_OK, fuzz final 123392/61 s sem crash e full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-3.1.md) §7, ADR 0020 e spec/events.md. CI/ARM/fuzz longo não observados; sem persistência/appender. |
+| 3.2 Appender com hash chain | ✅ concluída localmente | SQLite WAL/FULL, lock de escritor, replay integral, 16 testes novos/48 no crate e nove mutantes capturados. LEDGER_CRASH_OK: 10k eventos/24 SIGKILLs, zero perdas de appends reconhecidos; segundo processo recusado. Full verify/selftest VERIFY_OK, exit 0; autoteste isolado sem avisos; fuzz final 139749/61 s, exit 0. [Plano](docs/plans/etapa-3.2.md) §7, ADR 0021 e spec/ledger.md. CI/ARM/fuzz longo não observados. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -112,6 +125,9 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
    Eventos 3.1: smoke nativo, vetores --check e event_decode ligados aos
    workflows; runner de fuzz semeia 18 wires válidos também na CI limpa.
    Execução remota/ARM e ≥ 1 h de event_decode ainda não observados.
+   Appender 3.2: testes e ci/check-ledger-crash.sh ligados aos dois runners
+   Rust nativos, com worker release/oráculo Python/10k eventos/24 SIGKILLs.
+   Demonstração local passou; execução remota/ARM ainda não observada.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -181,37 +197,40 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.2 — appender com hash chain (`M`, TCB)
+## Próximo passo: Etapa 3.3 — índices e consultas (`M`)
 
-Dependências prontas: catálogo `EventBody`/`Event` e event/v1 assinável da
-3.1, CAS da 0.5 e Signer/KeyId da 0.4. Wire/limites/autoridade em
-spec/events.md e ADR 0020; read/verify não demonstram cadeia ou lógica.
-Ler ROADMAP 3.2; registrar plano e ADR das decisões de persistência.
+Dependências prontas: appender exclusivo/SQLite/replay integral da 3.2,
+catálogo assinado da 3.1, CAS da 0.5 e LedgerView/lookup/PremiseRef/LedgerEntry
+da 1.5. Contratos em spec/ledger.md, spec/events.md, spec/obligation.md e
+ADRs 0012/0020/0021. Ler ROADMAP 3.3 e registrar plano/ADR antes do código.
 
-Implementar em logos-ledger appender único `Ledger::append(body)` que
-calcula seq/prev e assina, SQLite transacional (`BEGIN IMMEDIATE`), WAL,
-durabilidade/fsync e lock de arquivo de escritor. Abertura verifica cadeia
-inteira (ou checkpoint assinado válido) antes de aceitar appends.
-Não implementar índices (3.3), HSM (13.1), transparência (13.2),
-kernel/gateway nem políticas administrativas futuras.
+Implementar tabelas derivadas/reconstruíveis claims, deps e citable;
+consultas de estado/fórmula/dependentes/citabilidade e implementação da
+LedgerView para o gerador. Acrescentar `logos ledger rebuild-index`.
+Demonstrar igualdade após reconstruir índices de 100k eventos e p99 <1ms
+em is_citable com 1M eventos. Consultas específicas de UI e índices de ações
+ficam fora, assim como kernel, fatos/políticas de fases futuras e CAS/GC 3.5.
 
-Critérios: processo morto por SIGKILL em pontos aleatórios durante 10k
-appends, reabertura sempre com cadeia válida/sem buracos; segundo escritor
-em outro processo falha ao abrir. Demonstrar runtime/crash, regressões,
-mutantes e full verify antes de marcar conclusão.
+Decisões abertas: v1 recusa tabelas extras; escolher base derivada separada
+ou versão/migração explícita, com vetores; resolução de V/O pelo CAS,
+snapshot de referências e tratamento de objetos ausentes; atualização
+transacional/rebuild sem confundir bytes assinados com dados derivados.
+A fronteira LedgerView é confiável: erro/Unknown/Rejected não vira citável.
+Sem inventar autoridade lógica/admin a partir de assinaturas. Mecanismo
+de janelas/épocas da 3.4 continua separado.
 
-Decisões abertas: driver SQLite e dependências/allowlist TCB; layout,
-transação/lock/durabilidade e estratégia de recuperação/checkpoints.
-Riscos: crash entre assinatura e commit, seq duplicado, publicação de
-evento não durável, elo/chave/epoch adulterados. Não inferir validade
-lógica de CheckRecord nem privilégio de uma assinatura.
-Pendências remotas 0.1–3.1 separadas: local não fecha S3/ARM/CI/fuzz longo.
+Riscos conhecidos: custo linear de replay na abertura, TCB C do SQLite não
+incluída no contador Rust e falta de âncora externa contra sufixo truncado.
+Pendências remotas 0.1–3.2 separadas: local não fecha S3/ARM/CI/fuzz longo.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 7892 LOC próprios vs. 78287 LOC de dependências de execução
-  (+ 51581 só de compilação), após 3.1; logos-air: 1556 LOC, logos-obligation: 550 LOC, logos-model: 1845 LOC, logos-ledger: 1877 LOC.
-  Maiores: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
+- **Tamanho da TCB de correção (execução):** 8235 LOC Rust próprios + 105199
+  de dependências Rust = 113434 (+64508 só de compilação), após 3.2;
+  logos-air1556, logos-obligation550, logos-model1845, logos-ledger2220.
+  SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
+  por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
+  Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
   medição agora filtra pela plataforma do host e separa execução × compilação.
@@ -236,6 +255,11 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - Desde 2.5, ProducerError/AST/validação dos produtores ficam em model_context;
   z3_models não reexporta os símbolos movidos. Fallback usa ausência de candidato
   (None), pois API Z3 não distingue unknown/timeout/unsat finito.
+- Fuzz com LeakSanitizer dentro do sandbox terminou com erro de ptrace no
+  encerramento, mesmo após completar o tempo. Repetição fora do sandbox
+  passou; não contar a primeira execução como fuzz bem-sucedido nem desativar
+  sanitizers. Evitar fuzz/comandos sandbox concorrentes durante o autoteste:
+  corpus e montagem dos diretórios protegidos podem gerar avisos do tar.
 
 ## Diário (apenas acrescentar)
 
@@ -686,3 +710,38 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Sem appender/persistência/índices/kernel; formatos antigos inalterados.
   Memória, fuzz-src e logs preexistentes preservados fora do commit.
   Sem push/CI remota; próximo: 3.2, appender SQLite durável e recuperação.
+- **2026-10-15** — Etapa 3.2 implementada sem subagentes: Ledger::open/append/
+  head, conexão privada rusqlite0.40.2 bundled/limits, SQLite3.53.2 WAL/FULL,
+  BEGIN IMMEDIATE e lock std::fs::File mantido até fechar a conexão. Replay
+  completo confere wire/assinaturas com chave externa fixa, seq/prev/epoch e
+  schema ledger-sqlite/v1; sem reparação silenciosa. Signer defeituoso não
+  persiste evento, erro de SQL/sync envenena append/head até reabrir.
+  ADR0021/spec/plano/vetor layout/manifesto/allowlist/locks e CI atualizados;
+  event/v1 e demais wires/domínios permanecem iguais. 48 testes no crate,
+  16 novos (14 integração, incluindo entrada de subprocesso, +2 unitários).
+  Vetores independentes 18/18 reproduzidos byte a byte pelo appender;
+  adulterações isolam assinatura, prev, seq/coluna/epoch e schema. Nove
+  mutantes compilados capturados, sem erro de compilação contado como morto;
+  fontes restauradas. Logs locais em target/ledger-mutations, reprodução
+  descrita no plano. Primeiro alvo teve fixture JSON tratada como array em
+  vez de objeto com vectors; corrigida. Clippy detectou import obsoleto e
+  chunks_exact constantes; corrigidos sem allows novos.
+  Worker release/oráculo canon/hashlib/Ed25519 Python público independente:
+  10k eventos/24 SIGKILLs, zero perdas de appends reconhecidos e commits sem
+  resposta preservados; segundo escritor real recusado antes da transação.
+  Primeiro smoke62,57s/9999 reconhecidos; na verificação64,50s/9996;
+  todos10000 persistidos e conferidos por ambos os leitores ao final.
+  Full ci/verify.sh --selftest: VERIFY_OK, exit0; workspace/smokes/guards/
+  supply-chain/vetores, 227 Python113,64s +25 TCB1,84s. Avisos deny anteriores
+  apenas. Autoteste concorrente avisou tar por corpus alterado; repetição
+  com comando sandbox concorrente avisou diretório raiz. Execução final
+  isolada passou sem avisos e com todos os controles pelo diagnóstico certo.
+  Fuzz nightly-2026-09-28 no script oficial: primeira execução132337/61s
+  acabou exit1 por LeakSanitizer/ptrace do sandbox, não foi contada como
+  sucesso. Repetição fora do sandbox139749/61s, exit0, sem crash, max_len4096;
+  sem desativar sanitizers/RUSTC_BOOTSTRAP. Log preexistente restaurado;
+  logs desta sessão em target/event-decode-3.2*.log. TCB Rust8235+105199=
+  113434, build-only64508, ledger2220; SQLite C176466 contado separadamente,
+  fora do medidor Rust. Sem índices/citabilidade/CAS-integrado/kernel/HSM/
+  transparência. Memória, fuzz-src, mutants.out e logs preexistentes fora
+  do commit. Sem push/CI remota; próximo: 3.3, índices e LedgerView reais.

@@ -58,6 +58,9 @@ jobs:
         run: cargo run -p logos-model --example checker_smoke
       - name: Smoke público dos eventos assinados
         run: cargo run -p logos-ledger --example events_smoke
+      - uses: astral-sh/setup-uv@v5
+      - name: Crash do ledger (SIGKILL, 10k appends, segundo escritor)
+        run: ci/check-ledger-crash.sh
 
   sort-coverage:
     name: Sort-checker (100% dos ramos LLVM)
@@ -167,7 +170,7 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/check_ledger_crash.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
       - run: uv run python ../tools/gen_crypto_vectors.py --check
       - run: uv run python ../tools/gen_cas_vectors.py --check

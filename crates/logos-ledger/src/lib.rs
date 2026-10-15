@@ -11,6 +11,9 @@ pub(crate) mod cas_domain;
 mod event;
 mod event_body;
 mod event_body_codec;
+mod ledger;
+mod ledger_error;
+mod ledger_store;
 
 pub use cas::{Cas, CasError, Limits};
 pub use event::{Event, EventError, MAX_EVENT_BYTES};
@@ -18,3 +21,5 @@ pub use event_body::{
     Authority, Certificate, CheckRecord, Checker, Consistency, EventBody, EventProposal,
     ModelObject, Route, TaintedText,
 };
+pub use ledger::{Ledger, LedgerHead};
+pub use ledger_error::LedgerError;
