@@ -77,7 +77,7 @@ name = "logos-ground"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/axioms.rs", "src/classify.rs", "src/error.rs", "src/lib.rs"]
 
 [[crate]]
 name = "logos-lrat"

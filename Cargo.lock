@@ -274,6 +274,15 @@ version = "0.0.0"
 [[package]]
 name = "logos-ground"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-model",
+ "logos-obligation",
+ "serde_json",
+]
 
 [[package]]
 name = "logos-kernel"

@@ -44,6 +44,7 @@ cargo run -p logos-model --example model_smoke   # modelo canônico, totalidade/
 cargo run -p logos-model --example eval_smoke   # true/false/Defined/Steps/entradas inválidas
 cargo run -p logos-ledger --example checker_smoke   # refutação/consistência, bytes/h(O) e CAS real
 ci/check-audit.sh                                # auditor independente,4 refutações e export sem banco
+cargo run -p logos-ground --example fragment_smoke # classificação/candidatos, fontes ainda opacas
 cargo run -p logos-ledger --example events_smoke   # eventos/autoridade reais, adulteração rejeitada
 (cd py && uv run python -m logos_provers.z3_models_smoke)   # produtor Z3 → checker Rust real
 (cd py && uv run python -m logos_provers.model_explain_smoke)   # 20 refutações → português + h(M)
@@ -281,4 +282,8 @@ esse arquivo sem banco original. Chave externa obrigatória, sem kernel/ledger
 na árvore de dependências; contrato em [`spec/audit.md`](spec/audit.md).
 
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
+Etapa4.1 oferece classificação conservadora de O/V e candidatos de fecho/
+nomes únicos com fonte declarada, sem modificar O ou emitir claims. Integrações
+autenticadas permanecem em6.1/7.3/7.5 por decisão do mantenedor (ADR0026).
+Contrato e limites em [`spec/finite-fragment.md`](spec/finite-fragment.md).
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

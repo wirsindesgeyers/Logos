@@ -803,27 +803,31 @@ Estimativa revisada de P para M (ADR0024): inventário completo, migração de f
 
 Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, terminando num certificado LRAT checado por um programa formalmente verificado (cake_lpr). É a rota B da §9, a que autoriza efeitos.
 
-### Etapa 4.1 — Fragmento "domínio finito" · `P` · ⚠ TCB
+### Etapa 4.1 — Fragmento "domínio finito" · `M` · ⚠ TCB
 
-**Depende de (recebe pronto).** 1.2 — `Enumerated`, `domain_source`; 1.5 — `Obligation`.
+**Contrato ajustado pelo mantenedor:** proposta A do [ADR0026](docs/adr/0026-contrato-de-fragmentos-e-fontes-de-fechamento.md), adotada em2026-10-15. Mecanismos genéricos aqui; critérios integrados preservados explicitamente em6.1/7.3/7.5. Estimativa P→M pela validação global de Defined, emissores limitados e regressões TCB.
 
-**Fora do escopo.** domínios `Open` (rota para a camada 2); grounding lazy.
+**Depende de (recebe pronto).** 1.2 — `Enumerated`, `domain_source`; 1.5 — `Obligation`; 2.2 — avaliador para os testes semânticos.
+
+**Fora do escopo.** grounding de domínios `Open` (rota para a camada2); grounding lazy; ingestão/autenticação de fatos/políticas e alteração de O; completion de predicados com fontes reais (7.3/7.5); emissão de claims/roteamento do kernel (5.4/7.4).
 
 **Entregáveis.**
-- `classify(O, V) -> Fragment`: `FiniteDomain` se todo sort quantificado é `Enumerated` e não há símbolos de função com contradomínio `Open`; caso contrário, `General`.
-- Os axiomas de fecho de domínio (`∀u:User. u = alice ∨ u = bob`) e de nomes únicos (`alice ≠ bob`) entram **como premissas explícitas** derivadas da fonte da enumeração (fato ou política), não como pressupostos implícitos do grounder.
-- **Fechamento de predicados** (necessário para negação, ver 7.3): quando uma obrigação usa `¬P(…)` sobre um predicado cuja extensão vem de fatos ou regras, o mesmo mecanismo gera o axioma de fechamento (completion de Clark) de `P` — por exemplo, `∀x. Executed(backup(x)) ↔ (x = db1 ∨ x = db2)` — como premissa explícita, cuja fonte é um compromisso de completude (raiz Merkle da política na 7.2, ou projeção do ledger com `as_of: h(head)` na 7.5). Sem esse axioma, a negação não é derivável na rota clássica, e isso é o comportamento correto.
+- `classify(O,V) -> Result<Fragment,GroundError>`: contexto/identidade de V conferidos antes de `FiniteDomain`/`General`. Política conservadora sobre todo V e todas as definições: quantificadores, parâmetros Defined e resultados de valores Const/Func com sort Open exigem General. Entrada inválida/limite é erro, nunca fallback General.
+- Candidatos lógicos aos axiomas de fecho de domínio (`∀u:User. u = alice ∨ u = bob`) e nomes únicos (`alice ≠ bob`), com AIR tipado, limites explícitos e DomainSource/h(V) preservados. Nenhuma conversão para PremiseRef, injeção em O ou autenticação implícita.
+- Axiomas autenticados devem entrar explicitamente em O/used/deps nas integrações6.1 e7.3. Completion de predicados e compromisso de completude pertencem à ponte7.3, repetida para projeções em7.5; ausência de fatos não vira negação clássica.
 
 **Critério de conclusão.**
-- [ ] Obrigação com sort `Open` quantificado é classificada `General` e roteada para fora da camada 1.
-- [ ] Os axiomas de fecho aparecem em `O` e no `deps` do claim (rastreáveis à fonte da enumeração).
-- [ ] Teste: `¬P(c)` não é provável sem o axioma de fechamento de `P` e passa a ser com ele; o axioma aparece em `used` com a fonte do compromisso de completude.
+- [x] Open quantificado é General; matrizes de casos enumerados/valores Open/Defined e erro de V/limites demonstram classificação conservadora determinística sem autorização. Dez regressões em logos-ground e smoke público passaram; mutantes compilados detectados ([evidência](docs/plans/etapa-4.1.md) §7).
+- [x] Candidatos para enumerações vazias/singleton/múltiplas têm AIR exato, sort-check, fonte/h(V) preservados, limites e semântica conferida pelo avaliador com controles Open de mesmas assinaturas que permitem violar fecho/nomes únicos. Oito vetores independentes e 288 interpretações de controle passaram; full verify/selftest VERIFY_OK, exit0.
+- [x] Os dois critérios integrados originais estão preservados, desmarcados, em6.1/7.3/7.5 com dependências explícitas. Nenhum candidato opaco é relatado como premissa autenticada ou proof/claim. Contrato documentado em ADR0026/spec/finite-fragment.md; smoke source=opaque/claims=0.
 
 ---
 
 ### Etapa 4.2 — Grounder · `M` · ⚠ TCB
 
-**Depende de (recebe pronto).** 4.1; 2.2 — avaliador (usado no teste semântico).
+**Depende de (recebe pronto).** 4.1 — classificador/candidatos de axiomas (ADR0026); 2.2 — avaliador (usado no teste semântico).
+
+**Fronteira de fontes.** Axiomas usados devem estar explícitos em O; testes condicionais com hipóteses não demonstram fonte factual/política. Não inferir fecho implícito no grounder para contornar integrações6.1/7.3.
 
 **Fora do escopo.** grounding incremental/lazy (Apêndice E); funções com contradomínio `Open`.
 
@@ -998,6 +1002,7 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
   - `Rejected` → claim volta a `Pending`, evento `CertificateRejected` (não é refutação);
   - `Unknown(_)` → evento `UnknownRecorded` com limites; claim fica `Pending` ou vai a `Unknown` após política de tentativas.
 - `Refute` → checker da camada 0 → `Refuted`.
+- Recusar uso autorizador de fontes de enumeração ainda não resolvidas/autenticadas (ADR0026); DomainSource opaco não vira confiança ou premissa por cast.
 
 **Critério de conclusão.**
 - [ ] **Invariantes P3 e P4**: não existe caminho de código que leve a `Verified` sem `CheckOutcome::Accepted` de um checker ativo (teste de propriedade + revisão; formalizado na Fase 12).
@@ -1142,7 +1147,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 
 ### Etapa 6.1 — Objeto `Fact` · `P` · ⚠ TCB
 
-**Depende de (recebe pronto).** 1.1, 1.2; 0.4 — assinatura; 3.1 — eventos; 3.4 — EpochRange e mecanismo de épocas; 5.3 — citação.
+**Depende de (recebe pronto).** 1.1, 1.2; 0.4 — assinatura; 3.1 — eventos; 3.4 — EpochRange e mecanismo de épocas; 5.3 — citação; 4.1/4.7/5.4/3.3 — integração de axiomas/used/deps de fonte Fact (ADR0026).
 
 **Fora do escopo.** confiança por tópico (6.2).
 
@@ -1155,6 +1160,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - [ ] Fato com assinatura de emissor desconhecido → recusado.
 - [ ] Fato expirado → não citável.
 - [ ] Fato assinado por emissor reconhecido, registrado no ledger real com validade [3,5], é citável em 4 e recusado em 6 pela LedgerView/gerador reais. Critério integrado preservado da 3.4 por decisão do mantenedor (ADR 0023); sem view falsa ou janela confiada ao cache.
+- [ ] Fonte Fact de enumeração autenticada e resolvida pelo evento correto produz axiomas explícitos em O; certificado real usa os axiomas e used/deps rastreiam a fonte; fonte ausente/adulterada é recusada. Parte factual do critério original4.1, preservada por ADR0026; sem copiar hash de payload para PremiseRef.
 
 ---
 
@@ -1293,7 +1299,7 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 
 ### Etapa 7.3 — Avaliador direto (rota L2) · `M` · ⚠ TCB
 
-**Depende de (recebe pronto).** 7.1, 7.2; 6.1 — fatos; 4.1 — axiomas de fechamento; 4.6 — rota LRAT (para o teste diferencial).
+**Depende de (recebe pronto).** 7.1, 7.2; 6.1 — fatos; 4.1 — candidatos de axiomas; 4.6 — rota LRAT (para o teste diferencial); 4.7/5.4/3.3 — prova/used/deps (ADR0026).
 
 **Fora do escopo.** recursão não estratificada; agregações.
 
@@ -1309,6 +1315,7 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 - [ ] Teste diferencial avaliador × grounding+LRAT (Fase 4) sobre 2k pares (política, ação), **com axiomas de completion na rota FOL**: mesmo veredicto. Pelo menos 30% dos pares usam regras com negação.
 - [ ] Teste de controle: nos pares com negação, a rota FOL **sem** os axiomas de completion não prova `Allowed` (mostra que a ponte é necessária, e não um acaso do corpus).
 - [ ] Benchmark: p99 < 5 ms para políticas de 500 regras e 10k fatos.
+- [ ] Fonte Policy7.2 autenticada produz axiomas explícitos em O/used/deps rastreáveis à fonte da enumeração. `¬P(c)` não tem prova sem completion e tem prova com ela; certificado LRAT rechecado e fonte do compromisso de completude em used/deps. Critérios integrados originais4.1 preservados por ADR0026; sem fechamento inferido de ausência de fatos. Não depender da7.5 para este teste de política.
 
 ---
 
@@ -1329,7 +1336,7 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 
 ### Etapa 7.5 — Fatos do próprio ledger (políticas de trajetória) · `M` · ⚠ TCB
 
-**Depende de (recebe pronto).** 7.3; 3.3 — índices; 6.1 — formato de fato.
+**Depende de (recebe pronto).** 7.3; 3.3 — índices; 6.1 — formato de fato; 4.1/4.7/5.4 — axiomas/prova/used (ADR0026).
 
 **Fora do escopo.** TOCTOU das projeções (tratado na 8.5).
 
@@ -1342,6 +1349,7 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 **Critério de conclusão.**
 - [ ] Cenário de decomposição (§10, ameaça 12): política "no máximo 3 deleções por sessão"; o agente tenta 4 deleções de tabelas separadas → a 4ª é recusada.
 - [ ] Cenário: `drop(x)` exige `Executed(backup(x))` na última hora → sem backup, recusado; após backup executado via gateway, permitido.
+- [ ] Repetir o controle sem/com completion e prova/used/deps da7.3 para projeção assinada com `as_of: h(head)` como fonte do compromisso de completude (critério original4.1, ADR0026); a fonte em O/used é a projeção autenticada correta.
 
 ---
 

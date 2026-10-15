@@ -9,7 +9,7 @@ on:
         description: "Segundos por target"
         default: "3600"
   pull_request:
-    paths: ["fuzz/**", "crates/**", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py"] # smoke de poucos minutos
+    paths: ["fuzz/**", "crates/**", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py", "spec/finite-fragment.md", "spec/vectors/fragment/**", "tools/gen_fragment_vectors.py"] # smoke de poucos minutos
 
 permissions:
   contents: read
