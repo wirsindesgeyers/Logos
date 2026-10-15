@@ -9,10 +9,11 @@ use std::fs;
 use logos_air::{Formula, FormulaNode, Limits as AirLimits, Vocabulary};
 use logos_canon::{Text, Value, from_canon, to_canon};
 use logos_core::{Budget, CheckOutcome, Exhausted};
-use logos_crypto::{FileSigner, Hash, Signer, hash};
+use logos_crypto::{FileSigner, Hash, Signer, hash, hash_raw};
 use logos_ledger::{
-    Authority, Cas, CheckRecord, Consistency, Event, EventBody, EventProposal, IndexComparison,
-    Ledger, LedgerError, LedgerIndex, Limits, Route, TaintedText,
+    Authority, Cas, Certificate, CheckRecord, Checker, Consistency, Event, EventBody,
+    EventProposal, IndexComparison, Ledger, LedgerError, LedgerIndex, Limits, ModelObject, Route,
+    TaintedText,
 };
 use logos_obligation::{EntryKind, LedgerView, Obligation, PremiseRef, Proposal, Reject, generate};
 use rusqlite::{Connection, params};
@@ -31,6 +32,9 @@ impl Fixture {
         let cas = Cas::open(temp.0.join("cas"), Limits::default()).unwrap();
         let vocabulary = Vocabulary::new(1, vec![], vec![]).unwrap();
         let hv = cas.put(&to_canon(&vocabulary).unwrap()).unwrap();
+        cas.put::<Certificate>(b"fixture-cert").unwrap();
+        cas.put::<Checker>(b"fixture-checker").unwrap();
+        cas.put::<ModelObject>(&[0x80]).unwrap();
         Self {
             temp,
             signer: signer(),
@@ -88,8 +92,8 @@ fn premise(id: Hash<Event>) -> PremiseRef {
 fn check(ho: Hash<Obligation>) -> CheckRecord {
     CheckRecord {
         obligation: ho,
-        certificate: Hash::from_bytes([2; 32]),
-        checker: Hash::from_bytes([3; 32]),
+        certificate: hash_raw::<Certificate>(b"fixture-cert"),
+        checker: hash_raw::<Checker>(b"fixture-checker"),
         budget: Budget {
             steps: 100,
             mem_bytes: 1024,
@@ -140,7 +144,7 @@ fn retract(id: Hash<Event>, signer: &FileSigner) -> EventBody {
 fn revoke(signer: &FileSigner) -> EventBody {
     receipt(
         EventBody::CheckerRevoked {
-            checker: Hash::from_bytes([3; 32]),
+            checker: hash_raw::<Checker>(b"fixture-checker"),
             reason: Text::new("fixture").unwrap(),
             authority: Authority {
                 key: signer.key_id().unwrap(),
@@ -200,7 +204,7 @@ fn statuses_dependencies_and_real_generation_bind_event_ids_to_cas_objects() {
         &ledger
             .append(EventBody::Refuted {
                 check: check(negative),
-                model: Hash::from_bytes([4; 32]),
+                model: hash_raw::<ModelObject>(&[0x80]),
             })
             .unwrap(),
     )
@@ -580,8 +584,18 @@ fn advancing_epoch_never_promotes_unknown_or_invalidated_records() {
 fn missing_or_corrupt_cas_never_creates_placeholder_formulas() {
     let fixture = Fixture::new();
     let mut ledger = fixture.ledger();
-    let missing = Hash::from_bytes([0xee; 32]);
+    let missing = fixture.obligation(&ledger, &[], &truth());
     let event = hash(&ledger.append(verified(missing, vec![], vec![])).unwrap()).unwrap();
+    let hex = missing.to_hex();
+    fs::remove_file(
+        fixture
+            .temp
+            .0
+            .join("cas/obligation-v1")
+            .join(&hex[..2])
+            .join(&hex[2..]),
+    )
+    .unwrap();
     let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
     let index = ledger.index().unwrap();
     assert!(matches!(
@@ -759,9 +773,10 @@ fn invalid_source_or_used_premise_cannot_publish_or_repair_signed_history() {
     let index = ledger.index().unwrap();
     drop(index);
     let before = fs::read(fixture.cache()).unwrap();
+    let ho = fixture.cas.put::<Obligation>(&[0x80]).unwrap();
     ledger
         .append(verified(
-            Hash::from_bytes([0; 32]),
+            ho,
             vec![Hash::from_bytes([0xff; 32])],
             vec![Hash::from_bytes([0xff; 32])],
         ))

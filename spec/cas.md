@@ -77,6 +77,10 @@ Remover temporário restante em falha: `NotFound` é limpeza já satisfeita. Se 
 falhar, `Io` preserva kind primário, ambos os diagnósticos e primário em `source()`.
 GC, replicação, compressão e streaming real ficam fora de cas/v1.
 
+Etapa3.5 acrescenta `Cas::open_existing(root, limits)` (não cria/sincroniza
+diretórios) e integra o store ao appender. A CLI oferece GC somente dry-run;
+contrato em [ledger-cas.md](ledger-cas.md), sem alteração do layout cas/v1.
+
 ## 4. Exemplos independentes
 
 Tabela de entrada para vetores; bytes hex vazios representados por `-`:

@@ -34,6 +34,10 @@ fuzz_target!(|data: &[u8]| {
     if let Ok(event) = Event::decode(data) {
         // Seeds de envelope também exercitam o decoder isolado do corpo v2.
         roundtrip::<EventBody>(&to_canon(&event.body).expect("body encodes"));
+        let refs = event.body.cas_references();
+        let body: EventBody =
+            from_canon(&to_canon(&event.body).expect("body encodes")).expect("body decodes");
+        assert_eq!(refs, body.cas_references());
         event
             .body
             .validate()

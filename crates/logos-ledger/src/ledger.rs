@@ -99,6 +99,7 @@ pub struct Ledger<'a, S: Signer> {
     public_key: PublicKey,
     head: Option<LedgerHead>,
     poisoned: bool,
+    cas: crate::Cas,
 }
 
 impl<'a, S: Signer> Ledger<'a, S> {
@@ -138,6 +139,15 @@ impl<'a, S: Signer> Ledger<'a, S> {
         let head = scan(&transaction, &public_key, |_, _| Ok(()))?;
         transaction.commit()?;
         directory.sync_all()?;
+        let cas_path = path.join("cas");
+        match fs::symlink_metadata(&cas_path) {
+            Ok(metadata) if !metadata.is_dir() => {
+                return Err(LedgerError::Invalid("CAS root is not a directory"));
+            }
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => return Err(error.into()),
+            _ => {}
+        }
+        let cas = crate::Cas::open(cas_path, crate::Limits::default())?;
         Ok(Self {
             connection,
             directory,
@@ -147,7 +157,14 @@ impl<'a, S: Signer> Ledger<'a, S> {
             public_key,
             head,
             poisoned: false,
+            cas,
         })
+    }
+
+    /// CAS obrigatório associado a este appender (DIRECTORY/cas).
+    #[must_use]
+    pub fn cas(&self) -> &crate::Cas {
+        &self.cas
     }
 
     /// Cabeça confirmada; após falha de persistência exige reabertura.
@@ -179,6 +196,10 @@ impl<'a, S: Signer> Ledger<'a, S> {
     pub fn append(&mut self, body: EventBody) -> Result<Event, LedgerError> {
         if self.poisoned {
             return Err(LedgerError::Poisoned);
+        }
+        body.validate()?;
+        for reference in body.cas_references() {
+            reference.require(&self.cas)?;
         }
         let event = Event::sign(
             next_seq(self.head)?,

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use logos_canon::Text;
-use logos_crypto::{FileSigner, Hash, Signer};
+use logos_crypto::{FileSigner, Signer, hash_raw};
 use logos_ledger::{EventBody, Route};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -18,7 +18,15 @@ impl Temp {
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
             match fs::create_dir(&path) {
-                Ok(()) => return Self(path),
+                Ok(()) => {
+                    let cas =
+                        logos_ledger::Cas::open(path.join("cas"), logos_ledger::Limits::default())
+                            .unwrap();
+                    for id in [1u8, 2, 3] {
+                        cas.put::<logos_obligation::Obligation>(&[id]).unwrap();
+                    }
+                    return Self(path);
+                }
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
                 Err(e) => panic!("create temp: {e}"),
             }
@@ -48,7 +56,7 @@ pub fn genesis(signer: &impl Signer) -> EventBody {
 
 pub fn ordinary(id: u8) -> EventBody {
     EventBody::ObligationCreated {
-        obligation: Hash::from_bytes([id; 32]),
+        obligation: hash_raw::<logos_obligation::Obligation>(&[id]),
         route: Route::Model,
         artifact: [id; 32],
     }

@@ -233,6 +233,7 @@ dependencies = [
 name = "logos-cli"
 version = "0.0.0"
 dependencies = [
+ "logos-canon",
  "logos-crypto",
  "logos-ledger",
 ]

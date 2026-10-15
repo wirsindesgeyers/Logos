@@ -258,5 +258,16 @@ Contrato em [`spec/epochs.md`](spec/epochs.md) e
 [`spec/events.md`](spec/events.md), decisão em
 [`ADR0023`](docs/adr/0023-contrato-de-epocas-e-fatos.md).
 
+Etapa 3.5 associa o appender ao CAS em `DIRECTORY/cas`: `ledger.cas().put(...)`
+precede `append`, que confere todas as referências, inclusive as de checks
+de consistência, antes de assinar. Hash ausente, domínio errado, corrupção,
+limite ou caminho irregular falham sem consumir seq/head. Histórico anterior
+continua legível, sem migração dos bytes assinados.
+`logos ledger gc --dry-run DIR --public-key HEX` usa somente chave pública,
+lista candidatos a órfãos e temporários e conserva links canônicos de forma
+conservadora; não remove arquivos. SQLite pode manter sidecars de coordenação
+durante leitura. Contrato em [`spec/ledger-cas.md`](spec/ledger-cas.md), decisão
+em [`ADR 0024`](docs/adr/0024-cas-antes-do-append-e-gc-dry-run.md).
+
 Grounding é declarado, não demonstrado; parsing e tipagem não são prova lógica.
 Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).

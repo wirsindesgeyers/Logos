@@ -3,7 +3,7 @@
 use std::io::{self, Write};
 use std::path::Path;
 
-use logos_crypto::{FileSigner, Hash, Signer, hash};
+use logos_crypto::{FileSigner, Signer, hash};
 use logos_ledger::{EventBody, Ledger, LedgerError, Route};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 chunk.copy_from_slice(&seq.to_be_bytes());
             }
             EventBody::ObligationCreated {
-                obligation: Hash::from_bytes(bytes),
+                obligation: ledger.cas().put(&logos_canon::to_canon(&seq)?)?,
                 route: Route::Model,
                 artifact: bytes,
             }

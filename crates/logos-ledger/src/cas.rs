@@ -113,6 +113,52 @@ pub struct Cas {
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 impl Cas {
+    /// Abre somente raiz existente e regular, sem criar/sincronizar diretórios.
+    ///
+    /// # Errors
+    /// Raiz ausente, symlink, tipo inválido ou erro de leitura.
+    pub fn open_existing(root: impl AsRef<Path>, limits: Limits) -> Result<Self, CasError> {
+        let root = root.as_ref();
+        if !fs::symlink_metadata(root)?.is_dir() {
+            return Err(
+                io::Error::new(io::ErrorKind::InvalidInput, "CAS root is not a directory").into(),
+            );
+        }
+        Ok(Self {
+            root: root.canonicalize()?,
+            limits,
+            #[cfg(test)]
+            hook: None,
+        })
+    }
+
+    pub(crate) fn verified_present<T: Domain>(&self, hash: &Hash<T>) -> Result<bool, CasError> {
+        let index = domain::<T>()?;
+        let directory = self.root.join(DOMAINS[index].directory);
+        let path = self.object_path(index, hash)?;
+        let shard = path
+            .parent()
+            .ok_or_else(|| io::Error::other("missing CAS shard"))?;
+        for (entry, directory) in [(&directory as &Path, true), (shard, true), (&path, false)] {
+            let metadata = match fs::symlink_metadata(entry) {
+                Ok(metadata) => metadata,
+                Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+                Err(error) => return Err(error.into()),
+            };
+            if if directory {
+                !metadata.is_dir()
+            } else {
+                !metadata.is_file()
+            } {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "CAS reference is not a regular path",
+                )
+                .into());
+            }
+        }
+        Ok(self.get(hash)?.is_some())
+    }
     /// Cria/abre raiz CAS e sincroniza ancestrais até raiz do filesystem.
     ///
     /// # Errors

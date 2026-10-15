@@ -22,6 +22,8 @@ application_id=0 e user_version=0 pode ser inicializada transacionalmente.
 Outra versão/schema MUST ser recusada. Não converter base desconhecida.
 Índices da 3.3 ficam em index.sqlite3 separado ([ledger-index.md](ledger-index.md));
 não acrescentar tabelas derivadas a este formato v1.
+Etapa3.5 associa o store cas/v1 em `cas/` sob esse diretório; não altera
+schema/wire. Integração e GC de diagnóstico em [ledger-cas.md](ledger-cas.md).
 wire contém exatamente canon(Event) segundo spec/events.md, até 16 MiB.
 Coluna seq MUST coincidir com event.seq, no intervalo 0..i64::MAX.
 Sem hash/assinatura duplicado no banco: a fonte são os bytes de wire.
@@ -55,6 +57,11 @@ INSERT explícito dentro de BEGIN IMMEDIATE, seguido de COMMIT e sync_all do
 diretório. Somente depois devolver Event e atualizar head em memória.
 Ninguém fornece cabeçalho/assinatura pronta ao appender.
 
+Desde a3.5, validar body e conferir presença regular/integridade/limites de
+todas as referências CAS antes da assinatura e SQL. Objetos precisam de put
+durável em `ledger.cas()` antes do append, sem flag de bypass. Ausência/erro
+nesse ponto preserva seq/head/handle. Detalhes do inventário em ledger-cas.md.
+
 Erros de construção/assinatura antes da persistência não consomem seq.
 Qualquer falha de persistência MUST tornar append/head indisponíveis até
 reabrir; o resultado do commit pode ser ambíguo. Evento confirmado sem resposta
@@ -65,7 +72,8 @@ exactly-once para retries do chamador.
 ## 4. Limites de garantia e reprodução
 
 Uma chave fixa por ledger. Verificação de assinatura não demonstra validade
-lógica, autoridade administrativa ou existência de objetos no CAS (3.5).
+lógica ou autoridade administrativa. Novo append confere objetos no CAS
+(3.5), mas replay histórico não afirma disponibilidade retroativa ou atual.
 Remover um sufixo inteiro deixa um prefixo válido: detecção exige âncora
 externa (13.2). Lock pressupõe escritores cooperativos e inodes estáveis.
 Durabilidade depende de sync honrado pelo SO/VFS/disco. SIGKILL não simula

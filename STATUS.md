@@ -35,8 +35,8 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 9056+105199=114255 LOC de correção, build-only64508;
-logos-core344, logos-ledger2980, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+TCB atual Rust: 9285+105199=114484 LOC de correção, build-only64508;
+logos-core344, logos-ledger3209, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
@@ -75,6 +75,13 @@ código. EpochRange inclusivo u64 e opcionais de EpochAdvanced com corpo v2;
 49 testes direcionados/Clippy e oito mutantes passaram. Fuzz core172375/61s
 e event107491/61s, exit0 sem crash. Full verify/selftest VERIFY_OK, exit0,
 227 Python +25 TCB, autoteste sem avisos. Integração Fact fica na6.1.
+3.5: CAS obrigatório em DIRECTORY/cas antes de assinar;
+inventário tipado incluindo checks aninhados. CLI gc somente dry-run com
+chave pública, candidatos conservadores/temporários e preservação de objetos.
+78 testes ledger/CLI passaram, dez novos;28 ausências individuais recusadas
+antes do Signer/SQL. Nove mutantes capturados, fontes restauradas; fuzz99066/61s,
+exit0 sem crash. Full verify/selftest VERIFY_OK, exit0,227 Python +25 TCB,
+autoteste sem avisos. ADR0024/plano/spec registram contrato e sidecars SQLite.
 
 ## Etapas da Fase 0
 
@@ -122,6 +129,7 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
 | 3.2 Appender com hash chain | ✅ concluída localmente | SQLite WAL/FULL, lock de escritor, replay integral, 16 testes novos/48 no crate e nove mutantes capturados. LEDGER_CRASH_OK: 10k eventos/24 SIGKILLs, zero perdas de appends reconhecidos; segundo processo recusado. Full verify/selftest VERIFY_OK, exit 0; autoteste isolado sem avisos; fuzz final 139749/61 s, exit 0. [Plano](docs/plans/etapa-3.2.md) §7, ADR 0021 e spec/ledger.md. CI/ARM/fuzz longo não observados. |
 | 3.3 Índices e consultas | ✅ concluída localmente | LedgerView/CAS/escopo e claims/deps/citable reais, cache derivado sem autoridade, CLI com chave pública. 17 testes novos e onze mutantes capturados; reconstrução100k preservou todas as cinco tabelas. 1M/20000 consultas: p99=36573ns, build252133ms fora da latência. Full verify/selftest VERIFY_OK, exit0; fuzz92653/61s, exit0, sem crash. [Plano](docs/plans/etapa-3.3.md) §7, ADR 0022 e spec/ledger-index.md. CI/ARM/fuzz longo não observados. |
 | 3.4 Épocas | ✅ concluída localmente | Divisão A adotada pelo mantenedor (ADR0023): EpochRange genérico e opcionais com epoch-body/v2; teste integrado Fact preservado na6.1. Seis regressões novas,22 vetores (18 idênticos), oito mutantes e fuzz core/event172375/107491 execuções sem crash. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-3.4.md)/[spec](spec/epochs.md). CI/ARM/fuzz longo pendentes. |
+| 3.5 CAS integrado ao ledger | ✅ concluída localmente | Appender sem bypass, inventário completo do catálogo, CLI gc somente dry-run. Dez testes novos,28 omissões individuais,78 testes ledger/CLI e nove mutantes passaram; fuzz99066/61s sem crash. Full verify/selftest VERIFY_OK, exit0,227 Python +25 TCB. [Plano](docs/plans/etapa-3.5.md)/[spec](spec/ledger-cas.md)/ADR0024. CI/ARM/fuzz longo pendentes. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -159,6 +167,9 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fases 4–23 não iniciadas.
    event_decode recebe os22 vetores (incluindo corpo v2) pelo runner existente,
    core_decode exercita limites do intervalo. Smokes locais de61s passaram;
    remoto/ARM e ≥1h continuam pendentes, sem integração de Fact antecipada.
+   Integração3.5: dez testes novos no workspace nativo, worker/oráculo de
+   crash confere objetos CAS e inventário do body exercitado em event_decode.
+   Demonstração local passou; CI/ARM e fuzz longo ainda não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -228,37 +239,39 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa 3.5 — CAS integrado ao ledger (`P`)
+## Próximo passo: Etapa 3.6 — auditor independente (`M`), começando pelo contrato
 
-Dependências prontas: appender durável/replay/lock da3.2 e Cas put/get com
-integridade da0.5. Catálogo atual inclui EpochAdvanced com opcionais da3.4;
-índices/CLI com chave pública da3.3 podem apoiar consultas, sem virar autoridade.
-Ler ROADMAP3.5, spec/cas.md, spec/events.md e spec/ledger.md; criar plano/ADR
-antes de fixar decisões abertas. Não implementar auditor3.6 ou fatos6.1.
+Prontos: canon/crypto0.3/0.4, ModelChecker/FiniteModel/reader de O da2.3,
+spec/events.md (inclui epoch-body/v2), spec/cas.md e spec/ledger.md com layout
+SQLite. `logos-audit` ainda é esqueleto sem dependências. Ler ROADMAP3.6 e
+criar plano/ADR antes do código. Não implementar LRAT4.5 ou transparência13.2.
 
-Garantir put → append: evento que referencia objeto inexistente/corrompido
-no CAS falha antes de persistir/assinar reconhecimento, sem consumir seq/head.
-Inventariar referências diretas e aninhadas (h(O), certificado, modelo,
-vocabulário etc.) e seus domínios. policy_root da3.4 é compromisso Merkle
-opaco, não hash de objeto Policy; não inventar esse objeto para verificá-lo.
-Adicionar `logos ledger gc --dry-run` para listar órfãos, sem apagar nada.
-Demonstrar falha com hash ausente e preservação de todos os referenciados.
+Resolver primeiro a fronteira de independência: `logos-model/Cargo.toml`
+ainda depende de logos-ledger para helpers check_*_from_cas; métodos puros de
+ModelChecker já existem, mas importar o crate inteiro hoje cria dependência
+transitiva proibida. `ci/check-audit-independence.sh` percorre todas as arestas
+de metadata --all-features, inclusive dev; mover uma aresta para dev ou
+ocultá-la em feature não basta. Registrar no plano como disponibilizar o
+checker sem ledger/kernel, preservando P2 e sem contornar o guard por aliases.
+Se a interface necessária não estiver pronta, registrar bloqueio por §1.3.
 
-Decisões abertas: vínculo obrigatório entre Ledger e CAS que impeça bypass
-por append antigo; distinguir hashes de objetos de digests crus de binários/
-artefatos e compromissos; validar leitura histórica sem reescrever eventos;
-enumerar objetos temporários/domínios sem seguir symlinks ou ocultar erros.
+Auditor reimplementa envelope/cadeia/assinatura e leitura CAS a partir da spec,
+sem usar LedgerIndex, ledger_references ou appender. Comandos verify/export
+usam chave pública externa; verify recheca100% dos Refuted por modelos e
+relata falhas, export entrega eventos canônicos sem depender de SQLite no
+consumidor. Demonstrar ≥10 adulterações e árvore sem ledger/kernel; observar
+CI onde o critério exigir. Nunca confundir assinatura válida com prova lógica.
 
-Riscos: falha após put e antes de append deixa órfão legítimo; dry-run apenas
-informa. Não converter I/O em ausência ou ignorar referências de consistência.
-Snapshots mantêm lock e replay integral (250s com1M nesta máquina), sem
-âncora contra rollback. Pendências remotas0.1–3.4 continuam separadas.
+Riscos: adulteração de sufixo válido sem âncora continua indetectável;
+checker não pode confiar em bytes só porque veio de outro transporte CAS.
+GC3.5 é diagnóstico dependente do ledger, não auditor independente.
+Pendências remotas0.1–3.5 continuam separadas de implementação nova.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 9056 LOC Rust próprios + 105199
-  de dependências Rust = 114255 (+64508 só de compilação), após3.4;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1845, logos-ledger2980.
+- **Tamanho da TCB de correção (execução):** 9285 LOC Rust próprios + 105199
+  de dependências Rust = 114484 (+64508 só de compilação), após3.5;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1845, logos-ledger3209.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -271,6 +284,9 @@ Snapshots mantêm lock e replay integral (250s com1M nesta máquina), sem
 ## Armadilhas conhecidas
 
 Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `gen` reservado).
+- SQLite read-only pode criar/manter sidecars WAL/SHM; GC3.5 preserva objetos
+  CAS/banco principal e lê WAL confirmado. Não usar immutable para esconder
+  sidecars e acabar omitindo eventos. Testes de preservação distinguem esses arquivos.
 - `rust-analyzer` não existe na toolchain stable do ambiente; consulta LSP falhou na inicialização.
   Rust foi validado por compilação/clippy/testes, não por diagnósticos LSP.
 - Formatar ferramentas Python com `uv run ruff format ../tools/...` dentro de `py/`:
@@ -867,3 +883,45 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   ADR/plano/spec/README/ROADMAP/manifesto/STATUS atualizados. Memória, fontes
   fuzz alheias, logs e mutants.out preexistentes preservados fora do commit.
   Sem push/CI remota; próximo:3.5, integração CAS/append e GC só dry-run.
+- **2026-10-15** — Etapa3.5 implementada: Ledger possui CAS obrigatório em
+  DIRECTORY/cas, getter cas() para put e conferência de todas as referências
+  antes de Signer::sign/SQL. CasReference deduplica cinco domínios e inclui
+  todos os CheckRecords de consistência, Witness.model e EpochAdvanced.vocab.
+  Arquivo regular/limites/hash exigidos; ausência/erro não consome seq/head
+  ou envenena handle. Sem bypass público; replay antigo permanece legível.
+  Helper ledger_references confere cadeia/schema/assinatura sob lock existente
+  mantido até Drop; open_existing não cria raiz CAS. GC fora da TCB, somente
+  --dry-run/chave pública, inventário dos16 domínios, rejeição de symlinks/
+  layout/nomes inválidos, integridade de candidatos e raízes diretas completas.
+  Marcação canônica conservadora por bytes32 em mapas/arrays, raw como folha;
+  pode reter em excesso e não prova links ausentes/uso externo. Temporários
+  separados, nenhum objeto removido; falha não emite lista parcial.
+  Dez regressões novas (4 ledger/6 CLI);28 omissões individuais com contador
+  de assinatura/SQL/head e put/retry, integridade/domínio/limites/tipos/links,
+  WAL confirmado/locks/abertura sem criação e preservação de objetos/dados.
+  78 testes ledger/CLI passaram. Compilação inicial de teste tentou update
+  de enum como struct; campos explícitos corrigiram. Clippy apontou Vec
+  desnecessário em fixture, trocado por array. Quatro testes CLI iniciais
+  detectaram sidecars criados pelo SQLite read-only; contrato/testes passaram
+  a preservar objetos e dados, documentando coordenação sem ignorar WAL.
+  Nove mutantes compilados capturados por testes, fontes restauradas; nenhum
+  erro de compilação contado como detecção. Logs target/cas-integration-mutations.
+  Fuzz oficial event_decode/nightly-2026-09-28:99066/61s, exit0 sem crash,
+  sanitizers ativos/max_len4096, fora do sandbox por ptrace conhecido.
+  Log preexistente restaurado byte a byte; novo target/event-decode-3.5.log.
+  Full ci/verify.sh --selftest: VERIFY_OK, exit0; Rust/smokes/lints/manifesto/
+  independência/supply-chain/vetores,227 Python90,61s +25 TCB1,77s; autoteste
+  sem avisos e bloqueios pelos diagnósticos corretos. Só avisos deny anteriores.
+  Crash10k/24 SIGKILLs/9999 ACKs/64,90s, zero perdas; oráculo independente
+  confere todos os objetos CAS por seq. Rebuild100k/tabelas5 exatas;
+  1M/20000 consultas p99=21866ns, cold build255599ms excluído da latência.
+  TCB Rust9285+105199=114484 (+229 próprios), build-only64508; ledger3209.
+  CLI acrescenta canon local; nenhum pacote externo novo. SQLite C176466
+  separado do contador Rust. Sem novos formatos/vetores, auditor ou kernel.
+  Estimativa3.5 revisada P→M e marca TCB explicitada, sem mudar escopo/ordem.
+  ADR0024/plano/spec/README/manifesto/allowlist/STATUS atualizados. Memória,
+  fontes fuzz alheias, logs e mutants.out anteriores fora do commit.
+  Descoberta para3.6: logos-model ainda importa Cas do ledger; é preciso
+  resolver a dependência transitiva antes de usar o checker no auditor,
+  preservando o guard que inclui all-features/dev. Nenhuma refatoração da3.6
+  antecipada. Sem push/CI remota; próximo: contrato do auditor independente.

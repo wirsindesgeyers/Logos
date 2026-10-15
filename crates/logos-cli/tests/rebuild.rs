@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use logos_crypto::{FileSigner, Hash, Signer};
+use logos_crypto::{FileSigner, Signer};
 use logos_ledger::{EventBody, Ledger, Route};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -29,9 +29,10 @@ impl Fixture {
                 kernel_key: signer.key_id().unwrap(),
             })
             .unwrap();
+        let obligation = ledger.cas().put(&[marker]).unwrap();
         ledger
             .append(EventBody::ObligationCreated {
-                obligation: Hash::from_bytes([marker; 32]),
+                obligation,
                 route: Route::Model,
                 artifact: [0; 32],
             })

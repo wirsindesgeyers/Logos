@@ -158,3 +158,5 @@ FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 event_decode
 ```
 
 Vetores e smoke não provam lógica, autoridade de produção ou cadeia histórica.
+Desde a3.5, o appender exige objetos CAS antes de assinar; isso não altera
+o decoder/assinaturas ou bytes históricos. Ver [ledger-cas.md](ledger-cas.md).

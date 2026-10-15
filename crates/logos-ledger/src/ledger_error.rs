@@ -28,6 +28,8 @@ pub enum LedgerError {
     Crypto(logos_crypto::CryptoError),
     /// CAS ausente/corrompido/limitado durante resolução de premissa.
     Cas(crate::CasError),
+    /// Objeto CAS referenciado não existe no domínio declarado.
+    MissingObject(crate::CasReference),
     /// Obrigação contextual inválida ou acima dos limites.
     Obligation(logos_obligation::DecodeError),
 }
@@ -45,6 +47,7 @@ impl fmt::Display for LedgerError {
             Self::Canon(error) => write!(f, "ledger canon: {error}"),
             Self::Crypto(error) => write!(f, "ledger crypto: {error}"),
             Self::Cas(error) => write!(f, "ledger CAS: {error}"),
+            Self::MissingObject(reference) => write!(f, "missing CAS object {reference}"),
             Self::Obligation(error) => write!(f, "ledger obligation: {error}"),
         }
     }

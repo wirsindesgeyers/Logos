@@ -23,5 +23,7 @@ Proposta preserva texto tainted como UTF-8 bytes, não política/fórmula confi�
 3.4 demonstrada localmente: mantenedor adotou divisão A do
 [ADR0023](../adr/0023-contrato-de-epocas-e-fatos.md), mecanismo genérico agora
 e teste integrado de fatos preservado na6.1 com dependência explícita de3.4.
-[Plano](etapa-3.4.md). 3.5/3.6 não iniciadas.
+[Plano](etapa-3.4.md). 3.5 demonstrada localmente: CAS obrigatório antes de assinar,
+inventário do catálogo e GC somente dry-run, [plano](etapa-3.5.md)/
+[ADR0024](../adr/0024-cas-antes-do-append-e-gc-dry-run.md). 3.6 não iniciada.
 CI remota/S3/ARM/fuzz longo anteriores continuam pendências separadas.

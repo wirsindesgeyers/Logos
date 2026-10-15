@@ -79,21 +79,36 @@ fn invalid_body_does_not_consume_sequence_and_epoch_is_derived() {
 }
 
 #[test]
-fn every_catalog_vector_is_stored_byte_for_byte() {
+fn every_historical_catalog_vector_replays_byte_for_byte_without_cas_migration() {
     let temp = Temp::new();
     let signer = signer();
     let vectors: serde_json::Value =
         serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json")).unwrap();
-    let mut ledger = Ledger::open(&temp.0, &signer).unwrap();
+    let ledger = Ledger::open(&temp.0, &signer).unwrap();
+    // Importação de fixture anterior ao contrato put→append; nenhum bypass público.
+    let connection = Connection::open(temp.database()).unwrap();
     for vector in vectors["vectors"].as_array().unwrap() {
         let expected = Event::decode(&unhex(vector["event_wire_hex"].as_str().unwrap())).unwrap();
-        let actual = ledger.append(expected.body.clone()).unwrap();
+        connection
+            .execute(
+                "INSERT INTO events(seq,wire) VALUES(?1,?2)",
+                rusqlite::params![expected.seq as i64, to_canon(&expected).unwrap()],
+            )
+            .unwrap();
+        let wire: Vec<u8> = connection
+            .query_row(
+                "SELECT wire FROM events WHERE seq=?1",
+                [expected.seq as i64],
+                |r| r.get(0),
+            )
+            .unwrap();
+        let actual = Event::decode(&wire).unwrap();
         actual.verify(signer.public_key()).unwrap();
         assert_eq!(to_canon(&actual).unwrap(), to_canon(&expected).unwrap());
     }
-    assert_eq!(ledger.head().unwrap().unwrap().seq, 21);
     drop(ledger);
-    Ledger::open(&temp.0, &signer).unwrap();
+    let ledger = Ledger::open(&temp.0, &signer).unwrap();
+    assert_eq!(ledger.head().unwrap().unwrap().seq, 21);
 }
 
 #[test]

@@ -64,7 +64,11 @@ def verify(path: Path, acknowledged: dict[int, str]) -> int:
                 assert event[5] == [1, 0, 1, b"\x10" * 32, key_id]
             else:
                 payload = seq.to_bytes(8, "big") * 4
-                assert event[5] == [1, 3, payload, 0, payload]
+                obligation = hashlib.sha256(b"logos/obligation/v1\0" + canon.encode(seq)).digest()
+                assert event[5] == [1, 3, obligation, 0, payload]
+                address = obligation.hex()
+                obj = path / "cas" / "obligation-v1" / address[:2] / address[2:]
+                assert obj.read_bytes() == canon.encode(seq), "missing/corrupt CAS before append"
             assert canon.encode(event) == wire
             previous = hashlib.sha256(b"logos/event/v1\0" + wire).digest()
             if seq in acknowledged:

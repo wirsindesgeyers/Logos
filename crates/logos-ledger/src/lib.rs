@@ -16,6 +16,7 @@ mod index_project;
 mod index_resolve;
 mod index_store;
 mod ledger;
+mod ledger_cas;
 mod ledger_error;
 mod ledger_store;
 
@@ -28,4 +29,5 @@ pub use event_body::{
 pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot};
 pub use index_store::{IndexComparison, RebuildReport};
 pub use ledger::{Ledger, LedgerHead};
+pub use ledger_cas::{CasReference, LedgerReferences, ledger_references};
 pub use ledger_error::LedgerError;

@@ -761,7 +761,9 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 
 ---
 
-### Etapa 3.5 — CAS integrado ao ledger · `P`
+### Etapa 3.5 — CAS integrado ao ledger · `M` · ⚠ TCB
+
+Estimativa revisada de P para M (ADR0024): inventário completo, migração de fixtures/worker e diagnóstico conservador do GC; escopo e ordem preservados.
 
 **Depende de (recebe pronto).** 3.2, 0.5.
 
@@ -772,7 +774,7 @@ Objetivo da fase: um log append-only, encadeado por hash, assinado pelo kernel, 
 - `logos ledger gc --dry-run` lista objetos órfãos (nunca apaga referenciados).
 
 **Critério de conclusão.**
-- [ ] Teste: append de evento referenciando hash ausente do CAS falha.
+- [x] Teste: append de evento referenciando hash ausente do CAS falha. `logos-ledger/tests/ledger_cas.rs` omite28 referências diretas/aninhadas, exige falha antes de Signer/SQL e preserva seq/head; put e nova tentativa passam. Dez regressões novas e nove mutantes capturados; GC dry-run testado por processos reais sem remover objetos. Full verify/selftest VERIFY_OK local; CI/ARM/fuzz longo não observados.
 
 ---
 
