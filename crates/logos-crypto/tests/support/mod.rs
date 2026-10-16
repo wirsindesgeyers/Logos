@@ -39,7 +39,7 @@ use logos_crypto::{sig_tags, tags};
 hash_domains! {
     DKey => tags::KEY, DFormula => tags::FORMULA, DVocab => tags::VOCAB, DProposal => tags::PROPOSAL,
     DObligation => tags::OBLIGATION, DCertificate => tags::CERTIFICATE, DChecker => tags::CHECKER,
-    DModel => tags::MODEL, DEvent => tags::EVENT, DFact => tags::FACT, DPolicy => tags::POLICY,
+    DModel => tags::MODEL, DGround => tags::GROUND, DEvent => tags::EVENT, DFact => tags::FACT, DPolicy => tags::POLICY,
     DContract => tags::CONTRACT, DAction => tags::ACTION, DParaphrase => tags::PARAPHRASE,
     DToken => tags::TOKEN, DAssumption => tags::ASSUMPTION,
 }
@@ -56,6 +56,7 @@ pub fn hash_by_name(name: &str, msg: &[u8]) -> String {
         "certificate" => hash_raw::<DCertificate>(msg).to_hex(),
         "checker" => hash_raw::<DChecker>(msg).to_hex(),
         "model" => hash_raw::<DModel>(msg).to_hex(),
+        "ground" => hash_raw::<DGround>(msg).to_hex(),
         "event" => hash_raw::<DEvent>(msg).to_hex(),
         "fact" => hash_raw::<DFact>(msg).to_hex(),
         "policy" => hash_raw::<DPolicy>(msg).to_hex(),

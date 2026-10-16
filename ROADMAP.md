@@ -832,13 +832,13 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 **Fora do escopo.** grounding incremental/lazy (Apêndice E); funções com contradomínio `Open`.
 
 **Entregáveis.**
-- `ground(O) -> PropFormula`: instancia `∀`/`∃` sobre os domínios enumerados, avalia igualdade entre constantes distintas (usando os axiomas de nomes únicos), cria átomos proposicionais `Pred(c1,…,cn)`.
+- `ground(O,V) -> Result<GroundProgram,GroundError>`: instancia `∀`/`∃` sobre os domínios enumerados, avalia igualdade entre representantes (usando axiomas explícitos), cria átomos proposicionais de predicados e escolhas de valores. GroundProgram preserva h(O)/h(V), restrições semânticas, raízes de premissas com referências e goal; codificação canônica versionada (ADR0027, alternativa A adotada pelo mantenedor em2026-10-15).
 - Tabela de átomos canônica (ordenada), para que a numeração das variáveis SAT seja determinística.
 - Limite de explosão: número de átomos e de nós; acima → `Unknown(Size)`.
 
 **Critério de conclusão.**
-- [ ] Teste semântico: para 5k obrigações pequenas, `O` é válida (verificado por enumeração de todos os modelos com o avaliador da Etapa 2.2) sse `ground(O)` é tautologia (verificado por tabela verdade).
-- [ ] Determinismo: mesma `O` → mesmos bytes DIMACS (hash estável em CI).
+- [x] Teste semântico: para 5k obrigações pequenas, `O` é válida (verificado por enumeração de todos os modelos com o avaliador da Etapa 2.2) sse `ground(O)` é tautologia (verificado por tabela verdade). Demonstrado localmente:5000 O distintas,32 interpretações/16 admissíveis e256 valorações por caso;3140 válidas/1860 inválidas. Full verify/selftest VERIFY_OK, exit0 ([evidência](docs/plans/etapa-4.2.md) §7).
+- [ ] Determinismo: mesma O/V e limites suficientes → mesmos bytes canônicos de GroundProgram/tabela de átomos, com vetores/digest independentes e repetições na CI. Critério integrado de DIMACS preservado na4.3 por decisão do mantenedor (ADR0027); parte remota só após observação. Local:12 vetores independentes,100 repetições complexas e oito por vetor passaram; execução remota ainda não observada.
 
 ---
 
@@ -857,6 +857,7 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 - [ ] `CNF` é insatisfazível sse `ground(O)` é válida (teste com SAT solver de referência em 5k casos + enumeração nos pequenos).
 - [ ] O auditor (`logos-audit`) refaz `O → CNF` e confere `h(CNF)` em 100% dos eventos.
 - [ ] LOC de grounder + Tseitin reportado na TCB (meta: < 1.000 LOC somados).
+- [ ] Determinismo integrado: mesma O/V → mesma saída proposicional4.2 → mesmos bytes DIMACS/h(CNF), com vetores e repetições na CI. Critério original4.2 preservado por ADR0027; não substituir DIMACS por bytes de outra representação.
 
 ---
 

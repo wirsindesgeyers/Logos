@@ -8,8 +8,13 @@ use logos_air::{
 };
 use logos_canon::{Text, from_canon, to_canon};
 use logos_crypto::hash;
-use logos_ground::{AxiomLimits, classify, domain_axioms, domain_axioms_with_limits};
-use logos_obligation::{LedgerEntry, LedgerError, LedgerView, PremiseRef, Proposal, generate};
+use logos_ground::{
+    AxiomLimits, GroundLimits, PropNode, classify, domain_axioms, domain_axioms_with_limits,
+    ground_with_limits,
+};
+use logos_obligation::{
+    EntryKind, LedgerEntry, LedgerError, LedgerView, PremiseRef, Proposal, generate,
+};
 
 fn roundtrip(data: &[u8]) {
     if let Ok(vocab) = from_canon::<Vocabulary>(data) {
@@ -33,6 +38,7 @@ impl LedgerView for EmptyView {
 }
 
 fn probe(v: &Vocabulary) {
+    ground_probe(v);
     let goal = Formula::new(vec![FormulaNode::True], Limits::default()).expect("goal");
     let o = generate(
         Proposal {
@@ -71,6 +77,115 @@ fn probe(v: &Vocabulary) {
     }
 }
 
+struct Assumptions<'a> {
+    v: &'a Vocabulary,
+    fs: &'a [Formula],
+}
+impl LedgerView for Assumptions<'_> {
+    fn current_epoch(&self) -> u64 {
+        0
+    }
+    fn lookup(&self, r: PremiseRef) -> Result<Option<LedgerEntry<'_>>, LedgerError> {
+        let i = usize::from(r.event_hash()[0]);
+        Ok(self.fs.get(i).map(|formula| LedgerEntry {
+            kind: EntryKind::Assumption,
+            epoch: 0,
+            retracted: false,
+            vocabulary: self.v,
+            formula,
+        }))
+    }
+}
+fn ground_probe(v: &Vocabulary) {
+    if v.sorts().len() > 4 || v.symbols().len() > 64 {
+        return;
+    }
+    let mut fs = Vec::new();
+    let mut goal = Formula::new(vec![FormulaNode::True], Limits::default()).expect("goal");
+    for s in v.sorts() {
+        if let SortDomain::Enumerated { constants, .. } = &s.domain {
+            if constants.len() > 4 {
+                return;
+            }
+            let Ok(a) = domain_axioms(
+                v,
+                &Sort {
+                    name: s.name.clone(),
+                },
+            ) else {
+                return;
+            };
+            fs.push(a.closure().clone());
+            fs.extend_from_slice(a.distinct());
+            let sort = Sort {
+                name: s.name.clone(),
+            };
+            let var = |index| {
+                logos_air::Term::new(
+                    vec![logos_air::TermNode::Var {
+                        index,
+                        sort: sort.clone(),
+                    }],
+                    Limits::default(),
+                )
+                .expect("var")
+            };
+            goal = Formula::new(
+                vec![
+                    FormulaNode::Forall(sort.clone()),
+                    FormulaNode::Exists(sort.clone()),
+                    FormulaNode::Eq(var(0), var(1)),
+                ],
+                Limits::default(),
+            )
+            .expect("quantifier");
+        }
+    }
+    let refs = (0..fs.len())
+        .map(|i| {
+            let mut r = [0; 32];
+            r[0] = i as u8;
+            PremiseRef::from_event_hash(r)
+        })
+        .collect::<Vec<_>>();
+    let o = generate(
+        Proposal {
+            vocabulary: v,
+            goal: &goal,
+            cites: &refs,
+        },
+        &Assumptions { v, fs: &fs },
+    )
+    .expect("conditional O");
+    let before = to_canon(&o).expect("O bytes");
+    let limits = GroundLimits {
+        max_atoms: 128,
+        max_nodes: 2048,
+        max_edges: 8192,
+        max_cells: 512,
+        max_steps: 16384,
+        max_bytes: 65536,
+        ..GroundLimits::default()
+    };
+    let result = ground_with_limits(&o, v, limits);
+    assert_eq!(result, ground_with_limits(&o, v, limits));
+    assert_eq!(to_canon(&o).expect("O bytes"), before);
+    if let Ok(g) = result {
+        assert_eq!(g.obligation(), hash(&o).expect("hO"));
+        assert_eq!(g.vocabulary(), hash(v).expect("hV"));
+        assert!(g.atoms().windows(2).all(|p| p[0] < p[1]));
+        for (i, n) in g.nodes().iter().enumerate() {
+            match n {
+                PropNode::Atom(a) => assert!(*a < g.atoms().len()),
+                PropNode::Not(a) => assert!(*a < i),
+                PropNode::And(xs) | PropNode::Or(xs) => assert!(xs.iter().all(|x| *x < i)),
+                _ => {}
+            }
+        }
+        assert!(to_canon(&g).expect("G bytes").len() <= limits.max_bytes);
+    }
+}
+
 fn structured(data: &[u8]) {
     let byte = data.first().copied().unwrap_or(0);
     let sort = Sort {
@@ -97,6 +212,44 @@ fn structured(data: &[u8]) {
             gloss_pt: Text::new("").expect("text"),
         })
         .collect::<Vec<_>>();
+    if byte & 64 != 0 {
+        declarations.push(SymbolDecl {
+            signature: Symbol {
+                name: Text::new("f").expect("f"),
+                kind: SymbolKind::Func,
+                arity: vec![sort.clone()],
+                result: SymbolResult::Sort(sort.clone()),
+            },
+            grounding: Grounding::Glossed(Text::new("").expect("text")),
+            gloss_pt: Text::new("").expect("text"),
+        });
+    }
+    if byte & 128 != 0 {
+        let variable = logos_air::Term::new(
+            vec![logos_air::TermNode::Var {
+                index: 0,
+                sort: sort.clone(),
+            }],
+            Limits::default(),
+        )
+        .expect("variable");
+        declarations.push(SymbolDecl {
+            signature: Symbol {
+                name: Text::new("D").expect("D"),
+                kind: SymbolKind::Pred,
+                arity: vec![sort.clone()],
+                result: SymbolResult::Bool,
+            },
+            grounding: Grounding::Defined(
+                Formula::new(
+                    vec![FormulaNode::Eq(variable.clone(), variable)],
+                    Limits::default(),
+                )
+                .expect("definition"),
+            ),
+            gloss_pt: Text::new("").expect("text"),
+        });
+    }
     if byte & 32 != 0 {
         declarations.push(SymbolDecl {
             signature: Symbol {

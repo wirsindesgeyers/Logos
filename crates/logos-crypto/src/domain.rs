@@ -51,6 +51,8 @@ pub mod tags {
     pub const CHECKER: &[u8] = b"logos/checker/v1\0";
     /// Modelo finito / contramodelo (2.1).
     pub const MODEL: &[u8] = b"logos/model/v1\0";
+    /// Saída proposicional canônica do grounder (ADR0027).
+    pub const GROUND: &[u8] = b"logos/ground/v1\0";
     /// Evento do ledger (3.1).
     pub const EVENT: &[u8] = b"logos/event/v1\0";
     /// Fato atestado (6.1).
@@ -69,7 +71,7 @@ pub mod tags {
     pub const ASSUMPTION: &[u8] = b"logos/assumption/v1\0";
 
     /// `(nome, tag, codificação)` de todos os domínios reservados; `"raw"` = bytes crus.
-    pub const RESERVED: [(&str, &[u8], &str); 16] = [
+    pub const RESERVED: [(&str, &[u8], &str); 17] = [
         ("key", KEY, "canonical"),
         ("formula", FORMULA, "canonical"),
         ("vocab", VOCAB, "canonical"),
@@ -78,6 +80,7 @@ pub mod tags {
         ("certificate", CERTIFICATE, "raw"),
         ("checker", CHECKER, "raw"),
         ("model", MODEL, "canonical"),
+        ("ground", GROUND, "canonical"),
         ("event", EVENT, "canonical"),
         ("fact", FACT, "canonical"),
         ("policy", POLICY, "canonical"),

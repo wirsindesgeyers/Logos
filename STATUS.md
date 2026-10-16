@@ -35,7 +35,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 9616+105199=114815 LOC de correção, build-only64508;
+TCB atual Rust: 10361+105199=115560 LOC de correção, build-only64508;
 logos-core344, logos-ledger3209, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -98,6 +98,14 @@ premissa ou claim. Dez regressões, oito vetores independentes,288 interpretaç�
 de controle e12 mutantes compilados capturados. Fuzz vocabulary_decode18372/61s,
 exit0 sem crash. Full verify/selftest VERIFY_OK, exit0;227 Python +25 TCB,
 autoteste sem avisos. CI/ARM/fuzz longo ainda não observados.
+4.2: alternativa A do ADR0027 adotada antes do código; determinismo DIMACS
+integrado preservado na4.3. Grounder real/ground-v1 com axiomas explícitos,
+valores simbólicos/Defined globais, DAG/raízes/refs e limites inclusivos.
+11 regressões,5k O distintas/32 interpretações/256 valorações,12 vetores
+independentes e13 mutantes compilados capturados. Fuzz final11287/61s,
+exit0 sem crash. Full verify/selftest VERIFY_OK, exit0;227 Python +25 TCB.
+Fixtures GC serializadas após WriterBusy intermitente,144 repetições passaram.
+Determinismo remoto da4.2 aguarda CI; nenhum CNF/DIMACS/LRAT/claim novo.
 
 ## Etapas da Fase 0
 
@@ -136,7 +144,7 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | 2.6 Tradução de contramodelos | ✅ concluída localmente | explain_model com h(M)/gloss_pt/ordinais e relevância sintática de O; Defined sem vazamento, valorações verdadeiras/falsas preservadas. Checker Rust aceitou 20/20; 10 regressões, MODEL_EXPLAIN_SMOKE_OK e runtime-only passaram. Full verify/selftest VERIFY_OK, exit 0, 227 Python + 25 TCB. [Plano](docs/plans/etapa-2.6.md)/ADR 0019. CI ainda não observada; TCB e formatos inalterados. |
 
 Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem os mecanismos
-genéricos4.1 concluídos localmente; Fases5–23 não iniciadas.
+genéricos4.1 e grounder4.2 implementados localmente; Fases5–23 não iniciadas.
 
 ## Etapas da Fase 3
 
@@ -154,9 +162,10 @@ genéricos4.1 concluídos localmente; Fases5–23 não iniciadas.
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 4.1 Fragmento de domínio finito | ✅ concluída localmente | Proposta A do ADR0026: classificador global/limites e candidatos sem autenticação; fontes/O/used/deps preservados em6.1/7.3/7.5. Dez regressões, oito vetores,288 interpretações,12 mutantes e fuzz18372/61s passaram. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-4.1.md)/[spec](spec/finite-fragment.md). CI/ARM/fuzz longo pendentes. |
+| 4.2 Grounder | ⚠ implementada, falta CI de determinismo | ADR0027/A: ground/v1 e referências/axiomas explícitos;11 regressões,5k O/32 interpretações/256 valorações,12 vetores e13 mutantes passaram. Fuzz11287/61s sem crash; full verify/selftest VERIFY_OK, exit0. Primeiro critério demonstrado; segundo aguarda CI. [Plano](docs/plans/etapa-4.2.md)/[spec](spec/grounding.md). |
 
-Roteiro em [plano da Fase4](docs/plans/fase-4.md). Classificador/candidatos não implementam grounder/LRAT/kernel/políticas;
-fontes opacas não demonstram autenticação.
+Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder condicional implementado;
+CNF/LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenticação.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -205,6 +214,9 @@ fontes opacas não demonstram autenticação.
    Fragmento4.1: testes/smoke e vetores independentes ligados aos jobs nativos
    e Python. vocabulary_decode estende o alvo existente para candidatos e
    classificação; smoke local passou, CI/ARM/fuzz longo ainda não observados.
+   Grounder4.2: diferencial5k, regressões/vetores/repetições/smoke ligados
+   aos jobs nativos/Python. vocabulary_decode exercita O condicional e DAG;
+   fuzz final11287/61s passou. Determinismo remoto e ≥1h ainda não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -274,31 +286,35 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.2 — contrato e plano do grounder
+## Próximo passo: Etapa4.3 — contrato e plano de Tseitin/CNF/proveniência
 
-Prontos: classificador/candidatos4.1 (ADR0026 aceito), AIR/Vocabulary/Obligation
-e avaliador2.2 para o diferencial semântico. PropFormula/tabela de átomos,
-grounder e CNF ainda não existem. Ler ROADMAP4.2/4.3 e preparar
-docs/plans/etapa-4.2.md antes do código; explicitar semântica de funções,
-Defined, igualdade, premissas/goal e limites de expansão.
+Prontos: GroundProgram/PropFormula/tabela de átomos4.2, h(O)/h(V), raízes
+de premissas/goal/restrições e referências de axiomas; CAS0.5 e auditor3.6
+reais. Independência remota3.6 e determinismo remoto4.2 continuam pendentes.
+Não existe CNF/DIMACS/clausify/ProvenanceMap; ler ROADMAP4.3 e criar
+docs/plans/etapa-4.3.md antes do código. Fixar spec/wire/versionamento/tag
+e limites em ADR; conferir as interfaces reais do auditor/eventos antes
+de assumir que a rederivação O→CNF já pode ser integrada.
 
-Dependência a resolver: o critério de determinismo4.2 exige bytes DIMACS,
-mas Tseitin/CNF/DIMACS só são entregues na4.3. Inspecionar as interfaces e,
-se confirmado o bloqueio, registrá-lo conforme AGENTS.md §1.3 e preparar
-uma proposta de contrato/ADR; não antecipar4.3 nem reduzir o critério sem
-decisão explícita. Preservar o diferencial de5k obrigações e determinismo
-reproduzível do artefato que o contrato definir.
+Manter diferencial5k com solver SAT de referência/enumeração, rederivação
+de h(CNF) pelo auditor e teste integrado DIMACS/hash estável em CI herdado
+da4.2 (ADR0027). Não antecipar LRAT/checkers4.4/4.5, produtor4.6 ou used4.7.
+Preservar o suporte de domain_axioms da transformação mesmo quando fecho/
+igualdade simplificarem premissas para tautologias; não perder fontes no
+mapa cláusula→premissa nem presumir autenticação de DomainSource opaco.
 
-Axiomas usados devem estar explícitos em O; não inferir fonte autenticada,
-fecho ou nomes únicos da classificação. Integrações originais permanecem
-nas6.1/7.3/7.5; completion/used reais não estão prontos. Independência
-remota3.6 e CI/ARM/fuzz longo seguem pendentes.
+Riscos: primitivas de valores/Defined têm restrições globais; encoder deve
+preservar as raízes e referências do grounder. Medir a meta de LOC
+grounder+Tseitin<1000 na4.3 (crate atual1075 inclui a4.1); não prometer
+cumprimento antecipado. Se faltar dependência exigida, registrar bloqueio
+conforme AGENTS.md §1.3 antes de implementar. Integrações autenticadas
+6.1/7.3/7.5 e kernel/gateway continuam ausentes; sem push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 9616 LOC Rust próprios + 105199
-  de dependências Rust = 114815 (+64508 só de compilação), após4.1;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground331, logos-ledger3209.
+- **Tamanho da TCB de correção (execução):** 10361 LOC Rust próprios + 105199
+  de dependências Rust = 115560 (+64508 só de compilação), após4.2;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1075, logos-ledger3209.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -311,6 +327,12 @@ remota3.6 e CI/ARM/fuzz longo seguem pendentes.
 ## Armadilhas conhecidas
 
 Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `gen` reservado).
+- Uma tag nova exige atualizar spec/domains.md, constante e catálogo RESERVED,
+  regenerar tools/gen_crypto_vectors.py, incluir o tipo/caso no helper Rust
+  de vetores e atualizar as contagens em py/tests/test_crypto_vectors.py.
+  Rodar os13 geradores --check e a suíte Python antes do full verify evita
+  descobrir essa sincronização depois do benchmark de1M. Os16 namespaces
+  do CAS são catálogo separado: ground/v1 não é persistível implicitamente.
 - SQLite read-only pode criar/manter sidecars WAL/SHM; GC3.5 preserva objetos
   CAS/banco principal e lê WAL confirmado. Não usar immutable para esconder
   sidecars e acabar omitindo eventos. Testes de preservação distinguem esses arquivos.
@@ -334,6 +356,7 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   passou; não contar a primeira execução como fuzz bem-sucedido nem desativar
   sanitizers. Evitar fuzz/comandos sandbox concorrentes durante o autoteste:
   corpus e montagem dos diretórios protegidos podem gerar avisos do tar.
+
 
 ## Diário (apenas acrescentar)
 
@@ -1026,3 +1049,57 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Memória, fontes fuzz alheias, logs e mutants.out preexistentes preservados
   fora do commit. Sem push. Próximo: contrato/plano4.2, resolvendo a exigência
   DIMACS antes da CNF4.3 sem fabricar dependência ou alterar escopo sozinho.
+
+- 2026-10-15: **Etapa4.2 implementada; determinismo remoto pendente.** Contrato
+  original exigia DIMACS antes da4.3. Bloqueio registrado; mantenedor adotou
+  explicitamente A no ADR0027, ROADMAP4.2/4.3 ajustado antes do código.
+  Preservados5k casos semânticos aqui e critério integrado DIMACS na4.3.
+  GroundProgram/ground-v1/tag própria: DAG canônico topológico, átomos por
+  símbolo/tupla/output, h(O)/h(V), premissas/goal e refs de axiomas explícitos.
+  Funções/constantes adicionais são escolhas totais/únicas; Defined global
+  respeita De Bruijn/ordinal mesmo não usado pelo goal. Nenhuma interpretação
+  arbitrária, injeção de axioma, fonte autenticada ou claim. Guardas excluem
+  interpretações sem Defined válido; enum vazio não inventa modelo vazio.
+  11 regressões novas:5k O distintas,32 interpretações/16 admissíveis por caso,
+  todas256 valorações;3140 válidas/1860 inválidas, zero divergências. Cobertos
+  limites inclusivos, overflow/produtos/tuplas, fontes ausentes, identidade/refs,
+  escopos/sorts, funções nullary/congruência e cadeia200/stack64KiB.12 vetores
+  Python independentes de bytes/hash e smoke público GROUND_SMOKE_OK passaram.
+  13 mutantes compilados capturados por asserções; fontes restauradas;
+  comandos/substituições em target/grounding-mutations/results.json e plano §7.
+  Revisão corrigiu max_cells para cobrar coordenadas repetidas antes de alocar
+  tuplas; teste fixa29 inclusivo, recusa28/12 e detecta a omissão por mutação.
+  Fuzz oficial vocabulary_decode/nightly-2026-09-28 final11287/61s, exit0 sem
+  crash, sanitizers ativos/max_len4096; primeira rodada11348/61s também passou.
+  Log preexistente restaurado byte a byte; nenhum parser/decoder novo.
+  Primeira verificação documental falhou101 em GC/WriterBusy; isolado passou,
+  sexta repetição paralela falhou. Flock herdado por fork/CLOEXEC reproduzido;
+  fixtures GC serializadas,24 suítes/144 testes passaram. Lock/GC runtime
+  preservados. strace ausente; sem captura de syscalls da falha original.
+  Compilação inicial Vec<bool>, docs do teste/Clippy e Ruff/mypy do gerador
+  corrigidos. Rodada documental interrompida143 após escolha de A; diferencial
+  redundante interrompido101 por SIGTERM antes de otimizar somente o oráculo
+  comum/bitsets, sem amostragem. Verificação da implementação interrompida143
+  para corrigir tuplas. Rodada seguinte falhou101 no catálogo RESERVED (17
+  tags na spec/16 no catálogo); incluído ground e três testes spec_domains
+  passaram. Interrupção de sessão encerrou a rodada seguinte sem VERIFY_OK/
+  exit observável, não contada. Retomada seguinte terminou1 nos vetores de
+  domínio: hash.tsv ainda não incluía ground. Regenerados quatro vetores
+  novos sem alterar anteriores, helper Rust ampliado;13 geradores --check
+  e suíte crypto passaram. Rodada seguinte falhou1 em Python:225 passaram,
+  duas expectativas ainda fixavam16 tags; ajustadas para17. As contagens16
+  do CAS são catálogo separado e permaneceram corretas. Pré-check Python/
+  TCB/autoteste completo passou antes da nova rodada. Histórico no plano §7.
+  Rodada retomada integral ci/verify.sh --selftest: VERIFY_OK, exit0 persistido
+  em target/verify-4.2-validation.exit; workspace Rust/smokes/manifesto/lints/
+  independência/supply-chain/vetores passaram;227 Python em 92.01s +25 TCB em 1.32s,
+  autoteste bloqueou pelo diagnóstico correto, sem avisos. Crash10k/24 SIGKILLs/
+  10000 ACKs/64.36s sem perdas; rebuild100k/cinco tabelas exatas;
+  1M/20000 consultas p99=18402ns, cold rebuild258591ms fora da latência.
+  TCB Rust10361+105199=115560 (+745 próprios), ground1075/crypto644,
+  build-only64508; SQLite C176466 separado. Nenhuma dependência nova. Novo
+  wire ground/v1 especificado/vetorizado, formatos anteriores intactos.
+  Primeiro critério4.2 marcado; segundo aguarda CI remota. Suporte dos axiomas
+  precisa sobreviver a simplificações ao gerar CNF/used nas4.3/4.7; fontes reais
+  permanecem nas6.1/7.3/7.5. Memória, dois fontes fuzz alheios, logs e mutants.out
+  preexistentes preservados fora do commit. Sem push; próximo: contrato4.3.

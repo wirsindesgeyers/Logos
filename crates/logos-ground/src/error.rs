@@ -7,6 +7,12 @@ use logos_core::Exhausted;
 /// Recusa de entrada ou recurso; não é falsidade lógica nem fragmento General.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GroundError {
+    /// Fragmento geral não admitido por este grounder.
+    GeneralFragment,
+    /// Falta premissa explícita de fecho/nomes únicos.
+    MissingDomainAxiom,
+    /// Contexto ou referência interna incompatível com as invariantes verificadas.
+    InvalidContext,
     /// Identidade de V não coincide com a obrigação.
     VocabularyMismatch,
     /// Assinatura global inválida, inclusive quando não utilizada.

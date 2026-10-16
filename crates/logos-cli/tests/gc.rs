@@ -4,6 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, MutexGuard};
 use std::time::SystemTime;
 
 use logos_canon::{Array, Map, Value, to_canon};
@@ -11,11 +12,15 @@ use logos_crypto::{Domain, FileSigner, Signer, tags};
 use logos_ledger::{CasReference, EventBody, Ledger, Route};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+// Um spawn em outro teste pode herdar o flock até exec/close, mesmo com
+// CLOEXEC. Não sobrepor subprocessos de uma fixture ao drop/reopen de outra.
+static FIXTURES: Mutex<()> = Mutex::new(());
 struct Policy;
 impl Domain for Policy {
     const TAG: &'static [u8] = tags::POLICY;
 }
 struct Fixture {
+    _guard: MutexGuard<'static, ()>,
     root: PathBuf,
     signer: FileSigner,
     obligation: CasReference,
@@ -33,6 +38,7 @@ fn label(reference: CasReference) -> PathBuf {
 }
 impl Fixture {
     fn new() -> Self {
+        let guard = FIXTURES.lock().unwrap();
         let root = std::env::temp_dir().join(format!(
             "logos-cli-gc-{}-{}",
             std::process::id(),
@@ -70,6 +76,7 @@ impl Fixture {
             .unwrap();
         drop(ledger);
         Self {
+            _guard: guard,
             root,
             signer,
             obligation: CasReference::Obligation(obligation),

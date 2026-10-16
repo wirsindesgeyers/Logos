@@ -32,6 +32,7 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 | certificate | `logos/certificate/v1` | raw | 2.3 |
 | checker | `logos/checker/v1` | raw | 4.5 |
 | model | `logos/model/v1` | canonical | 2.1 |
+| ground | `logos/ground/v1` | canonical | 4.2 (ADR0027) |
 | event | `logos/event/v1` | canonical | 3.1 |
 | fact | `logos/fact/v1` | canonical | 6.1 |
 | policy | `logos/policy/v1` | canonical | 7.1 |
@@ -41,14 +42,18 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 | token | `logos/token/v1` | canonical | 8.3 |
 | assumption | `logos/assumption/v1` | canonical | 5.7 |
 
-Os domínios acima só são *reservados* na Etapa 0.4: os tipos que os usam nascem nas etapas
-indicadas. Um domínio novo ou uma mudança de tag exige entrada nesta tabela, ADR e novos vetores;
+Os domínios originais foram *reservados* na Etapa 0.4; ground foi acrescentado
+na4.2 pelo ADR0027. Os tipos nascem nas etapas indicadas. Um domínio novo ou
+uma mudança de tag exige entrada nesta tabela, ADR e novos vetores;
 mudar o conteúdo de um domínio existente é uma nova versão (`v2`), nunca uma edição da `v1`.
 Formato `obligation/v1` é definido em [`obligation.md`](obligation.md); usa a
 tag reservada sem rehashear o digest de evento das premissas. Epoch/status não
 fazem parte da codificação de O.
 Formato `model/v1` é definido em [`model.md`](model.md); usa tag reservada,
 h(V) contextual e tabelas totais. Hash de estrutura não prova satisfação de O.
+Formato `ground/v1` é definido em [`grounding.md`](grounding.md): DAG de
+consequência condicionado a premissas explícitas, com h(O)/h(V). Não é CNF,
+certificado ou autenticação de fonte. Tag nova, sem alterar os domínios anteriores.
 
 
 ### Digest externo

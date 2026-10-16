@@ -22,7 +22,8 @@ const CANONICAL_LIMIT: u64 = 16 * 1024 * 1024;
 /// Limite padrão de 256 MiB (268.435.456 bytes) para domínios crus (raw).
 const RAW_LIMIT: u64 = 256 * 1024 * 1024;
 
-/// Tabela fixa com todos os 16 domínios reservados na ordem de `spec/domains.md`.
+/// Tabela fixa dos 16 domínios suportados pelo CAS, conforme `spec/cas.md`.
+/// Tags de hash adicionais, como ground/v1, não criam namespaces implicitamente.
 pub(crate) const DOMAINS: [DomainEntry; 16] = [
     DomainEntry {
         tag: tags::KEY,
@@ -108,7 +109,7 @@ pub(crate) const DOMAINS: [DomainEntry; 16] = [
 
 /// Resolve uma tag binária exata para o índice correspondente na tabela [`DOMAINS`].
 ///
-/// Retorna `Some(index)` se a tag for exatamente uma das 16 tags reservadas,
+/// Retorna `Some(index)` se a tag for exatamente uma das 16 tags do CAS,
 /// ou `None` caso contrário (inclusive se for prefixo, sufixo ou malformada).
 #[must_use]
 pub(crate) fn resolve(tag: &[u8]) -> Option<usize> {
