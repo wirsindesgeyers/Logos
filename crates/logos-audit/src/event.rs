@@ -30,6 +30,7 @@ impl Domain for Checker {
 pub(crate) struct Check {
     pub obligation: Hash<Obligation>,
     pub certificate: Hash<Certificate>,
+    pub checker: [u8; 32],
     pub budget: Budget,
     pub outcome: CheckOutcome,
 }
@@ -53,6 +54,7 @@ pub(crate) struct Parsed {
     pub digest: [u8; 32],
     pub advance: bool,
     pub proof: bool,
+    pub proof_check: Option<Check>,
     pub refs: Vec<(&'static str, [u8; 32])>,
     pub rechecks: Vec<Recheck>,
     pub derivation: Option<Derivation>,
@@ -129,6 +131,7 @@ fn check(v: &Value, parsed: &mut Parsed) -> Result<Check> {
     Ok(Check {
         obligation: Hash::from_bytes(obligation),
         certificate: Hash::from_bytes(certificate),
+        checker: digest(checker)?,
         budget: Budget::from_value(budget)?,
         outcome,
     })
@@ -184,6 +187,7 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         digest: *hash_raw::<EventDomain>(wire).as_bytes(),
         advance: false,
         proof: false,
+        proof_check: None,
         refs: Vec::new(),
         rechecks: Vec::new(),
         derivation: None,
@@ -299,6 +303,7 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
                 _ => return Err(fail("invalid consistency")),
             }
             p.proof = true;
+            p.proof_check = Some(c);
         }
         [Value::Unsigned(1), Value::Unsigned(5), record, m] => {
             let c = check(record, &mut p)?;

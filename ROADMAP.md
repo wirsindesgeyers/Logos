@@ -877,7 +877,7 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 **Critério de conclusão.**
 - [x] Aceita as provas LRAT de um conjunto de ≥ 200 instâncias SAT-competition pequenas/médias (pigeonhole, etc.). Demonstrado:200 CNFs distintas do SAT-02 Challenge Set/SATLIB,22 famílias, com fontes/hashes e reprodução offline; [evidência](docs/plans/etapa-4.4.md) §7.
 - [x] Rejeita 100% de uma suíte de provas corrompidas (hint trocado, cláusula alterada, cláusula vazia sem derivação).600/600 rejeitadas pelo checker, além das regressões e11 mutantes compilados capturados.
-- [ ] Concordância total com `cake_lpr` sobre a mesma suíte (após a Etapa 4.5).
+- [x] Concordância total com `cake_lpr` sobre a mesma suíte (após a Etapa 4.5). Demonstrada no corpus dos dois critérios anteriores:200/200 provas aceitas e600/600 corrupções rejeitadas por ambos, sem filtro Rust. Controles manuais de perfil/recursos têm diferenças `duplicates`/`sparse`, registradas no [ADR0031](docs/adr/0031-build-e-isolamento-do-cake-lpr.md); não é equivalência universal.
 
 ---
 
@@ -895,9 +895,9 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 
 **Critério de conclusão.**
 - [ ] Binário de `cake_lpr` reconstruído do zero tem o mesmo hash em duas máquinas.
-- [ ] Trocar o binário por outro (mesmo nome) faz o kernel recusar o check.
-- [ ] Mesma suíte da Etapa 4.4 passa com resultados idênticos.
-- [ ] `logos-audit` recheca 100% dos `Verified` de camada 1 de um ledger de exemplo, com os dois checkers, e detecta um certificado LRAT trocado no CAS.
+- [x] Trocar o binário por outro, mesmo com o mesmo nome, faz o registry local/wrapper recusar o check antes de executar o artefato desconhecido. Testar hash não permitido, substituição após registro e vínculo entre bytes identificados e executados; integração no kernel preservada na5.4 (ADR0030). Demonstrado por testes do registry, CAS/P2, snapshots selados e mutações compiladas.
+- [x] Mesma suíte da Etapa 4.4 passa com resultados idênticos. Corpus obrigatório200/600: ambos executados sobre os mesmos bytes, aceites/recusas idênticos; teste integrado passou em380.65s na verificação completa final (VERIFY_OK/exit0). Controles adicionais dos14 vetores manuais:12 concordam,2 diferenças de perfil/recursos documentadas no ADR0031, sem normalização dos bytes.
+- [x] `logos-audit` recheca 100% dos `Verified` de camada 1 de um ledger de exemplo, com os dois checkers, e detecta um certificado LRAT trocado no CAS. Demonstrado:3/3 provas por cada checker antes/depois do export sem banco; certificados adulterados com CAS/assinaturas válidos em cada posição recusados, assim como binário trocado e Budget inconclusivo. Uma prova histórica de outra rota continua explicitamente unchecked.
 
 ---
 
@@ -1008,6 +1008,7 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 **Critério de conclusão.**
 - [ ] **Invariantes P3 e P4**: não existe caminho de código que leve a `Verified` sem `CheckOutcome::Accepted` de um checker ativo (teste de propriedade + revisão; formalizado na Fase 12).
 - [ ] Reproduz o "STATE 15–16" e a variante de refutação da §3 como testes de integração.
+- [ ] Teste integrado preservado da4.5 (ADR0030): registrar checker conhecido, substituir o binário por outro de mesmo nome e enviar CERTIFY; o kernel recusa o check e não emite Verified. Conferir também checker desconhecido/inativo, preservando P3/P4.
 
 ---
 

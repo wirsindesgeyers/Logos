@@ -1,0 +1,201 @@
+{
+  "base": "d401bad",
+  "recipes": [
+    {
+      "name": "identity",
+      "path": "crates/logos-lrat/src/cake.rs",
+      "old": "if ExternalDigest::of(&bytes).as_bytes() != &crate::cake_known::SHA256 {",
+      "new": "if false && ExternalDigest::of(&bytes).as_bytes() != &crate::cake_known::SHA256 {",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--test",
+        "cake",
+        "unknown_and_replaced_binary_never_runs"
+      ]
+    },
+    {
+      "name": "p2",
+      "path": "crates/logos-lrat/src/cake.rs",
+      "old": "if hash_raw(cnf) != expected || hash_raw(proof) != certificate {",
+      "new": "if false && (hash_raw(cnf) != expected || hash_raw(proof) != certificate) {",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--test",
+        "cake",
+        "cas_and_both_input_identities_are_checked"
+      ]
+    },
+    {
+      "name": "stdout-prefix",
+      "path": "crates/logos-lrat/src/cake_output.rs",
+      "old": "stdout == b\"s VERIFIED UNSAT\\n\"",
+      "new": "stdout.starts_with(b\"s VERIFIED UNSAT\\n\")",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--test",
+        "cake",
+        "output_protocol_is_exact_and_bounded"
+      ]
+    },
+    {
+      "name": "stderr",
+      "path": "crates/logos-lrat/src/cake_output.rs",
+      "old": "&& stderr.is_empty()",
+      "new": "&& (true || stderr.is_empty())",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--test",
+        "cake",
+        "output_protocol_is_exact_and_bounded"
+      ]
+    },
+    {
+      "name": "status",
+      "path": "crates/logos-lrat/src/cake_output.rs",
+      "old": "status == 0 && stdout ==",
+      "new": "(true || status == 0) && stdout ==",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--test",
+        "cake",
+        "output_protocol_is_exact_and_bounded"
+      ]
+    },
+    {
+      "name": "seals",
+      "path": "crates/logos-lrat/src/sandbox.rs",
+      "old": "SealFlags::WRITE | SealFlags::GROW",
+      "new": "SealFlags::GROW",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "sealed_inputs_cannot_be_written_or_resized"
+      ]
+    },
+    {
+      "name": "network",
+      "path": "crates/logos-lrat/src/sandbox.rs",
+      "old": "\"--unshare-net\",",
+      "new": "",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "actual_namespace_network_filesystem_environment_and_rlimits"
+      ]
+    },
+    {
+      "name": "memory-limit",
+      "path": "crates/logos-lrat/src/sandbox.rs",
+      "old": "format!(\"--as={0}:{0}\", b.mem_bytes)",
+      "new": "\"--as=unlimited:unlimited\".to_owned()",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "actual_namespace_network_filesystem_environment_and_rlimits"
+      ]
+    },
+    {
+      "name": "timeout-verdict",
+      "path": "crates/logos-lrat/src/sandbox.rs",
+      "old": "child.0.wait()?;\n            return Ok(CheckOutcome::Unknown(Exhausted::Time));",
+      "new": "child.0.wait()?;\n            return Ok(CheckOutcome::Accepted);",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "timeout_kills_namespace_with_descendants_and_output_is_bounded"
+      ]
+    },
+    {
+      "name": "auditor",
+      "path": "crates/logos-audit/src/verify.rs",
+      "old": "if rust != CheckOutcome::Accepted || external != CheckOutcome::Accepted {",
+      "new": "if false && (rust != CheckOutcome::Accepted || external != CheckOutcome::Accepted) {",
+      "args": [
+        "-p",
+        "logos-audit",
+        "--test",
+        "audit",
+        "lrat_rechecks_every_proof_with_real_checkers_and_export_without_database"
+      ]
+    },
+    {
+      "name": "unexpected-signal",
+      "path": "crates/logos-lrat/src/sandbox.rs",
+      "old": "return Err(fail(\"checker terminated by an unexpected signal\"));",
+      "new": "return Ok(CheckOutcome::Unknown(Exhausted::Memory));",
+      "args": [
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "unexpected_process_crash_is_an_error_not_resource_exhaustion"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "name": "identity",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "p2",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "stdout-prefix",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "stderr",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "status",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "seals",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "network",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "memory-limit",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "timeout-verdict",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "auditor",
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "unexpected-signal",
+      "exit": 101,
+      "caught": true
+    }
+  ],
+  "profile": "test: lrat/crypto/sha2 opt-level=1, overflow-checks=true, debug-assertions=true"
+}

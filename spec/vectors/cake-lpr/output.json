@@ -1,0 +1,89 @@
+{
+  "format": "cake-lpr-output/v1",
+  "vectors": [
+    {
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": "",
+      "outcome": "Accepted"
+    },
+    {
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "outcome": "Error"
+    },
+    {
+      "status": 1,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": "",
+      "outcome": "Error"
+    },
+    {
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\nextra",
+      "stderr": "",
+      "outcome": "Error"
+    },
+    {
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": "warning",
+      "outcome": "Error"
+    },
+    {
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT",
+      "stderr": "",
+      "outcome": "Error"
+    },
+    {
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\r\n",
+      "stderr": "",
+      "outcome": "Error"
+    },
+    {
+      "status": 0,
+      "stdout": "",
+      "stderr": "c empty clause not derived at end of proof\n",
+      "outcome": "Rejected"
+    },
+    {
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 0. Reason: pivot must be non-zero\n",
+      "outcome": "Rejected"
+    },
+    {
+      "status": 1,
+      "stdout": "",
+      "stderr": "c empty clause not derived at end of proof\n",
+      "outcome": "Error"
+    },
+    {
+      "status": 1,
+      "stdout": "",
+      "stderr": "bwrap: denied\n",
+      "outcome": "Error"
+    },
+    {
+      "status": 3,
+      "stdout": "",
+      "stderr": "CakeML heap space exhausted.\n",
+      "outcome": "Memory"
+    },
+    {
+      "status": 3,
+      "stdout": "",
+      "stderr": "CakeML stack space exhausted.\n",
+      "outcome": "Memory"
+    },
+    {
+      "status": 0,
+      "stdout": "other",
+      "stderr": "c Checking failed at line: 2\n",
+      "outcome": "Error"
+    }
+  ]
+}

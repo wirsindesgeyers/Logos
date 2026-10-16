@@ -70,6 +70,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }),
         })?;
     }
+    // Fixture opcional4.5: provas reais, produzidas manualmente e rechecadas pelo auditor.
+    if let Some(binary) = std::env::args().nth(2) {
+        let checker_bytes = std::fs::read(binary)?;
+        let checker = ledger.cas().put::<Checker>(&checker_bytes)?;
+        for (which, proof) in [
+            (0, b"10 0 4 7 0\n".as_slice()),
+            (0, b"11 0 4 8 0\n"),
+            (10, b"12 0 4 7 0\n"),
+        ] {
+            let c = &cnfs["vectors"][which];
+            let obligation = ledger.cas().put::<logos_obligation::Obligation>(&unhex(
+                c["obligation"].as_str().ok_or("O")?,
+            )?)?;
+            let bytes = c["cnf"].as_str().ok_or("CNF")?.as_bytes();
+            let cnf = ledger.cas().put::<logos_ledger::CnfObject>(bytes)?;
+            let certificate = ledger.cas().put::<Certificate>(proof)?;
+            ledger.append(logos_ledger::EventBody::ObligationCreated {
+                obligation,
+                route: logos_ledger::Route::Lrat,
+                artifact: *logos_crypto::ExternalDigest::of(bytes).as_bytes(),
+                cnf: Some(logos_ledger::CnfRecord {
+                    hash: cnf,
+                    encoder_version: 1,
+                }),
+            })?;
+            ledger.append(logos_ledger::EventBody::Verified {
+                check: logos_ledger::CheckRecord {
+                    obligation,
+                    certificate,
+                    checker,
+                    budget: logos_core::Budget::new(1_000_000, 268_435_456, 1_000_000, 10_000),
+                    outcome: logos_core::CheckOutcome::Accepted,
+                },
+                cited: vec![],
+                used: vec![],
+                consistency: logos_ledger::Consistency::Unknown { check: None },
+            })?;
+        }
+    }
     println!(
         "{}",
         signer

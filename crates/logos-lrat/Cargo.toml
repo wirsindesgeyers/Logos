@@ -9,6 +9,7 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+rustix = { version = "=1.1.5", default-features = false, features = ["std", "fs"] }
 logos-canon = { path = "../logos-canon" }
 logos-core = { path = "../logos-core" }
 logos-crypto = { path = "../logos-crypto" }

@@ -1,0 +1,14 @@
+{
+  "format": "sandbox-probe/v1",
+  "source_sha256": "89bd861acc23a96acd4236cfc2e1e5cc7efd87818b0efbf28c50824c3e6c3ca2",
+  "binaries": {
+    "x86_64": {
+      "sha256": "bbc8536ed41f7a97401798b9f011691dac54e34444fc6d6a788f5408771fdf64",
+      "bytes": 34904
+    },
+    "aarch64": {
+      "sha256": "500772a1d71d6d634d053faea9ade60edaa5825dfeacb47a3e94615d4e3ef8a3",
+      "bytes": 44144
+    }
+  }
+}

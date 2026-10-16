@@ -608,3 +608,129 @@ fn signed_wrong_cnf_cannot_pass_with_valid_cas_hashes_at_any_position() {
     failed(t.verify(&events), "CAS integrity:");
     fs::write(p, saved).unwrap();
 }
+
+#[test]
+fn lrat_rechecks_every_proof_with_real_checkers_and_export_without_database() {
+    let t = Temp::new();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let binary = t.0.join("cake_lpr");
+    let install = Command::new("python3")
+        .arg(root.join("tools/build_cake_lpr.py"))
+        .arg("--output")
+        .arg(&binary)
+        .output()
+        .unwrap();
+    assert!(
+        install.status.success(),
+        "{}",
+        String::from_utf8_lossy(&install.stderr)
+    );
+    let cake = logos_lrat::CakeRegistry::register(&binary).unwrap();
+    let ledger = t.0.join("ledger");
+    let producer = Command::new("cargo")
+        .args([
+            "run",
+            "--quiet",
+            "-p",
+            "logos-ledger",
+            "--example",
+            "audit_fixture",
+            "--",
+        ])
+        .arg(&ledger)
+        .arg(&binary)
+        .current_dir(&root)
+        .output()
+        .unwrap();
+    assert!(
+        producer.status.success(),
+        "{}",
+        String::from_utf8_lossy(&producer.stderr)
+    );
+    let key = signer().public_key().clone();
+    let cas = ledger.join("cas");
+    let report = logos_audit::verify_with_cake(&ledger, &cas, &key, Some(&cake)).unwrap();
+    assert_eq!(report.lrat_proofs, 3);
+    assert_eq!(report.cnf_derivations, 6);
+    assert_eq!(report.unchecked_proofs, 1); // a fixture histórica inclui outra rota explícita.
+    assert!(
+        logos_audit::verify(&ledger, &cas, &key)
+            .unwrap_err()
+            .to_string()
+            .contains("configured cake_lpr")
+    );
+    let mut exported = Vec::new();
+    logos_audit::export(&ledger, &key, &mut exported).unwrap();
+    let events: Vec<Vec<u8>> = {
+        let mut input = &exported[MAGIC.len()..];
+        let mut events = Vec::new();
+        while !input.is_empty() {
+            let size = u32::from_be_bytes(input[..4].try_into().unwrap()) as usize;
+            events.push(input[4..4 + size].to_vec());
+            input = &input[4 + size..];
+        }
+        events
+    };
+    let moved = t.0.join("cas");
+    fs::rename(&cas, &moved).unwrap();
+    fs::remove_dir_all(ledger).unwrap();
+    let stream = t.stream(&events);
+    assert_eq!(
+        logos_audit::verify_with_cake(&stream, &moved, &key, Some(&cake)).unwrap(),
+        report
+    );
+    let proof_positions: Vec<_> = events
+        .iter()
+        .enumerate()
+        .filter_map(|(i, w)| {
+            let v = from_canon::<Value>(w).unwrap();
+            let body = items(&items(&v)[5]);
+            (body.get(1) == Some(&unsigned(4)) && i > 10).then_some(i)
+        })
+        .collect();
+    assert_eq!(proof_positions.len(), 3);
+    for i in proof_positions {
+        let mut bad = events.clone();
+        // Um certificado diferente, mas com hash/CAS/assinaturas válidos, precisa falhar no checker.
+        let invalid = b"10 0 0\n";
+        struct Cert;
+        impl Domain for Cert {
+            const TAG: &'static [u8] = logos_crypto::tags::CERTIFICATE;
+        }
+        let h = hash_raw::<Cert>(invalid);
+        let hex = h.to_hex();
+        let dir = moved.join("certificate-v1").join(&hex[..2]);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join(&hex[2..]), invalid).unwrap();
+        mutate(&mut bad, i, &[5, 2, 1], Value::Bytes(h.as_bytes().to_vec()));
+        let e =
+            logos_audit::verify_with_cake(&t.stream(&bad), &moved, &key, Some(&cake)).unwrap_err();
+        assert!(e.to_string().contains("LRAT recheck"), "{e}");
+        let mut bad = events.clone();
+        mutate(&mut bad, i, &[5, 2, 2], Value::Bytes(vec![0; 32]));
+        assert!(logos_audit::verify_with_cake(&t.stream(&bad), &moved, &key, Some(&cake)).is_err());
+    }
+    let position = events
+        .iter()
+        .enumerate()
+        .rfind(|(_, w)| {
+            let v = from_canon::<Value>(w).unwrap();
+            items(&items(&v)[5]).get(1) == Some(&unsigned(4))
+        })
+        .unwrap()
+        .0;
+    for (field, value) in [(0, 0), (1, 0), (3, 0)] {
+        let mut bad = events.clone();
+        mutate(&mut bad, position, &[5, 2, 3, field], unsigned(value));
+        assert!(logos_audit::verify_with_cake(&t.stream(&bad), &moved, &key, Some(&cake)).is_err());
+    }
+    let mut changed = fs::read(&binary).unwrap();
+    changed.push(0);
+    fs::write(&binary, changed).unwrap();
+    assert!(
+        logos_audit::verify_with_cake(&t.stream(&events), &moved, &key, Some(&cake))
+            .unwrap_err()
+            .to_string()
+            .contains("hash")
+    );
+}

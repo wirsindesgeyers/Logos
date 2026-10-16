@@ -30,6 +30,20 @@ guarantee = "O sistema consegue concluir coisas. Provers, LLM e formalizador fic
 # properties = ["correctness"]
 # verified = "cakeml"
 
+[[external]]
+name = "cake_lpr-x86_64-linux-musl"
+sha256 = "48760ef54cd448f86b7587715e12b5236d2d1e66981b68b0f4b8da9802484eb4"
+properties = ["correctness"]
+verified = "cakeml"
+# Assembly CakeML; C/FFI/musl/linker/isolamento não são formalmente verificados (ADR0031).
+
+[[external]]
+name = "cake_lpr-aarch64-linux-musl"
+sha256 = "c771c826749afc48906dff064f07c168e6512149c3b57d26084e86bc98922e5f"
+properties = ["correctness"]
+verified = "cakeml"
+# Assembly CakeML; C/FFI/musl/linker/isolamento não são formalmente verificados (ADR0031).
+
 [[crate]]
 name = "logos-canon"
 properties = ["correctness"]
@@ -84,7 +98,7 @@ name = "logos-lrat"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/checker.rs", "src/lib.rs", "src/parse.rs", "src/resources.rs"]
+files = ["src/cake.rs", "src/cake_known.rs", "src/cake_output.rs", "src/checker.rs", "src/lib.rs", "src/parse.rs", "src/resources.rs", "src/sandbox.rs"]
 
 [[crate]]
 name = "logos-ledger"

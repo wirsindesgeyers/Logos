@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "upstream": "https://github.com/tanyongkiam/cake_lpr",
+  "revision": "a36874a8b750b43fe4b385b8ddbf5b033e46a3fa",
+  "hol": "0ae7030322cdf2b0d46dc9d5503e2d5eae2fa726",
+  "cakeml": "fb377b4bb704497c921cde68ccc8da3b4f0e9132",
+  "source_sha256": "b91296a9dc20e367baddfa4973d1241c48128c46b33237c0a7eb3c8aba9826f1",
+  "files": {
+    "cake_lpr.S": "2f3af32d55083839b3fa0e693afd817679c0b8944bef41def05a8b0ec72b7d4a",
+    "cake_lpr_arm8.S": "95b64883edc0cb09feedbcb1ebec233e2490f5b458fdda9dc29c212ed916f00c",
+    "basis_ffi.c": "8e30d84fdcb2177aa5571d7fa6661a2fae5ecfd56baa0ce49c65f9233a9f87cb",
+    "LICENSE": "eb1e4ff71900d55d384ff18afad5aae48417ce0fff25231565862c42b45e5dbc",
+    "README.md": "5bd6f5949181cb41065333491154bbac3550b6587170702e444101cee6cc825e",
+    "Makefile": "57f5c407a9274560d8cfe31d60ee8095ac4a8046bbe960b9d706d37006d3ba10",
+    "cake_lpr.sha256": "449be5fbee561f30dbc94bd8bc5588011af9a80a17d3e1fc284a81952c2744ec"
+  },
+  "zig_version": "0.15.1",
+  "zig": {
+    "x86_64-linux": {
+      "tarball": "https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz",
+      "shasum": "c61c5da6edeea14ca51ecd5e4520c6f4189ef5250383db33d01848293bfafe05",
+      "size": "53734456"
+    },
+    "aarch64-linux": {
+      "tarball": "https://ziglang.org/download/0.15.1/zig-aarch64-linux-0.15.1.tar.xz",
+      "shasum": "bb4a8d2ad735e7fba764c497ddf4243cb129fece4148da3222a7046d3f1f19fe",
+      "size": "49493872"
+    }
+  },
+  "binaries": {
+    "x86_64": {
+      "sha256": "48760ef54cd448f86b7587715e12b5236d2d1e66981b68b0f4b8da9802484eb4",
+      "bytes": 538896,
+      "checker_hash": "96a2913566dc32fc7c31f2df4ccd14be36ee347695fd16c2139a76d7ab7fe4fb"
+    },
+    "aarch64": {
+      "sha256": "c771c826749afc48906dff064f07c168e6512149c3b57d26084e86bc98922e5f",
+      "bytes": 518088,
+      "checker_hash": "8a6b80ff7b9ad0c303b1bd940b96d10e798cbc13fdeb8d68ccf98e6613b1f7bb"
+    }
+  }
+}

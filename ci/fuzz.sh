@@ -52,6 +52,18 @@ for vector in json.loads(Path("../spec/vectors/lrat/vectors.json").read_text())[
     (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
 SEED
   fi
+  if [ "$t" = cake_output ]; then
+    python3 - <<'SEED'
+import hashlib
+import json
+from pathlib import Path
+corpus = Path("corpus/cake_output")
+corpus.mkdir(parents=True, exist_ok=True)
+for v in json.loads(Path("../spec/vectors/cake-lpr/output.json").read_text())["vectors"]:
+    wire = bytes([v["status"]]) + v["stdout"].encode() + b"\0" + v["stderr"].encode()
+    (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+SEED
+  fi
   echo "== $t (${seconds}s) =="
   cargo fuzz run "$t" -- -max_total_time="$seconds" 2>&1 | tee "../fuzz-logs/$t.log"
 done

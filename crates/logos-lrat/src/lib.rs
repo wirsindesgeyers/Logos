@@ -6,9 +6,16 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod cake;
+mod cake_known;
+mod cake_output;
 mod checker;
 mod parse;
 mod resources;
+mod sandbox;
+
+pub use cake::{CakeBinary, CakeError, CakeRegistry, LratCertificate};
+pub use cake_output::decode_cake_output;
 
 use logos_canon::{CanonError, Text};
 use logos_core::{CheckOutcome, Reason};

@@ -35,7 +35,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 11101+105199=116300 LOC de correção, build-only64508;
+TCB atual Rust: 11549+747130=758679 LOC de correção, build-only64508;
 logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -121,8 +121,21 @@ sob Budget compartilhado.15 testes Rust,200 provas SAT-2002/22 famílias e600
 corrupções,14 vetores,28160 traces e11 mutantes compilados passaram. Fuzz final
 844911/533686 execuções sem crash. Full verify/selftest VERIFY_OK, exit0;
 227 Python +25 TCB, autoteste sem avisos. TCB logos-lrat417 LOC; corpus XZ56MB
-com manifesto/hashes/reprodução offline. Concordância cake_lpr fica na4.5;
-sem wrapper/auditor LRAT, produtor SAT público ou used_premises antecipados.
+com manifesto/hashes/reprodução offline. Concordância cake_lpr demonstrada
+na4.5; produtor SAT público e used_premises continuam nas4.6/4.7.
+
+4.5: A/ADR0030 adotada; teste local de substituição implementado e teste
+integrado no kernel preservado na5.4. Cake_lpr upstream fixado com ELF estático
+musl/Zig0.15.1 e rebuild x86_64 idêntico no mesmo host. Registry só aceita hash
+fixado; P2/CAS/snapshots selados, prlimit/bubblewrap sem rede/host/shell, saída
+completa e kill/wait. Auditor3/3 com ambos antes/depois do export sem banco;
+1 prova histórica de outra rota continua explicitamente unchecked.10 testes
+novos LRAT+1 auditor e11 mutantes passaram; fuzz final2821026/61s sem crash.
+Corpus200/600 concordou em380.65s;14 controles manuais têm12 concordâncias
+e2 limites de perfil/recursos registrados (duplicates/sparse). Verificação
+completa com selftest: VERIFY_OK, exit0;227 Python +25 TCB. Rebuild em segundo
+host/CI/ARM não observados. ADR0031/spec/plano registram
+TCB Rust758679 como cota superior e componentes nativos separados.
 
 ## Etapas da Fase 0
 
@@ -180,10 +193,12 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem classificação, g
 | 4.1 Fragmento de domínio finito | ✅ concluída localmente | Proposta A do ADR0026: classificador global/limites e candidatos sem autenticação; fontes/O/used/deps preservados em6.1/7.3/7.5. Dez regressões, oito vetores,288 interpretações,12 mutantes e fuzz18372/61s passaram. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-4.1.md)/[spec](spec/finite-fragment.md). CI/ARM/fuzz longo pendentes. |
 | 4.2 Grounder | ⚠ implementada, falta CI de determinismo | ADR0027/A: ground/v1 e referências/axiomas explícitos;11 regressões,5k O/32 interpretações/256 valorações,12 vetores e13 mutantes passaram. Fuzz11287/61s sem crash; full verify/selftest VERIFY_OK, exit0. Primeiro critério demonstrado; segundo aguarda CI. [Plano](docs/plans/etapa-4.2.md)/[spec](spec/grounding.md). |
 | 4.3 Tseitin/CNF e proveniência | ⚠ implementada, falta CI de determinismo | 5k O/Z3/tabela verdade sem divergência,12 vetores e13 mutantes; auditor3/3 antes/depois do export, bytes/hash/versão conferidos. Fuzz9673/132990 sem crash; full verify/selftest VERIFY_OK, exit0. Núcleo983 LOC/crate1337; primeiro a terceiro critérios demonstrados, quarto aguarda CI. [Plano](docs/plans/etapa-4.3.md)/[spec](spec/cnf.md)/[ADR0028](docs/adr/0028-tseitin-canonico-e-rederivacao.md). |
-| 4.4 Checker LRAT próprio | 🚧 implementada; concordância prevista na4.5 | Parser cnf/v1 e lrat-rup/v1, P2/RUP/deleções/fecho implementados.15 testes Rust,200 provas/600 corrupções,14 vetores,28.160 traces e11 mutantes passaram. Fuzz final844911/533686 sem crash. Full verify/selftest VERIFY_OK, exit0; comparação cake_lpr continua aberta até4.5. [Plano](docs/plans/etapa-4.4.md). |
+| 4.4 Checker LRAT próprio | ✅ concluída localmente no corpus exigido | P2/RUP/deleções/fecho;200/200 provas e600/600 corrupções concordam com cake_lpr na4.5 (380.65s), sem filtro Rust.14 vetores Rust preservados; dois controles de perfil/recursos diferem no cake_lpr (duplicates/sparse), explicitados no ADR0031. [Plano](docs/plans/etapa-4.4.md). CI/ARM/fuzz longo pendentes. |
+| 4.5 Integração do cake_lpr | ⚠ implementada, falta rebuild em segundo host/CI | A/ADR0030 adotada; build estático fixado e rebuild x86_64 idêntico localmente; wrapper/registry/P2/isolamento e auditor3/3 com dois checkers.10 testes LRAT+1 auditor,11 mutantes e fuzz final2821026/61s passaram. Corpus200/600 concordou; dois controles manuais de perfil diferem. Verificação completa com selftest: VERIFY_OK, exit0. Primeiro critério aguarda segundo host; execução CI/ARM e fuzz longo pendentes. [Plano](docs/plans/etapa-4.5.md). |
+| 4.6 Produtor SAT | ⏳ não iniciada | CNF4.3, checkers4.4/4.5, ModelChecker2.3 e encoder Python0.3 prontos. Próximo: produtor fora da TCB e corpus de300 obrigações, respeitando os limites de perfil documentados. |
 
 Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder/CNF e rederivação implementados;
-Checker LRAT4.4 implementado; concordância cake_lpr aguarda4.5. Kernel/políticas ainda ausentes,
+Checker LRAT4.4 e recheck duplo4.5 demonstrados no corpus exigido. Kernel/políticas ainda ausentes,
 fontes opacas não demonstram autenticação.
 
 ## Pendências de verificação (nada disso depende de código novo)
@@ -243,8 +258,18 @@ fontes opacas não demonstram autenticação.
    LRAT4.4: quinze testes nativos/smoke,14 vetores e corpus200/600 ligados
    aos jobs Rust/Python. cnf_decode/lrat_decode integrados à matriz que descobre
    os16 alvos; fuzz local final61s por alvo passou. Execução remota/ARM,
-   matriz e ≥1h por alvo ainda não observados. Concordância cake_lpr depende
-   de4.5 e não é alegada por esses testes locais.
+   matriz e ≥1h por alvo ainda não observados. Concordância cake_lpr no
+   corpus200/600 demonstrada localmente na4.5.
+   Cake_lpr4.5: build offline estático por hash e recheck duplo entram nos
+   testes/smoke nativos; workflow cake-rebuild compara o hash fixado em jobs
+   separados Ubuntu24.04/22.04, mas nenhum resultado remoto foi observado.
+   Rebuild x86_64 local idêntico não fecha primeiro critério4.5. ARM só teve
+   cross-build; execução nativa, bwrap/namespaces do runner e fuzz longo seguem
+   pendentes. Dois controles manuais diferem e não são equivalência universal;
+   corpus exigido200/600 concordou. Wrapper nunca normaliza CNF/IDs para ocultar
+   diferenças. Certificados futuros precisam de Accepted nos dois checkers.
+   cake_output é o17º alvo da matriz; fuzz local2821026/61s sem crash,
+   mas ≥1h e execução remota permanecem pendentes.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -314,39 +339,49 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.5 — integração do cake_lpr
+## Próximo passo: Etapa4.6 — produtor SAT fora da TCB
 
-Prontos: checker Rust LratChecker (P2/RUP/deleções/IDs usados), corpus offline
-SAT-2002 de200 CNFs distintas e provas/600 corrupções, com manifesto e receita
-reproduzível. DIMACS cnf/v1/h(CNF)/ProvenanceMap da4.3 e auditor independente
-3.6 com rederivação O→CNF, CAS/streams/eventos reais. Full verify/selftest da4.4
-passou com VERIFY_OK/exit0. Primeiro e segundo critérios4.4 demonstrados;
-terceiro fica aberto expressamente até comparação na4.5.
+Implementar logos_provers.sat conforme ROADMAP4.6. Estão prontos o encoder
+Python0.3, a CNF/tabela de átomos4.3, o checker LRAT4.4 e o ModelChecker2.3;
+cake_lpr4.5 fornece a validação externa exigida pelo critério ponta a ponta.
+Ler o contrato e registrar o plano/decisões antes de implementar.
 
-Ler ROADMAP4.5 e preparar docs/plans/etapa-4.5.md/ADR antes do código. Entregar
-build reproduzível e identificação do binário, wrapper subprocesso com limites,
-registry local que recusa hash desconhecido e recheck LRAT no auditor com os
-dois checkers, mantendo independência de ledger/kernel. Não antecipar produtor
-SAT4.6, used_premises4.7, registro no kernel5.4 ou alterar cake_lpr.
+O produtor executa CaDiCaL ou Kissat e, se necessário, conversão DRAT→LRAT,
+tudo fora da TCB. Demonstrar obrigação finita→CNF→solver→LRAT→cake_lpr em
+≥95% de300 obrigações de política; para SAT, reconstruir FiniteModel pela
+tabela de átomos e demonstrar100% dos contramodelos aceitos pelo ModelChecker.
+Políticas autenticadas ainda não existem: usar obrigações explícitas no
+corpus, sem antecipar Policy/fatos/kernel. Portfólio/cache10.2,
+used_premises4.7 e kernel5.4 estão fora do escopo.
 
-Decisões/riscos: o critério de trocar binário menciona kernel, mas ele só chega
-na5.4 e está fora do escopo4.5; alinhar esse contrato em plano/ADR antes de
-antecipar kernel. Rebuild igual em duas máquinas exige evidência de dois hosts,
-não duas execuções locais. Conferir diferenças entre LRAT completo e perfil
-RUP estrito (RAT/IDs/deleções/cauda), antes de alegar concordância.
-Used da4.4 são IDs originais da CNF, sem mapear premissas. domain_support da4.3
-é contexto conservador: sua precisão/alcance será analisada na4.7, sem união
-automática a used. CI/ARM/fuzz longo de etapas anteriores seguem pendentes.
-Nenhum push autorizado.
+Riscos: perfis LRAT diferem em duplicates e sparse; não normalizar bytes/IDs
+silenciosamente. Fixar solver/conversor e preservar h(CNF)/h(certificado),
+limites positivos e resultados inconclusivos sem convertê-los em aceitação.
+Decisões em aberto: solver, formato de prova e eventual conversor; resolver
+com ADR conforme a evidência, sem acrescentar dependências à TCB.
+
+4.5 passou integralmente em ci/verify.sh --selftest: VERIFY_OK/exit0 em
+target/verify-4.5-final.log/.exit;200/600 em380.65s, onze mutantes e fuzz final
+2821026/61s. Primeiro critério permanece desmarcado até rebuild em segundo
+host; CI/ARM/fuzz longo também pendentes. O teste integrado de substituição
+no kernel está preservado na5.4 (ADR0030/A). Alterações preexistentes de
+memória/fontes de fuzz/logs/mutants.out preservadas; nenhum push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 11101 LOC Rust próprios + 105199
-  de dependências Rust = 116300 (+64508 só de compilação), após4.4;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-lrat417, logos-ledger3271.
+- **Tamanho da TCB de correção (execução):** 11549 LOC Rust próprios + 747130
+  de dependências Rust = 758679 (+64508 só de compilação), após4.5;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-lrat865, logos-ledger3271.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
-  Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
+  Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
+  LOC runtime de cota superior (fontes completos/todas as plataformas/módulos,
+  não LOC efetivamente compilados). O custo não é omitido por serem bindings.
+  C/FFI/musl/assembly e ferramentas de isolamento ficam fora desse contador Rust;
+  hashes dos dois binários cake_lpr constam no manifesto, sem estender a prova
+  CakeML ao wrapper/C/OS. Relatório target/tcb-4.5-final.json/.md.
+  Maiores dependências Rust: linux-raw-sys478851, libc113368 e rustix49394;
+  seguem `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC) e
   `typenum` 16 k. Se isso incomodar para a avaliação (11.9): restringir o texto canônico (p.ex.
   identificadores ASCII) tira a NFC; trocar a curva exigiria outra biblioteca. Não alterado. A
   medição agora filtra pela plataforma do host e separa execução × compilação.
@@ -1221,3 +1256,52 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   preservados. Critérios1–2 da4.4 marcados, concordância cake_lpr fica na4.5;
   CI/ARM/hora de fuzz ainda não observados. Alterações de memória/fontes de
   fuzz/logs/mutants.out anteriores preservadas. Sem push; próximo:4.5.
+
+- 2026-10-16 — Análise da4.5 (base d401bad): dependências4.4/3.6 prontas,
+  mas critério de troca do binário exige kernel5.4 ainda esqueleto e fora do
+  escopo4.5. Bloqueio registrado conforme AGENTS.md §1.3 antes de código.
+  Preparados plano4.5/ADR0030: proposta A testa registry local agora e preserva
+  teste integrado no kernel5.4; alternativa B mantém contrato/replaneja ordem.
+  ROADMAP e critérios preservados até decisão. Upstream cake_lpr consultado;
+  nenhum build/comparação/fuzz/full verify/commit nesta análise. Rebuild em
+  dois hosts continua requisito; alterações anteriores preservadas. Sem push.
+
+- 2026-10-16 — Mantenedor autorizou “pode implementar A” para4.5. ADR0030
+  aceito e ROADMAP4.5/5.4 ajustado antes do código: teste de substituição no
+  registry local agora, integrado no kernel5.4 preservado. Implementação iniciada.
+
+- 2026-10-16 — Etapa4.5 implementada sob A/ADR0030; teste integrado de troca
+  do checker preservado no kernel5.4. Upstream cake_lpr fixado sem alterações;
+  build estático musl/Zig0.15.1 com hashes por ISA e instalação offline.
+  Rebuild x86_64 limpo reproduziu48760ef54cd4… localmente; -s removeu DWARF
+  de compiler_rt com caminhos temporários. Segundo host e execução nativa ARM
+  não observados; primeiro critério continua desmarcado. Registry por hash,
+  P2/CAS e snapshots memfd selados; prlimit/bubblewrap com namespaces, ambiente
+  limpo, root read-only, ausência de rede e cleanup. Parser de saída exata
+  não aceita exit0 genérico; falhas operacionais/sinais inesperados são erros,
+  somente exaustão reconhecida é Unknown. ADR0031/spec/plano/vetores/manifesto
+  e allowlist documentam dependências e limites. Auditor independente rederiva
+  CNF e recheca3/3 provas LRAT com ambos antes/depois do export sem SQLite;
+  adulterações assinadas com CAS íntegro recusadas em cada posição. Uma prova
+  histórica de outra rota permanece explicitamente unchecked. Dez testes LRAT
+  novos +1 auditor; onze mutantes compilados capturados por asserções, fontes
+  restauradas; fuzz oficial cake_output final2821026/61s/exit0 sem crash.
+  Corpus obrigatório:200/200 aceites e600/600 corrupções recusadas por ambos
+  sobre os mesmos bytes em380.65s.14 controles manuais:12 concordam;
+  duplicates rejeitado e sparse sem memória no cake_lpr, ambos aceitos no Rust,
+  registrados sem normalizar CNF/IDs nem alegar equivalência universal.
+  Primeiro corpus falhou por substituição do ELF compartilhado do harness;
+  instalação privada corrigiu. Primeira full interrompida com exit-15 para
+  corrigir classificação de sinais e prazo; não contada como sucesso.
+  Verificação final ci/verify.sh --selftest: VERIFY_OK/exit0 persistido em
+  target/verify-4.5-final.log/.exit; Rust/Clippy/smokes/TCB/manifesto/independência/
+  supply-chain/vetores passaram;227 Python78.33s +25 TCB1.41s; autoteste correto.
+  Crash10k/24 SIGKILLs/9998 ACKs/54.06s sem perdas; rebuild100k/cinco tabelas
+  exatas;1M/20000 consultas p99=11389ns, cold rebuild243024ms fora da latência.
+  TCB Rust11549+747130=758679, lrat865, build-only64508: acréscimo runtime641931
+  é cota superior de rustix/linux-raw-sys/libc/errno, sem ocultar fontes de outras
+  plataformas. FFI C354 e assembly das duas ISAs56341 LOC medidos separadamente;
+  musl/ferramentas/OS não estão no contador Rust nem na prova CakeML.
+  Três critérios4.5 demonstrados; rebuild segundo host/CI/ARM/fuzz longo pendentes.
+  Memória, dois fontes fuzz alheios, logs e mutants.out preexistentes preservados
+  fora do commit. Sem push; próximo:4.6, produtor SAT fora da TCB.

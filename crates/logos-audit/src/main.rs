@@ -8,18 +8,20 @@ use logos_crypto::{PublicKey, SigAlg};
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
-    let usage = "uso: logos-audit verify LEDGER --cas DIR --public-key ED25519_HEX | logos-audit export LEDGER --public-key ED25519_HEX";
+    let usage = "uso: logos-audit verify LEDGER --cas DIR --public-key ED25519_HEX [--cake-lpr BIN] | logos-audit export LEDGER --public-key ED25519_HEX";
     let (command, ledger, rest) = match args.as_slice() {
         [command, ledger, rest @ ..] => (command.as_str(), ledger, rest),
         _ => return Err(usage.into()),
     };
     let mut cas = None;
     let mut key = None;
+    let mut cake = None;
     let (options, remainder) = rest.as_chunks::<2>();
     for pair in options {
         match pair[0].as_str() {
             "--cas" if cas.is_none() => cas = Some(&pair[1]),
             "--public-key" if key.is_none() => key = Some(&pair[1]),
+            "--cake-lpr" if cake.is_none() => cake = Some(&pair[1]),
             _ => return Err(usage.into()),
         }
     }
@@ -37,10 +39,18 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     match command {
         "verify" => {
             let cas = cas.ok_or(usage)?;
-            let report = logos_audit::verify(Path::new(ledger), Path::new(cas), &key)?;
+            let cake = cake
+                .map(|path| logos_lrat::CakeRegistry::register(Path::new(path)))
+                .transpose()?;
+            let report = logos_audit::verify_with_cake(
+                Path::new(ledger),
+                Path::new(cas),
+                &key,
+                cake.as_ref(),
+            )?;
             println!("AUDIT_OK {report}");
         }
-        "export" if cas.is_none() => {
+        "export" if cas.is_none() && cake.is_none() => {
             let report =
                 logos_audit::export(Path::new(ledger), &key, &mut std::io::stdout().lock())?;
             eprintln!("AUDIT_EXPORTED authenticated_only=true {report}");

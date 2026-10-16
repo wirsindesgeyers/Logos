@@ -32,6 +32,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Confirmar arquitetura nativa
         run: test "$(uname -m)" = "${{ matrix.arch }}" && uname -m
+      - name: Dependências do isolamento do cake_lpr
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap util-linux
+      - name: Instalar checker offline fixado
+        run: python3 tools/build_cake_lpr.py
       - run: cargo fmt --all --check
       - run: cargo build --workspace --all-targets
       - run: cargo clippy --workspace --all-targets -- -D warnings
@@ -186,7 +190,7 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
       - run: uv run python ../tools/gen_crypto_vectors.py --check
       - run: uv run python ../tools/gen_cas_vectors.py --check
@@ -224,3 +228,18 @@ jobs:
         with:
           tool: cargo-deny
       - run: ci/selftest.sh
+
+  cake-rebuild:
+    name: cake_lpr rebuild (${{ matrix.host }})
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-24.04, ubuntu-22.04]
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/build_cake_lpr.py --rebuild --target x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cake-rebuild-${{ matrix.host }}
+          path: target/cake-lpr/cake_lpr.build.json

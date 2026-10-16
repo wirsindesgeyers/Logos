@@ -38,10 +38,16 @@ allow = [
   { name = "logos-kernel" },
   { name = "logos-gateway" },
   { name = "logos-attest" },
-  { name = "logos-audit" }, # canon/crypto/checkers/rusqlite, fora da TCB, ADRs0025/0028; ground para rederivação CNF
+  { name = "logos-audit" }, # canon/crypto/checkers/rusqlite, fora da TCB, ADRs0025/0028/0031; ground/lrat para rederivação e recheck
   { name = "logos-cli" }, # ledger/crypto/canon locais; fora da TCB, ADRs 0022/0024
   { name = "logos-tui" },
   { name = "xtask" },
+  # logos-lrat: memfd/seals seguros (ADR0031)
+  { name = "rustix" },
+  { name = "linux-raw-sys" },
+  { name = "errno" },
+  { name = "windows-sys" },
+  { name = "windows-link" },
   # logos-canon (ADR 0003)
   { name = "unicode-normalization" },
   { name = "tinyvec" },

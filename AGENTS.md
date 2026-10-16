@@ -50,9 +50,9 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ## 4. Verificação completa (rodar antes de todo commit)
 
 ```sh
-ci/verify.sh              # fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
-                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002)
-                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); crash ledger (SIGKILL, 10k appends), índices (rebuild 100k, p99 com 1M); vetores --check
+ci/verify.sh              # instala cake_lpr offline fixado, fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
+                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr)
+                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); crash ledger (SIGKILL, 10k appends), índices (rebuild 100k, p99 com 1M); vetores --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 
@@ -131,3 +131,8 @@ fuzz/       alvos de cargo fuzz (workspace próprio)
   é 15.0 e o `unicode-normalization` 0.1.25 é Unicode 17 (por isso está fixado em `=0.1.24`).
 - `gh` (GitHub CLI) não está instalado: não dá para consultar a CI daqui; peça ao mantenedor.
 - Ferramentas instaladas: `cargo-deny`, `cargo-audit`, `cargo-fuzz`, `tokei`, `uv`.
+
+- cake_lpr4.5 exige Linux, `/usr/bin/bwrap` e `/usr/bin/prlimit`, com namespaces
+  de usuário/rede habilitados. Ausência/falha não tem fallback sem isolamento.
+  Build offline: `python3 tools/build_cake_lpr.py`; rebuild do assembly/FFI
+  fixados: `python3 tools/build_cake_lpr.py --rebuild` (Zig0.15.1 por hash).

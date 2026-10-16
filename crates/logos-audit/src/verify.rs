@@ -1,5 +1,6 @@
 //! Autenticação histórica e composição com checkers, sem executar artefatos CAS.
 
+use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Seek, Write};
 use std::os::unix::fs::OpenOptionsExt;
@@ -11,6 +12,7 @@ use logos_canon::from_canon;
 use logos_core::CheckOutcome;
 use logos_crypto::{ExternalDigest, Hash, PublicKey, hash_raw};
 use logos_ground::{Cnf, GroundLimits, clausify, ground_for_check};
+use logos_lrat::{CakeRegistry, LratCertificate, LratChecker};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
 
@@ -56,9 +58,24 @@ pub(crate) fn walk(
 /// # Errors
 /// Falha explícita em entrada ausente/adulterada, recheck Rejected/Unknown ou I/O.
 pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<Report, AuditError> {
+    verify_with_cake(path, cas, key, None)
+}
+
+/// Recheca camada1 com os dois checkers; executável permitido vem do operador.
+///
+/// # Errors
+/// Recusa checker ausente/desconhecido, CAS inválido e resultado diferente de Accepted.
+pub fn verify_with_cake(
+    path: &Path,
+    cas: &Path,
+    key: &PublicKey,
+    cake: Option<&CakeRegistry>,
+) -> std::result::Result<Report, AuditError> {
     let mut refutations = 0;
     let mut consistencies = 0;
     let mut cnf_derivations = 0;
+    let mut cnfs = BTreeMap::new();
+    let mut lrat_proofs = 0;
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -109,6 +126,36 @@ pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<R
                 return Err(fail("CNF rederivation mismatch"));
             }
             cnf_derivations += 1;
+            cnfs.insert(d.obligation, hash);
+        }
+        if let Some(c) = &p.proof_check {
+            if let Some(&hash) = cnfs.get(&c.obligation) {
+                let cake = cake.ok_or_else(|| fail("LRAT recheck requires configured cake_lpr"))?;
+                if c.checker != *cake.identity().as_bytes() {
+                    return Err(fail("LRAT checker identity not allowed"));
+                }
+                let cnf = source::cas(cas, hash)?;
+                let proof = source::cas(cas, c.certificate)?;
+                let rust = LratChecker::new()?.check_lrat(&cnf, hash, &proof, &c.budget);
+                // Os dois checkers são executados, inclusive quando Rust rejeita.
+                let external = cake
+                    .check_bytes(
+                        &cnf,
+                        hash,
+                        &proof,
+                        Hash::<LratCertificate>::from_bytes(*c.certificate.as_bytes()),
+                        &c.budget,
+                    )
+                    .map_err(|e| fail(format!("cake_lpr recheck: {e}")))?;
+                if rust != CheckOutcome::Accepted || external != CheckOutcome::Accepted {
+                    return Err(fail(format!(
+                        "LRAT recheck Rust={rust:?} cake_lpr={external:?}"
+                    )));
+                }
+                lrat_proofs += 1;
+            } else if cake.is_some_and(|cake| c.checker == *cake.identity().as_bytes()) {
+                return Err(fail("LRAT obligation metadata missing"));
+            }
         }
         for r in &p.rechecks {
             recheck(cas, r)?;
@@ -123,6 +170,8 @@ pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<R
     report.refutations = refutations;
     report.consistencies = consistencies;
     report.cnf_derivations = cnf_derivations;
+    report.lrat_proofs = lrat_proofs;
+    report.unchecked_proofs -= lrat_proofs;
     Ok(report)
 }
 

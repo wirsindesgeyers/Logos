@@ -134,3 +134,10 @@ path = "fuzz_targets/lrat_decode.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "cake_output"
+path = "fuzz_targets/cake_output.rs"
+test = false
+doc = false
+bench = false

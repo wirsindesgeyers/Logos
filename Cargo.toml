@@ -47,3 +47,15 @@ all = { level = "warn", priority = -1 }
 opt-level = 1
 overflow-checks = true
 debug-assertions = true
+
+# ADR0031: hashes de centenas de MB de certificados no corpus externo.
+# Manter overflow/debug; não altera o perfil de produção.
+[profile.test.package.logos-crypto]
+opt-level = 1
+overflow-checks = true
+debug-assertions = true
+
+[profile.test.package.sha2]
+opt-level = 1
+overflow-checks = true
+debug-assertions = true

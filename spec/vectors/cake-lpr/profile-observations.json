@@ -1,0 +1,111 @@
+{
+  "format": "cake-profile-observations/v1",
+  "binary_sha256": "48760ef54cd448f86b7587715e12b5236d2d1e66981b68b0f4b8da9802484eb4",
+  "as_bytes": 268435456,
+  "heap_mb": 64,
+  "stack_mb": 64,
+  "cpu_soft": 3,
+  "cpu_hard": 4,
+  "wall_seconds": 5,
+  "input_vectors": "../lrat/vectors.json",
+  "observations": [
+    {
+      "id": "unit-conflict",
+      "rust_expected": true,
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": ""
+    },
+    {
+      "id": "history-deleted",
+      "rust_expected": true,
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": ""
+    },
+    {
+      "id": "unused-branch",
+      "rust_expected": true,
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": ""
+    },
+    {
+      "id": "duplicates",
+      "rust_expected": true,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 0. Reason: clause not empty or singleton after reduction\n"
+    },
+    {
+      "id": "empty-original",
+      "rust_expected": true,
+      "status": 0,
+      "stdout": "s VERIFIED UNSAT\n",
+      "stderr": ""
+    },
+    {
+      "id": "sparse",
+      "rust_expected": true,
+      "status": 1,
+      "stdout": "",
+      "stderr": "CakeML heap space exhausted.\n"
+    },
+    {
+      "id": "wrong-hint",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 0. Reason: clause not empty or singleton after reduction\n"
+    },
+    {
+      "id": "changed-clause",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 1. Reason: pivot must be non-zero\n"
+    },
+    {
+      "id": "unjustified",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 0. Reason: pivot must be non-zero\n"
+    },
+    {
+      "id": "deleted",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 1. Reason: clause index unavailable: 1\n"
+    },
+    {
+      "id": "tail",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 1. Reason: pivot must be non-zero\n"
+    },
+    {
+      "id": "rat-unsupported",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c empty clause not derived at end of proof\n"
+    },
+    {
+      "id": "sat",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c Checking failed at line: 0. Reason: pivot must be non-zero\n"
+    },
+    {
+      "id": "no-empty",
+      "rust_expected": false,
+      "status": 0,
+      "stdout": "",
+      "stderr": "c empty clause not derived at end of proof\n"
+    }
+  ]
+}

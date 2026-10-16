@@ -13,7 +13,7 @@ use std::path::Path;
 
 use logos_crypto::PublicKey;
 
-pub use verify::{export, verify};
+pub use verify::{export, verify, verify_with_cake};
 
 /// Falha de leitura, autenticação, formato ou recheck, nunca veredicto lógico.
 #[derive(Debug)]
@@ -64,6 +64,8 @@ pub struct Report {
     pub unchecked_proofs: u64,
     /// Derivações O→CNF reemitidas e conferidas (não provas LRAT).
     pub cnf_derivations: u64,
+    /// Provas de camada1 rechecadas por Rust e cake_lpr, ambos com Accepted.
+    pub lrat_proofs: u64,
     /// Digest integral do último evento; None no vazio.
     pub head: Option<[u8; 32]>,
 }
@@ -73,12 +75,14 @@ impl fmt::Display for Report {
         let head = self.head.map(hex).unwrap_or_else(|| "none".into());
         write!(
             f,
-            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={}",
+            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={}",
             self.events,
             self.refutations,
             self.consistencies,
             self.unchecked_proofs,
-            self.cnf_derivations
+            self.cnf_derivations,
+            self.lrat_proofs,
+            self.lrat_proofs
         )
     }
 }
