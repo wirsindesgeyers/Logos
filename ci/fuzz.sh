@@ -37,6 +37,21 @@ for vector in vectors:
 print(f"event_decode: {len(vectors)} vetores canônicos no corpus")
 PY
   fi
+  if [ "$t" = cnf_decode ] || [ "$t" = lrat_decode ]; then
+    python3 - "$t" <<'SEED'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+field = "cnf" if sys.argv[1] == "cnf_decode" else "proof"
+corpus = Path("corpus") / sys.argv[1]
+corpus.mkdir(parents=True, exist_ok=True)
+for vector in json.loads(Path("../spec/vectors/lrat/vectors.json").read_text())["vectors"]:
+    wire = vector[field].encode()
+    (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+SEED
+  fi
   echo "== $t (${seconds}s) =="
   cargo fuzz run "$t" -- -max_total_time="$seconds" 2>&1 | tee "../fuzz-logs/$t.log"
 done

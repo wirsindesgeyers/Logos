@@ -306,6 +306,13 @@ dependencies = [
 [[package]]
 name = "logos-lrat"
 version = "0.0.0"
+dependencies = [
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ground",
+ "serde_json",
+]
 
 [[package]]
 name = "logos-model"

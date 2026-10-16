@@ -9,15 +9,42 @@ on:
         description: "Segundos por target"
         default: "3600"
   pull_request:
-    paths: ["fuzz/**", "crates/**", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py", "spec/finite-fragment.md", "spec/vectors/fragment/**", "tools/gen_fragment_vectors.py"] # smoke de poucos minutos
+    paths: ["fuzz/**", "crates/**", "spec/lrat.md", "spec/vectors/lrat/**", "tools/gen_lrat_vectors.py", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py", "spec/finite-fragment.md", "spec/vectors/fragment/**", "tools/gen_fragment_vectors.py"] # smoke de poucos minutos
 
 permissions:
   contents: read
 
 jobs:
-  fuzz:
+  targets:
     runs-on: ubuntu-24.04
-    timeout-minutes: 720
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: targets
+        name: Descobrir alvos no manifesto do fuzz
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          import tomllib
+          from pathlib import Path
+
+          manifest = tomllib.loads(Path("fuzz/Cargo.toml").read_text())
+          targets = sorted(item["name"] for item in manifest["bin"])
+          assert targets and len(targets) == len(set(targets))
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              print("targets=" + json.dumps(targets), file=output)
+          PYTHON
+  fuzz:
+    needs: targets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        target: ${{ fromJSON(needs.targets.outputs.targets) }}
     env:
       SECONDS_PER_TARGET: ${{ github.event_name == 'pull_request' && '120' || inputs.seconds || '3600' }}
     steps:
@@ -29,16 +56,16 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-fuzz
-      - name: Fuzz de todos os targets
+      - name: Fuzz do target descoberto
         # ci/fuzz.sh fixa RUSTUP_TOOLCHAIN=nightly: o rust-toolchain.toml da raiz (stable) tem
         # precedência sobre a toolchain padrão instalada pela action e o cargo-fuzz exige nightly.
-        # Inclui decoders e sort_check via descoberta de cargo fuzz list.
-        run: ci/fuzz.sh "$SECONDS_PER_TARGET"
+        # Um alvo por job permite a hora inteira sem exceder o limite do job em sequência.
+        run: ci/fuzz.sh "$SECONDS_PER_TARGET" "${{ matrix.target }}"
       - name: Arquivar logs e corpus
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fuzz-logs
+          name: fuzz-logs-${{ matrix.target }}
           path: |
             fuzz-logs/
             fuzz/artifacts/

@@ -40,3 +40,10 @@ missing_docs = "warn"
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
+
+# O corpus histórico tem223MB de LRAT; preservar checks de debug com execução viável na CI.
+# ADR0029: só este pacote, sem alterar overflow-checks/debug-assertions do perfil test.
+[profile.test.package.logos-lrat]
+opt-level = 1
+overflow-checks = true
+debug-assertions = true

@@ -1,0 +1,149 @@
+{
+  "format": "lrat-rup/v1",
+  "vectors": [
+    {
+      "name": "unit-conflict",
+      "cnf": "p cnf 1 2\n-1 0\n1 0\n",
+      "proof": "3 0 1 2 0\n",
+      "h_cnf": "88e648d7b3069edc9414c527d27582b6fc11dc6613480b98a84c098a72dab497",
+      "h_proof": "adb6e95f0953f4667de0487208434566720b3402a943409a29e7ce3af2fcac11",
+      "accepted": true,
+      "used": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "history-deleted",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 2 0 3 2 0\n5 d 2 3 0\n6 0 5 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "93053706584bb2ae39aca238ce56d2c759dc5d213c415cef559ee1b0332d136f",
+      "accepted": true,
+      "used": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "unused-branch",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 2 0 3 2 0\n6 0 4 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "d32b7c3373b80da1b78616fc658c34ccb05fafa8b18ecfec5dc1273b84591097",
+      "accepted": true,
+      "used": [
+        1,
+        4
+      ]
+    },
+    {
+      "name": "duplicates",
+      "cnf": "p cnf 1 2\n-1 -1 0\n1 1 0\n",
+      "proof": "3 0 1 2 0\n",
+      "h_cnf": "d8df3f3df049f560611aee51e5f5d869f481cdbff070cdb7cfcf7f40d66a81ec",
+      "h_proof": "adb6e95f0953f4667de0487208434566720b3402a943409a29e7ce3af2fcac11",
+      "accepted": true,
+      "used": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "empty-original",
+      "cnf": "p cnf 0 1\n0\n",
+      "proof": "2 0 1 0\n",
+      "h_cnf": "9006351280e23357160c66ffaaef45d81078a5b70c1a995caa6026de2ecb9e18",
+      "h_proof": "e9e8efac6b9ae4e573ea336bda10c42dd1afd438f229214bc577fcf96ee6694a",
+      "accepted": true,
+      "used": [
+        1
+      ]
+    },
+    {
+      "name": "sparse",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "18446744073709551615 0 4 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "02c7d20d59e2abe7e502d0eb541475d0d958ae605a32bd435a825e598e54d6b6",
+      "accepted": true,
+      "used": [
+        1,
+        4
+      ]
+    },
+    {
+      "name": "wrong-hint",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 0 2 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "b519fee8df341d3e8f1d9ea853421d4a795a13034b9ff76dfe44ba6bfd9203ee",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "changed-clause",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 1 0 3 2 0\n6 0 5 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "d5c7b56b651d32c4872e72b3aa891dcd31881e4ced2d62c0d99fbea23c6ea28e",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "unjustified",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 0 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "9d03c51769c8ca4336d3fa7dc8413f26304c4fd5f2822906ccce5777c7ab2289",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "deleted",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "4 d 1 0\n5 0 4 1 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "d5cd36bbb99403c5814ea1bbe5b0acef64043eb834769760fc95f7c1cf2b6337",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "tail",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 0 4 1 0\n6 0 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "66f36a48555a7216c3f403575f5c67586689094f670e0576b140a1bf2a8b7eeb",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "rat-unsupported",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 1 0 -2 3 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "191a19d9a874bbed6da8dd63d1adc443b3cb648e8cf593e789898a76a063f0db",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "sat",
+      "cnf": "p cnf 1 1\n1 0\n",
+      "proof": "2 0 1 0\n",
+      "h_cnf": "4409364bdcc7c508f0275e1305e7c2df377734ead696e742e47b45a6e9dafa35",
+      "h_proof": "e9e8efac6b9ae4e573ea336bda10c42dd1afd438f229214bc577fcf96ee6694a",
+      "accepted": false,
+      "used": null
+    },
+    {
+      "name": "no-empty",
+      "cnf": "p cnf 2 4\n-2 0\n-1 2 0\n1 0\n2 0\n",
+      "proof": "5 2 0 3 2 0\n",
+      "h_cnf": "58e974848f4fdaa3e4516bf29044fb7eaa444d6772c42b0ca35023e8ef4205ad",
+      "h_proof": "beda7a2dc3a42dd94cfaa4891f926750badf35e3bf2a2268f3903f051f75e54e",
+      "accepted": false,
+      "used": null
+    }
+  ]
+}

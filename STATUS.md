@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-15 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-16 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
@@ -11,7 +11,7 @@ Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigid
 Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`,
-`logos-audit`, `logos-ground` e CAS/eventos/índices de `logos-ledger`;
+`logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`;
 demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
@@ -35,7 +35,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 10686+105199=115885 LOC de correção, build-only64508;
+TCB atual Rust: 11101+105199=116300 LOC de correção, build-only64508;
 logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -116,6 +116,14 @@ recusa CNF trocada mesmo com assinatura/CAS íntegros; prova LRAT segue pendente
 Full verify/selftest VERIFY_OK, exit0;227 Python +25 TCB. Núcleo grounder/
 DAG/IR/Tseitin983 LOC, crate inteiro1337. Determinismo remoto aguarda CI.
 
+4.4: checker próprio cnf/v1+lrat-rup/v1, P2/RUP/deleções e fecho histórico
+sob Budget compartilhado.15 testes Rust,200 provas SAT-2002/22 famílias e600
+corrupções,14 vetores,28160 traces e11 mutantes compilados passaram. Fuzz final
+844911/533686 execuções sem crash. Full verify/selftest VERIFY_OK, exit0;
+227 Python +25 TCB, autoteste sem avisos. TCB logos-lrat417 LOC; corpus XZ56MB
+com manifesto/hashes/reprodução offline. Concordância cake_lpr fica na4.5;
+sem wrapper/auditor LRAT, produtor SAT público ou used_premises antecipados.
+
 ## Etapas da Fase 0
 
 | Etapa | Estado | Evidência / pendência |
@@ -171,11 +179,12 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem classificação, g
 | --- | --- | --- |
 | 4.1 Fragmento de domínio finito | ✅ concluída localmente | Proposta A do ADR0026: classificador global/limites e candidatos sem autenticação; fontes/O/used/deps preservados em6.1/7.3/7.5. Dez regressões, oito vetores,288 interpretações,12 mutantes e fuzz18372/61s passaram. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-4.1.md)/[spec](spec/finite-fragment.md). CI/ARM/fuzz longo pendentes. |
 | 4.2 Grounder | ⚠ implementada, falta CI de determinismo | ADR0027/A: ground/v1 e referências/axiomas explícitos;11 regressões,5k O/32 interpretações/256 valorações,12 vetores e13 mutantes passaram. Fuzz11287/61s sem crash; full verify/selftest VERIFY_OK, exit0. Primeiro critério demonstrado; segundo aguarda CI. [Plano](docs/plans/etapa-4.2.md)/[spec](spec/grounding.md). |
-
 | 4.3 Tseitin/CNF e proveniência | ⚠ implementada, falta CI de determinismo | 5k O/Z3/tabela verdade sem divergência,12 vetores e13 mutantes; auditor3/3 antes/depois do export, bytes/hash/versão conferidos. Fuzz9673/132990 sem crash; full verify/selftest VERIFY_OK, exit0. Núcleo983 LOC/crate1337; primeiro a terceiro critérios demonstrados, quarto aguarda CI. [Plano](docs/plans/etapa-4.3.md)/[spec](spec/cnf.md)/[ADR0028](docs/adr/0028-tseitin-canonico-e-rederivacao.md). |
+| 4.4 Checker LRAT próprio | 🚧 implementada; concordância prevista na4.5 | Parser cnf/v1 e lrat-rup/v1, P2/RUP/deleções/fecho implementados.15 testes Rust,200 provas/600 corrupções,14 vetores,28.160 traces e11 mutantes passaram. Fuzz final844911/533686 sem crash. Full verify/selftest VERIFY_OK, exit0; comparação cake_lpr continua aberta até4.5. [Plano](docs/plans/etapa-4.4.md). |
 
 Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder/CNF e rederivação implementados;
-LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenticação.
+Checker LRAT4.4 implementado; concordância cake_lpr aguarda4.5. Kernel/políticas ainda ausentes,
+fontes opacas não demonstram autenticação.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -231,6 +240,11 @@ LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenticaç
    Python, rederivação3/3 em check-audit e testes nativos. Fuzz de vocabulário/
    eventos exercita CNF/releitura e corpo v2;61s por alvo passou localmente.
    Determinismo integrado remoto4.3/4.2 e ≥1h de fuzz ainda não observados.
+   LRAT4.4: quinze testes nativos/smoke,14 vetores e corpus200/600 ligados
+   aos jobs Rust/Python. cnf_decode/lrat_decode integrados à matriz que descobre
+   os16 alvos; fuzz local final61s por alvo passou. Execução remota/ARM,
+   matriz e ≥1h por alvo ainda não observados. Concordância cake_lpr depende
+   de4.5 e não é alegada por esses testes locais.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -300,35 +314,36 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.4 — checker LRAT próprio
+## Próximo passo: Etapa4.5 — integração do cake_lpr
 
-Prontos: DIMACS cnf/v1 e h(CNF), ProvenanceMap com IDs1-based e suporte
-domain_support da4.3, CAS/eventos/auditor com rederivação real, Budget/
-StepMeter/CheckOutcome da0.6. CI remota de determinismo4.2/4.3 e independência
-3.6 continuam pendentes. Nenhum parser/checker LRAT existe; logos-lrat é esqueleto.
+Prontos: checker Rust LratChecker (P2/RUP/deleções/IDs usados), corpus offline
+SAT-2002 de200 CNFs distintas e provas/600 corrupções, com manifesto e receita
+reproduzível. DIMACS cnf/v1/h(CNF)/ProvenanceMap da4.3 e auditor independente
+3.6 com rederivação O→CNF, CAS/streams/eventos reais. Full verify/selftest da4.4
+passou com VERIFY_OK/exit0. Primeiro e segundo critérios4.4 demonstrados;
+terceiro fica aberto expressamente até comparação na4.5.
 
-Ler ROADMAP4.4 e criar docs/plans/etapa-4.4.md antes do código. Fixar formato,
-versão, limites, P2 e suporte RUP/deleções em ADR/spec. Implementar
-check_lrat(cnf_bytes,h_cnf,proof_bytes,budget), rejeição de provas malformadas
-e extração do fecho de cláusulas originais usadas; cada parser exige fuzz.
-Preparar corpus reproduzível ≥200 provas pequenas/médias e suíte corrompida.
-Não antecipar wrapper/registry/cake_lpr4.5, produtor4.6, used_premises4.7 ou kernel.
-Concordância com cake_lpr será demonstrada após4.5, como o próprio critério4.4 prevê.
+Ler ROADMAP4.5 e preparar docs/plans/etapa-4.5.md/ADR antes do código. Entregar
+build reproduzível e identificação do binário, wrapper subprocesso com limites,
+registry local que recusa hash desconhecido e recheck LRAT no auditor com os
+dois checkers, mantendo independência de ledger/kernel. Não antecipar produtor
+SAT4.6, used_premises4.7, registro no kernel5.4 ou alterar cake_lpr.
 
-Riscos: CNF conserva duplicatas/tautologias e ordenação exata; IDs de cláusulas
-são posições após ordenar. Domínio do hash é logos/cnf/v1\0, não SHA puro ou
-certificate. Budget/exaustão/Rejected não viram Refuted. domain_support precisa
-ser conservado na4.7 mesmo sem cláusula de axioma útil. É lista conservadora
-de contexto: testar precisão/alcance com o certificado, sem unir todas as
-referências automaticamente a used. Rederivação de CNF não checa prova nem autentica fonte. Faltando dependência
-exigida, registrar bloqueio
-conforme AGENTS.md §1.3. Sem push autorizado.
+Decisões/riscos: o critério de trocar binário menciona kernel, mas ele só chega
+na5.4 e está fora do escopo4.5; alinhar esse contrato em plano/ADR antes de
+antecipar kernel. Rebuild igual em duas máquinas exige evidência de dois hosts,
+não duas execuções locais. Conferir diferenças entre LRAT completo e perfil
+RUP estrito (RAT/IDs/deleções/cauda), antes de alegar concordância.
+Used da4.4 são IDs originais da CNF, sem mapear premissas. domain_support da4.3
+é contexto conservador: sua precisão/alcance será analisada na4.7, sem união
+automática a used. CI/ARM/fuzz longo de etapas anteriores seguem pendentes.
+Nenhum push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 10686 LOC Rust próprios + 105199
-  de dependências Rust = 115885 (+64508 só de compilação), após4.3;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-ledger3271.
+- **Tamanho da TCB de correção (execução):** 11101 LOC Rust próprios + 105199
+  de dependências Rust = 116300 (+64508 só de compilação), após4.4;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-lrat417, logos-ledger3271.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -341,6 +356,11 @@ conforme AGENTS.md §1.3. Sem push autorizado.
 ## Armadilhas conhecidas
 
 Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `gen` reservado).
+- Executar Ruff de tools/ a partir de py/, como ci/verify.sh. Selecionar
+  somente o ambiente com uv --project py a partir da raiz usou outra configuração
+  de formatação; isso causou a primeira falha completa da4.4. O corpus LRAT
+  é offline e usa Python padrão/lzma no harness Rust; a prova continua checada
+  pelo Rust e pelo oráculo independente, sem solver instalado na CI.
 - Uma tag nova exige atualizar spec/domains.md, constante e catálogo RESERVED,
   regenerar tools/gen_crypto_vectors.py, incluir o tipo/caso no helper Rust
   de vetores e atualizar as contagens em py/tests/test_crypto_vectors.py.
@@ -1176,3 +1196,28 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   no ADR/deny/lock. Critérios1–3 da4.3 marcados; determinismo remoto4.3/4.2,
   ARM e fuzz longo pendentes. Fontes/memória/logs alheios e mutants.out preservados.
   Sem push; próximo:4.4, checker LRAT, concordância cake_lpr após4.5.
+
+- 2026-10-16 — Etapa4.4 implementada localmente (base37c544e): plano/ADR0029/
+  spec lrat-rup/v1, parsers cnf/v1 e LRAT, P2/RUP/deleções/fecho histórico com
+  IDs esparsos u64 e Budget único.15 testes Rust/14 vetores; cadeia5000 em64KiB;
+  28160 traces (1792 aceitos/26368 rejeitados), todos os aceitos/used UNSAT
+  por enumeração. Corpus histórico SAT-2002:200 fontes/CNFs distintas/22
+  famílias,20–7767 variáveis;200 aceitas/600 corrupções rejeitadas, used exato
+  contra Python independente. JSON249940618/XZ56171972 bytes; manifestos com
+  hashes/origens/opções/revisão do CaDiCaL e reprodução das provas, sem solver
+  na TCB/CI nem produtor público4.6. Onze mutantes compilados capturados;
+  sobrevivente inicial de passos corrigido com caso comentário10k/budget1000.
+  Reservas geométricas contabilizam capacidade; perfil test nível1 só lrat,
+  overflow/debug-assertions explícitos. Fuzz oficial final844911/533686
+  execuções em61s/target, exit0 sem crash; matriz descoberta dos16 alvos.
+  Primeira rodada completa exit1 no Ruff de dois scripts; formatação corrigida
+  rodando em py/. Rodada final ci/verify.sh --selftest VERIFY_OK/exit0:
+  Rust/smokes/5000 CNFs Z3/auditor/TCB/deny/audit/vetores passaram;227 Python
+  em138.23s e25 TCB em2.64s; autoteste sem avisos de tar. Crash10k/24 SIGKILLs/
+  9999 ACKs/108.18s preservou todo append reconhecido; rebuild100k exato;
+  1M/20000 consultas p99=48538ns, cold rebuild539292ms fora da latência.
+  TCB Rust11101+105199=116300 (+415 próprios), lrat417, build-only64508;
+  SQLite C176466 separado. Nenhum pacote externo novo; formatos anteriores
+  preservados. Critérios1–2 da4.4 marcados, concordância cake_lpr fica na4.5;
+  CI/ARM/hora de fuzz ainda não observados. Alterações de memória/fontes de
+  fuzz/logs/mutants.out anteriores preservadas. Sem push; próximo:4.5.

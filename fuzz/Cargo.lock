@@ -241,6 +241,7 @@ dependencies = [
  "logos-crypto",
  "logos-ground",
  "logos-ledger",
+ "logos-lrat",
  "logos-model",
  "logos-obligation",
 ]
@@ -266,6 +267,16 @@ dependencies = [
  "logos-crypto",
  "logos-obligation",
  "rusqlite",
+]
+
+[[package]]
+name = "logos-lrat"
+version = "0.0.0"
+dependencies = [
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ground",
 ]
 
 [[package]]

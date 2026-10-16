@@ -875,8 +875,8 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 - Extração do conjunto de **cláusulas originais usadas** (fecho para trás a partir da cláusula vazia).
 
 **Critério de conclusão.**
-- [ ] Aceita as provas LRAT de um conjunto de ≥ 200 instâncias SAT-competition pequenas/médias (pigeonhole, etc.).
-- [ ] Rejeita 100% de uma suíte de provas corrompidas (hint trocado, cláusula alterada, cláusula vazia sem derivação).
+- [x] Aceita as provas LRAT de um conjunto de ≥ 200 instâncias SAT-competition pequenas/médias (pigeonhole, etc.). Demonstrado:200 CNFs distintas do SAT-02 Challenge Set/SATLIB,22 famílias, com fontes/hashes e reprodução offline; [evidência](docs/plans/etapa-4.4.md) §7.
+- [x] Rejeita 100% de uma suíte de provas corrompidas (hint trocado, cláusula alterada, cláusula vazia sem derivação).600/600 rejeitadas pelo checker, além das regressões e11 mutantes compilados capturados.
 - [ ] Concordância total com `cake_lpr` sobre a mesma suíte (após a Etapa 4.5).
 
 ---

@@ -84,7 +84,7 @@ name = "logos-lrat"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/checker.rs", "src/lib.rs", "src/parse.rs", "src/resources.rs"]
 
 [[crate]]
 name = "logos-ledger"

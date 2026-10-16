@@ -1,0 +1,250 @@
+{
+  "stage": "4.4",
+  "method": "Substituir before por after, rodar command, restaurar fonte. caught exige compilação e assertion failure, não erro de compilação.",
+  "results": [
+    {
+      "name": "p2",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "if hash_raw::<Cnf>(bytes) != expected {",
+      "after": "if false && hash_raw::<Cnf>(bytes) != expected {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "p2_binds_exact_bytes_and_domain",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "deleted",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "if !clauses[index].active {",
+      "after": "if false && !clauses[index].active {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "rejects_deleted_forward_self_reused_ids_and_invalid_deletions",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "rup-skipped",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "    rup(&lits, &deps, &clauses, &mut assignment, res)?;",
+      "after": "    if false { rup(&lits, &deps, &clauses, &mut assignment, res)?; }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "wrong_hint_changed_clause_and_unjustified_empty_are_rejected",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "non-unit",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "if unit.is_some_and(|old| old != lit) {",
+      "after": "if false && unit.is_some_and(|old| old != lit) {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "duplicates_do_not_count_as_distinct_units_and_tautologies_do_not_conflict",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "polarity",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "let value = if lit > 0 { -1 } else { 1 };",
+      "after": "let value = if lit > 0 { 1 } else { -1 };",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "history_survives_deletion_and_excludes_unused_original",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "tail-skipped",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "    for line in proof_lines(proof)? {",
+      "after": "    for line in proof_lines(proof)? { if empty.is_some() { break; }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "all_lines_are_checked_after_empty_and_on_unreachable_branches",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "closure-all",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "if seen[index] == 1 {",
+      "after": "if seen[index] <= 1 {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "history_survives_deletion_and_excludes_unused_original",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "history-erased",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "clauses[index].active = false;",
+      "after": "clauses[index].active = false; clauses[index].deps.clear();",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "history_survives_deletion_and_excludes_unused_original",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "size-inclusive",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "> budget.size_bytes {",
+      "after": ">= budget.size_bytes {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "all_resource_exhaustions_are_unknown_and_never_have_used",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "steps-unmetered",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "    res.step(size)?;",
+      "after": "    if false { res.step(size)?; }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "shared_budget_covers_multiple_additions_and_memory_is_inclusive",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "memory-unmetered",
+      "file": "crates/logos-lrat/src/resources.rs",
+      "before": "self.remaining = self.remaining.checked_sub(bytes).ok_or(Exhausted::Memory)?;",
+      "after": "if false { self.remaining = self.remaining.checked_sub(bytes).ok_or(Exhausted::Memory)?; }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "all_resource_exhaustions_are_unknown_and_never_have_used",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    }
+  ],
+  "first_attempt": {
+    "survivor": {
+      "name": "steps-unmetered",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "    res.step(size)?;",
+      "after": "    if false { res.step(size)?; }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "checker",
+        "shared_budget_covers_multiple_additions_and_memory_is_inclusive",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    "correction": "Acrescentado comentário de10k bytes e budget1000: remover cobrança de bytes agora aceita indevidamente e falha assertion."
+  },
+  "profile": "test, logos-lrat opt-level1, overflow-checks=true/debug-assertions=true"
+}

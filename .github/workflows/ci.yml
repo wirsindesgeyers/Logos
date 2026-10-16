@@ -64,6 +64,8 @@ jobs:
         run: cargo run -p logos-ground --example ground_smoke
       - name: Tseitin e DIMACS independentes
         run: cargo run -p logos-ground --example cnf_smoke
+      - name: Checker LRAT RUP público
+        run: cargo run -p logos-lrat --example lrat_smoke
       - name: Auditor independente (SQLite e export canônico)
         run: ci/check-audit.sh
       - uses: astral-sh/setup-uv@v5
@@ -184,7 +186,7 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
       - run: uv run python ../tools/gen_crypto_vectors.py --check
       - run: uv run python ../tools/gen_cas_vectors.py --check
@@ -199,6 +201,8 @@ jobs:
       - run: uv run python ../tools/gen_fragment_vectors.py --check
       - run: uv run python ../tools/gen_grounding_vectors.py --check
       - run: uv run python ../tools/gen_cnf_vectors.py --check
+      - run: uv run python ../tools/gen_lrat_vectors.py --check
+      - run: uv run python ../tools/lrat_corpus.py --check
       - name: CNF contra SAT Z3 e tabela verdade (5 mil O)
         run: ../ci/check-cnf.sh
       - name: Smoke público do produtor Z3 com checker Rust

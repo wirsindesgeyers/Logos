@@ -1,0 +1,3248 @@
+{
+  "format": "lrat-rup/v1",
+  "source_url": "https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/New/Competition-02/sat-2002-beta.tgz",
+  "archive_sha256": "90be16ce81b54ccfc3b93b5633d746dbf21dc7dcedde5211a13793615a0f87bc",
+  "cadical_commit": "c60730422e758ef1cebe7aeddf2dda31c996bf04",
+  "fixture_sha256": "01d422a9e25e1d9d537171ddbe4db3503380624c239739ebbfe85605e6208557",
+  "fixture_bytes": 56171972,
+  "uncompressed_bytes": 249940618,
+  "count": 200,
+  "cases": [
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.7/unif-c1125-v250-s1670494464.cnf",
+      "source_sha256": "1e682b82d194eddf07cb0207fcfc8255f9fda1074c7ffb07df3b0dcbf15559ba",
+      "h_cnf": "4272bb114d73dfa6c0f1ec506b7fe43401f6c48a193f9f976d86c5b1649c1e50",
+      "h_proof": "a56a1ef224e31819ee64c215cc1600b24eab5d5ff84728ac873d80a48c49a728",
+      "raw_proof_sha256": "acb39a3a7eb2970cad768ea46d839cb5b9a00e40880f3d32fc6e878ff6829bb5",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1125,
+      "cnf_bytes": 15936,
+      "proof_bytes": 4628782,
+      "used_clauses": 1118
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.8/unif-c1250-v250-s1014042678.cnf",
+      "source_sha256": "92535552a8defbc889417595ec501755c034b8af729330eee38edcd5a061d530",
+      "h_cnf": "8fe374bce9e631c74aac773899e9e82aa9780c671015730d19b37c67508c1ee3",
+      "h_proof": "6fa1b272c717aa1357324b6b3e621a4065379955f15f37825be494d911010c18",
+      "raw_proof_sha256": "91ab9cde8dec60bbf52c5cccfb517ac77de02cc0ed529b06a1ffbdc7d9bcb8bd",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17753,
+      "proof_bytes": 3767130,
+      "used_clauses": 1250
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.8/unif-c1250-v250-s1471999806.cnf",
+      "source_sha256": "0a3313b90bb4dd153a6d06f7df56cd2b22350dba3ce91c2d2de0ed01b77db752",
+      "h_cnf": "9212e09628c1f7db4c214e79e0ec3740f83086abfbc90f303b84a4637fc240b2",
+      "h_proof": "f6e0aef45ad81b8ed2a5a572a5b665b7fd28df5ffa4f333448177f3ecc5857e4",
+      "raw_proof_sha256": "df47724665ac5b80134f408332e7cf8c44e807434c2f61ddd5a1d456d8b0be05",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17733,
+      "proof_bytes": 2543444,
+      "used_clauses": 1249
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.8/unif-c1250-v250-s1704674283.cnf",
+      "source_sha256": "cb1230a2af252a525643cd36d51193e6b4f76cd27eb085872b374fb05b94d1f7",
+      "h_cnf": "1f54c140cb66f4affea0c98acf77f04537b4ceb6b36e9dbb51fd710d44319dd9",
+      "h_proof": "b85c599b137433cbf22e8dc08bff812b14556448cfbd630d673971fd56a4dba0",
+      "raw_proof_sha256": "6257e5d61d7b9f99629009d612a099a70e0f1ee7a4953b97f1ffbf4b173885b6",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17800,
+      "proof_bytes": 4249520,
+      "used_clauses": 1249
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.8/unif-c1250-v250-s1781662145.cnf",
+      "source_sha256": "2c6428eb0794ba27f56904420482e802263ac419eeebc06ba9b4560d99338cd0",
+      "h_cnf": "3e4182437a8d8587aa8841ea53c357d847e8482854a5b746b796e778db1bb3b8",
+      "h_proof": "3df37fe8fd3f648755bee513dd3d44249ac353eb89e49924599c840563bd0aa6",
+      "raw_proof_sha256": "a02b6bc632947a2b48479335e3cd5e657d3a6a01651cb2e2d8acb8210a3a5d9b",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17744,
+      "proof_bytes": 4454190,
+      "used_clauses": 1250
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.8/unif-c1250-v250-s480917233.cnf",
+      "source_sha256": "09d385c9b4127f90f1f540be9f038efa7f4c1547a46da7c520c55784ee050c2c",
+      "h_cnf": "6d5d474c5ada4e46ad51767eb342b28cba8bc959e1f4d77891249698b27d4460",
+      "h_proof": "477adac9190110a5d3ae2c6f81895c75f47e478e589c55186bef3a6f99a2214b",
+      "raw_proof_sha256": "034b22ae07eede19e69b9f285502d91e07a5df6ec6b6765db821deeb530a226b",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17766,
+      "proof_bytes": 2846625,
+      "used_clauses": 1250
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1625-v250-s1050485456.cnf",
+      "source_sha256": "e0028cec5245e5d9997ad94c892d954fe129dd3eb919fa4a1b5e5f8b70cf735d",
+      "h_cnf": "f255c0bd909fdf7ec5e68e1499096139ddc06610b31f13946587ab8fd2aa6964",
+      "h_proof": "8e3af4261a188225e2872af45e9aa21580d81a3c7e737b86ca7b8aaebf68fa15",
+      "raw_proof_sha256": "a4d23518a391834ff71c0e7a458da0bb1eb135fad636b47b31e261ca8103cf37",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23053,
+      "proof_bytes": 339237,
+      "used_clauses": 1603
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1625-v250-s1074209340.cnf",
+      "source_sha256": "d00052e0738cf74e0e1b3bdaba16a62ffd8a86edaea76fead6f6002a24ae9889",
+      "h_cnf": "f45dd20c218eecbb82c34d944fdc6d645932f9b7dd4da34619420f4e41f5cc7f",
+      "h_proof": "6ac839822d1a56f52b1e50adaeb6c1b436f9fdf20e0c7533c980ebf960812747",
+      "raw_proof_sha256": "d309648bf4c455b7d57d20ea6354c47b2ea438b104d6d5391349fba71d04a36b",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23085,
+      "proof_bytes": 584204,
+      "used_clauses": 1622
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1625-v250-s329304759.cnf",
+      "source_sha256": "69111bbe709bf174582349de0dcf3b8603689dbd3226de485b20903a4f41ea8e",
+      "h_cnf": "52dad17994c1598df8cb1e75d315cfeeffa5d3a6ad167250fcdcc49a7166b8ed",
+      "h_proof": "895a7f98b43afa29d00b2b81a7bc13dfcb64bd7cd5eb1788716a73ef928f3d59",
+      "raw_proof_sha256": "2107f628504f58f027cb06c1ecf6ec5102c4f9eeaece0675d676979a7aceaa11",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23103,
+      "proof_bytes": 543149,
+      "used_clauses": 1610
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1625-v250-s571313867.cnf",
+      "source_sha256": "727e02dbeb278174231858c9edcc5008b0bcea14a2217a14452f3dcdbf2d32ce",
+      "h_cnf": "c58a51ca9920be9a3259da54665759c3c818e59ddc2abc2fec7b76fd527c168c",
+      "h_proof": "8ed90239db8386a1e6be200fbe39669a5d693d76a88d964d3513b3d35e8c66b6",
+      "raw_proof_sha256": "c44576be0eba123c9523c2bc1533ccb319c0d332c8e6e389889e7d75f5b1300d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23150,
+      "proof_bytes": 280268,
+      "used_clauses": 1565
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1625-v250-s873326728.cnf",
+      "source_sha256": "6513bd5b86365b4753f01a7096ed464a7f745f665656cd00300bd5cb528e7837",
+      "h_cnf": "82dbf68c347d309b59e292a3a0852e9ca50db9e3836da522399a67aeaaec9f87",
+      "h_proof": "038f7dd218bf0cedf4769738123c408af748042b8db5d5128fcefce737f5aba6",
+      "raw_proof_sha256": "d934219b1a7bfb04b17e2126694d2b38f66e4ba35faef3679d427391aee1d43d",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23031,
+      "proof_bytes": 383285,
+      "used_clauses": 1614
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1950-v300-s1086847325.cnf",
+      "source_sha256": "0f94595181594aa10f32da4b3c859b3d4a7750f59a1ab52b41e646c94622eb88",
+      "h_cnf": "f41f12670650f3d4cc492fe207ebdb6903fdc83d572d6b205cbec1b9341a18e1",
+      "h_proof": "c7a1a596e2ce97abbbfcb9107c8cd88c75b91c3fb6a81843577603f8cbf6d9b4",
+      "raw_proof_sha256": "730431c3269adf2ba92187ea3e0d58b6bdae2a7cdd38352a6ad5ee4c34d782fe",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28022,
+      "proof_bytes": 1223838,
+      "used_clauses": 1944
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1950-v300-s115699898.cnf",
+      "source_sha256": "970c3fbc7f3b0a66c6f99ee4a4a5d12e0abf1330f794dc3c5172a22b76f411a0",
+      "h_cnf": "c6b7d03da9a1897a238d1ccd9fc2dfb75f4bf06c12fb144cb3779f3333fe835e",
+      "h_proof": "cf766fa94df8d6064f60e7f24f45b4339a75263808679cd46cd68b61a9bed148",
+      "raw_proof_sha256": "8ed3343a4f576d5daedaf73c5999169651fb65a14af22747aa0ff106ccbf8631",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28006,
+      "proof_bytes": 1727665,
+      "used_clauses": 1944
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1950-v300-s1878851628.cnf",
+      "source_sha256": "60662124b65f6376ed668a19f168b9e518ef50c65e977cc511cb1a8f27a7390b",
+      "h_cnf": "bd3fb745c4f9c6fd4dc581278891992ac139829df3806a85c76c4d9c643e72f8",
+      "h_proof": "2e8893e9deac68e2a69d4aafd15cb546ae1008593ffd85466bca5bb9c5d19160",
+      "raw_proof_sha256": "6ebcdc661378aa98ebb4950a9ebbdeee621905c72d635855326420e453a91498",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28041,
+      "proof_bytes": 1446720,
+      "used_clauses": 1946
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1950-v300-s1891680993.cnf",
+      "source_sha256": "6a43867c10e209e984d52d6f8128f8685fe5eed8b58f3c1777a5c3313f5ab5de",
+      "h_cnf": "241e812c9564f073309e7514a57dd0d70a04d6508bd7ab55569f5db7a560a74f",
+      "h_proof": "23356828f2cfb35cda5c5273ed9b90d8400abaa8c60efd710611bb2e6fbbd028",
+      "raw_proof_sha256": "9cddf99cd2531bc052ffdcf96886b829511b5cb6419660411a80f842684126f6",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28058,
+      "proof_bytes": 2364061,
+      "used_clauses": 1948
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c1950-v300-s682445738.cnf",
+      "source_sha256": "d34d8837cd25eb6d67ffc46176f59242eacfb1276ed739189a091126542e2e24",
+      "h_cnf": "50da02b28fa555f27c4b18783c623a1a02b5c3e39da732e71de50d872a22b172",
+      "h_proof": "ec8333f2a8dd52df539cb840b00238d6a8831c414671d2a19c68f9ce06b5d05d",
+      "raw_proof_sha256": "9d68b7822c08f11e271df0a73a19313abd1fc8fa49c1e21a91dd4aad39a382c0",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 27968,
+      "proof_bytes": 1495942,
+      "used_clauses": 1947
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c2275-v350-s15722288.cnf",
+      "source_sha256": "cc70341af565bb7562d06d4099704fe03a541fdebebe4c5bc3137d002ce24747",
+      "h_cnf": "d93b7086761a892853566c5cf9b1d6756d49de05bf318b176fcd5cc2f7bec645",
+      "h_proof": "388433cb8bb753759386f65ceeba200eefe641f3e2574defefd95abcd6bedde9",
+      "raw_proof_sha256": "1d1fd92170cb3baa867d7fead5edffc9738eb15e9ff55f61f06bc49b394b1b55",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33183,
+      "proof_bytes": 3212444,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c2275-v350-s1836997859.cnf",
+      "source_sha256": "1a5194f4ef2ecbe870d227a3d5c505a83b19ecd59639d0fb30e7ae23d67f9820",
+      "h_cnf": "503b968d997c48df22c818e1ce419849cd9999d19e1b895dc5a47cd500e08741",
+      "h_proof": "f3ccecce293974724faf1d9fe1a6e4ac9460c7faff80f7e407ad49293d9786e9",
+      "raw_proof_sha256": "1070c719abd92eec885725c82b70e56dbd2b91c54a5acf2c3783e22d76aaeebf",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33177,
+      "proof_bytes": 3936506,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c2275-v350-s2039996060.cnf",
+      "source_sha256": "6a92383ced446f3a4fb273a0faa2567929b65a29d195ee3decd58d8be5f736f9",
+      "h_cnf": "fe03fe02c45e114908f770670187550f64bca2c1eeecf0dfa90c95b8ef2b892b",
+      "h_proof": "deff6e17063206271547a4c42b761f4ab25bebba8dbd2feb2b4909fbde467a16",
+      "raw_proof_sha256": "0f33498db36adf7e705125d3da1d452986c437a6166c17ae4b6342ed952f10f3",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33047,
+      "proof_bytes": 4697682,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c2275-v350-s876035895.cnf",
+      "source_sha256": "ac575da7ba617f192c58a6b1f55d4d4224644f026497500d3ce5afd8807ac136",
+      "h_cnf": "8b71d29526d24c615807432405a5a3ff5b3e7e8ba81a7a76577336570bad011a",
+      "h_proof": "b858c3fa8d30269e2093459c1566b5c60e46801c4a7843d7e20788903895593c",
+      "raw_proof_sha256": "4da889c956f3fc05c4558cd2d1fd775d014cf11c6f30bcf5ce1861898f8048af",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33177,
+      "proof_bytes": 6111533,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-1/gen-1.9/unif-c2275-v350-s972582399.cnf",
+      "source_sha256": "990697fd85eefd3d6ff5e4ddde95c45778b28eea4203854a6f919bf676c12a53",
+      "h_cnf": "27e68c4e153daf419890d6d74579f7e8217f4713b0028967337f0e4374af04a3",
+      "h_proof": "8424c39ffe3a4b7350987d53186d2f7ce016c19fcc402d5061f9972eca3b614e",
+      "raw_proof_sha256": "f4211882815172cf0ef0fe8e346b2b0cabaa462ec864f147709b606917adaeb4",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33208,
+      "proof_bytes": 4422835,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.8/okgen-c1250-v250-s109089145-109089145.cnf",
+      "source_sha256": "23bece60bd06fdab9a89bfa91714f764a7bf42c3c7ab18ef87ee941734cd96c1",
+      "h_cnf": "6c0b020528a30de5a0d37d6268745bcd3c3d7d2875ddedf26eacd2ee507cfbc4",
+      "h_proof": "1479008e936ee97b6ba723746230066b24dc6959e98cba1359bc1d8f1c4cb1f2",
+      "raw_proof_sha256": "1c79c8f1e39d542ef6ee65d8de112d0b75f875f34ebf910f788d2c602a6648fb",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17688,
+      "proof_bytes": 3337924,
+      "used_clauses": 1243
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.8/okgen-c1250-v250-s1150708211-1150708211.cnf",
+      "source_sha256": "3e017b3835d5963f59501f13eb4ce4b6638fb9af94bde20e6109e9318e06d1ab",
+      "h_cnf": "315927217592254e2d967ee48845ae86f441fa51211a811445e3e886f421216f",
+      "h_proof": "faf2e6b67fb01811d0de462dfc61ec51b517ae1eeecd0bf5b2f5f4b8416e0405",
+      "raw_proof_sha256": "d1e2cf9891cd3d5c793e3cb228d11efd81656e781849dee0ab8277c1c639891f",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17712,
+      "proof_bytes": 4010967,
+      "used_clauses": 1250
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.8/okgen-c1250-v250-s1183586200-1183586200.cnf",
+      "source_sha256": "7d745b6665410bfbdc77825cc6660242f000c459edf0c179ae58f71715b3eacc",
+      "h_cnf": "99ecc06335c1e16ab82c8b81b2919a36576b5250f2fc79dbbee444fd4eba34c2",
+      "h_proof": "d1cbcff0e9422e16bce6aeac241424011078120e6beeadc57315e90d80e64145",
+      "raw_proof_sha256": "650af069148d34f307cd8acc7ba8894006dab34edad45605350b8997fd47ace9",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17776,
+      "proof_bytes": 2595629,
+      "used_clauses": 1247
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.8/okgen-c1250-v250-s1712445435-1712445435.cnf",
+      "source_sha256": "5b625c4fe06466cb1a44674c321ef0ce1476d7158e26ced3fa78ac513ce9e20b",
+      "h_cnf": "61db15ba06f58526055298cee982cbe47b59271a03170b78ff1dd978a45d903f",
+      "h_proof": "a83ec79e4336247b3ba4995edb85f945d6693b144c50898c3242573103b7ab6a",
+      "raw_proof_sha256": "1788760424da4e20586b50280a72de6b52c92ae9958bd86aee3237c60eb9b037",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17637,
+      "proof_bytes": 1688724,
+      "used_clauses": 1241
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.8/okgen-c1250-v250-s974554662-974554662.cnf",
+      "source_sha256": "f13c638203437ae8942456ab812410cb903b044ac94130ce5aefbce06bd99c2b",
+      "h_cnf": "6898699eba37fd7cde8e591d2dae9390872814c1a02a5626d0589e6aaf4f2e70",
+      "h_proof": "ef633be8ddfc36cc983d084df824b98cbbefc356da9f2809a0c78639986f8fdc",
+      "raw_proof_sha256": "f9636cf07d148f401eb30e51e505e3453e07267b45a127171e6d6a7c4bd52719",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1250,
+      "cnf_bytes": 17807,
+      "proof_bytes": 4742681,
+      "used_clauses": 1244
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1625-v250-s1552501129-1552501129.cnf",
+      "source_sha256": "a5d37a70a505676ae5c8875a773d6a8d44c6edc0831cc74dcf1fc73621a5e86f",
+      "h_cnf": "1fa2cd834d91d6fcf4f2069f095b571313f3e009e176c9436324226a890e9f9f",
+      "h_proof": "8e0c8200286ec0791759a0e9bf703f7f2c9cbbf0cf9255cba4104a88c5a790f0",
+      "raw_proof_sha256": "90aa2c50a6e12f1934a5162cd9d9397613912f79306e56db71919b131eaa2972",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23008,
+      "proof_bytes": 422634,
+      "used_clauses": 1607
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1625-v250-s1788998670-1788998670.cnf",
+      "source_sha256": "c4f1df72fef31e160632a1e6b92e4ba5e6b86b53e1605059851329cbcce4a6c3",
+      "h_cnf": "f436f27b712f7417009f01ceec0af5e15fa5faf284a59efef46e496154848651",
+      "h_proof": "75b34c6fd0d88a2ae50dbc984d976f597c1c21a28db5a2452a3a87c56ba23b95",
+      "raw_proof_sha256": "2346b74f10bbfb08ebde45939ad4c5054c4a8234bc9be1a6402ebb11768b55a4",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 22999,
+      "proof_bytes": 417378,
+      "used_clauses": 1606
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1625-v250-s317413490-317413490.cnf",
+      "source_sha256": "dc75296fc108d9a4309e80c987b4c5bca18a982493aa3cb06536939178126b6f",
+      "h_cnf": "e16436bed155a64a81d88dccf375911b8496dd248aa09d0b29c129de85e1550e",
+      "h_proof": "0ce93c9a868e6ce01df3fcd5825ef9bcea788257c26c03f86b108f89b1998c54",
+      "raw_proof_sha256": "07010b7828f5d0ce2dbe825732b8dc4a89bcf1081e05625eb4567eb37dbf0574",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23121,
+      "proof_bytes": 466081,
+      "used_clauses": 1614
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1625-v250-s49543550-49543550.cnf",
+      "source_sha256": "e4ba32682c89a106bd3db7cb00b41ee0b8c2a89875b74d0c95b876bbd3967ac8",
+      "h_cnf": "ebb2e7018ba1f96d8a7dc88d074a3819dc8a88dde380d2cdc57ec5de6d04caab",
+      "h_proof": "4c7e4ccbebb8fb38919556b65bc7320044990c1a96941d000f6927dd7dabbea7",
+      "raw_proof_sha256": "8ad19cfefedad1b3f692c654d479e72e6cc3b074c70a2eca654fad968335c068",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23125,
+      "proof_bytes": 484112,
+      "used_clauses": 1617
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1625-v250-s882959944-882959944.cnf",
+      "source_sha256": "0aad8ff0d5cb87d0b72acba90586a2dabf8b1b6721d6ce79c230a2b4a3c1d7ac",
+      "h_cnf": "9d1928b26b3597bd203b80689a93a9c4edbb5e3bfc9ac738d4e64e30edd86154",
+      "h_proof": "fc99ca586fc81ca6ea972a0c10950e00e783025ab7c368a9048cfc73a4ef8af6",
+      "raw_proof_sha256": "6894fe56391a0d1f66a07c067d98d8fedb92a55c0e1febae3ca1f0e0077539ba",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 250,
+      "clauses": 1625,
+      "cnf_bytes": 23063,
+      "proof_bytes": 632769,
+      "used_clauses": 1621
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1950-v300-s1260821077-1260821077.cnf",
+      "source_sha256": "6e09430c26bef5d95c4505e595e39718e65106291410e26806f8a77e9d77aaa3",
+      "h_cnf": "85ba6595d33f9ade9c1e2dd8a75744562dedf372f3167a647e8fbbf625afc34a",
+      "h_proof": "88be621325119399d664bd9b85a2ee8647f161fbefb42ae02039b41123e3f912",
+      "raw_proof_sha256": "02f7e62d6ac2f5cdc3de8707e16f00d418a3d3771e14d931c4faa1af195ecb98",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28110,
+      "proof_bytes": 1608207,
+      "used_clauses": 1947
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1950-v300-s1828398006-1828398006.cnf",
+      "source_sha256": "f19e453ffc465fe726c90f70c19811f4aa20b06e56d17f996a2da512da337a42",
+      "h_cnf": "639aeb692ccdedee6603a7ad58d1db753a36981a176f9ba7161a22c1b3556ece",
+      "h_proof": "dd27789de1d04d17e5716874e2165039e75cdca89e19906651a5cd9d17cff29f",
+      "raw_proof_sha256": "55c277aa12ae62206b7918dfb56a4146391b2db550da0eae6d42291719b41577",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28060,
+      "proof_bytes": 1682583,
+      "used_clauses": 1947
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1950-v300-s1986177779-1986177779.cnf",
+      "source_sha256": "12ad25c37fde4cae9ec8bd46ad5e8e142cfeecad7242637d4ad9b8d6b379f0c6",
+      "h_cnf": "9945378ef5535f19c9777127349778f72adf2970d96acb2dab4020111b0a1896",
+      "h_proof": "e8d50624b7f6420e033594b4fd868a14682f10aa490588d40ecfa4e9bde4cbcc",
+      "raw_proof_sha256": "9b775116f5ab7df5158aa452a588abd3825c7623f4d22b8fbe19ae174bfd3f2b",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28075,
+      "proof_bytes": 1081010,
+      "used_clauses": 1948
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1950-v300-s70590897-70590897.cnf",
+      "source_sha256": "88832766b4fd0a17afb02d081e90d11f573432a5a8e832ad946a0650f1b5e369",
+      "h_cnf": "b95f876f127f1d469fcc8180310c2a028dab94f02ecc52a1353ea36d6ef7d75e",
+      "h_proof": "c8e7bd1ef37578c0b5a3efbdf236bcda2f01c839115bab999b7770c8d07428b1",
+      "raw_proof_sha256": "bd1cade7b6faa5b75af9d1086621ccf999e599049b559e3c8cabe6f3d5066ffd",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28115,
+      "proof_bytes": 1692782,
+      "used_clauses": 1950
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c1950-v300-s839206220-839206220.cnf",
+      "source_sha256": "caa2d1a9a2adfaed02f6a5e4a95d18107ec039262e01b73eb6b971bd320e09e6",
+      "h_cnf": "e39244101a87b1bf92825f8c7cbda4befc4a2658119c71dd051faf3d816baf49",
+      "h_proof": "7f6aa666c58303e4bcafda599696f31ecdebfbd85b3cd039b29d722412e0b480",
+      "raw_proof_sha256": "7c2f539eb9c14227cc7c4b094b51f7bf5f4f0100c43ffe85acce1099f8bec7ad",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 300,
+      "clauses": 1950,
+      "cnf_bytes": 28145,
+      "proof_bytes": 2030124,
+      "used_clauses": 1945
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c2275-v350-s1114836916-1114836916.cnf",
+      "source_sha256": "615569a25161ab1c23858282e3b871a12533e8e1e9ffd5b9a6aadbe96388b38e",
+      "h_cnf": "025071a48a26b89029caa7cec0c4d67491ab8d71db4f08c8696ce582c6e240c7",
+      "h_proof": "b3a38829c66ee65f6070ed6773a805d70a9750db94e93ed1acec46bceb8a9957",
+      "raw_proof_sha256": "522724fa906513c6e5142821a63f0b5a8961a0ed82cbd7276befe374a13830ce",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33118,
+      "proof_bytes": 3727191,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c2275-v350-s1469687161-1469687161.cnf",
+      "source_sha256": "741e62dcd618d46cbb1cc34d2465b6a0c1993a8f83375b40e99eb4ac4d437f29",
+      "h_cnf": "88578fed429e09a2a2947954643789f9aadd00db694b847a6a5c82b8a59edf3b",
+      "h_proof": "619dba5dbb40419003230daf62cc02c4759bcf2d4a4d6121625280450b31b82b",
+      "raw_proof_sha256": "eefc1c23fbe899d5c8e8f68e32a1a0a794f30dc8b2b7b7a10f62126ecb57887b",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33138,
+      "proof_bytes": 4584430,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c2275-v350-s2059616347-2059616347.cnf",
+      "source_sha256": "6fdd99360dcce1986325c9354c8d9b114a2733d0918c02ada9175080850f651d",
+      "h_cnf": "8ecfe8e1b4297bb2585d29e257dc0c884a3e1c9614be3cd87fd4348d7096e0e1",
+      "h_proof": "e628a39dbfd9e8cc04d3a2fda87f0b377568cade9b89c9702d5df5e320014938",
+      "raw_proof_sha256": "0d1ede35f3d1e8519af1b5f11c32fc094e7bea4018f1a39de0df76e3d46b054e",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33132,
+      "proof_bytes": 1644672,
+      "used_clauses": 2269
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c2275-v350-s697471184-697471184.cnf",
+      "source_sha256": "bf44f8ac572418468129cea8fbb4e2a632dd18cf2c8f0d250bd9740c595a1e89",
+      "h_cnf": "e097ab9fa38f160c65e24b30a9bcdb5b54b284d4aa87fbedf803c986ab6146bf",
+      "h_proof": "ec7d053c7305db31375a2b2d79ec02bfcf97c7182cd037644aee76cfb54228da",
+      "raw_proof_sha256": "22537fb896693c3b10a8e999498f61d6fe029d3c70437ca0864bebe73ac71476",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33242,
+      "proof_bytes": 5660680,
+      "used_clauses": 2275
+    },
+    {
+      "source": "sat-2002-beta/generated/gen-11/gen-11.9/okgen-c2275-v350-s963526834-963526834.cnf",
+      "source_sha256": "954ae1c20a9946fd1165d469222e4f4f684387abfbd634b50dfaa1cf19e18cfc",
+      "h_cnf": "0a55451ab6e2b55da52a2ec0ff1179e761bbd1db829613632bf4d49fd642bdcf",
+      "h_proof": "bf6e19c3effe67209927b0d917a9bf6d2d8a80e456a04afb64a3b8fe6bde20b3",
+      "raw_proof_sha256": "9ec3a42453c04575fb48c14c3b9b7a2399336ecf12cac361bbba4b0276277c8f",
+      "solver_options": [
+        "--plain",
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 350,
+      "clauses": 2275,
+      "cnf_bytes": 33206,
+      "proof_bytes": 4994404,
+      "used_clauses": 2274
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca002.shuffled.cnf",
+      "source_sha256": "e56b425830c6224e8827329d18116d21a6c76ca91c3dc000e99a95d29d749870",
+      "h_cnf": "b42c082737086a57370da6ef14ee143ee16bb57bb3aec3f2456a42b5bc41ad12",
+      "h_proof": "eda467c7606f6f0d87f91b18968ea2e97b23f2d1a7edd506bbec384188841093",
+      "raw_proof_sha256": "933c78f415f5dbd28082228cb9ecd8dc8e70b19e4800d81f817f345afbc6e2fe",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 26,
+      "clauses": 70,
+      "cnf_bytes": 718,
+      "proof_bytes": 572,
+      "used_clauses": 45
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca004.shuffled.cnf",
+      "source_sha256": "d27bf90d65e472bee3178603f70b311536d20a4c7d7c63e200da8d7f9493f4c3",
+      "h_cnf": "8105fdefde229a17ad0ef233c49cc3b865e39588f7ad22307cf5d8ec170b1337",
+      "h_proof": "4f5a052a53353211af6e41a46708e1fd09265daf9301b773dfa4b8b9574362ce",
+      "raw_proof_sha256": "d73f0c00802f0ee1588bc7f5777143ef0e7a7a604219411a5c9e4aebc255c450",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 60,
+      "clauses": 168,
+      "cnf_bytes": 1777,
+      "proof_bytes": 2408,
+      "used_clauses": 123
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca008.shuffled.cnf",
+      "source_sha256": "6e92dcfbc707463b22ac405e55a9beaa6bb06fa99ffbfa3e582ff69115ce4abe",
+      "h_cnf": "42959b354bf685fee74a0c1eda2e2d57acbdbb50d7f68df3be6d48a4a40c56c3",
+      "h_proof": "3310a5fd77ebdc08444a11e42365e12e39ae8140f29d6ce1917157d496c358a7",
+      "raw_proof_sha256": "f0023bba23dbf04851c64f242362189364252d0665ad9a035a941a44c64e4131",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 130,
+      "clauses": 370,
+      "cnf_bytes": 4182,
+      "proof_bytes": 8136,
+      "used_clauses": 280
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca016.shuffled.cnf",
+      "source_sha256": "5f2f701f8c839cfb5bc2914078dfcf3d74aa03d2a42302eb87305d81659576aa",
+      "h_cnf": "89b02d3b3d28c62184ed696b6d75cb43f6d8759f61fb31f9f3fd1a0e0ecc0bbc",
+      "h_proof": "512303b5cdb80ec4d14cc03d394e561ee58ff8bc02f72897169db93766ac8127",
+      "raw_proof_sha256": "f0dee2edd718d716d31a1fa0067029ff7621a6b68f666ad2ab19df998ee5672a",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 272,
+      "clauses": 780,
+      "cnf_bytes": 9704,
+      "proof_bytes": 17436,
+      "used_clauses": 597
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca032.shuffled.cnf",
+      "source_sha256": "de2f1d8975cebb8317945c377fc0804bfbb22ceb6ab184c7ce539df01524b5f1",
+      "h_cnf": "f6502689c9628bf9ff24d4b35db354d73f6f431eb2675609048fdfcb3cf4f0f6",
+      "h_proof": "d3d9ea8ee7e579c20d5dc873d294398b0c889fd1f977eedc8a2b0245c02ae266",
+      "raw_proof_sha256": "a7ff8baf948fdbb31e6f67a03145f94ae33b3eb9a342ecaaa6002f28e6956e3d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 558,
+      "clauses": 1606,
+      "cnf_bytes": 20777,
+      "proof_bytes": 45633,
+      "used_clauses": 1301
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca064.shuffled.cnf",
+      "source_sha256": "0a7b33356e0a050bf887cb4222a848ad2ed1ad9da698e004c316a92bbbb021fc",
+      "h_cnf": "1709bf879ac839d2929c6be1f303030857262122fd4e9c98926b02efecf29f96",
+      "h_proof": "dfbbda435a713e097cf3f0176fdb0f0728bab8dbdfb3a890918406fcb8099f5e",
+      "raw_proof_sha256": "90c319aa4570127dbbb3e515df5bd1316690278f6c9f9931383c39f9d64ed3de",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1132,
+      "clauses": 3264,
+      "cnf_bytes": 44010,
+      "proof_bytes": 92067,
+      "used_clauses": 2624
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/cmpadd/ca256.shuffled.cnf",
+      "source_sha256": "73e949873cf721f2033a370c0b331e298754e5abe90d764dedee7ca6ccd00a5e",
+      "h_cnf": "926005fdca85292e996f0041cf7f4199aa3931ddfcdc12d28b61bd62a95f95f1",
+      "h_proof": "025b4bcafff7786a7b62a661937e6191ef9e1f7b200bf41accfb930f16c82d51",
+      "raw_proof_sha256": "2ae092303c84b08d1d05f6c20c49ff3e737e37fab024a71a1b0c9174bbc77274",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4584,
+      "clauses": 13236,
+      "cnf_bytes": 203258,
+      "proof_bytes": 934002,
+      "used_clauses": 11003
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp02u01.shuffled.cnf",
+      "source_sha256": "5816d80993dfe99706764ee709bb4a40e048735984145bd0a8486735e3e1cbcc",
+      "h_cnf": "8d5b8f28f09ee7d85187d8ae68e5c69ab7ba4912e7af22ef792d1f018e5ee32f",
+      "h_proof": "8088f2bca495ca123a34181eb8a1d3603da55ecc994386a4a19ea2dc00311a02",
+      "raw_proof_sha256": "2bad23f8e67dec80521fa56c212c6ec62835352ab51b5a8bcac9a9daf312ad35",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 213,
+      "clauses": 376,
+      "cnf_bytes": 4337,
+      "proof_bytes": 1276,
+      "used_clauses": 75
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp03u02.shuffled.cnf",
+      "source_sha256": "654df44b33964f24b746fb545c09d22b85611d9be676d1abf338363260e7c2a9",
+      "h_cnf": "35a42ea8cf1fecfe402e5ea659d74727a24edbeb1f23b74cc91c89fc3ab953ed",
+      "h_proof": "e3dc1c9879f9bd9c4fdaa90f35533541b8b662d1a42157992fc0e49006a18d03",
+      "raw_proof_sha256": "eec4c7c45e1da8eb4d77ad188792658f3fbc4b0701b31e03ba74d1f4fe541a9d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 478,
+      "clauses": 1007,
+      "cnf_bytes": 12072,
+      "proof_bytes": 4024,
+      "used_clauses": 307
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp04u03.shuffled.cnf",
+      "source_sha256": "9aedbcc2314ccbf9ccddd0fa408dd138eb55658eca5d471ed9af91c3175b6d34",
+      "h_cnf": "209c938b598844b3c7c40c48ae95bb347c6feaa7034fcd0e840cbc364568c2e9",
+      "h_proof": "e89c292c964217ad436bbbb98ce44ac5649318fdcc009694c8d91fa3d5afac9a",
+      "raw_proof_sha256": "58c413f1c08f9342745aef74f1cb81904ee869816b43813a7f91adb44587241c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1017,
+      "clauses": 2411,
+      "cnf_bytes": 29972,
+      "proof_bytes": 15582,
+      "used_clauses": 716
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp05u04.shuffled.cnf",
+      "source_sha256": "16dea559731e981204c19d09d30fbb3b12c83c924d5ce081d299a92c6c11d771",
+      "h_cnf": "8f7bd91ab86cfedf0ef46e3f1f621ef1bc6765e4642925ce8c78c326cfbe51ef",
+      "h_proof": "023879647c71ecc3086d3b701eb8261b451c705b52ff93498d3120e538e83b47",
+      "raw_proof_sha256": "2f8d814892fe8b0715e4acfd1a179c5fad6aa2eb8ad5fce9039a2a492285380c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1571,
+      "clauses": 3902,
+      "cnf_bytes": 51716,
+      "proof_bytes": 70454,
+      "used_clauses": 1405
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp06u05.shuffled.cnf",
+      "source_sha256": "60be9b2871d6deafb6af475f755fdeeec26d7c7b6cd63aef69b229aa4113d97c",
+      "h_cnf": "1c71f02e0aa1310d6c62f0d9e90604f7a5ddde592abbfd5fc1dc6f8914a22b7a",
+      "h_proof": "ea0e1e41754c56129441ecd2c2e39a1a449a23b821779d1579ffd7a460a77323",
+      "raw_proof_sha256": "754bfc2de6717a65e6506b44955edb840a2c53e59f65c4fcab59ac9dcc8c2d5d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2359,
+      "clauses": 6053,
+      "cnf_bytes": 84004,
+      "proof_bytes": 262564,
+      "used_clauses": 2452
+    },
+    {
+      "source": "sat-2002-beta/submitted/biere/dinphil/dp07u06.shuffled.cnf",
+      "source_sha256": "2c843fb6d5c583dc7d5922f042ba6849fb73f2ce98c30b5cf54e7414b69affc7",
+      "h_cnf": "da066470ce4cdbf5d77b555323aa0d65a0911597ddc6a87cfefda376f0b672be",
+      "h_proof": "639d705d590de04967bc270af38972d3ed50675a10722bc2a4826690018b7452",
+      "raw_proof_sha256": "f80dfc9eafedfd6962d03147af0134d203f5a2cee6dc46b98c44e6d1ca6e135c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3193,
+      "clauses": 8308,
+      "cnf_bytes": 117898,
+      "proof_bytes": 1128627,
+      "used_clauses": 5400
+    },
+    {
+      "source": "sat-2002-beta/submitted/chu-min-li/urquhart/urquhart2_25.shuffled.cnf",
+      "source_sha256": "867c8e21634ac8a884254b2f46f393ac83e3688172f74172f6c907aaac843e72",
+      "h_cnf": "e8064d5c45b93efb156b2330518c748ae826c65f779a322d647c09cdd53947ac",
+      "h_proof": "f93a879a7ebed2acb65e0b315b1a709efd2a4b1b759a4824d311cd705b5110e7",
+      "raw_proof_sha256": "28a163c8c7569a9b1bc465994d9d76c003b789922d0b79d7f21430411289f6e4",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 60,
+      "clauses": 160,
+      "cnf_bytes": 1941,
+      "proof_bytes": 806097,
+      "used_clauses": 160
+    },
+    {
+      "source": "sat-2002-beta/submitted/chu-min-li/urquhart/urquhart2_25bis.shuffled.cnf",
+      "source_sha256": "51d8e8728e9ec66de7c3be519650b15bd48e644b1f80f55ae6d5fad08d9066ec",
+      "h_cnf": "9ef64656487aa463981ac99684d57e7deda868516e3b6e0a0c3d05855d7f00a5",
+      "h_proof": "636f05625b8dc3f300de84267d985b68fe347ad1e8c46640a3b4b996e7f90a33",
+      "raw_proof_sha256": "1543277faabc14d7895d264a9788569f89dda87130e00e34063b2af4c918b358",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 36,
+      "clauses": 96,
+      "cnf_bytes": 1140,
+      "proof_bytes": 68329,
+      "used_clauses": 96
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/bmc1/23.shuffled.cnf",
+      "source_sha256": "15ddcc8bb50ffa2089a594a422e26bef1027e439a3f1931d37a11154889acc3b",
+      "h_cnf": "18fc840be56c08f561fce09371550c57d1a84c0375c0a07ea93a9022a5122bd4",
+      "h_proof": "8cdfcd103e9b087e65da40db0ccf436e684e8f94ea76a844dce5426d8865e097",
+      "raw_proof_sha256": "00fea6d0c16ad470eae520f5c149f08e1239eaf9b502eb563d28e928dbae48c1",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 198,
+      "clauses": 474,
+      "cnf_bytes": 5412,
+      "proof_bytes": 2091,
+      "used_clauses": 221
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/bmc1/4.shuffled.cnf",
+      "source_sha256": "5ad6d2c1e1080e7ea44bc9233806f70cc4999da591337180cab4019d38bfafc8",
+      "h_cnf": "6d56f8ca8af6dcde7a5a66aa08af5181df7de3b5d3f89529cb949e3c0073d2f1",
+      "h_proof": "f5270562ff04475bd355436b3c3ff683c2d75b85c4dd7d61ad4d825ddd176aaf",
+      "raw_proof_sha256": "83ee3cb4001e46fb27fe0d6e362e607bdda7a748bf8accd3b11a4c3371897c6b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 198,
+      "clauses": 474,
+      "cnf_bytes": 5386,
+      "proof_bytes": 2190,
+      "used_clauses": 226
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/bmc1/42.shuffled.cnf",
+      "source_sha256": "a378509b58383545fc3295e184af93980b681de012e4bed0f96c2729fe015fa7",
+      "h_cnf": "a83b86221d53de80ef077cfb371bd3491958df1e7bea04c0a3277a8614813bad",
+      "h_proof": "0ecb99a67f8b9464f5a715f86b9a71ebe07602d6e0d50974da79ba872530cdcd",
+      "raw_proof_sha256": "ef7cebe45053bf1ad26728f843d63d1b2914acc2ee26c2df767b5a7778dc80f3",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 378,
+      "clauses": 904,
+      "cnf_bytes": 10833,
+      "proof_bytes": 3870,
+      "used_clauses": 434
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/bmc1/61.shuffled.cnf",
+      "source_sha256": "38574b7d3d4ba7fe5aa88a201e6494e07f0fa5da545570b23c742854d4c637de",
+      "h_cnf": "c54c722af0d18fd765b70ccb2b490c45836940876e634221345857148096d4d6",
+      "h_proof": "faba5de0a60107ceb6b0170b8ff60040af9ef6fd0e057480dac4cb57b5baae66",
+      "raw_proof_sha256": "a4cd68da9971960c1404fbfddb94cac4af44762486406a6799e12088c86ac83c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 378,
+      "clauses": 904,
+      "cnf_bytes": 10777,
+      "proof_bytes": 3930,
+      "used_clauses": 448
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/9symml_gr_2pin_w5.shuffled.cnf",
+      "source_sha256": "22d9b2effc52ae35d15f8f5b87706ffb25d7d382ea284c84c642e633f48e5e9f",
+      "h_cnf": "ed4329184341ec98369b7b33de52db71cc8d4b41369cf9f200aade51bddedc05",
+      "h_proof": "01e7c08a820c5766e023257303f322c1be0b92000aece0a2064c7145ad7790b2",
+      "raw_proof_sha256": "1eea9e619acdb0678beac7e78664a734e4db1435acdc98cfd907e1b9ccab0ad3",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2604,
+      "clauses": 32450,
+      "cnf_bytes": 944565,
+      "proof_bytes": 56009,
+      "used_clauses": 290
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/9symml_gr_rcs_w5.shuffled.cnf",
+      "source_sha256": "3853ae7d67518ff3a340ca4703964d3e0cc09db342a838b41ccc4ec7243d2772",
+      "h_cnf": "65985190d14bc95e8c950249d8b9a5c1ed11ad7dd9d0c6c9d1fdd5a3d0b47c39",
+      "h_proof": "a06769e4f9159e95e0cbb662b151608b9d4aecc98a9ee1c1d8751c9062d64962",
+      "raw_proof_sha256": "ecab3c412aa3515b8bd0c7f151411b6429f5a3d2a8debf7530343aa9bb057d49",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1295,
+      "clauses": 24309,
+      "cnf_bytes": 278219,
+      "proof_bytes": 15736,
+      "used_clauses": 466
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/apex7_gr_2pin_w4.shuffled.cnf",
+      "source_sha256": "afdd2c87ce8af321d5dcf49a5b6fc05ee45feefd2c65cd9ef8e07a9b457eec46",
+      "h_cnf": "9f2705ac45df63d85649806890bcfb16bc7b5a954d2640be1a8100ca097d34e9",
+      "h_proof": "ca810e2dfa870c1091d009e6191f60646b898f6361ac105e7bcb5a71c8320149",
+      "raw_proof_sha256": "c64822e44fcb61903a1e25bcb8051b31ebcfcb863180349326dd0e8be55183e0",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1322,
+      "clauses": 10940,
+      "cnf_bytes": 212051,
+      "proof_bytes": 25608,
+      "used_clauses": 223
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/c499_gr_2pin_w5.shuffled.cnf",
+      "source_sha256": "8c55ba4ba422c7e2e0fcf1bc608b0bd695ea42fdcf0d5137a5a2cc56359fcf5d",
+      "h_cnf": "454ed3621bdf9a1e029b4b05bf3eef5fa3afa3ef7ed4bc3352b6d37b157be48e",
+      "h_proof": "b4816a2852e2e3b4b85aa7eab6cfc5ef1f3dfdfacc8f31a76db6a42a29c44379",
+      "raw_proof_sha256": "7208bffd231f746a3eeb277647f2b52445706d7450b167fcfbe26cfcb4f8b021",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2070,
+      "clauses": 19908,
+      "cnf_bytes": 559843,
+      "proof_bytes": 72817,
+      "used_clauses": 363
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/c499_gr_rcs_w5.shuffled.cnf",
+      "source_sha256": "ebe8cd707216037aa820e7b398ce5857238c07e30f315ce845fefdb06643a468",
+      "h_cnf": "be2a7ccd7f291bf35a5adf6d63a0cfe77afcd602ceb9d49644aefcf3574555f9",
+      "h_proof": "2b4bee3eb3904d9f116f6882daeb48434caad906e6d158e810c54111084536d4",
+      "raw_proof_sha256": "1cb6e6e908995d2c2381f9918cc6789b2d6ceed30ac3d7a247d424c8edbaf252",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1560,
+      "clauses": 15777,
+      "cnf_bytes": 187157,
+      "proof_bytes": 39982,
+      "used_clauses": 647
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/c880_gr_rcs_w5.shuffled.cnf",
+      "source_sha256": "f8563fccb34bac0a90e656b69c3feb6501788b375285338167965f5e5ea68180",
+      "h_cnf": "318089a7b18388168092ad079b370430074d5b52e4b7a252acc147a2649819a6",
+      "h_proof": "2719fbb2b833cb2234ff73a9a9ba0075b49db234e6ece2df9c0d682143480be1",
+      "raw_proof_sha256": "8d44b2ee3a547f310cb1994db92cc59ca8d284c14436fc51b0c885efde1416b0",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3280,
+      "clauses": 44291,
+      "cnf_bytes": 556738,
+      "proof_bytes": 62844,
+      "used_clauses": 779
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/example2_gr_2pin_w5.shuffled.cnf",
+      "source_sha256": "d88055fbc5ceb2c91363a910a18129259ae9e9e1e4834237a44ff6f2ead435f0",
+      "h_cnf": "b34d0903e4326c587527d9170d9df8db3b2ea73f0fd4f05226ec7a2cfdf2e57b",
+      "h_proof": "34991459fc4567e5d8182268977770463fdd30c58ba46b35eeee3d2589204833",
+      "raw_proof_sha256": "d96089e40f176250c022679d4c522cda8ea2a8d0e372c902baf41443d50403e5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3603,
+      "clauses": 36344,
+      "cnf_bytes": 1061918,
+      "proof_bytes": 40404,
+      "used_clauses": 231
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/example2_gr_rcs_w5.shuffled.cnf",
+      "source_sha256": "d3fce128e0aaeecbf75a9f52f9cf2aa915f4a007b0855bf3b8f0ac8a59d0e549",
+      "h_cnf": "820437971f9f8182fec73eb2f32e2558be1aacaf35cacf4af188e52a800d0aac",
+      "h_proof": "e83716f189faef32f46e555cbc5cc984960ad655e11cf5ebefc0db59037db4f9",
+      "raw_proof_sha256": "51f103e7ce8c01b5f586a0ff92f88688bf4f638e350a5fbdaa6422298972d7fd",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2220,
+      "clauses": 23144,
+      "cnf_bytes": 284680,
+      "proof_bytes": 15858,
+      "used_clauses": 165
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/term1_gr_2pin_w3.shuffled.cnf",
+      "source_sha256": "4e1bbb85c7e9f1732568ed6d1ac96228e55d9e4e1f4da86ca47517c291ef175a",
+      "h_cnf": "fd63dd5f5b8ff883c7ae9642984c12b3e37daeddcf04fc2047878eedc04a9f0f",
+      "h_proof": "19f4f3385a4230d670d378445bacfb02cf9d668a048e1062a90ffe00ab644bd2",
+      "raw_proof_sha256": "87a6cf108d0739288e1847fa7cb30ff4ac9a8e426b64040ccc35948a12e050f9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 746,
+      "clauses": 3517,
+      "cnf_bytes": 59059,
+      "proof_bytes": 5076,
+      "used_clauses": 190
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/term1_gr_rcs_w3.shuffled.cnf",
+      "source_sha256": "4cee102a36bfbd5dfbe6e9b65f8f785f5782b2767ac836c52c3ffafc6c2d5e05",
+      "h_cnf": "6de2e823bb74e445cfb23a4b190d6178a90af25a782e1ec62d6b2b29e952d7b5",
+      "h_proof": "1bb6865e6f58175453c1b5177e0240f43ba21709a9f50da9b59ed7e2100a6abd",
+      "raw_proof_sha256": "13224e33e9c5e23efe16d0000f94afc57703ec4284a96c423655d02646a3f1d5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 606,
+      "clauses": 2518,
+      "cnf_bytes": 27903,
+      "proof_bytes": 510,
+      "used_clauses": 31
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/too_large_gr_rcs_w5.shuffled.cnf",
+      "source_sha256": "c5e9898d3d067afa499c3907cd8a3f9fe40528d62f153de8093996e276b41e3a",
+      "h_cnf": "7994bf2550bc9555d89e4df3524773d7b5c2526bbcbbdbcde222ee144ba00ba7",
+      "h_proof": "bf1b3b0ca7b7eda2bc1e404293b3eea14c7d4641f6498d596896189f3d9e7cfa",
+      "raw_proof_sha256": "151e463b7dfec2ecf8c8ab8b94ac29f2df5f97faee9064b8fd1ac66ed97532e6",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2595,
+      "clauses": 36129,
+      "cnf_bytes": 448859,
+      "proof_bytes": 17691,
+      "used_clauses": 212
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/fpga_routing/too_large_gr_rcs_w6.shuffled.cnf",
+      "source_sha256": "b2c4968cd7f83a7aaacd70bc6cdcd7257345b12d165b081a38fc3e6c31305e4e",
+      "h_cnf": "67ca689f5a9a541a2a8e77a442d1fb89deb5a4410e9fe184a0c468780e1740f9",
+      "h_proof": "605bb8b3c9668ea126228a63f0154baf072c1d5988984f1c7579b42e5516b770",
+      "raw_proof_sha256": "9d232e9ffd0720cacd2a09b50e655ca2f0f66b8985ba259508e7485a567c09d5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3114,
+      "clauses": 43251,
+      "cnf_bytes": 541996,
+      "proof_bytes": 144700,
+      "used_clauses": 660
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-25-1.shuffled.cnf",
+      "source_sha256": "8c89f4601c1143ea1580e45365922306297f525a86db0b463aa889e059927cb8",
+      "h_cnf": "28b74ac9efb966cfbbcec5328cf5bb4069eca41f5d39656f5683fa364392604c",
+      "h_proof": "00adc54b77937d0c5e0ef4657eb7513e57e923680c526bff2a3684a6355fb1da",
+      "raw_proof_sha256": "a87496d961322e16b587b2ba0ecb530255d8b8771385d64f7a2db244c2bf913f",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2000,
+      "clauses": 5921,
+      "cnf_bytes": 80905,
+      "proof_bytes": 230059,
+      "used_clauses": 3614
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-25-10.shuffled.cnf",
+      "source_sha256": "24b63a9498438ef68a9f1c253ee86cad80b331d3b7b90658e600b05000bf4bc3",
+      "h_cnf": "910fcf09546521057c53c3d8c026a297248101a6da90244e972ca0018904ddc4",
+      "h_proof": "b2ccfa53995c6772aaab8b4a664dede8d5b2bde64778e7d2cdc3af7567afa505",
+      "raw_proof_sha256": "00e69e6890af01265ce06417e132a730fdf5f69fe470f2ba1b2cc7c25238dd9b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2000,
+      "clauses": 5921,
+      "cnf_bytes": 80895,
+      "proof_bytes": 664744,
+      "used_clauses": 5550
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-25-5.shuffled.cnf",
+      "source_sha256": "523f1a01d1c8fed087232de19e098a5026ac4afe91c464d798c2b12ca9a42f87",
+      "h_cnf": "aaa332d2d2bccde86b9f779f0bb839c1c7c1f841a3801ae32e68c258f4166cae",
+      "h_proof": "acbcdf71786b7dce901ca81bf57c43aad1b220af162287e5acf35e6db6ebbe1b",
+      "raw_proof_sha256": "0dc8391a98d23308deb0e08898e9dd3018429e527fdbd4f5a54ec88b7d6e7181",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2000,
+      "clauses": 5921,
+      "cnf_bytes": 80971,
+      "proof_bytes": 2025197,
+      "used_clauses": 5303
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-30-1.shuffled.cnf",
+      "source_sha256": "be2f7cdc27340b88f9bf55ba7df377055febcc274d3fb56f6aa0d2a155a9d7c8",
+      "h_cnf": "c3a7a8621e11a9f69b0d0b8c256adfa05324bafc40a2cdab1b9a2c0a3cdacb54",
+      "h_proof": "ae3fc61fd53d6d877180e91e097a528a5cb75ea94724eef2d4e42e99c0d2d09d",
+      "raw_proof_sha256": "c637c2651f49c67642a97ea83e84fcea49ae3ca83f349f99ba74a1e82a29abad",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2400,
+      "clauses": 7121,
+      "cnf_bytes": 98668,
+      "proof_bytes": 1203515,
+      "used_clauses": 5885
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-30-10.shuffled.cnf",
+      "source_sha256": "298bcc44a4e983b0996c3f0c0dcd3b5058b83e1d8d090528f8645f88515803c4",
+      "h_cnf": "07acc950eefb3ad8ac72f1fe2592c516d76c6b9f44a3a9a1171ddc5342d352ca",
+      "h_proof": "f7a2994d1cb8daf68946aa6c8120e4cfa17b760b5626d39e9c920912871f32c5",
+      "raw_proof_sha256": "f532ae81feaa9963032be225537939318e685803309918bf388af32449c4c41b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2400,
+      "clauses": 7121,
+      "cnf_bytes": 98677,
+      "proof_bytes": 564922,
+      "used_clauses": 6339
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-30-5.shuffled.cnf",
+      "source_sha256": "947469e10cae203ca30822aeda6dba7381866f24f92c1bbe2654450a356f5355",
+      "h_cnf": "162847079a7dc8e6cea311da173ea3ec640ea8eb22609899e0131ac22ce4496c",
+      "h_proof": "128371e4732fe87b7cdfd1fbebccc0b1d4df8997bf9e13ecf9336dd7607a07b0",
+      "raw_proof_sha256": "c0c63a53e3dac3e1fab5fec3ff05f10134bd3f4bd47fc22cd66a7ec35319054b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2400,
+      "clauses": 7121,
+      "cnf_bytes": 98748,
+      "proof_bytes": 2735451,
+      "used_clauses": 6136
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-40-1.shuffled.cnf",
+      "source_sha256": "27b3a2232bede4ed63c927942dec2da0c5760442621f401df3b8fd8bcd7eb739",
+      "h_cnf": "a769c882e63485f99b04f92edaa86bc4fc75b47d35c88e450834f47276fed4e3",
+      "h_proof": "af93ed460b366be7f391c0f2cb70999eeecb84a431f4c9f45c06cd8d77d70413",
+      "raw_proof_sha256": "b3192d8820e94f674686d61b9b8435047ee497f2d13eca1e70748e340d0c4fab",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3200,
+      "clauses": 9521,
+      "cnf_bytes": 134271,
+      "proof_bytes": 1358604,
+      "used_clauses": 7044
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-40-10.shuffled.cnf",
+      "source_sha256": "811bfa2aae98269fcb57ac497797403a6ffdb7abf30424d9036448a2f9c3fb19",
+      "h_cnf": "dc2049ecf04ad1be02a3f43a8558d499e858058d24adf9c1256982a0745f3c55",
+      "h_proof": "03da48c59f4c4d00aa3bbb095db34d55488301bf8572043cca95020d0b7e6f73",
+      "raw_proof_sha256": "f2e488ecbb3313c753882c398276dcc1a7ffa4dea46dd2ab4ecd4c23172a17f2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3200,
+      "clauses": 9521,
+      "cnf_bytes": 134192,
+      "proof_bytes": 380799,
+      "used_clauses": 9420
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net40-60-1.shuffled.cnf",
+      "source_sha256": "58699001b2330fb3b6e8bddb3ad8a9f034cb0a38029812ad3f88d42e3288b62f",
+      "h_cnf": "325257081ccbd3462941c1ad52d2ca4ff126ec1a429924d72e3cd5b8aa237a85",
+      "h_proof": "8f87d4c9d4c79a8f3b076845f8a68e8e8dc9ffaa2adba4db036373b64d521a85",
+      "raw_proof_sha256": "10521afb6610b60d65d89a03d2c978d7f6bffe957001398e0c6981b50c57214e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4800,
+      "clauses": 14321,
+      "cnf_bytes": 205519,
+      "proof_bytes": 824590,
+      "used_clauses": 8381
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-25-1.shuffled.cnf",
+      "source_sha256": "4b928969cc3d671224646b9376445e042705096a7bb5f0df251f29099d4a0dd4",
+      "h_cnf": "dc97e31e734fcdc0ae1ccfba36d3d11dc3f2d892f2f7fde3544456cc870bdb8f",
+      "h_proof": "ec58f986c3932e9c5ec216a0ff78ad0f94f95d2a6750bf5a7e35a7b8dd6df2e0",
+      "raw_proof_sha256": "852d2d5e91b1fcf42c0f8e96337c7bda6e68b6294ae4d655f8e18a235db435a9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2500,
+      "clauses": 7401,
+      "cnf_bytes": 103063,
+      "proof_bytes": 1333955,
+      "used_clauses": 5956
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-25-10.shuffled.cnf",
+      "source_sha256": "c390da9a7c608269b3ade6c61a59397e73873f22b1ee97b94cc52a2dbd497f66",
+      "h_cnf": "1962bbf104cd212a351b336bfb95741f2ba78f600445d660b24710cc0672b9fe",
+      "h_proof": "de2c199a67b53432a5f87936562b859caf810f87e947cef699f020b8039d1fd5",
+      "raw_proof_sha256": "f57f655ec0f288dfe7ab3d6e456d6b76906336096387dbcac923506ad836d129",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2500,
+      "clauses": 7401,
+      "cnf_bytes": 103028,
+      "proof_bytes": 386273,
+      "used_clauses": 7161
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-25-5.shuffled.cnf",
+      "source_sha256": "6d0cb8f20796fc193b3d801f87b7878762a1e76e7a636c1d35b441146223be4f",
+      "h_cnf": "ebc05e3facaaf8ba5ecae627eb5277f30a74c4dfa4640313dd3b00efba686234",
+      "h_proof": "f6762a75a2e7809c9e6d7cfdf184ac9ccb25055b0c97ade5e6ef583b653cc02b",
+      "raw_proof_sha256": "3317afff155ed30f71d2c9a30ce9fde3210dff1c3f7af7d869743d2575880d07",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 2500,
+      "clauses": 7401,
+      "cnf_bytes": 103135,
+      "proof_bytes": 1499936,
+      "used_clauses": 6809
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-30-1.shuffled.cnf",
+      "source_sha256": "8ec0355dc44881fe2f9f781f3616ae1c912d31bea01866f875b1e3f97eb5fead",
+      "h_cnf": "8d35ffa51f6b63e78088b2623c133719b2051129c6459ca7e1f3514ec9bea3d4",
+      "h_proof": "bcb1ce44d00afa29bb745958104e6311d9a6b092508dc8cb91e098d77c5b250b",
+      "raw_proof_sha256": "535518ec13655e454c2ead69a1a6fdc8bca7c86cb37f7a07baecbb1e3b75320b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8901,
+      "cnf_bytes": 125294,
+      "proof_bytes": 2052299,
+      "used_clauses": 7200
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-30-10.shuffled.cnf",
+      "source_sha256": "5dafd743f95199ac9fb1d56cc7c6187093188e48acb898e00a046db549a9c478",
+      "h_cnf": "dd9fb82c06d608d001ff03f6b52de135bf736c998aca6e16d1cdea261fb6eee4",
+      "h_proof": "7e17dfd42036411a8d0efe0ffc51ae90188e1b3f5c4e258d661cfd7fbcf1fb5b",
+      "raw_proof_sha256": "f58747584fd1a7981f70adac511cbe9761af5ca46b06ebd9826af58e31c8a8ff",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8901,
+      "cnf_bytes": 125293,
+      "proof_bytes": 1169709,
+      "used_clauses": 8398
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-30-5.shuffled.cnf",
+      "source_sha256": "f5df9f32d16606891471b2490ef98876f9a0c9e9eac91a744e3f3ed74fcc8427",
+      "h_cnf": "c80cc40c234ba3f035b56527528dcaf115b9649f0760404cd01739734a18ffdb",
+      "h_proof": "2e1dda6ce01d9251f4c9c11840640496f0cf2617e976008c8c629ee8dc5b1456",
+      "raw_proof_sha256": "c4172016433114d29fdee1f39bad705b163f09c9668d8f194e680e3cb0dd282e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8901,
+      "cnf_bytes": 125370,
+      "proof_bytes": 7046642,
+      "used_clauses": 8266
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-40-1.shuffled.cnf",
+      "source_sha256": "4e1a84dc5e27e1407fa0fc9d111d29480024cfe93a555c4105d907a6e0cee586",
+      "h_cnf": "9d479fdbc6dd7d495734add7252446b65b01eef9b05b176c76bf0758b4fa70e2",
+      "h_proof": "0a6aad52a03412e313f55772288a2351e5939264236d1bc787274485ab9c2d18",
+      "raw_proof_sha256": "fa0644ab3f64485143307314988a17d1217ad94bae94004649be106ff722d72a",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4000,
+      "clauses": 11901,
+      "cnf_bytes": 169763,
+      "proof_bytes": 2842070,
+      "used_clauses": 9077
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-40-5.shuffled.cnf",
+      "source_sha256": "3072a08272e8b55b79ec010f2dddb1e1f32af8602478835cabf0f8839fc72861",
+      "h_cnf": "2a02da9860f3b6e03a71e2adb9a6b2dcea5e1c6a5d9b7be786909a72cf265631",
+      "h_proof": "8b02e5bf04afd29b8dc8f37958b0ed927ef52d953b1b20e532b0cb3e3021874f",
+      "raw_proof_sha256": "9e96f566eb919c81e6b7df432eb2d41c8803c8628cff795585ee31a1c1ccdcaf",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4000,
+      "clauses": 11901,
+      "cnf_bytes": 169944,
+      "proof_bytes": 5792061,
+      "used_clauses": 10383
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net50-60-1.shuffled.cnf",
+      "source_sha256": "33ae9254dcb8426c131d3e248304bd040d2c7a5403ed002f55b7e8eeb6ec3d5e",
+      "h_cnf": "43f64728456732dfcb5d692497a84de18a2e87f4d53d8b43ab49e0a89c6b24b8",
+      "h_proof": "cb08e7031f0a5774ac94939b1afb39ff0886104f9d2ffce9f7bda97424f174fd",
+      "raw_proof_sha256": "e442a034d7e90b78ae22e74ce0d301beff269c93f1a0da0b7c74abc3f4f782d5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 6000,
+      "clauses": 17901,
+      "cnf_bytes": 258826,
+      "proof_bytes": 1445563,
+      "used_clauses": 11754
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-25-1.shuffled.cnf",
+      "source_sha256": "5928d46d96e3e888633e899d40d9522e5ba6eff284d9e26fca808846b9ae1308",
+      "h_cnf": "03267123095e856afcf5002e6239a77e92993bc37c64a9b769bb207c73682e92",
+      "h_proof": "8e153eafe3f62e6f0ecba5748eea19486bbb0d2cbb591f21826f4c75d06b8083",
+      "raw_proof_sha256": "9857ecbc99bf012a77f3f34dd9853adc9c90ce57fe69af48d1b607ffa86b3471",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8881,
+      "cnf_bytes": 125344,
+      "proof_bytes": 3790520,
+      "used_clauses": 7970
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-25-10.shuffled.cnf",
+      "source_sha256": "1be04d7039d13c3fb6673e472ce1ab9b7d1a23172cb2a1e9eb7e3482efa4ca1a",
+      "h_cnf": "9f0fe14a990be58fa4af19c31b22df4e1130c777b83d619c2ed7ae8fae076e75",
+      "h_proof": "2438c0d6ca794199f318de3a389b3723c817e5fdee6c3e120243ef70a6e479bb",
+      "raw_proof_sha256": "54185e09620887b8c0c9667b6203a0d0eba81fcc462f4dc6741de83816ef48e2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8881,
+      "cnf_bytes": 125193,
+      "proof_bytes": 660557,
+      "used_clauses": 8563
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-25-5.shuffled.cnf",
+      "source_sha256": "f8cd179403a8088a2ef093258248b5c7d4f6a6bd0a95544e4a6f433dc6e67416",
+      "h_cnf": "d6c6d192c3908b3c3d662266f363dc837a9369dc60b15074b63e5303437a82ee",
+      "h_proof": "811e135eba9e7362bb059464b224a2608b6f9f557e5cdeafd0f61e75a05dc861",
+      "raw_proof_sha256": "c26b4d55e7602432df805adc310e4c704497171ae91da1f089f4f4b947bdc140",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3000,
+      "clauses": 8881,
+      "cnf_bytes": 125206,
+      "proof_bytes": 1284600,
+      "used_clauses": 8424
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-30-1.shuffled.cnf",
+      "source_sha256": "a09ec8678a7114fc283b8d729695a5b0b44e36f3110ca26fda823ec8cbf5a6ce",
+      "h_cnf": "ae682e4d54e56ccaa272937820d3ca071343471e97aae88d05f3ce7212895767",
+      "h_proof": "17f4ca11a36a64406b81e8b192133e9911576c1b2a538354ebf1581b33b92ad9",
+      "raw_proof_sha256": "658b370a665d130c2eb7a512dc27db72d4ef4b59dfba5a261ff5127b74bb2569",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3600,
+      "clauses": 10681,
+      "cnf_bytes": 151914,
+      "proof_bytes": 1581249,
+      "used_clauses": 7738
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-30-10.shuffled.cnf",
+      "source_sha256": "0363825fa5c7be571887f21e4e71450369ed9a66fd38953622cdd09bcb0021cd",
+      "h_cnf": "01ae2f36dbdbe1efd3573ae1ab23119a0c059257c8a16b87159744f8fb3afba6",
+      "h_proof": "83478b78823ad979e3f8f284a01b2e5ccee6bc9a566e6ee2dd47868c2701af66",
+      "raw_proof_sha256": "88f84128c45973121e0f7eacfc4a00cfb46cf5628b73c2c21fc8aeb3912a68ba",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3600,
+      "clauses": 10681,
+      "cnf_bytes": 151859,
+      "proof_bytes": 1633494,
+      "used_clauses": 10088
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net60-30-5.shuffled.cnf",
+      "source_sha256": "54d9bb7eab7ca4e3006b1aa3910aec00d33f438703bbc193c53fa14605508000",
+      "h_cnf": "326794fa03e9d351fd71ac53d522047cce6fd1c87b24999d796478376bbce76f",
+      "h_proof": "fe630375b343764629261ac94392c9265146f609a75324130b0b399a99a82101",
+      "raw_proof_sha256": "6dabb52e71959fe6ba1e96abcc6753e4dfb4a7f947214766c8ae304629d11f9e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3600,
+      "clauses": 10681,
+      "cnf_bytes": 151756,
+      "proof_bytes": 2698852,
+      "used_clauses": 9559
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-25-1.shuffled.cnf",
+      "source_sha256": "045c88c58246b853ee6712d7cf74bd9020ac8635bbbac4d9ddb3a08c9a8df8d2",
+      "h_cnf": "e3c5a0ad19f849ab2bcdb8e2a6861f668704294ba6b49aa8f0ef5d2574c42c4a",
+      "h_proof": "50b25a200d9b6dc0eef0e95e91dc63176bd76b16fc3ea1fdaffffb41860666a9",
+      "raw_proof_sha256": "e9ba86d11a2fac53767536c433a072cdf83daa6746aad8bfd410f2b4a1b227b7",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3500,
+      "clauses": 10361,
+      "cnf_bytes": 147312,
+      "proof_bytes": 6581503,
+      "used_clauses": 9379
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-25-10.shuffled.cnf",
+      "source_sha256": "2619e22f664e2ec36f484fa5e21ec12e579470fbf41fff47530585269da74bd3",
+      "h_cnf": "28b4c4163733dd5ba2d18ac7aea266124b19a57cef8e02eaf5a5dea4bde9f76a",
+      "h_proof": "3633a9d604a61b84c91c1342db1e88076be78545815ade7423a58b5f2e2eca90",
+      "raw_proof_sha256": "cde0a4ad57f176afc1ae626b8b2fbe17d688aaee34dee328927e808c14c7b41f",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3500,
+      "clauses": 10361,
+      "cnf_bytes": 147329,
+      "proof_bytes": 598277,
+      "used_clauses": 10176
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-25-5.shuffled.cnf",
+      "source_sha256": "490adf0493c78c2517e21439e69d03fad33b393a8fe59e85c423621a3f1f9743",
+      "h_cnf": "31a1df909e5cdef8ee4899a9f56b22de15159a0d68ece3267c47e68f0de56960",
+      "h_proof": "8ba8258ac577804068d4008a6cf37d36dec30162306f999b8d1ce264f3f66af8",
+      "raw_proof_sha256": "28de18af58a2500959d27ca0fdb229a1e0cb4c2c978d42b7ac7f50942df6ddb2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3500,
+      "clauses": 10361,
+      "cnf_bytes": 147281,
+      "proof_bytes": 997788,
+      "used_clauses": 9991
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-30-1.shuffled.cnf",
+      "source_sha256": "e4b496d6526d9a99ea5a5f67798423fd0b2e196c7268ae40192d0d0584f6f12a",
+      "h_cnf": "6e0247e117756d22ce12a7d4c337989d2d8ac78b8edd6b41469c277e1ec86d81",
+      "h_proof": "900ffeb4ebc4dd12f9a415629ea26a9928ec6930162042752837e78f4dcfacae",
+      "raw_proof_sha256": "b73e518305c19b4c1a507c59f238c8ca4dbaf7ad546c6b89170ec7ffed6211fc",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4200,
+      "clauses": 12461,
+      "cnf_bytes": 178536,
+      "proof_bytes": 3217919,
+      "used_clauses": 9831
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-30-10.shuffled.cnf",
+      "source_sha256": "8e2bef9999defd229e04efcb3e9ab8cd0959ba3ec078c66d1cdc8e64db009b5d",
+      "h_cnf": "e74d556e40313b1f617dfd694b34f6cb9b385bded6f1d069f9ffbc3ef19edcde",
+      "h_proof": "51e1a902b4b5f62141975d8d5e6a8be68ed935cd5ad39a3780ccaac1aa30fb89",
+      "raw_proof_sha256": "aab7e926989eb589a4fc8bf4bb7b81cb64632ba5d2d8caf9ec8b76a65f147bf2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 4200,
+      "clauses": 12461,
+      "cnf_bytes": 178538,
+      "proof_bytes": 624586,
+      "used_clauses": 12214
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-40-1.shuffled.cnf",
+      "source_sha256": "f8cf07cd94e6b66b4b0e923f5e907096105db2ede2c833d73564fded70afcb3d",
+      "h_cnf": "ce68b2945e489e761e27c6dc2f5400cddd6e85685e59d338c98fa0d7e0ef0d71",
+      "h_proof": "552d349dc9a3fcc0b5d731b94e978d2ba6cf6d8d8f977bf3265d7ae2f5326923",
+      "raw_proof_sha256": "5a3ac004d774bb9362b595e96780bcede8cc4c5ef14ac2e850c7cc8e6259cb8a",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 5600,
+      "clauses": 16661,
+      "cnf_bytes": 240797,
+      "proof_bytes": 2875570,
+      "used_clauses": 12281
+    },
+    {
+      "source": "sat-2002-beta/submitted/goldberg/rand_net/rand_net70-40-10.shuffled.cnf",
+      "source_sha256": "24627ca6caec780cd637ececfb5f5c4de7efff68023c65f263cc1b2dfb4ac569",
+      "h_cnf": "a296a70208ff1080fee8e68fb6a5f3164320243e3d06e15c1d8427c03650adf0",
+      "h_proof": "63faa84faa9da9b8546bcb4f9621f397874a8dd97dc3e96981b96a481cf6fa8a",
+      "raw_proof_sha256": "f4624daf08153ca662aa64149df9b763b4ec953d2b1fc994c8a9f626a3838f07",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 5600,
+      "clauses": 16661,
+      "cnf_bytes": 240760,
+      "proof_bytes": 1568921,
+      "used_clauses": 16189
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_1.shuffled.cnf",
+      "source_sha256": "01bc86c6898a9a28801b965ab6864e0548cbca67b0c626c2d81898dfce0d7cf5",
+      "h_cnf": "2356ab4a9e3bb630e8e5245d8aad9cad3adcef8cbd216fa44fadf18438dd02e0",
+      "h_proof": "799dca0289f3f829e4eb122e5cb4ed73ddf9b00cb420bee243f3a18876197b18",
+      "raw_proof_sha256": "83434d0ccd4efe151950514acde7b27df2eff568d2f78b9d6de512571a955881",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18403,
+      "proof_bytes": 995,
+      "used_clauses": 55
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_10.shuffled.cnf",
+      "source_sha256": "b50a53b2e38febb92bc484776fbdd20de8792df62a4cfe27e464cccddef7a739",
+      "h_cnf": "c4030325f7cc9493ac31b1ab708f3d1ef91d26e235a96db7d19fec90aa787740",
+      "h_proof": "1cd3e2bcb2af4cd9cf523542c7abc5f5d9f791978753e048bac5da59c1bf7cad",
+      "raw_proof_sha256": "4a7e8d61180960aef750389d3e6ffa113e23d1b7ed7c19f95b148f7446563573",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18333,
+      "proof_bytes": 1597,
+      "used_clauses": 76
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_2.shuffled.cnf",
+      "source_sha256": "8ade8c9d2b055864fb1751bc5fa391670280499ae606c4d69e0872686b9f2ac8",
+      "h_cnf": "46660c8deebb8e467ba5f2b05fb10cdc0a5f0e6bdec2714a46cc3b3ef620e79d",
+      "h_proof": "2f639e5a772d87f93469616f0c272716a7696596028eccaa29c5a52f30289bd4",
+      "raw_proof_sha256": "c6a71bb0c044ed99a6dada4ed6f9f569f188f58227578b06470b88f0108f8534",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18335,
+      "proof_bytes": 1389,
+      "used_clauses": 61
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_3.shuffled.cnf",
+      "source_sha256": "1cdfcaa3191a9192fdb9401dc84c871c8148bf14b2c1d6e84e7185ff37e89eac",
+      "h_cnf": "5485769c3698499e821bfe0acea24bfea12153ed7a9bf19da7e5822d48923316",
+      "h_proof": "bfbe3cd10a57a0e2cd67838ca2ea3c67fca658c69d3654a0cbdc433cecb4c9a3",
+      "raw_proof_sha256": "c59aed285dc509d90c8df1ff247ea1917fa101b75ac95dc17d540bc9b2e6b1cd",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18399,
+      "proof_bytes": 1018,
+      "used_clauses": 51
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_4.shuffled.cnf",
+      "source_sha256": "d35e3d058d3ef9ec93843b369ab2ce676c635e9d73863a6d24cfca0997a34674",
+      "h_cnf": "f07fbd720a902c2db608529b09f0e8574867a384dce72ce8aa9134af94441e4f",
+      "h_proof": "0e1110ff768c53af2c3af6a4d45eec73d0864a120deb9ab1c2fa02ba84872d71",
+      "raw_proof_sha256": "f0d0fb6d667412c84a8dd07041a6962bf6bfe08732a8909b7d48ef8583aae1eb",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18330,
+      "proof_bytes": 858,
+      "used_clauses": 45
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_5.shuffled.cnf",
+      "source_sha256": "21b43814be224f5bba40d6288a8c1ffb1fa4f830d8936a138dc19eee5c30c2c0",
+      "h_cnf": "340cc35029299c2c71bf32559076fc37f1c5d81f5930a22ac7998ab0836c4a26",
+      "h_proof": "4a23a48bf7d85d827ec6b34c2bf730d6edb89a3e11befc8daefdf03a19e45f62",
+      "raw_proof_sha256": "df527ed67730ee73dfac2105f2176b8d9da9dfea6f5d1147af8893d006e521ce",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18318,
+      "proof_bytes": 987,
+      "used_clauses": 52
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_6.shuffled.cnf",
+      "source_sha256": "649463d93ccbd4c6c9b3035929cea3fb071b1a2a1f3c7bc90fc9c9ab4c87e2c2",
+      "h_cnf": "b32860e0de869763873a0abb2ddfb701ebbfbae4d189484162a1742f40985890",
+      "h_proof": "67572b94c2c1f9dcaf82d199a168c94483156b2c4cdd3bd3ce8b064bf39ca278",
+      "raw_proof_sha256": "75518203864f0602a075ae055b413c4d223ef4746f8f9e4bc8a2be12b01ddae9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18310,
+      "proof_bytes": 929,
+      "used_clauses": 44
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_7.shuffled.cnf",
+      "source_sha256": "50b14147fa76b0ac07e161c0f58c3943140b70749973b24852cc5938bc810166",
+      "h_cnf": "15f352cd6d4de65f6ef952227cc895f0c28d2b516b07d852e3a83ee9ee303fab",
+      "h_proof": "44126c801d7fc8eda84b76168da6b631e487671e98807b2aed7a14bf556e8b8a",
+      "raw_proof_sha256": "79ef8fad042848821792c7033aa32ff1869a92cdd96658bfe9e5057cf92c6917",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18354,
+      "proof_bytes": 1094,
+      "used_clauses": 51
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_8.shuffled.cnf",
+      "source_sha256": "ed8b2ee923c7a52eb11eedaddac83eeb12d9a99c70e785588a5c44b7b587ffe5",
+      "h_cnf": "d566c21a8bc8e6d8b0c44faf3e5d5c6536c96d3821f9a90d3d960d1b1817492a",
+      "h_proof": "b7526f71b99b3fc3ab26709750a7f7d70d118cab967127f16008b2364c3662f3",
+      "raw_proof_sha256": "f4a2feb5d889d0ccb4e6c2f21420644fdcb8453114b91a317260885dd5e8e76d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18406,
+      "proof_bytes": 84999,
+      "used_clauses": 797
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/ezfact/ezfact16_9.shuffled.cnf",
+      "source_sha256": "44e823d9ff39c9acb768ba113674bc755fc4d1671d7f727b4e7793b4bf739796",
+      "h_cnf": "c11a92f6c0ad05d3f516601686e89f9577c27ad06b4c8344dbeb8cf03959cdc2",
+      "h_proof": "22dfeba5d281b42690d443b2762cdb6eb1e36383e8bc685a3b6bdb1b9e0b27e5",
+      "raw_proof_sha256": "33cd07929b399468cf76f167a81b31b0f8e8b46390f5d8d178031c0d81608b3a",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 193,
+      "clauses": 1113,
+      "cnf_bytes": 18328,
+      "proof_bytes": 1100,
+      "used_clauses": 50
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_1.shuffled.cnf",
+      "source_sha256": "f78409f7c84d465f6f0fc24f86115c7689a913506b9d33ac66a87045daed3b41",
+      "h_cnf": "c49f395dd88fd3aa39f70f8afc778073dd77e8cab14f62b04f0ab94c017eabf6",
+      "h_proof": "eaa146f1b500ece46c1d74c8031fea39beb6f35855b874b736ccbd8b9341303d",
+      "raw_proof_sha256": "74c43461753b500512c4793b7ca014178d6fcc15cca737365b25c6ee8ade0ba2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2484,
+      "proof_bytes": 1124,
+      "used_clauses": 53
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_10.shuffled.cnf",
+      "source_sha256": "aba1ae9fde1c6fcdc2ab0746dfb2cf5adbe5d23bc15aaba2598a3ba12d0ccb3f",
+      "h_cnf": "895f9766b19ed2851960e4899b822d8777b973da0896d41129b5ab054d99967d",
+      "h_proof": "d031491ba2e5dc51072baa5217009fed751b6d5d926e8c78e99903764aeddeb1",
+      "raw_proof_sha256": "9274ed7ec84249826ca9b667460c382e7e2210751d5b80b6ac1a2934ff45ecf9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2483,
+      "proof_bytes": 892,
+      "used_clauses": 47
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_2.shuffled.cnf",
+      "source_sha256": "4ae1e15357f863c2195b2abc309850f35d7a0c4e85c4a6d26516b31183d02974",
+      "h_cnf": "015ff16a131cc770bc525f0605da581f3937fcb008a9d6d7c2a5b922505f5d73",
+      "h_proof": "4140454121662507aae0325780eeea6ba241c0cce1130ca87770d3cb79510436",
+      "raw_proof_sha256": "0576c3a6d3d783695fae6aa1b36c8e7dcc3c5e0df693843dd0dfeae0b7b6aa56",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2499,
+      "proof_bytes": 881,
+      "used_clauses": 44
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_3.shuffled.cnf",
+      "source_sha256": "d56abed1ee14b22dee4419ad5739fa923054c24ea8572abadce492444fd6831c",
+      "h_cnf": "038187523b49f42a34f3b70e033eb571c031a4c1b53fdd761cbb8a194c40e67c",
+      "h_proof": "21537362f32a996dd08ffb348935015ba5361efabe34a5d978c5bfd659e29140",
+      "raw_proof_sha256": "7b07fbf6428425224216c3a4dc436fce8fa8e92b76ad19987a798f5efeab216e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2525,
+      "proof_bytes": 980,
+      "used_clauses": 59
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_4.shuffled.cnf",
+      "source_sha256": "c8528056b7b226ec3a06ff9fd2a83feeb83b18763439ef825e37cbaee56004af",
+      "h_cnf": "29d6aa8460aae6ac6fef519386b4ea1d408a975ab43b35a23f36c6180541a4ae",
+      "h_proof": "e1d81e7b532237507a7ddf8c79b1b2139a55f401100d4811b87111512d0584ce",
+      "raw_proof_sha256": "5b8ac5230ca9725ee300694c0644e6dc8ea02838a76aaba4a22682f8444273c7",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2487,
+      "proof_bytes": 942,
+      "used_clauses": 54
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_5.shuffled.cnf",
+      "source_sha256": "70652a2bb8badb98eec255bff0a04aef3b949f53c0fdc00c9726e4683a170836",
+      "h_cnf": "3956da297345b175f8253227bd8c5ec910abc68fcf9aa106f7cbc10b495418fd",
+      "h_proof": "e664a456f4d1fffa4285eb3db3208dce059a52c34cb0be87950c17edea0555b3",
+      "raw_proof_sha256": "d5e52ef4c2f55e72385ca9855cc7bf4b6d4fbaaa097e61c088125da59cb4f204",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2468,
+      "proof_bytes": 810,
+      "used_clauses": 43
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_6.shuffled.cnf",
+      "source_sha256": "5d261038c8fab39689fb67eb6ce857a6aeda09511c21cd1a18d0ebbbed3ba002",
+      "h_cnf": "4856b2531d3d0d1030b7f79693eb47b734c520151c9b754986465af4b1647609",
+      "h_proof": "ced88eb3d9400cf80e2166aab75228aeabd2724429837a81502a1dca57348a2e",
+      "raw_proof_sha256": "842de2f27d56daefbe6af086b3c71e12e2851b5d1fe7268c9efc0878e082b695",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2483,
+      "proof_bytes": 853,
+      "used_clauses": 41
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_7.shuffled.cnf",
+      "source_sha256": "9a07386631b840259e3442f8d53d8a983c12a0e4ea975478d235a723eb4ce170",
+      "h_cnf": "463679092ef1adb199725f86719e149bc6806d2b95c79633b5921f632fc3773a",
+      "h_proof": "788fd4e4251835af989fee304077482b07328903d50587aabd1f263ddf847f3f",
+      "raw_proof_sha256": "8c2830af183d8931ae0c4649c57e1c0b3c08e723ca8e231785349cc355eb0dbd",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2474,
+      "proof_bytes": 1007,
+      "used_clauses": 45
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_8.shuffled.cnf",
+      "source_sha256": "04c5acc893376d4fd73a9d2ede003b79153d373801fb440aeb62effaf7b1c524",
+      "h_cnf": "c7bda30f4635076b22d92eb82c5109a6374d19b00a1b9a56ca08478e1ef6be92",
+      "h_proof": "852420bcdc28e888f8deae9de42fd3cdc5250f79b1e3f8647f70a809eefbd52a",
+      "raw_proof_sha256": "6c342d64366db370baaacf928b1cae3698e20a8bf652696f1575d143b5cc752d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2474,
+      "proof_bytes": 637,
+      "used_clauses": 39
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col20_5_9.shuffled.cnf",
+      "source_sha256": "af34b83036948ea4216698db7c2c96a16daa1e16bc5b93b98408db38f42d5ae0",
+      "h_cnf": "9e7d10f126e9078504d4ef8408fdb8902c97d41dfb5e97757b1988ce0e5c5845",
+      "h_proof": "bff97d375fa063d7ac68dbf6e68376c4266c32c9ce01a3787c1c2f462ac3ba66",
+      "raw_proof_sha256": "197d5190255d56ac7658a11271e434d8e6fbab03a496b274feeb93ab0eb86214",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 176,
+      "cnf_bytes": 2477,
+      "proof_bytes": 834,
+      "used_clauses": 44
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_1.shuffled.cnf",
+      "source_sha256": "feed1395f5c4f2e8ad6fea15b32d18738df6b712eeb8e8458f8bed2fd98c66ba",
+      "h_cnf": "666c344573d3f3c00723f5f6f27ab94f0e426af182a7b2c396042b37e50ee899",
+      "h_proof": "47ebfea371760e26f63b6c4a532566bdd6cfe39606446fa0fab369072624ff92",
+      "raw_proof_sha256": "76a815d81a732c6d8d1621666fffb7e7770d2e2f4231a1860678b025778708a0",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5049,
+      "proof_bytes": 3821,
+      "used_clauses": 132
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_10.shuffled.cnf",
+      "source_sha256": "f6ef311da5773d667143ffabb5e9173a876997634f19b18e7db19d1e33147dd3",
+      "h_cnf": "0211a035c16d01d75acf200b7709ecf4729c1f5e787eb375a8024fdf840479d9",
+      "h_proof": "d347df5c00b083a78136d785e6a9abf59cdc8f74a795c8b9e5a04f9f85b9613c",
+      "raw_proof_sha256": "edb99caef3ed68b343435318d10a4a1e40f8dbe1892eddcaff399e8ae27e8fae",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5041,
+      "proof_bytes": 8052,
+      "used_clauses": 210
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_2.shuffled.cnf",
+      "source_sha256": "beeec38b1abb39277120b3422728311ed48d1a6acac963df90957fd392798a5f",
+      "h_cnf": "d898c6ec745cd99e075c6df1c31a889d993fbd07029400479bb5859e33fa583e",
+      "h_proof": "cd9fc9ee921b75f0bc598055cbbea9428e1557cb524f86df619eba849967219d",
+      "raw_proof_sha256": "fd09878e18cec30291cb74964b324ae0e2176662d7e00565c5a2ccdc0e01e06b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5034,
+      "proof_bytes": 3288,
+      "used_clauses": 140
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_3.shuffled.cnf",
+      "source_sha256": "1f10a03bda44008e2ee32b76b1dc5185e83bd92ea556de15cf0ca60de5dc6e1a",
+      "h_cnf": "0fd82b3018a91cf5bf8419e2d6f6ca9c3fc1f7e4462fc5af3a32198f885ec9b2",
+      "h_proof": "652b1a393d0b98895654a4018115eb474626482c9ab6d8a11c6e9e079f297ea1",
+      "raw_proof_sha256": "5acf943637af4e88bcb1f3b7c99fce70f4bcb4e1bfb5948197816eb92d218b29",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5080,
+      "proof_bytes": 5814,
+      "used_clauses": 188
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_4.shuffled.cnf",
+      "source_sha256": "85a15b95d0401fb6af48457867e5cd71032114029a9336c88329fb9abdabf8d3",
+      "h_cnf": "af0bf6e0528a9c5dec5cc131f661789b5ec44263666e094a1b7f0e6ed7986593",
+      "h_proof": "23e701c2b00d783fe4b47db3d740116c7e5d6c0ee88144153aef6915f265fc75",
+      "raw_proof_sha256": "6fc1c223dfbcf5d68ec97a1288b4a5ce14ef45d4db82daeb4f26a94beb0150ce",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5096,
+      "proof_bytes": 4504,
+      "used_clauses": 163
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_5.shuffled.cnf",
+      "source_sha256": "50db8f7cc6a1286282261e7389cfd0cb557f19353e4d2a0b64e42d7733852223",
+      "h_cnf": "d9fe246342eb900abef273a888e966e3c11827c906d7f994eb93880e290ad622",
+      "h_proof": "222e24b879006e4531037f338a605edd87ce81d5690d11621f744d61dc5afcc8",
+      "raw_proof_sha256": "8495e3a0da0b9e156d6809edccc0c2a7b7d6a91db15f6945e9b3581b6dc6d74b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5050,
+      "proof_bytes": 2627,
+      "used_clauses": 117
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_6.shuffled.cnf",
+      "source_sha256": "f05eae9b47c2a507b406120f6f119436c9db2acffc872b5c6c55b3b318aa9426",
+      "h_cnf": "0e942a2b4ee0ce6c8ab511d5d78c3a79b85b18b70db8462deee65eb13b980daf",
+      "h_proof": "d4a87a2e308326692422ce7d4fda0a152c1ab5cab005b1f9f6b1a662330d5169",
+      "raw_proof_sha256": "941531cb4e80f5d263b46ce21618d5dcaa5512125557d83544b95be54909f1da",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5087,
+      "proof_bytes": 7103,
+      "used_clauses": 183
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_7.shuffled.cnf",
+      "source_sha256": "dee70fa15a9c87e8d054a0e3c5e31f89d82c12e99e5d9a99b379dad3d7e78131",
+      "h_cnf": "481f77a39369a7865fc3c0de9d84f8127bcf0a53db96bf93f458db26c39e695f",
+      "h_proof": "66611aeac455be7fb860a4cfcc0b5480e8f4a0ef80d949360c6f1db9732d6be5",
+      "raw_proof_sha256": "211d3826f35a2455a056e2fb53c96363ccd2c87f78d645cad7bae28575f0b0d5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5069,
+      "proof_bytes": 5525,
+      "used_clauses": 178
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_8.shuffled.cnf",
+      "source_sha256": "9585321485aed9b848df148c792418b0aec6a316d995b0cc331081b515163e57",
+      "h_cnf": "cc271b75c727d64e427610ac85cc346207eda60f3af6172d33372e77984e886b",
+      "h_proof": "34ae4105b1639a6a6f1085432e703e19bdc695d45276bf4e99e105240e417ca5",
+      "raw_proof_sha256": "1a5298c0c6aadec7310834d8a6a6f7444c6d8db6613abc4b0c59f1f291e59121",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5033,
+      "proof_bytes": 4522,
+      "used_clauses": 148
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col40_5_9.shuffled.cnf",
+      "source_sha256": "b5a0f9f1a27de158f47f649bb2067490e290db87f775db5781adc628b206a872",
+      "h_cnf": "59f52db6d94c4cd5de4df4df6bcf713743cfa0517fa94d19542df8a63cba369d",
+      "h_proof": "388d35596f2a0a80be461ae7ba793f98b59702136c922fcff9ab29db510279c5",
+      "raw_proof_sha256": "4a0edcf56b0e57db592285ec50b3ee8c02cb177c5e88bdf46ccea9bd0836b491",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 80,
+      "clauses": 346,
+      "cnf_bytes": 5068,
+      "proof_bytes": 5626,
+      "used_clauses": 175
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_1.shuffled.cnf",
+      "source_sha256": "5f2114281c04d3afd2c9e7d64b3697ae7768bf498f96e19137975476af73aa47",
+      "h_cnf": "6924b33789edf5178b0443168a6d2b29dd91e2ed372a9cb91bfdf927aac5cfd8",
+      "h_proof": "d7952fea3db7c4a2f5bce119235e1db7c482a044138d46d6fb9c6f21fce0be2e",
+      "raw_proof_sha256": "aaf5f0f9c037c7032d123dc105878f769a11e7b984700758fa4cdd030b66eabd",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 8008,
+      "proof_bytes": 29240,
+      "used_clauses": 419
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_10.shuffled.cnf",
+      "source_sha256": "91ea494664128df1543ce2a9b4bc1263f238302c5f2951c02f58d78f0d5628da",
+      "h_cnf": "f8f9a1b9d8243723ad876614dce4a1bf1d59c37edf86a2c0926313da70dbf707",
+      "h_proof": "f9424eb08c69c5a3846354b547b0dbf82d609eacfb1e4c75a0b6afa4c137d80e",
+      "raw_proof_sha256": "c4a6fdf6942095e9f9caa24babec7064c88e1ad003b1dac37d68ac6373a1f293",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7982,
+      "proof_bytes": 40811,
+      "used_clauses": 406
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_2.shuffled.cnf",
+      "source_sha256": "97ae955321e5b98d48d64e9c9d6b787aa3e916ac770fa0fd86e64372e2540c23",
+      "h_cnf": "c79d8e243ee471600ba221556bb51d4494fadeffbf0f033f7a66c653d4186c4d",
+      "h_proof": "d708fe6627bad23e62c45f4574615081e2e6c839acab03929b0ca16baadc0b70",
+      "raw_proof_sha256": "d9acae3efa29cf2c7148d8c4e291be19ca2a9fc87ba466a25dc32556a84d2e50",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7961,
+      "proof_bytes": 37509,
+      "used_clauses": 429
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_3.shuffled.cnf",
+      "source_sha256": "4f198e739f44ae1faf10d178937e243394c8450fbd9c51bc7f8e68e43366def6",
+      "h_cnf": "e3aed15c323eb14ad200812f767948e8b12aec487a1c29820d15abe4ec09539c",
+      "h_proof": "63afa8d93595572181e0ad8ad0251bb0980b5ed1611362d38c3e8d2476e85095",
+      "raw_proof_sha256": "74e07102e4b2cff980b73a5712144b3bac2e10a9234c3be0b694d100c5a5c40c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 8016,
+      "proof_bytes": 28953,
+      "used_clauses": 411
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_4.shuffled.cnf",
+      "source_sha256": "17850ccf60f2a1425fe79f2208f0a84d5cacd50af9e1790006a700545e7bd396",
+      "h_cnf": "d90d8f1074840064d8c41aa589833f0366f7a9f9d46c32dea72f4fb8510c7bc7",
+      "h_proof": "111de6954771b6a0c930111daba91db6a0d003fe7342f185530a21978cc7f7da",
+      "raw_proof_sha256": "202fa88a2055ccc970e60f4441dce01127e6b06acbb33ff7f52a2ef4727e037d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 8009,
+      "proof_bytes": 47822,
+      "used_clauses": 438
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_5.shuffled.cnf",
+      "source_sha256": "f477a94596d8e9691155f6010498f48247a5f042841d1ccd2173e206e62d8153",
+      "h_cnf": "e31c3ad8e59a28889e32d5327af73da27398bbf400c1671abbbc109cb86909bd",
+      "h_proof": "746403c3c646a1a0fd0e6f5d271372d8223454d8ec1453b659885afc71204565",
+      "raw_proof_sha256": "3be9ec4c12f6effb0f47138dd4f506a70277e60221037fe459c43f76dc116a62",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7967,
+      "proof_bytes": 24420,
+      "used_clauses": 399
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_6.shuffled.cnf",
+      "source_sha256": "7bac7bdc7ae620fe1c9cc52bb3f032d78e91e6766926ea62ca3cdf4e2094a549",
+      "h_cnf": "79f23aa42be99c8e9679fe4bee142571a38c346c7b5417def180b7027de914d4",
+      "h_proof": "4dc2afbb80f1e4e30f57cf5cd9f80c573f25d0e8d19b8b40285f244dd84b20fc",
+      "raw_proof_sha256": "09dc044da9e49acb8f2c2de3e8f1703fcd87013587088c4c15f7f45bc4300a1d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7973,
+      "proof_bytes": 28040,
+      "used_clauses": 394
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_7.shuffled.cnf",
+      "source_sha256": "005483e9fe61aa839e500179cb532ba9a520b64276ae51b1cc7a81a1af49e244",
+      "h_cnf": "500b3920f61ae0414fcbccc3b5b666b2d30f48b867989d5602a21ecf9452205d",
+      "h_proof": "8357271ea42c6c4a5cc4bc6eb63802f189688ef30aae7f3968b036418e982dea",
+      "raw_proof_sha256": "1de8e01aeb55cc5df582b55a75cb696c88a35a4c4632f35c69b27984238ba255",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7998,
+      "proof_bytes": 36692,
+      "used_clauses": 426
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_8.shuffled.cnf",
+      "source_sha256": "74ef59112c99f96f2c1502e3a56c5fe195812aa5e08b3ed2add0d1dabedcc82e",
+      "h_cnf": "ad5a7b0f82233d665022f630155ade2440a26747437f1645dcfe31eb44f5accd",
+      "h_proof": "f6327622ef08ffde5aa9fe2eed7bc7df92de589a0e0beb984a8ed4a80bf6a8cc",
+      "raw_proof_sha256": "6bb7c3db8b9e9039a140887b378907c24598682cebfcda0e94c31e301198c9b1",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7962,
+      "proof_bytes": 37502,
+      "used_clauses": 426
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/graphcolors3/3col60_5_9.shuffled.cnf",
+      "source_sha256": "f908a1408377fbfc63c0a738ba0416e87fc377bda5c8910a58b99f112f638b90",
+      "h_cnf": "e525fbf5bbfe1b0eb9d6deff861989a95c32ffb75e6379272e462881b78ea581",
+      "h_proof": "9d371e36172e6587d1b1afd6058e7ebbe53f0da2422034c908287ae630a4ffcf",
+      "raw_proof_sha256": "e7734c9a8403c3af9b9768bc8bad3d3c744a0d290ec731e50268ef09413567bf",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 120,
+      "clauses": 516,
+      "cnf_bytes": 7975,
+      "proof_bytes": 23750,
+      "used_clauses": 373
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_3500_3500_30f1.shuffled.cnf",
+      "source_sha256": "c9f2715afe27732040a9cd7ba10c0b0bcd52022c649a63643282ddba2c1b08b1",
+      "h_cnf": "c7b60f60df8171469a6aee9ea661c9e69b7187000d06b888aa5800dcdd606920",
+      "h_proof": "81fd3b3a2467831c200aac508a69b55ffb78136b84d2c53f1e248a1b765e217f",
+      "raw_proof_sha256": "ffe99974ff1f212d8d665bc62337c4a434767a4864fab8bdc26f8166ead2e4d9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 30,
+      "clauses": 420,
+      "cnf_bytes": 7139,
+      "proof_bytes": 40312,
+      "used_clauses": 405
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_3500_3500_30f4.shuffled.cnf",
+      "source_sha256": "d054f70080d54de2602d1c120b571a54c1e79e1ae38aa4b6733a6ef253c273d6",
+      "h_cnf": "320efb53589e8a5ad41c4d712b78fed960a731c000aef8e7531ab0e7396c65bf",
+      "h_proof": "18ab4585c6d0d8022837b74e64886e706f896e7f9bed9f2d924281e397a1529a",
+      "raw_proof_sha256": "b738777e0af74814e2336269bdd0de518ef504886577a665b619f9d35947ca90",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 30,
+      "clauses": 419,
+      "cnf_bytes": 7173,
+      "proof_bytes": 53848,
+      "used_clauses": 411
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_3800_3800_40f1.shuffled.cnf",
+      "source_sha256": "0d7dedf635b1bbcba2cab7801d54ec74541d23f78dccbd6dcd1e6274d1961a93",
+      "h_cnf": "2ba6977a22490490cb084a1e22e676d90719cea9ebf36f19731979b5607b779a",
+      "h_proof": "91d8b065644faebf6dff1fbbab433cccf1427e7dc394a6c4a7afee0b8e3c6b96",
+      "raw_proof_sha256": "fe9ae39d6b9375ce4f0b4bf4d8f3ea6707c842df16ed742c6f6638c599134993",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 608,
+      "cnf_bytes": 10698,
+      "proof_bytes": 343722,
+      "used_clauses": 607
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_3900_3900_040.shuffled.cnf",
+      "source_sha256": "72728a1fb54d00bf96d6decdd04adc7a6b49936ea8d82c81ce19c3168c64f9d5",
+      "h_cnf": "316daea37dbef6b187484e8d83f90f1b02ca3ca0c03311ac1d35a76ea324d61e",
+      "h_proof": "db0991db6636c92ee1890678b4279323aaf481ececc207665a2180621645ac01",
+      "raw_proof_sha256": "b84a12bba58b8f5e403cae060b0c518cdf9d5802d67977ee342f704ae5e55ac5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 40,
+      "clauses": 624,
+      "cnf_bytes": 11010,
+      "proof_bytes": 382364,
+      "used_clauses": 624
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4000_4000_50f7.shuffled.cnf",
+      "source_sha256": "be0a7300cadeb0a8d990a44053be170dfa0e6b4be13b3e957dcb9231fb69c56e",
+      "h_cnf": "2fe6de84f1cf86e28cfe9b864fc98faf5e7df310d8f04a45d0d3f0e3a5b6cb18",
+      "h_proof": "59a62affd58f7299f31e59abbc411a0606dcf3213d8446af54e4bc57ee2a890d",
+      "raw_proof_sha256": "a3c3992ea6ad04ff55e05498b6fce08f180bc8e49c55b90a54aa71923f196448",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 800,
+      "cnf_bytes": 14368,
+      "proof_bytes": 2510562,
+      "used_clauses": 800
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4100_4100_50f1.shuffled.cnf",
+      "source_sha256": "1423561d508c7ca23f05b9fed46a06c0b4394de9de05a7d658af371c41cf5ab6",
+      "h_cnf": "bbb192730ba06dc1ffdf8f31b83318b5e22bdf16320d878affbf4bfb2cfe127c",
+      "h_proof": "e0b5902293dc1a688c6b91f1bca433c337f57e27cb5d7f344a91ab602d007240",
+      "raw_proof_sha256": "5a32bfcfdefacac1f9c60e254425adea38120bb81deaa90e603424d2516d0c38",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 820,
+      "cnf_bytes": 14709,
+      "proof_bytes": 2107919,
+      "used_clauses": 819
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4100_4100_50f2.shuffled.cnf",
+      "source_sha256": "f7943a8cd52d8246cfaa45021578ad620d5ecf34819eb256b8c2be2ddccc45e5",
+      "h_cnf": "e633b9a3830f9d82844c3f1013403307e60b82dd95cc1bc4de9ca0ff8713f138",
+      "h_proof": "5a162eaeea143e141ebfbe26bd8aa42989631a7dc1f71452b555a3cdeb699f70",
+      "raw_proof_sha256": "faa5c0ab7a4bf9909e3513dafd7038119ef28a90d9e4a5502c625226966331bf",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 820,
+      "cnf_bytes": 14729,
+      "proof_bytes": 2376578,
+      "used_clauses": 820
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4100_4100_50f5.shuffled.cnf",
+      "source_sha256": "57905cfd7ad01d8a01dc3aaf2d6684907483fb9635e5be5a0ee4268d8e8a35ed",
+      "h_cnf": "5dbe4d81f7c15321ad328637f99e3f7769e9342e31e1d46c0f1292fc8beeeac3",
+      "h_proof": "a442a9e1df92b03d1936e6e741195219b0f9bdda07da3c7ea5f4dc9b6ce522d4",
+      "raw_proof_sha256": "90e82b8c78a0a36b8f648c86fc8138b5a5b5b34a6a62b3654ab03ce584ccdaf8",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 820,
+      "cnf_bytes": 14732,
+      "proof_bytes": 2029628,
+      "used_clauses": 819
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4100_4100_50f7.shuffled.cnf",
+      "source_sha256": "ff7c659db388de49b02a6c6423855840745b924ea7b0c111288fc82bb6ec0200",
+      "h_cnf": "2e79c2cedc9eed601e3bc365a3bc9c7f0f0ba8108720515d29083cd98f1f0f76",
+      "h_proof": "735b6914df2b0f0b7d73d93624ae78c2be8746236ef5abcaadc700689d4b04e9",
+      "raw_proof_sha256": "93a09ab194c9d7accd9df3b1a1f7c975e0ba51d731ee8f942d1f1e661edf7bb2",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 820,
+      "cnf_bytes": 14783,
+      "proof_bytes": 2466598,
+      "used_clauses": 820
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/plainoldcnf/5cnf_4100_4100_50t1.shuffled.cnf",
+      "source_sha256": "19e812d689c1bbcac3ac2d5c62ce8b8445b3c6b737653f2d0267e028599ef03d",
+      "h_cnf": "59473ea54bb2ce4df623c1b4a08ebe0d5fe133a05d1fe9c8fd63628c2b02d70b",
+      "h_proof": "66474181298b545d95f1d29291bdfa1555f8c2ba378061288389a7f0d837a369",
+      "raw_proof_sha256": "2064308c15148639a853223f96e1fd3a09f0b3ad17aac3028a17685c0a059fa6",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 50,
+      "clauses": 820,
+      "cnf_bytes": 14710,
+      "proof_bytes": 2135873,
+      "used_clauses": 820
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/twentyvars/6cnf20_28000_28000_8.shuffled.cnf",
+      "source_sha256": "4aef164310af141f4ad7e5b3fa6516d7eb45881146960288d05dcf0882a3aad8",
+      "h_cnf": "90c67fef2455bf0dba8c402bae4a86ee30be12b80970b6ca29ef844643aecf24",
+      "h_proof": "a3135c294d3bc0acf2c8cc893463efa7543127590d4d9bda913a7a1f03375b6c",
+      "raw_proof_sha256": "9c0fc605d0acf90e6d7aedf334f45ade5ac5b818bfd5e4d3b168425103d2b32d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 20,
+      "clauses": 803,
+      "cnf_bytes": 16279,
+      "proof_bytes": 65749,
+      "used_clauses": 771
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/twentyvars/6cnf20_28000_28000_9.shuffled.cnf",
+      "source_sha256": "2056bd9074ff7a9256534ed6fd045e7ba48618a3f96f572deddcaef8e5c23ca3",
+      "h_cnf": "1911e6eb1f729657ccf78d805f9dd4fa32d72a1361323ddc26e09a52e6ff77f9",
+      "h_proof": "943daf52fb78e8e440f9111479ce3c8bfb7741fabbf81bf356f65237f93bff87",
+      "raw_proof_sha256": "d9d641d3713ff2b4cb9b51e55e90738e34a0af7e550b2bf2c0e0d2ff3a4e5d38",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 20,
+      "clauses": 795,
+      "cnf_bytes": 16133,
+      "proof_bytes": 68540,
+      "used_clauses": 772
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/twentyvars/7cnf30_80000_80000_2.shuffled.cnf",
+      "source_sha256": "f2ec855c3bb4c320f97a7ed818f93d2e735957ebad6e6d62445f1ab39a62219b",
+      "h_cnf": "af8ea5e0229ed0893cb430746f8437426f0a105e1406e7007050164dfb773d8f",
+      "h_proof": "8f02f0171309ecb592a9e2402ba3346b51e932be3122a92a46da96fc328582b4",
+      "raw_proof_sha256": "2111c6da35eb94431085be669c82b438cda5d81aa69cb018563201ecf059b980",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 30,
+      "clauses": 3244,
+      "cnf_bytes": 79042,
+      "proof_bytes": 2377809,
+      "used_clauses": 3244
+    },
+    {
+      "source": "sat-2002-beta/submitted/pehoushek/twentyvars/8cnf20_2400000_2400000_2.shuffled.cnf",
+      "source_sha256": "3f768452865a3f729db078083054adb8fe3559c7c5681c3f4c5e3b3476044650",
+      "h_cnf": "f374509526fac77e5f3227dbd68efde8826410a0fdcd5e182dcc8c50fe02bafe",
+      "h_proof": "9944abd20f004f5214abb34c3399732998118ff75c88e6d07d4771044e50083c",
+      "raw_proof_sha256": "1e0c659c2d240fa86dd4934e6acfe10f14fd6d38165c30f264316953e62eba76",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 20,
+      "clauses": 22996,
+      "cnf_bytes": 607057,
+      "proof_bytes": 552328,
+      "used_clauses": 10980
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/Urquhart/Urquhart-s3-b10.shuffled.cnf",
+      "source_sha256": "7370dde77c7359f24bf5014459caf1912b4732a854ee53942ce223f9c3aa1e18",
+      "h_cnf": "df3d63df43a98ce4592680417dd94bb491c46bcaf97484ce087260ab6611ac38",
+      "h_proof": "bfd1a951cd366612ac9b49bbe778dfedc2c974b03b415f7257a3d07006c4e7f2",
+      "raw_proof_sha256": "76d9a299df59a3326ca997fbe585fef8b919ef32e3830fd28dd2a4fa22837e36",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 43,
+      "clauses": 340,
+      "cnf_bytes": 6983,
+      "proof_bytes": 8407522,
+      "used_clauses": 340
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/Urquhart/Urquhart-s3-b2.shuffled.cnf",
+      "source_sha256": "7afc76984e359f36d85f90aac99d16ab21cffdeb892a532e80beae68e980ea9d",
+      "h_cnf": "cd2f4b89b2f34b59e334d8ce8594488571c6aa2c2df8b393a3da353fdcecade5",
+      "h_proof": "9973db3c8bcab8d885fcd84412a2fd3904ded22ed9ed4423be3dbbabe5ea3ade",
+      "raw_proof_sha256": "af39fbaca42382a5d87e79e04188d0a9d1c7f959b6faa701e5e31aa51f8066a9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 44,
+      "clauses": 398,
+      "cnf_bytes": 8645,
+      "proof_bytes": 2981391,
+      "used_clauses": 398
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/Urquhart/Urquhart-s3-b7.shuffled.cnf",
+      "source_sha256": "c5f04d19a37844360cf4db76c1bb2b55d050d73e15aa709498f19149eed29d26",
+      "h_cnf": "9bf0f060ed399c9a77269bef029fe1676fef2785e088bd43b34382b27a705c50",
+      "h_proof": "3b2b2e6c7c62ea1a94f95db9f6e894de8cfa2c7b0c830d415d7fea07e2b75406",
+      "raw_proof_sha256": "0f55b230c98bce880182a462667d82776451eeca073b4b240aebe2bd83e6c3af",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 42,
+      "clauses": 342,
+      "cnf_bytes": 7181,
+      "proof_bytes": 11258907,
+      "used_clauses": 342
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/Urquhart/Urquhart-s3-b9.shuffled.cnf",
+      "source_sha256": "b4aa6d682230b75db643cf8eb344becc51f11cf777624747de5228a6e8ba8b06",
+      "h_cnf": "e87a1ca338a3086d7ee34e597c0d75f65114673a7b747cc70c616a28d2863541",
+      "h_proof": "ead8ca72d343f300eaac47cc6e18da023275d459da0ee6820fe1fc50c438499d",
+      "raw_proof_sha256": "66163634779f69481e99e937652f319fd1b7f64bfa1a09184582c912c12219f8",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 36,
+      "clauses": 230,
+      "cnf_bytes": 4441,
+      "proof_bytes": 564305,
+      "used_clauses": 230
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/satex-challenges/c3540-s.shuffled.cnf",
+      "source_sha256": "7ef8e0836fb2df61ac6590ff75beab6016015b973137a0e24b107116a7cd1003",
+      "h_cnf": "9abd8d002e6bb96d518c12b47c3eb36e17c0f4a7a6df23fa856cf956d19b0776",
+      "h_proof": "1169114b1583d013c86d989610ec553703c1e2619c8df8bdb9728bcf8473a79c",
+      "raw_proof_sha256": "1ff69c069b6a3eb0e429a4d832d8b313d5cad4099c0a991239407c625c3bc39a",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 3499,
+      "clauses": 9526,
+      "cnf_bytes": 131463,
+      "proof_bytes": 489301,
+      "used_clauses": 9375
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/satex-challenges/c5315-s.shuffled.cnf",
+      "source_sha256": "4848a667d219f9e247ac6cc3d0f6a6918299c641c6d60489c7aa0a7a0500ec41",
+      "h_cnf": "b3e890e94b9722bca51113db2147365bb97b9600c6af6ede14e846861467b4cf",
+      "h_proof": "69730fad56775b20aadb4ab9b359181be5b39c1dffe0773133571bbc0ac3b115",
+      "raw_proof_sha256": "8221988f488cec07a69327ba73f448af8aa3dc928160b0bd67e5fcc826cb60ee",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 5408,
+      "clauses": 15110,
+      "cnf_bytes": 214738,
+      "proof_bytes": 798410,
+      "used_clauses": 14423
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/satex-challenges/c5315.shuffled.cnf",
+      "source_sha256": "0098f271f96a8b67f52018e8c781897fb64a7c876e7fa8b6e81bd338ed30de8f",
+      "h_cnf": "527d02d78d0bbef7826c33b2c86733c729870b75849be1f6b3ea0d381e40a70b",
+      "h_proof": "53975ef208ab40cffac1a1f5ba4af99c92efc8dcc0e8d540faeadd41cb42f727",
+      "raw_proof_sha256": "62dc7281f4e6373232545677668019d4d924f2ce371b2cfc2c1e41af2a43060b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 5399,
+      "clauses": 15024,
+      "cnf_bytes": 213159,
+      "proof_bytes": 1077166,
+      "used_clauses": 14324
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/satex-challenges/c6288-s.shuffled.cnf",
+      "source_sha256": "f5b06f953b2c36e0b1365a6618047ff3c80f750e896dd2d3f6c196a5fa1ad144",
+      "h_cnf": "7947f660810eb9e6530c100694131681bcb36b523301b424fc5a37b44171076f",
+      "h_proof": "795981acbb0db06166586d6414a54d0b42b9995bdb86a05d79324f853baeb59a",
+      "raw_proof_sha256": "e57df83ad31751532b234b8ac1e2e91de8c5b58df4ce02ac83352c05c5f29a51",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 5025,
+      "clauses": 14882,
+      "cnf_bytes": 212676,
+      "proof_bytes": 581679,
+      "used_clauses": 14588
+    },
+    {
+      "source": "sat-2002-beta/submitted/simon/satex-challenges/c7552-s.shuffled.cnf",
+      "source_sha256": "713bd1053f06658781421230d945ca351ca0a9e3e73ab59ab22888d8e755569a",
+      "h_cnf": "13624a8f091e8ad3ac482299b15771ea14fa55e2362d29a8ee31876409bbc71d",
+      "h_proof": "3be9902618c54a5e5a849e9ae9f730fc3017cdfb8b8b31fb6bddbc6acdfcb1b9",
+      "raw_proof_sha256": "818771a3f2bec7d51bbf7fae8084555a1d4f228f116d2fb679fa882b2dcdc181",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 7767,
+      "clauses": 20812,
+      "cnf_bytes": 295269,
+      "proof_bytes": 1134248,
+      "used_clauses": 20168
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/CheckerInterchange/avg-checker-4-23.shuffled.cnf",
+      "source_sha256": "9133b77b581a20f49594b714c66ead42b27772ddecad21a8c66a23f9ea9c39d0",
+      "h_cnf": "a365cf014fb679d38bf0808ca5834985c21a59ec3df92ce08b8f16e291c31d1c",
+      "h_proof": "b43d69ed0754efff9c2467c3572d484662c47c44bd18fe5467eaa48491778607",
+      "raw_proof_sha256": "9757760582ca048b16a6343122a436fca01e3db288afeeab3fcbef7ab4a50d4c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 648,
+      "clauses": 17087,
+      "cnf_bytes": 301986,
+      "proof_bytes": 1271171,
+      "used_clauses": 8411
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_05_05.shuffled.cnf",
+      "source_sha256": "94ab80cbe258465b4cb44c48951f5338387383ce61ec67484838f1ddb62d492c",
+      "h_cnf": "b4bd2e327d480403a5819128f220822f8428af77ee3171a278d35ff704ce8e06",
+      "h_proof": "cab52b21b25d7653433053e869d468301ae6df1e24033ba874326e31fbc8a499",
+      "raw_proof_sha256": "b453c89cb7c8aebc698c102736d5f78ba91aba33596cbdef854e8ed9ec8f242e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 48,
+      "clauses": 81,
+      "cnf_bytes": 1156,
+      "proof_bytes": 16635,
+      "used_clauses": 81
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_05_10.shuffled.cnf",
+      "source_sha256": "2f50e8baba88141f6fa13cc331eb00c3dbb58e699d732e619445c2c07923b6f7",
+      "h_cnf": "25246fa0f6ec2995ab27814f0399c755a553c33f3643f6c597a3c9b19a2bca88",
+      "h_proof": "61ce41fd615c7f8af022db470f2a97dee6049242dfbdf814f6a0525a59b952ac",
+      "raw_proof_sha256": "b00c92c0bfc1379c9d85ed34c337634185c455a5f6f40d55825c5f62c65a8fde",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 98,
+      "clauses": 171,
+      "cnf_bytes": 2563,
+      "proof_bytes": 45575,
+      "used_clauses": 171
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_10_10.shuffled.cnf",
+      "source_sha256": "121302ed5b0b03fc728d3e7ea8af380b92ad65deddad1263e583a71061ae652f",
+      "h_cnf": "daa3d6f8a50c40fed8dfb20eec823fc2cca5174da5c74ecfca1301bf435e767f",
+      "h_proof": "f82a37e59a125fdea6f79d7f3d0638704f20fefc6c42fac47904a029ac469c70",
+      "raw_proof_sha256": "add550093f1996c93ecb3effdf87bdd8d270e44e7d74f63fb03347e1bf24b5da",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 198,
+      "clauses": 361,
+      "cnf_bytes": 6269,
+      "proof_bytes": 25702,
+      "used_clauses": 361
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_10_15.shuffled.cnf",
+      "source_sha256": "b4e09067918c86679ad1096ac2ae913c3a9190a9910923b9d7104ec50a147c6b",
+      "h_cnf": "07fe8a128557f44ae184c5fc088ab0aa4e48d4a5a233768fd3f4130a67c9101c",
+      "h_proof": "fab519de02df1bb6089ae4f41f7ff9e6a3d0af86ae4108b815ee071aec22e683",
+      "raw_proof_sha256": "fbd73db9c291181277ffde031f1da37fda8896aa32771bea042271281743fc57",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 298,
+      "clauses": 551,
+      "cnf_bytes": 10011,
+      "proof_bytes": 32078,
+      "used_clauses": 551
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_10_20.shuffled.cnf",
+      "source_sha256": "02c28118f014ae4e90108e868997bd1599a4e816a3a4d26356b73a2d69ab66b2",
+      "h_cnf": "f916c093ea69a68a8f8cd40063d109b6cf7e5d4c4e02a1ff780ec8d4dcf76bf5",
+      "h_proof": "815a58db28b85bac8914b824448320c7dd1e9c219466f8fc895600f2b210d741",
+      "raw_proof_sha256": "fe3ec881a3b5df952e15668ae0553561a313c9d46bc89577184709df15346382",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 398,
+      "clauses": 741,
+      "cnf_bytes": 13765,
+      "proof_bytes": 43718,
+      "used_clauses": 741
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_15_15.shuffled.cnf",
+      "source_sha256": "079d365fbe9cdbf30ee002c4807c443413e3e6d9d2f08d53a2cca9255784f37b",
+      "h_cnf": "cee604cd0fd7a3dd631d2cb24f2d1abe219865bde2dd0e3686baa4e646418b20",
+      "h_proof": "99684f57d9c862824463bf31ce1d57f42d659c697a1cc8fda6a2a4a109a1c2d8",
+      "raw_proof_sha256": "4b4cf45fc43aac445131cb6eb32547714d1315dda329e2068d89bbc20864c9fb",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 448,
+      "clauses": 841,
+      "cnf_bytes": 15740,
+      "proof_bytes": 87156,
+      "used_clauses": 841
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_15_20.shuffled.cnf",
+      "source_sha256": "2680795c4985d6fc5640feb67d1ba62d5332d3a9fff28ffeb417b1946946c9c0",
+      "h_cnf": "e5dcd426795cc0d6706071d6daa026b6dc4654e330df86c6ddd6ea762dbdd4f8",
+      "h_proof": "4fc197447eb2bfb3c5f0707c1e75ff5adc6ee4377c7c0c55efcafbb50e04f682",
+      "raw_proof_sha256": "0c221754ada8a44c0806c26b6f27af0d85843ef02c7a50521293c7958d17c9fe",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 598,
+      "clauses": 1131,
+      "cnf_bytes": 21481,
+      "proof_bytes": 75112,
+      "used_clauses": 1131
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/GridMNbench/grid_20_20.shuffled.cnf",
+      "source_sha256": "c6a3f35a70a8077a7af05d5acdd458bbffc557577ab12a9f76841febeadf673a",
+      "h_cnf": "e6a64d39ad54830e20300b119e73c8b0173bc85bbacf65dffd2e53e832766f9f",
+      "h_proof": "acee9096428296472dfc5c913e4285bcecd3e1d31c9a98a2e06bacc3f5b78f63",
+      "raw_proof_sha256": "c317a6df3ee618d5f12a3926ac8cd1f0f7b9850ad32ae32af88677723fc89f65",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 798,
+      "clauses": 1521,
+      "cnf_bytes": 29262,
+      "proof_bytes": 90481,
+      "used_clauses": 1521
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0001.shuffled.cnf",
+      "source_sha256": "b3af60a2eb3dccd02377e47a36eeedd8fbe9826294835e9b5ce7fadd88537084",
+      "h_cnf": "87700d29e32494d3a7d1d8ffda8def2f971e93470bd4882ff9d03e9ab334c1c7",
+      "h_proof": "144b340ea69a6feaedcfb01559397a641662d6a1de3bb7314dca64865e7dcf17",
+      "raw_proof_sha256": "d7a0538e6ef8532b4b8b922796f664780308495eaf724b4319ddf34a0028ff07",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 36,
+      "clauses": 84,
+      "cnf_bytes": 771,
+      "proof_bytes": 2270,
+      "used_clauses": 84
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0002.shuffled.cnf",
+      "source_sha256": "c3adb36193e8b5801d1c0ceb3b32d3273baf2b2f41c3dcb954184381b5a7a022",
+      "h_cnf": "01aa98c8dcb2110759cac938ee7e409ee2e5cd370b0664fc5198dd6df56621c0",
+      "h_proof": "b37c9c904e3d7f3286c4478110ab9e7bb593b25d00af76d2486b2570500063f2",
+      "raw_proof_sha256": "12cf7fdeb47d897b818ab99e0fdbb988f745b9c4b18ff158d24bbea29ef38d51",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 72,
+      "clauses": 168,
+      "cnf_bytes": 1567,
+      "proof_bytes": 16491,
+      "used_clauses": 168
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0003.shuffled.cnf",
+      "source_sha256": "2be72f26e7fd067bd8af92b204e18619a43e567409059099d8cd614939c5a319",
+      "h_cnf": "4cdd3217c07302a94eb74c1a035fb127b619c67585a2592d7a9ab6cf22082fa4",
+      "h_proof": "157bfcde2e8452288b8e3498474880740964a921ef3e97d68126028f253b1740",
+      "raw_proof_sha256": "1c36a22135b0a7447736aa4f092f884c287dd312b2ea71cd45d7e9a2cfce7da0",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 108,
+      "clauses": 252,
+      "cnf_bytes": 2429,
+      "proof_bytes": 31460,
+      "used_clauses": 252
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0004.shuffled.cnf",
+      "source_sha256": "4163459ec4996704d5c4fa961c7783b3020b822dac5856e8a4223c9e821bc3d7",
+      "h_cnf": "acbc2485b0713b44018e926b698f8cd6060ed2759ae31f07810fe50bf863e65e",
+      "h_proof": "3e5fb86f6f9a3ae4d1464e0314bcedaf4465c1b8fd20cb0f5bf61897d517c9e3",
+      "raw_proof_sha256": "86d8b4fcd08d708e1af32f732a170233b8a3e46edbd5bf1ae8f1de8908121a78",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 144,
+      "clauses": 336,
+      "cnf_bytes": 3374,
+      "proof_bytes": 56122,
+      "used_clauses": 336
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0005.shuffled.cnf",
+      "source_sha256": "c934f6e359770110f33af079c3d3431ecd5d793d6e0cd7331d8140309e9e5c79",
+      "h_cnf": "003044937f0542c5c6c4a708e3b761a6693f2538f672309f811c39df07af0ec9",
+      "h_proof": "6fd3bb36f74ad15b278e3d8ef588dfcbc91d2764558c364a0da149ab1e9dd94c",
+      "raw_proof_sha256": "1caafc6afd7671940d76c47fd4872e2dbef16892879bac13adc6338d8f83bf29",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 180,
+      "clauses": 420,
+      "cnf_bytes": 4340,
+      "proof_bytes": 100820,
+      "used_clauses": 420
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0006.shuffled.cnf",
+      "source_sha256": "0bb6b4728fe1520c51f40569fd4e723f3d77254e14ed7bff79a93b05fb4e36a7",
+      "h_cnf": "07434d233a01279f095fc0e46cd386d44c65dbac7e4281efa101f1ca54508184",
+      "h_proof": "4b3d54cefdb247d74c70867f5f606476a5f9cd4d7d97b848552f4fc0e876452b",
+      "raw_proof_sha256": "2b020094e4514de62385a4eb7e94d6ae8ca0e7c020f258aa8bd5319ec4e6b32c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 216,
+      "clauses": 504,
+      "cnf_bytes": 5351,
+      "proof_bytes": 57519,
+      "used_clauses": 504
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0007.shuffled.cnf",
+      "source_sha256": "d34f966ee72ff30ea22f69b4ef949d84a7701d95ffea16535b210583147b9ba3",
+      "h_cnf": "d98a20b7971e9708074f660b36dec18201242d99534c2b46bc736463f0491d82",
+      "h_proof": "a28c53e477baec23ecc7237e6944753133b609ec94f14f211e53a22e6c3ec5fe",
+      "raw_proof_sha256": "72d0c2350322043d657d90022b5da09cf3f763149fff0c9719f9c32aa2c4bf85",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 252,
+      "clauses": 588,
+      "cnf_bytes": 6311,
+      "proof_bytes": 98919,
+      "used_clauses": 588
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0008.shuffled.cnf",
+      "source_sha256": "59535e5cb61393fa3dccae459435aa1eca86b32abad21676fc62009efd91dc61",
+      "h_cnf": "4c9c599211117c5fab7919c534647f850a56cebc9732037d9be0d15b6578eea6",
+      "h_proof": "3c0810e0805583483d9099e3a6e81f9c7a85c6753a645ae03a2612b0e4b5aaa4",
+      "raw_proof_sha256": "89d7caaa78935aa0aff70e69e5b452ec5665f265d1a3e038abfc154a7f11654f",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 288,
+      "clauses": 672,
+      "cnf_bytes": 7307,
+      "proof_bytes": 148030,
+      "used_clauses": 672
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0009.shuffled.cnf",
+      "source_sha256": "07f7d9630e68991877bd1dd3be918daf619509889f98138982474f0f665f480d",
+      "h_cnf": "7b12cf68f69761b940d40c716badbd499f4a8be63bb43ecb83e53e1ec6eed271",
+      "h_proof": "24f7b736511ea9a398a83fb8be01dad4e4cfa4bff50d004005844abb1376d1d5",
+      "raw_proof_sha256": "8dac9733b72b4bf8605b263cb2fd2f4eb23180d379fd720429d0070c968da1a9",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 324,
+      "clauses": 756,
+      "cnf_bytes": 8291,
+      "proof_bytes": 134769,
+      "used_clauses": 756
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0010.shuffled.cnf",
+      "source_sha256": "bba37a2b0ea6dac6c9d1b82f479e6963dfca23fea424878cd33a6ddc8423643f",
+      "h_cnf": "7500b876585ffc40f881a92804a6e723f37d78fa7c4c8d21baa45eff976ec497",
+      "h_proof": "e17a949447913e3711c05f59de0b0e7273ec55bccbed6be21e5e9f36e31956ae",
+      "raw_proof_sha256": "e96365c4a56b40804cba6acd8efe300a9a0572bd8a385a712f5d9ae5cf4c456c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 360,
+      "clauses": 840,
+      "cnf_bytes": 9242,
+      "proof_bytes": 319019,
+      "used_clauses": 840
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0011.shuffled.cnf",
+      "source_sha256": "b2c97180ae6a54c317295c76f68f378b85f67eb7a2a8438bbd599cbd83f54e9b",
+      "h_cnf": "4c7557e234ac28bf570876ebc8bf352052bf99f85e9c17204f67589e5b5273e1",
+      "h_proof": "0b016d05ef45a27c980708176da2b955c95aae9debc824e75ec4dfd7623a16c2",
+      "raw_proof_sha256": "e2dc4a814e30cc66867d19c4b2256958ae7d25ae5d2d74ce230bc776b28a638e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 396,
+      "clauses": 924,
+      "cnf_bytes": 10256,
+      "proof_bytes": 143497,
+      "used_clauses": 924
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0012.shuffled.cnf",
+      "source_sha256": "b3867d8db39be938c8881a7df9b6fe5da5b340ae65fabf7c534172fed871345d",
+      "h_cnf": "ec8238123a54d5258c27c886c22626eaada26184c70741a4caaf7e2b76c37443",
+      "h_proof": "035827ea367f2096c5dec48b95ddf35be82a241efd8cdc4a3421407bade25994",
+      "raw_proof_sha256": "788580a1d8b66884e526c507d1e6fc3a0989164fec8ffffa5bed8884ee7febef",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 432,
+      "clauses": 1008,
+      "cnf_bytes": 11232,
+      "proof_bytes": 266378,
+      "used_clauses": 1008
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0020.shuffled.cnf",
+      "source_sha256": "0659d76b80e65cfc58c906fbed0e4cef98cae8d5efb21cabb49cd81c584ff832",
+      "h_cnf": "f8cf56b1d6dfde4281564c71cf987d7adb864347df2e21efd63597eb9dd76da3",
+      "h_proof": "f80a6f9584f28bf894a22196f9e270313b31b3a6c0eed7bca13269bbf27a8ab2",
+      "raw_proof_sha256": "59aab1b38c7affce261adbe29ca11245a6a71b9e7040d2683c25d4ae1092a6b4",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 720,
+      "clauses": 1680,
+      "cnf_bytes": 19053,
+      "proof_bytes": 407866,
+      "used_clauses": 1680
+    },
+    {
+      "source": "sat-2002-beta/submitted/vangelder/RopeBench/rope_0030.shuffled.cnf",
+      "source_sha256": "369a17f5645e5d2d1a99d244f45cecccd512580ada7f57907c4527ff93cbaccb",
+      "h_cnf": "093ae91d223856f5e47bd848227605653828d380f5b34ea357a70e78bac57784",
+      "h_proof": "0ce1594fbd04b938b980b4357ff53f22fa6d7411471a108a5869c63b236b2e84",
+      "raw_proof_sha256": "54601d70421855ea05ede09d959b87239c8c96f5a7cf975914fb8c5ad63e6f0d",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1080,
+      "clauses": 2520,
+      "cnf_bytes": 29272,
+      "proof_bytes": 666427,
+      "used_clauses": 2520
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg4-8.shuffled.cnf",
+      "source_sha256": "bc32a25d820bcaa0c2f5c29106f89ed64d5ff689daaa8b903c51bf72b4a10fd5",
+      "h_cnf": "dd5370d291df15399b7eb1a116142f962f7ad4679052fce8b77c48c85d2118dc",
+      "h_proof": "cae22e07fe15b3b980d4445dbbecbe2bba3a2bdf22334e4e8dfe649e7ce45e7d",
+      "raw_proof_sha256": "ca597012770060428304de12ca830976c9033c62cd73a1e3bbf90af68d12037b",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 512,
+      "clauses": 17913,
+      "cnf_bytes": 245270,
+      "proof_bytes": 259972,
+      "used_clauses": 3990
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg5-10.shuffled.cnf",
+      "source_sha256": "d917927e6684f44b544690d40cd15bf4f5a162dadd160fe29107ee4520f77e65",
+      "h_cnf": "f7d78ad2fd28ed19783ac605d07a1e5d0cdb394ca6c4c433722c5dd04f6dfe3f",
+      "h_proof": "3ca52dcb68ae6fe00d3d4b4a2752a7df92ce768050ecb91c65f9e9e850d1b06f",
+      "raw_proof_sha256": "be69aea9645d8d9ee2cc5b79c86e3485c05171f4ff12e7c3c6d7dd6c0a83ebb6",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1000,
+      "clauses": 43900,
+      "cnf_bytes": 612629,
+      "proof_bytes": 26915,
+      "used_clauses": 883
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg5-12.shuffled.cnf",
+      "source_sha256": "c6149a7a73689c8f668949418f61dfabe185ea5b9db166d38133d63622a91435",
+      "h_cnf": "f261d6b55dd5e28c44ae19832e95965866f78f50d4ee41ef44e3a09f05ef5f77",
+      "h_proof": "dc878bbdf50d5fdb235bfd85ed02af2740d2d89babed7de0e164a18a518b28bf",
+      "raw_proof_sha256": "2e17d61a02d187529a14217959dfd11627372f43f98a6486f36c7837998a9645",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1728,
+      "clauses": 91307,
+      "cnf_bytes": 1388546,
+      "proof_bytes": 546349,
+      "used_clauses": 10031
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg6-10.shuffled.cnf",
+      "source_sha256": "02206dcdc6bba51d3f9c75fa3c0fdd0f0c9e4de33cabb08dfe7aa86ce256529a",
+      "h_cnf": "77e69eeed3db7018e84a5992df0909450d40bda23aa7523da482d48d9bf53f98",
+      "h_proof": "e155384cb35302c633a1c3012e36719dd903fb7339dc6d9d35b9a51e0c6ff04f",
+      "raw_proof_sha256": "17447e32e49ed1f05bb406bb4600a1fbacc7ea98833f65275711f1a90a519062",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1000,
+      "clauses": 43540,
+      "cnf_bytes": 608332,
+      "proof_bytes": 53205,
+      "used_clauses": 1460
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg6-11.shuffled.cnf",
+      "source_sha256": "c3f0b75bcb459f07700a59a920b49066e04f7ab21053907e8c2dbd68d2c4329e",
+      "h_cnf": "f3b762c48d306f71e9fbf3fe14c5c1dcbab7b3a45a6bdc4bfa359c1b7f2ec68e",
+      "h_proof": "18bc24b84d75a804e432bf1a6e10d637c5e7ca75f25a5988c4b4a13279545898",
+      "raw_proof_sha256": "08d93748a0fd9dd1d9977757757cf1362140069d391658a042cfc956d5eb8de5",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1331,
+      "clauses": 63937,
+      "cnf_bytes": 939175,
+      "proof_bytes": 573458,
+      "used_clauses": 9617
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg7-10.shuffled.cnf",
+      "source_sha256": "0bb57c2aeed97d4f73c526c7efce3aa5c6a3c8818eef8e0dda3367a7143d0fc3",
+      "h_cnf": "d078d57089a64aeb18de044896390c6cb80d34edaae8fd19df4988057d67c417",
+      "h_proof": "0c9fa99cd0a521c4f73f91e40eff1d2cd534122ccad02bf228ac73b6cd7a8713",
+      "raw_proof_sha256": "adf6fb8b22ac1013c8ad218bfe7f55548e9c86f87b5148ea6b811398cd839d0e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1000,
+      "clauses": 43900,
+      "cnf_bytes": 612736,
+      "proof_bytes": 39695,
+      "used_clauses": 1544
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg7-11.shuffled.cnf",
+      "source_sha256": "497b0627e1d0c9377ea1d01c6dd70d3061114645bbfab19b7d9863724f9ddbce",
+      "h_cnf": "cb2220b7d7f95e3f818620eff1be9a5cab743b12803e12fc2f94ee0b9810330b",
+      "h_proof": "63715ae111feaddb71c181eb0faf572c2462fa66d41671a5da799f5d20e89ecc",
+      "raw_proof_sha256": "2b378ef74985763b3b40a32bdfb2cec07ba8d052875c7961b884c2fb2b30aaf8",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1331,
+      "clauses": 64377,
+      "cnf_bytes": 946786,
+      "proof_bytes": 370706,
+      "used_clauses": 7985
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-hantao/qgbench/qg7-12.shuffled.cnf",
+      "source_sha256": "5c345300654b742c4cf610c93b5a49b874ba080d5ddc3bbb4b72dc530f6c7fd7",
+      "h_cnf": "461b7eddcce0b5d7c7aeaa68a25e66980ef9d95dee3efaa786490bd2eb17e290",
+      "h_proof": "13c3df29ba7c4612932945cac0060d2b22da660531cbfe99fe200d7f92c9d720",
+      "raw_proof_sha256": "da4ec5d6db837067a74335b664d450f8282d0d7779561e443a52598513048b4e",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 1728,
+      "clauses": 91307,
+      "cnf_bytes": 1387165,
+      "proof_bytes": 2194873,
+      "used_clauses": 23507
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-lintao/xor-chain/x1_16.shuffled.cnf",
+      "source_sha256": "75a9e7bfa83fdffb38921dfc4dee139c85e094459c8301f31a5f54b6cc9c8b6c",
+      "h_cnf": "56e5ae2ced597d3b1efdc93006c11a8ad93a35b4f5d2f5c9aaaf3097720ac8de",
+      "h_proof": "5702030a6b2f8215843902ed69c70325a407126f8671236ceeb478f0ae550b7e",
+      "raw_proof_sha256": "a551487eef09be6304bc725669fc7cffcaf743c09c12906a41df063876530bab",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 46,
+      "clauses": 122,
+      "cnf_bytes": 1461,
+      "proof_bytes": 77148,
+      "used_clauses": 122
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-lintao/xor-chain/x2_16.shuffled.cnf",
+      "source_sha256": "e923584774d54df78e84bbab2de0e8601258baf2a3e68ca6cadb6662545b61f4",
+      "h_cnf": "48f13ca96da8bcaa71d9ff92956cbc735064526cb3c57b4ef57d4ccb195c5936",
+      "h_proof": "05cfc3dfb8651e5073584da91e50dfff68822bc87a64176033a9641795041123",
+      "raw_proof_sha256": "81a6e686ea2e31b4f2cdc083fc45d4e6815f4aea2aac14d214bc8b83e987b79c",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 46,
+      "clauses": 122,
+      "cnf_bytes": 1461,
+      "proof_bytes": 416760,
+      "used_clauses": 122
+    },
+    {
+      "source": "sat-2002-beta/submitted/zhang-lintao/xor-chain/x2_24.shuffled.cnf",
+      "source_sha256": "44444d46eba3db7536fd1e29ca611967f016f5535ff232b6c0d41eae4d3187f7",
+      "h_cnf": "af2736ab9482198b0c538dfe5ebc224365091e74721c43504ec307d13eb90814",
+      "h_proof": "b39faf48ae49dbee0325fd4389e907f9a147528722c17ef0c7b4e26797be10f7",
+      "raw_proof_sha256": "d182ae5f2d73afaaddda6d071abaddb671b40dcc90150267655edba857b67188",
+      "solver_options": [
+        "--lrat",
+        "--no-binary"
+      ],
+      "variables": 70,
+      "clauses": 186,
+      "cnf_bytes": 2259,
+      "proof_bytes": 755428,
+      "used_clauses": 186
+    }
+  ],
+  "compression": "xz/lzma2 preset6"
+}
