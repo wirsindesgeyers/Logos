@@ -490,3 +490,121 @@ fn size_limits_and_missing_lock_fail_without_creating_an_input() {
     failed(t.command("export", &missing), "I/O:");
     assert!(!missing.exists());
 }
+
+fn cnf_history(t: &Temp) -> Vec<Vec<u8>> {
+    let base = t.fixture();
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../spec/vectors/cnf/vectors.json")).unwrap();
+    let mut events = vec![base[0].clone()];
+    for c in data["vectors"].as_array().unwrap().iter().take(3) {
+        let vocab = unhex(c["vocabulary"].as_str().unwrap());
+        let ob = unhex(c["obligation"].as_str().unwrap());
+        let ov = from_canon::<Value>(&ob).unwrap();
+        let ho = logos_crypto::hash_raw::<logos_obligation::Obligation>(&ob);
+        let Value::Bytes(hv) = &items(&ov)[4] else {
+            panic!("vocab hash");
+        };
+        let hc = unhex(c["cnf_digest"].as_str().unwrap());
+        for (domain, h, wire) in [
+            ("vocab", hex(hv), vocab),
+            ("obligation", ho.to_hex(), ob),
+            (
+                "cnf",
+                hex(&hc),
+                c["cnf"].as_str().unwrap().as_bytes().to_vec(),
+            ),
+        ] {
+            let dir = t.0.join("cas").join(format!("{domain}-v1")).join(&h[..2]);
+            fs::create_dir_all(&dir).unwrap();
+            fs::write(dir.join(&h[2..]), wire).unwrap();
+        }
+        let body = array(vec![
+            unsigned(2),
+            unsigned(3),
+            ho.to_value().unwrap(),
+            unsigned(1),
+            Value::Bytes(unhex(c["artifact"].as_str().unwrap())),
+            array(vec![Value::Bytes(hc), unsigned(1)]),
+        ]);
+        let mut event = from_canon::<Value>(&base[1]).unwrap();
+        set(&mut event, &[2], unsigned(events.len() as u64));
+        set(&mut event, &[5], body);
+        events.push(to_canon(&event).unwrap());
+    }
+    resign(&mut events);
+    events
+}
+
+#[test]
+fn cnf_rederivation_covers_every_event_sqlite_and_export_without_proof_promotion() {
+    let t = Temp::new();
+    let events = cnf_history(&t);
+    let out = t.verify(&events);
+    assert!(out.status.success(), "{out:?}");
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(text.contains("proofs_unchecked=0"));
+    assert!(text.contains("cnf_rederived=3"));
+    let key = signer().public_key().clone();
+    let auth = logos_audit::authenticate(&t.0.join("events.logos"), &key).unwrap();
+    assert_eq!(auth.cnf_derivations, 0);
+    let db = sqlite(&t, &events);
+    let out = t.command("verify", &t.0);
+    assert!(out.status.success(), "{out:?}");
+    assert!(
+        String::from_utf8(out.stdout)
+            .unwrap()
+            .contains("cnf_rederived=3")
+    );
+    let out = t.command("export", &t.0);
+    assert!(out.status.success());
+    assert_eq!(out.stdout, stream(&events));
+    drop(db);
+    let path = t.0.join("export.logos");
+    fs::write(&path, out.stdout).unwrap();
+    fs::remove_file(t.0.join("ledger.sqlite3")).unwrap();
+    assert!(t.command("verify", &path).status.success());
+}
+
+#[test]
+fn signed_wrong_cnf_cannot_pass_with_valid_cas_hashes_at_any_position() {
+    let t = Temp::new();
+    let events = cnf_history(&t);
+    for position in 1..=3 {
+        let other = from_canon::<Value>(&events[position % 3 + 1]).unwrap();
+        let fields = items(&items(&other)[5]);
+        let mut bad = events.clone();
+        mutate(&mut bad, position, &[5, 4], fields[4].clone());
+        mutate(&mut bad, position, &[5, 5], fields[5].clone());
+        failed(t.verify(&bad), "CNF rederivation mismatch");
+    }
+    let mut bad = events.clone();
+    mutate(&mut bad, 1, &[5, 4], Value::Bytes(vec![0; 32]));
+    failed(t.verify(&bad), "CNF rederivation mismatch");
+    let mut bad = events.clone();
+    mutate(&mut bad, 1, &[5, 5, 1], unsigned(2));
+    failed(t.verify(&bad), "CNF encoder version/record");
+    let v = from_canon::<Value>(&events[1]).unwrap();
+    let b = items(&items(&v)[5]);
+    let old = array(vec![
+        unsigned(1),
+        unsigned(3),
+        b[2].clone(),
+        unsigned(1),
+        b[4].clone(),
+    ]);
+    let mut bad = events.clone();
+    mutate(&mut bad, 1, &[5], old);
+    failed(t.verify(&bad), "LRAT derivation metadata missing");
+    assert!(t.command("export", &t.stream(&bad)).status.success());
+    let Value::Bytes(h) = &items(&b[5])[0] else {
+        panic!("hash");
+    };
+    let h = hex(h);
+    let p = t.0.join("cas/cnf-v1").join(&h[..2]).join(&h[2..]);
+    let saved = fs::read(&p).unwrap();
+    fs::remove_file(&p).unwrap();
+    failed(t.verify(&events), "I/O:");
+    fs::write(&p, b"p cnf 0 0\n").unwrap();
+    failed(t.verify(&events), "CAS integrity:");
+    fs::write(p, saved).unwrap();
+}

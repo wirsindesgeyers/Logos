@@ -1,6 +1,6 @@
 # event/v1 — catálogo, assinaturas e extensão epoch-body/v2
 
-Normativo para ROADMAP 3.1/3.4; ADRs 0020/0023. MUST/MUST NOT conforme RFC 2119.
+Normativo para ROADMAP 3.1/3.4/4.3; ADRs 0020/0023/0028. MUST/MUST NOT conforme RFC 2119.
 Consome canon/v1, air/v1, core/v1 e domínios existentes. A extensão de corpo
 mantém os formatos anteriores. O catálogo valida estrutura; verificação de
 histórico pertence ao appender/replay e não prova execução lógica do kernel.
@@ -160,3 +160,26 @@ FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 event_decode
 Vetores e smoke não provam lógica, autoridade de produção ou cadeia histórica.
 Desde a3.5, o appender exige objetos CAS antes de assinar; isso não altera
 o decoder/assinaturas ou bytes históricos. Ver [ledger-cas.md](ledger-cas.md).
+
+
+## 7. Extensão obligation-body/v2 (Etapa 4.3)
+
+```text
+body = [2,3,hO,1,artifact_raw,[hCNF,encoder_version]]
+encoder_version = 1
+```
+
+A variante Rust ObligationCreated ganha cnf: Option<CnfRecord>. Some somente
+na rota Lrat, com encoder conhecido 1, produz o corpo acima. None usa corpo
+v1 sem metadados, preservando exatamente sua representação histórica.
+artifact_raw continua SHA-256 cru; hCNF usa logos/cnf/v1\0 e bytes DIMACS
+canônicos, conforme [cnf.md](cnf.md). Digest de outro tamanho, aridade, rota,
+versão ou metadados vazios são erros; não preencher ou ignorar campos.
+A versão do corpo está nos bytes assinados. Envelope/domínio event/v1,
+corpos de época e ledger-sqlite/v1 permanecem iguais; sem migração histórica.
+
+O inventário do appender inclui hCNF em cnf-v1 antes de assinar. Presença não
+prova derivação; o auditor reemite e confere todos os eventos Lrat, recusando
+v1 sem versão em verify. Authenticate/export conservam a distinção entre
+cadeia autenticada e tradução/prova checada. Recheck LRAT continua na4.5.
+Vinte e três vetores:22 anteriores preservados byte a byte e um corpo novo.

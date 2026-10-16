@@ -292,13 +292,27 @@ impl Canon for EventBody {
                 obligation,
                 route,
                 artifact,
-            } => array(vec![
-                Value::Unsigned(1),
-                Value::Unsigned(3),
-                obligation.to_value()?,
-                route.to_value()?,
-                Value::Bytes(artifact.to_vec()),
-            ]),
+                cnf,
+            } => {
+                if let Some(c) = cnf {
+                    array(vec![
+                        Value::Unsigned(2),
+                        Value::Unsigned(3),
+                        obligation.to_value()?,
+                        route.to_value()?,
+                        Value::Bytes(artifact.to_vec()),
+                        array(vec![c.hash.to_value()?, c.encoder_version.to_value()?])?,
+                    ])
+                } else {
+                    array(vec![
+                        Value::Unsigned(1),
+                        Value::Unsigned(3),
+                        obligation.to_value()?,
+                        route.to_value()?,
+                        Value::Bytes(artifact.to_vec()),
+                    ])
+                }
+            }
             Self::Verified {
                 check,
                 cited,
@@ -429,6 +443,22 @@ impl CanonDecode for EventBody {
             return Err(CanonError::WrongType);
         }
         if fields[0] == Value::Unsigned(2) {
+            if let [_, Value::Unsigned(3), o, route, artifact, record] = fields {
+                let [h, version] = items(record)? else {
+                    return Err(CanonError::WrongType);
+                };
+                let body = Self::ObligationCreated {
+                    obligation: digest::<Obligation>(o)?,
+                    route: Route::from_value(route)?,
+                    artifact: bytes32(artifact)?,
+                    cnf: Some(crate::CnfRecord {
+                        hash: digest::<crate::CnfObject>(h)?,
+                        encoder_version: u64::from_value(version)?,
+                    }),
+                };
+                body.validate().map_err(|_| CanonError::WrongType)?;
+                return Ok(body);
+            }
             let [_, Value::Unsigned(10), epoch, reason, root, vocab] = fields else {
                 return Err(CanonError::WrongType);
             };
@@ -491,6 +521,7 @@ impl CanonDecode for EventBody {
                     obligation,
                     route,
                     artifact,
+                    cnf: None,
                 }
             }
             (4, [chk_val, cited_val, used_val, cons_val]) => {

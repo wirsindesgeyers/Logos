@@ -50,10 +50,10 @@ def render_vectors() -> str:
     tag_to_dir = parse_spec_tag_dirs(spec_text)
     examples = parse_spec_examples(spec_text)
 
-    if len(tag_to_dir) != 16:
-        raise ValueError(f"esperado 16 domínios em spec/cas.md, encontrados {len(tag_to_dir)}")
-    if len(examples) != 3:
-        raise ValueError(f"esperado 3 exemplos em spec/cas.md, encontrados {len(examples)}")
+    if len(tag_to_dir) != 17:
+        raise ValueError(f"esperado 17 domínios em spec/cas.md, encontrados {len(tag_to_dir)}")
+    if len(examples) != 4:
+        raise ValueError(f"esperado 4 exemplos em spec/cas.md, encontrados {len(examples)}")
 
     header = "# name\ttag_hex\tbytes_hex\tdigest_hex\trelative_path — spec/cas.md §4"
     rows = [header]

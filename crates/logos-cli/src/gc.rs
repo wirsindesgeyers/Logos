@@ -29,7 +29,7 @@ fn read(cas: &Cas, address: Address) -> Result<Vec<u8>> {
             _ => return Err("unknown CAS domain".into()),
         } };
     }
-    domains!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+    domains!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)
         .ok_or_else(|| format!("CAS object disappeared: {}", label(address)).into())
 }
 fn directory(domain: usize) -> String {

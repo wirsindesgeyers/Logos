@@ -854,9 +854,9 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 - Decisão documentada em ADR: **a derivação O → CNF é determinística e está na TCB** (é o "clausificador, se não for certificado" da §5). O evento guarda `h(O)`, `h(CNF)` e `encoder_version`, e o auditor refaz a derivação.
 
 **Critério de conclusão.**
-- [ ] `CNF` é insatisfazível sse `ground(O)` é válida (teste com SAT solver de referência em 5k casos + enumeração nos pequenos).
-- [ ] O auditor (`logos-audit`) refaz `O → CNF` e confere `h(CNF)` em 100% dos eventos.
-- [ ] LOC de grounder + Tseitin reportado na TCB (meta: < 1.000 LOC somados).
+- [x] `CNF` é insatisfazível sse `ground(O)` é válida (teste com SAT solver de referência em 5k casos + enumeração nos pequenos). Demonstrado localmente:5000 O distintas,2247 válidas/2753 inválidas, Z3×tabela verdade sem divergência e enumeração integral dos vetores pequenos.
+- [x] O auditor (`logos-audit`) refaz `O → CNF` e confere `h(CNF)` em 100% dos eventos. Demonstrado para todos os eventos ObligationCreated/Lrat:3/3 no ledger real e após export; mutações assinadas/CAS válido em cada posição recusadas. Lrat sem metadados falha; outras rotas não são CNF. Prova LRAT continua na4.5.
+- [x] LOC de grounder + Tseitin reportado na TCB (meta: < 1.000 LOC somados). Medidos983 LOC em ground/dag/prop/cnf; crate completo1337, incluindo354 de classificação/axiomas/infraestrutura. TCB total115885 Rust; [evidência](docs/plans/etapa-4.3.md) §7.
 - [ ] Determinismo integrado: mesma O/V → mesma saída proposicional4.2 → mesmos bytes DIMACS/h(CNF), com vetores e repetições na CI. Critério original4.2 preservado por ADR0027; não substituir DIMACS por bytes de outra representação.
 
 ---

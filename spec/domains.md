@@ -33,6 +33,7 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 | checker | `logos/checker/v1` | raw | 4.5 |
 | model | `logos/model/v1` | canonical | 2.1 |
 | ground | `logos/ground/v1` | canonical | 4.2 (ADR0027) |
+| cnf | `logos/cnf/v1` | raw | 4.3 (ADR0028) |
 | event | `logos/event/v1` | canonical | 3.1 |
 | fact | `logos/fact/v1` | canonical | 6.1 |
 | policy | `logos/policy/v1` | canonical | 7.1 |
@@ -109,3 +110,6 @@ carga é recusada (`InsecurePermissions`). A permissão é conferida no arquivo 
 
 A chave fica em memória do processo que assina. HSM/TEE e rotação de chaves são da Etapa 13.1,
 como outras implementações da trait `Signer`.
+
+Formato cnf/v1 em [cnf.md](cnf.md): bytes DIMACS determinísticos, domínio
+próprio e namespace CAS cnf-v1. SHA-256 cru no artifact do evento é separado.

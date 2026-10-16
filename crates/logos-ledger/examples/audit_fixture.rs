@@ -49,6 +49,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err("appender differs from independent vector".into());
         }
     }
+    let cnfs: serde_json::Value =
+        serde_json::from_str(include_str!("../../../spec/vectors/cnf/vectors.json"))?;
+    for c in cnfs["vectors"].as_array().ok_or("CNFs")?.iter().take(3) {
+        ledger
+            .cas()
+            .put::<logos_air::Vocabulary>(&unhex(c["vocabulary"].as_str().ok_or("V")?)?)?;
+        let obligation = ledger
+            .cas()
+            .put::<logos_obligation::Obligation>(&unhex(c["obligation"].as_str().ok_or("O")?)?)?;
+        let bytes = c["cnf"].as_str().ok_or("DIMACS")?.as_bytes();
+        let cnf = ledger.cas().put::<logos_ledger::CnfObject>(bytes)?;
+        ledger.append(logos_ledger::EventBody::ObligationCreated {
+            obligation,
+            route: logos_ledger::Route::Lrat,
+            artifact: *logos_crypto::ExternalDigest::of(bytes).as_bytes(),
+            cnf: Some(logos_ledger::CnfRecord {
+                hash: cnf,
+                encoder_version: 1,
+            }),
+        })?;
+    }
     println!(
         "{}",
         signer

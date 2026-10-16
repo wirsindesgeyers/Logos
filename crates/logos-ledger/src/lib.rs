@@ -23,8 +23,8 @@ mod ledger_store;
 pub use cas::{Cas, CasError, Limits};
 pub use event::{Event, EventError, MAX_EVENT_BYTES};
 pub use event_body::{
-    Authority, Certificate, CheckRecord, Checker, Consistency, EventBody, EventProposal,
-    ModelObject, Route, TaintedText,
+    Authority, Certificate, CheckRecord, Checker, CnfObject, CnfRecord, Consistency, EventBody,
+    EventProposal, ModelObject, Route, TaintedText,
 };
 pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot};
 pub use index_store::{IndexComparison, RebuildReport};

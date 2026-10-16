@@ -132,6 +132,7 @@ fn prepare(root: &Path, total: u64, signer: &FileSigner) -> Result<(), Box<dyn E
                     obligation: ho,
                     route: Route::Model,
                     artifact: [0x20; 32],
+                    cnf: None,
                 },
                 3 => EventBody::UnknownRecorded {
                     check: CheckRecord {

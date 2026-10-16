@@ -1,0 +1,290 @@
+{
+  "stage": "4.3",
+  "implementation": "código final desta etapa",
+  "method": "Para cada receita: substituir todas as ocorrências exatas de before por after no arquivo indicado, executar command e restaurar o arquivo original antes da próxima receita. caught exige compilação sem error[E], test result: FAILED e panicked at, não apenas exit diferente de zero.",
+  "first_attempt": {
+    "survivor": {
+      "name": "or-sign",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "else { [id, -x] }",
+      "after": "else { [-id, -x] }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "all_auxiliary_assignments_enforce_exact_equivalences_and_consequence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 0,
+      "caught": false
+    },
+    "correction": "Teste ampliado: além de unicidade, cada auxiliar é comparado à avaliação independente do nó do DAG. A rodada final usa esse teste reforçado."
+  },
+  "final_results": [
+    {
+      "name": "goal-polarity",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "[-root(g.goal())?]",
+      "after": "[root(g.goal())?]",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "independent_vectors_fix_every_literal_origin_hash_and_repetition",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "constraints",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "    b.clause(ClauseOrigin::Definitional, 1, [root(g.constraints())?])?;",
+      "after": "",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "domain_axioms_remain_transformation_support_even_when_tautological",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "not-sign",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "[-id, -a]",
+      "after": "[-id, a]",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "all_auxiliary_assignments_enforce_exact_equivalences_and_consequence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "reverse-equivalence",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "                b.clause(d, joined.len(), joined)?;",
+      "after": "",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "all_auxiliary_assignments_enforce_exact_equivalences_and_consequence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "or-sign",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "else { [id, -x] }",
+      "after": "else { [-id, -x] }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "all_auxiliary_assignments_enforce_exact_equivalences_and_consequence",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "axiom-origin",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "ClauseOrigin::DomainAxiom(*r)",
+      "after": "ClauseOrigin::Premise(*r)",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "domain_axioms_remain_transformation_support_even_when_tautological",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "axiom-support",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "domain_support.extend_from_slice(g.domain_axioms());",
+      "after": "domain_support.extend_from_slice(&[]);",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "domain_axioms_remain_transformation_support_even_when_tautological",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "byte-limit",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "if bytes > limits.max_bytes {",
+      "after": "if false {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "limits_are_inclusive_and_larger_budgets_do_not_change_bytes_or_origins",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "reader-identity",
+      "file": "crates/logos-ground/src/ground.rs",
+      "before": "decode_for_check(bytes, expected, v, decode)?",
+      "after": "decode_for_check(bytes, logos_crypto::hash_raw(bytes), v, decode)?",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ground",
+        "--test",
+        "cnf",
+        "checked_input_matches_sealed_translation_and_never_accepts_wrong_identity",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "event-version",
+      "file": "crates/logos-ledger/src/event_body.rs",
+      "before": "&& (*route != Route::Lrat || c.encoder_version != 1)",
+      "after": "&& false && (*route != Route::Lrat || c.encoder_version != 1)",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ledger",
+        "--test",
+        "ledger_cas",
+        "cnf_metadata_requires_known_route_and_cas_before_signing_and_survives_gc_inventory",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "cas-inventory",
+      "file": "crates/logos-ledger/src/ledger_cas.rs",
+      "before": "result.insert(CasReference::Cnf(c.hash));",
+      "after": "",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-ledger",
+        "--test",
+        "ledger_cas",
+        "cnf_metadata_requires_known_route_and_cas_before_signing_and_survives_gc_inventory",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "gc-last-domain",
+      "file": "crates/logos-cli/src/gc.rs",
+      "before": "14, 15, 16, 17",
+      "after": "14, 15, 16",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-cli",
+        "--test",
+        "gc",
+        "cnf_raw_is_retained_and_last_reserved_domain_is_still_readable",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    },
+    {
+      "name": "audit-rederivation",
+      "file": "crates/logos-audit/src/verify.rs",
+      "before": "            if hash_raw::<Cnf>(cnf.dimacs()) != hash\n                || cnf.dimacs() != bytes\n                || ExternalDigest::of(cnf.dimacs()).as_bytes() != &d.artifact\n            {",
+      "after": "            if false {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-audit",
+        "--test",
+        "audit",
+        "signed_wrong_cnf_cannot_pass_with_valid_cas_hashes_at_any_position",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "caught": true
+    }
+  ]
+}

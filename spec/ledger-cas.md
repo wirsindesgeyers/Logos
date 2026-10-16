@@ -103,3 +103,9 @@ map keys/arrays/raw, candidatos/temporários, falhas completas, argumentos
 estritos e conteúdo/mtime/nomes de CAS/banco principal preservados.
 Vetores históricos continuam exercitando replay; fixtures de novos appends
 usam put real. Worker de crash e oráculo independente conferem objetos por seq.
+
+
+Etapa4.3/ADR0028: ObligationCreated com CnfRecord também referencia h(CNF)
+no namespace cnf-v1, exigido antes do Signer/SQL. artifact cru não é endereço
+CAS. O leitor de raízes e GC dry-run conservam a referência; DIMACS é raw e
+não é interpretado como CBOR nem percorrido em busca de hashes aninhados.

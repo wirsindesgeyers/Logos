@@ -72,6 +72,7 @@ impl Fixture {
                 obligation,
                 route: Route::Model,
                 artifact: [0; 32],
+                cnf: None,
             })
             .unwrap();
         drop(ledger);
@@ -227,6 +228,7 @@ fn reachable_noncanonical_payload_is_error_instead_of_empty_graph() {
             obligation,
             route: Route::Model,
             artifact: [0; 32],
+            cnf: None,
         })
         .unwrap();
     drop(ledger);
@@ -324,4 +326,44 @@ fn wrong_key_locked_writer_and_tampered_history_are_refused() {
     failure(fixture.run());
     unchanged(&fixture.root, &before);
     fs::write(database, bytes).unwrap();
+}
+
+#[test]
+fn cnf_raw_is_retained_and_last_reserved_domain_is_still_readable() {
+    struct Assumption;
+    impl Domain for Assumption {
+        const TAG: &'static [u8] = tags::ASSUMPTION;
+    }
+    let f = Fixture::new();
+    let mut ledger = Ledger::open(&f.root, &f.signer).unwrap();
+    let bytes = b"p cnf 1 1\n1 0\n";
+    let cnf = ledger.cas().put::<logos_ledger::CnfObject>(bytes).unwrap();
+    let assumption = ledger.cas().put::<Assumption>(&[0x80]).unwrap();
+    let CasReference::Obligation(obligation) = f.obligation else {
+        panic!("O");
+    };
+    ledger
+        .append(EventBody::ObligationCreated {
+            obligation,
+            route: logos_ledger::Route::Lrat,
+            artifact: *logos_crypto::ExternalDigest::of(bytes).as_bytes(),
+            cnf: Some(logos_ledger::CnfRecord {
+                hash: cnf,
+                encoder_version: 1,
+            }),
+        })
+        .unwrap();
+    drop(ledger);
+    let out = f.run();
+    assert!(out.status.success(), "{out:?}");
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(!text.contains(&format!(
+        "ORPHAN {}",
+        label(CasReference::Cnf(cnf)).display()
+    )));
+    let h = assumption.to_hex();
+    assert!(
+        text.contains(&format!("ORPHAN assumption-v1/{}/{}", &h[..2], &h[2..])),
+        "{text}"
+    );
 }

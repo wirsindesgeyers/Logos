@@ -1,4 +1,4 @@
-//! event/v1 + epoch-body/v2: preservar bytes canônicos e invariantes.
+//! event/v1 + epoch-body/v2 + obligation-body/v2: preservar bytes canônicos e invariantes.
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
@@ -35,6 +35,16 @@ fuzz_target!(|data: &[u8]| {
         // Seeds de envelope também exercitam o decoder isolado do corpo v2.
         roundtrip::<EventBody>(&to_canon(&event.body).expect("body encodes"));
         let refs = event.body.cas_references();
+        if let EventBody::ObligationCreated {
+            cnf: Some(c),
+            route,
+            ..
+        } = &event.body
+        {
+            assert_eq!(*route, Route::Lrat);
+            assert_eq!(c.encoder_version, 1);
+            assert!(refs.contains(&logos_ledger::CasReference::Cnf(c.hash)));
+        }
         let body: EventBody =
             from_canon(&to_canon(&event.body).expect("body encodes")).expect("body decodes");
         assert_eq!(refs, body.cas_references());

@@ -114,6 +114,22 @@ pub struct EventProposal {
     pub vocabulary: Hash<Vocabulary>,
 }
 
+/// Marcador de bytes DIMACS canônicos (cnf/v1), sem executar solver.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CnfObject;
+impl Domain for CnfObject {
+    const TAG: &'static [u8] = tags::CNF;
+}
+
+/// Identidade/versionamento da derivação proposicional registrada.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CnfRecord {
+    /// Hash com domínio dos bytes DIMACS canônicos.
+    pub hash: Hash<CnfObject>,
+    /// Versão do encoder; atualmente somente 1 é reconhecida.
+    pub encoder_version: u64,
+}
+
 /// Registro completo de uma checagem executada (`spec/events.md` §2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CheckRecord {
@@ -182,6 +198,8 @@ pub enum EventBody {
         route: Route,
         /// Digest SHA-256 cru do artefato direcionado ao provador.
         artifact: [u8; 32],
+        /// Metadados CNF; Some usa obligation-body/v2 somente em rota Lrat.
+        cnf: Option<CnfRecord>,
     },
     /// Registro de obrigação verificada formalmente com evidências.
     Verified {
@@ -380,7 +398,13 @@ impl EventBody {
             }
             Self::VocabPublished { .. } => {}
             Self::Proposed { proposal, .. } => proposal.validate()?,
-            Self::ObligationCreated { .. } => {}
+            Self::ObligationCreated { route, cnf, .. } => {
+                if let Some(c) = cnf
+                    && (*route != Route::Lrat || c.encoder_version != 1)
+                {
+                    return Err(EventError::Invalid("CNF route/encoder version"));
+                }
+            }
             Self::Verified {
                 check,
                 cited,

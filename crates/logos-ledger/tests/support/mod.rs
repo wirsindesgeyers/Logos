@@ -59,6 +59,7 @@ pub fn ordinary(id: u8) -> EventBody {
         obligation: hash_raw::<logos_obligation::Obligation>(&[id]),
         route: Route::Model,
         artifact: [id; 32],
+        cnf: None,
     }
 }
 

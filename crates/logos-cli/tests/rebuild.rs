@@ -35,6 +35,7 @@ impl Fixture {
                 obligation,
                 route: Route::Model,
                 artifact: [0; 32],
+                cnf: None,
             })
             .unwrap();
         drop(ledger);

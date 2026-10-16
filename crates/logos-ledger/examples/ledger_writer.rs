@@ -45,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 obligation: ledger.cas().put(&logos_canon::to_canon(&seq)?)?,
                 route: Route::Model,
                 artifact: bytes,
+                cnf: None,
             }
         };
         let event = ledger.append(body)?;

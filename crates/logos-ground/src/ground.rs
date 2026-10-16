@@ -1,16 +1,13 @@
 //! Grounding finito por tabelas simbólicas e pilhas explícitas.
 use crate::dag::{Dag, push, size, space};
-use crate::{
-    AnalysisLimits, Atom, Fragment, GroundError, GroundProgram, PropNode, classify_with_limits,
-    domain_axioms,
-};
+use crate::{AnalysisLimits, Atom, Fragment, GroundError, GroundProgram, PropNode, domain_axioms};
 use logos_air::{
     Formula, FormulaNode as F, Grounding, Sort, SortDomain, Symbol, SymbolResult, Term, TermNode,
     Vocabulary,
 };
 use logos_canon::to_canon;
-use logos_crypto::hash;
-use logos_obligation::Obligation;
+use logos_crypto::{Hash, hash};
+use logos_obligation::{DecodeLimits, Obligation, PremiseRef, decode_for_check};
 use std::collections::BTreeMap;
 
 /// Limites inclusivos da construção; não são hard RSS/wall.
@@ -452,9 +449,51 @@ pub fn ground_with_limits(
     v: &Vocabulary,
     limits: GroundLimits,
 ) -> Result<GroundProgram, GroundError> {
-    if classify_with_limits(o, v, limits.analysis)? != Fragment::FiniteDomain {
+    ground_parts(
+        || Ok(hash(o)?),
+        o.vocab(),
+        o.premises(),
+        o.goal(),
+        v,
+        limits,
+    )
+}
+
+/// Reproduz grounding de bytes/hash de O, sem construir uma obrigação autoritativa.
+/// # Errors
+/// Erros de decode_for_check, contexto/axiomas/fragmento e limites inclusivos.
+pub fn ground_for_check(
+    bytes: &[u8],
+    expected: Hash<Obligation>,
+    v: &Vocabulary,
+    decode: DecodeLimits,
+    limits: GroundLimits,
+) -> Result<GroundProgram, GroundError> {
+    let o = decode_for_check(bytes, expected, v, decode)?;
+    ground_parts(
+        || Ok(expected),
+        o.vocab(),
+        o.premises(),
+        o.goal(),
+        v,
+        limits,
+    )
+}
+
+fn ground_parts(
+    identify: impl FnOnce() -> Result<Hash<Obligation>, GroundError>,
+    vocabulary: Hash<Vocabulary>,
+    source: &[(PremiseRef, Formula)],
+    goal_formula: &Formula,
+    v: &Vocabulary,
+    limits: GroundLimits,
+) -> Result<GroundProgram, GroundError> {
+    if crate::classify::classify_parts(v, vocabulary, source, goal_formula, limits.analysis)?
+        != Fragment::FiniteDomain
+    {
         return Err(GroundError::GeneralFragment);
     }
+    let obligation = identify()?;
     let mut e = Engine::new(v, limits)?;
     let mut references = Vec::new();
     for sort in v.sorts() {
@@ -467,7 +506,7 @@ pub fn ground_with_limits(
             )?;
             for f in std::iter::once(c.closure()).chain(c.distinct()) {
                 let mut found = None;
-                for (r, p) in o.premises() {
+                for (r, p) in source {
                     e.dag.charge(f.node_count())?;
                     if p == f {
                         found = Some(*r);
@@ -485,17 +524,17 @@ pub fn ground_with_limits(
     let constraints = e.dag.and(std::mem::take(&mut e.guards))?;
     let mut premises = Vec::new();
     let mut antecedents = vec![constraints];
-    for (r, f) in o.premises() {
+    for (r, f) in source {
         let n = e.formula(f, Vec::new())?;
         push(&mut premises, (*r, n))?;
         push(&mut antecedents, n)?;
     }
-    let goal = e.formula(o.goal(), Vec::new())?;
+    let goal = e.formula(goal_formula, Vec::new())?;
     let antecedent = e.dag.and(antecedents)?;
     let root = e.dag.implies(antecedent, goal)?;
     let p = GroundProgram {
-        obligation: hash(o)?,
-        vocabulary: o.vocab(),
+        obligation,
+        vocabulary,
         atoms: e.atoms,
         nodes: e.dag.nodes,
         constraints,

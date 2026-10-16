@@ -62,6 +62,8 @@ pub struct Report {
     pub consistencies: u64,
     /// Provas Verified sem checker de prova nesta etapa.
     pub unchecked_proofs: u64,
+    /// Derivações O→CNF reemitidas e conferidas (não provas LRAT).
+    pub cnf_derivations: u64,
     /// Digest integral do último evento; None no vazio.
     pub head: Option<[u8; 32]>,
 }
@@ -71,8 +73,12 @@ impl fmt::Display for Report {
         let head = self.head.map(hex).unwrap_or_else(|| "none".into());
         write!(
             f,
-            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head}",
-            self.events, self.refutations, self.consistencies, self.unchecked_proofs
+            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={}",
+            self.events,
+            self.refutations,
+            self.consistencies,
+            self.unchecked_proofs,
+            self.cnf_derivations
         )
     }
 }

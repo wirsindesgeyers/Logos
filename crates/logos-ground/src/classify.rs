@@ -7,8 +7,8 @@ use logos_air::{
     check_with_binders,
 };
 use logos_core::Exhausted;
-use logos_crypto::hash;
-use logos_obligation::Obligation;
+use logos_crypto::{Hash, hash};
+use logos_obligation::{Obligation, PremiseRef};
 
 use crate::GroundError;
 
@@ -59,6 +59,16 @@ pub fn classify_with_limits(
     v: &Vocabulary,
     limits: AnalysisLimits,
 ) -> Result<Fragment, GroundError> {
+    classify_parts(v, o.vocab(), o.premises(), o.goal(), limits)
+}
+
+pub(crate) fn classify_parts(
+    v: &Vocabulary,
+    vocab: Hash<Vocabulary>,
+    premises: &[(PremiseRef, Formula)],
+    goal: &Formula,
+    limits: AnalysisLimits,
+) -> Result<Fragment, GroundError> {
     let size = || GroundError::Unknown(Exhausted::Size);
     if v.sorts()
         .len()
@@ -76,8 +86,8 @@ pub fn classify_with_limits(
         }
         Ok(())
     };
-    add(o.goal().node_count())?;
-    for (_, f) in o.premises() {
+    add(goal.node_count())?;
+    for (_, f) in premises {
         add(f.node_count())?;
     }
     for sort in v.sorts() {
@@ -91,7 +101,7 @@ pub fn classify_with_limits(
             add(body.node_count())?;
         }
     }
-    if hash(v)? != o.vocab() {
+    if hash(v)? != vocab {
         return Err(GroundError::VocabularyMismatch);
     }
     let sorts = v
@@ -136,12 +146,7 @@ pub fn classify_with_limits(
             general |= open_quantifier(body, &open)?;
         }
     }
-    for f in o
-        .premises()
-        .iter()
-        .map(|(_, f)| f)
-        .chain(std::iter::once(o.goal()))
-    {
+    for f in premises.iter().map(|(_, f)| f).chain(std::iter::once(goal)) {
         check(v, f)?;
         general |= open_quantifier(f, &open)?;
     }

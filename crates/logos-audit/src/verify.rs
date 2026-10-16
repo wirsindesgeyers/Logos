@@ -9,7 +9,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use logos_air::Vocabulary;
 use logos_canon::from_canon;
 use logos_core::CheckOutcome;
-use logos_crypto::{Hash, PublicKey};
+use logos_crypto::{ExternalDigest, Hash, PublicKey, hash_raw};
+use logos_ground::{Cnf, GroundLimits, clausify, ground_for_check};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
 
@@ -57,6 +58,7 @@ pub(crate) fn walk(
 pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<Report, AuditError> {
     let mut refutations = 0;
     let mut consistencies = 0;
+    let mut cnf_derivations = 0;
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -72,11 +74,41 @@ pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<R
                 "certificate" => {
                     source::cas::<Certificate>(cas, Hash::from_bytes(*digest))?;
                 }
+                "cnf" => {
+                    source::cas::<Cnf>(cas, Hash::from_bytes(*digest))?;
+                }
                 "checker" => {
                     source::cas::<Checker>(cas, Hash::from_bytes(*digest))?;
                 }
                 _ => return Err(fail("unhandled CAS reference domain")),
             }
+        }
+        if let Some(d) = &p.derivation {
+            let expected = d
+                .cnf
+                .ok_or_else(|| fail("LRAT derivation metadata missing"))?;
+            let obligation = source::cas(cas, d.obligation)?;
+            let vh = vocabulary_for_check(&obligation, d.obligation, DecodeLimits::default())
+                .map_err(|e| fail(format!("CNF obligation: {e}")))?;
+            let v = from_canon::<Vocabulary>(&source::cas(cas, vh)?)?;
+            let ground = ground_for_check(
+                &obligation,
+                d.obligation,
+                &v,
+                DecodeLimits::default(),
+                GroundLimits::default(),
+            )
+            .map_err(|e| fail(format!("CNF grounding: {e}")))?;
+            let (cnf, _) = clausify(&ground).map_err(|e| fail(format!("CNF encoding: {e}")))?;
+            let hash = Hash::<Cnf>::from_bytes(expected);
+            let bytes = source::cas(cas, hash)?;
+            if hash_raw::<Cnf>(cnf.dimacs()) != hash
+                || cnf.dimacs() != bytes
+                || ExternalDigest::of(cnf.dimacs()).as_bytes() != &d.artifact
+            {
+                return Err(fail("CNF rederivation mismatch"));
+            }
+            cnf_derivations += 1;
         }
         for r in &p.rechecks {
             recheck(cas, r)?;
@@ -90,6 +122,7 @@ pub fn verify(path: &Path, cas: &Path, key: &PublicKey) -> std::result::Result<R
     })?;
     report.refutations = refutations;
     report.consistencies = consistencies;
+    report.cnf_derivations = cnf_derivations;
     Ok(report)
 }
 

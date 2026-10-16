@@ -7,6 +7,8 @@ use logos_core::Exhausted;
 /// Recusa de entrada ou recurso; não é falsidade lógica nem fragmento General.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GroundError {
+    /// Leitura contextual de O para auditoria; não confere autoridade.
+    Decode(logos_obligation::DecodeError),
     /// Fragmento geral não admitido por este grounder.
     GeneralFragment,
     /// Falta premissa explícita de fecho/nomes únicos.
@@ -57,3 +59,12 @@ impl std::fmt::Display for GroundError {
     }
 }
 impl std::error::Error for GroundError {}
+
+impl From<logos_obligation::DecodeError> for GroundError {
+    fn from(e: logos_obligation::DecodeError) -> Self {
+        match e {
+            logos_obligation::DecodeError::Unknown(reason) => Self::Unknown(reason),
+            other => Self::Decode(other),
+        }
+    }
+}

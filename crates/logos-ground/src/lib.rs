@@ -12,6 +12,7 @@
 
 mod axioms;
 mod classify;
+mod cnf;
 mod dag;
 mod error;
 mod ground;
@@ -20,5 +21,7 @@ mod prop;
 pub use axioms::{AxiomCandidates, AxiomLimits, domain_axioms, domain_axioms_with_limits};
 pub use classify::{AnalysisLimits, Fragment, classify, classify_with_limits};
 pub use error::GroundError;
-pub use ground::{GroundLimits, ground, ground_with_limits};
+pub use ground::{GroundLimits, ground, ground_for_check, ground_with_limits};
 pub use prop::{Atom, GroundProgram, PropFormula, PropNode};
+
+pub use cnf::{ClauseOrigin, Cnf, CnfLimits, ProvenanceMap, clausify, clausify_with_limits};

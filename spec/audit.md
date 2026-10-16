@@ -108,3 +108,17 @@ O guard registra cargo tree em target/audit-dependencies.txt e percorre metadata
 --all-features com todas as arestas inclusive dev/aliases/ponte externa. Não mover
 ledger/kernel para dev ou feature para contorná-lo. Leitor de modelos refatorado
 não introduz parser TCB; usa decoders contextuais existentes e mesmo wire.
+
+
+## Derivação CNF (Etapa4.3)
+
+Para todo ObligationCreated/Lrat, verify requer CnfRecord/encoder_version=1,
+resolve O/V/CNF no CAS, confere hashes, faz leitura contextual não autoritativa
+de O e reemite ground→Tseitin→DIMACS. Compara bytes, h(CNF) com domínio e
+artifact SHA-256 cru. Falta de metadados em evento Lrat v1, versão desconhecida,
+limite/erro de tradução ou divergência falham sem saída de sucesso parcial.
+Outras rotas não são reinterpretadas como CNF. Campo cnf_rederived conta
+apenas derivações efetivamente reemitidas; authenticate/export mantêm zero.
+O auditor depende de logos-ground, sem ledger/kernel inclusive em dev.
+Conferir tradução não valida prova LRAT, autoridade ou used; proofs_unchecked
+continua explícito até4.5. Contrato em [cnf.md](cnf.md)/ADR0028.

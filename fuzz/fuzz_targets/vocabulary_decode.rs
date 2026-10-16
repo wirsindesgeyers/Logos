@@ -171,6 +171,40 @@ fn ground_probe(v: &Vocabulary) {
     assert_eq!(result, ground_with_limits(&o, v, limits));
     assert_eq!(to_canon(&o).expect("O bytes"), before);
     if let Ok(g) = result {
+        let checked = logos_ground::ground_for_check(
+            &before,
+            hash(&o).expect("hO"),
+            v,
+            logos_obligation::DecodeLimits::default(),
+            limits,
+        )
+        .expect("same checked input");
+        assert_eq!(g, checked);
+        let cnf_limits = logos_ground::CnfLimits {
+            max_variables: 4096,
+            max_clauses: 16384,
+            max_literals: 65536,
+            max_bytes: 65536,
+        };
+        let translated = logos_ground::clausify_with_limits(&g, cnf_limits);
+        assert_eq!(
+            translated,
+            logos_ground::clausify_with_limits(&g, cnf_limits)
+        );
+        if let Ok((cnf, map)) = translated {
+            assert_eq!(cnf.clauses().len(), map.origins().len());
+            assert_eq!(map.domain_support(), g.domain_axioms());
+            assert!(cnf.dimacs().len() <= cnf_limits.max_bytes);
+            assert!(cnf.clauses().windows(2).all(|c| c[0] <= c[1]));
+            for c in cnf.clauses() {
+                assert!(c.windows(2).all(|v| v[0] <= v[1]));
+                assert!(
+                    c.iter()
+                        .all(|v| *v != 0 && v.unsigned_abs() as usize <= cnf.variables())
+                );
+            }
+        }
+
         assert_eq!(g.obligation(), hash(&o).expect("hO"));
         assert_eq!(g.vocabulary(), hash(v).expect("hV"));
         assert!(g.atoms().windows(2).all(|p| p[0] < p[1]));

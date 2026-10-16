@@ -12,19 +12,19 @@ pub(crate) struct DomainEntry {
     pub(crate) tag: &'static [u8],
     /// Nome do subdiretório sob a raiz CAS.
     pub(crate) directory: &'static str,
-    /// Limite padrão em bytes (16 MiB para canônicos, 256 MiB para crus).
+    /// Limite em bytes: CNF/canônicos 16 MiB; certificados/checkers crus 256 MiB.
     pub(crate) limit: u64,
 }
 
-/// Limite padrão de 16 MiB (16.777.216 bytes) para domínios canônicos.
+/// Limite padrão de 16 MiB (16.777.216 bytes) para canônicos e CNF.
 const CANONICAL_LIMIT: u64 = 16 * 1024 * 1024;
 
-/// Limite padrão de 256 MiB (268.435.456 bytes) para domínios crus (raw).
+/// Limite padrão de 256 MiB (268.435.456 bytes) para certificados/checkers crus.
 const RAW_LIMIT: u64 = 256 * 1024 * 1024;
 
-/// Tabela fixa dos 16 domínios suportados pelo CAS, conforme `spec/cas.md`.
+/// Tabela fixa dos 17 domínios suportados pelo CAS, conforme `spec/cas.md`.
 /// Tags de hash adicionais, como ground/v1, não criam namespaces implicitamente.
-pub(crate) const DOMAINS: [DomainEntry; 16] = [
+pub(crate) const DOMAINS: [DomainEntry; 17] = [
     DomainEntry {
         tag: tags::KEY,
         directory: "key-v1",
@@ -105,11 +105,16 @@ pub(crate) const DOMAINS: [DomainEntry; 16] = [
         directory: "assumption-v1",
         limit: CANONICAL_LIMIT,
     },
+    DomainEntry {
+        tag: tags::CNF,
+        directory: "cnf-v1",
+        limit: CANONICAL_LIMIT,
+    },
 ];
 
 /// Resolve uma tag binária exata para o índice correspondente na tabela [`DOMAINS`].
 ///
-/// Retorna `Some(index)` se a tag for exatamente uma das 16 tags do CAS,
+/// Retorna `Some(index)` se a tag for exatamente uma das 17 tags do CAS,
 /// ou `None` caso contrário (inclusive se for prefixo, sufixo ou malformada).
 #[must_use]
 pub(crate) fn resolve(tag: &[u8]) -> Option<usize> {

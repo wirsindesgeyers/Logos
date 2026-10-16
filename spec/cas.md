@@ -30,6 +30,7 @@ normativa; estas tags são as mesmas de [domains.md](domains.md).
 | `logos/paraphrase/v1` | paraphrase-v1 | canonical | 16777216 |
 | `logos/token/v1` | token-v1 | canonical | 16777216 |
 | `logos/assumption/v1` | assumption-v1 | canonical | 16777216 |
+| `logos/cnf/v1` | cnf-v1 | raw | 16777216 |
 
 16 MiB = 16777216 bytes; 256 MiB = 268435456 bytes. CAS calcula hash dos bytes recebidos,
 inclusive em domínios canonical: consumidor é responsável pela codificação correta.
@@ -90,8 +91,12 @@ Tabela de entrada para vetores; bytes hex vazios representados por `-`:
 | certificate-empty | `logos/certificate/v1` | `-` |
 | certificate-binary | `logos/certificate/v1` | `0001ff804c4f474f53` |
 | obligation-canonical | `logos/obligation/v1` | `a1616101` |
+| cnf-empty | `logos/cnf/v1` | `7020636e66203020300a` |
 
-Último exemplo é canon/v1 de mapa `{"a": 1}`, sem afirmar semântica de obrigação.
+O exemplo obligation-canonical é canon/v1 de mapa `{"a": 1}`, sem afirmar semântica de obrigação.
 Script independente `tools/gen_cas_vectors.py` lê apenas este documento e usa `hashlib`.
 Vetores em `spec/vectors/cas/vectors.tsv` incluem tag, bytes, digest e caminho relativo.
 `--check` exige igualdade exata com arquivo versionado.
+
+Etapa4.3/ADR0028 acrescenta namespace cnf-v1 (DIMACS), com limite padrão
+16 MiB e hash separado. Objetos e endereços anteriores permanecem iguais.

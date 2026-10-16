@@ -103,3 +103,9 @@ funções/Defined/limites/axiomas ausentes; vetores independentes com bytes e
 digest; mutantes compilados; fuzz pelos caminhos reais; smoke público.
 Determinismo remoto só é marcado após observar CI. DIMACS/h(CNF) integrado
 permanece desmarcado na4.3; fonte/used/deps reais permanecem nas6.1/7.3/7.5.
+
+
+Desde a4.3, ground_for_check(bytes,hO,V,DecodeLimits,GroundLimits) usa o
+leitor contextual existente para reproduzir esse mesmo artefato na auditoria.
+Não constrói Obligation selada, não confere fonte/autorização e preserva
+bytes ground/v1. Hash/limites/tipagem inválidos são erros explícitos.

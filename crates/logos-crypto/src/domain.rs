@@ -53,6 +53,8 @@ pub mod tags {
     pub const MODEL: &[u8] = b"logos/model/v1\0";
     /// Saída proposicional canônica do grounder (ADR0027).
     pub const GROUND: &[u8] = b"logos/ground/v1\0";
+    /// DIMACS canônico (ADR0028).
+    pub const CNF: &[u8] = b"logos/cnf/v1\0";
     /// Evento do ledger (3.1).
     pub const EVENT: &[u8] = b"logos/event/v1\0";
     /// Fato atestado (6.1).
@@ -71,7 +73,7 @@ pub mod tags {
     pub const ASSUMPTION: &[u8] = b"logos/assumption/v1\0";
 
     /// `(nome, tag, codificação)` de todos os domínios reservados; `"raw"` = bytes crus.
-    pub const RESERVED: [(&str, &[u8], &str); 17] = [
+    pub const RESERVED: [(&str, &[u8], &str); 18] = [
         ("key", KEY, "canonical"),
         ("formula", FORMULA, "canonical"),
         ("vocab", VOCAB, "canonical"),
@@ -81,6 +83,7 @@ pub mod tags {
         ("checker", CHECKER, "raw"),
         ("model", MODEL, "canonical"),
         ("ground", GROUND, "canonical"),
+        ("cnf", CNF, "raw"),
         ("event", EVENT, "canonical"),
         ("fact", FACT, "canonical"),
         ("policy", POLICY, "canonical"),

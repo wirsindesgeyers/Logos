@@ -35,8 +35,8 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 10361+105199=115560 LOC de correção, build-only64508;
-logos-core344, logos-ledger3209, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+TCB atual Rust: 10686+105199=115885 LOC de correção, build-only64508;
+logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
@@ -106,6 +106,15 @@ independentes e13 mutantes compilados capturados. Fuzz final11287/61s,
 exit0 sem crash. Full verify/selftest VERIFY_OK, exit0;227 Python +25 TCB.
 Fixtures GC serializadas após WriterBusy intermitente,144 repetições passaram.
 Determinismo remoto da4.2 aguarda CI; nenhum CNF/DIMACS/LRAT/claim novo.
+4.3: Tseitin completo e DIMACS cnf/v1, origens por cláusula e suporte dos
+axiomas preservados. Obrigação relida sem construir Obligation selada;
+novo namespace cnf-v1 e corpo ObligationCreated/v2 com h(CNF)/encoder=1,
+sem alterar os22 vetores históricos. Auditor rederiva3/3 eventos Lrat e
+recusa CNF trocada mesmo com assinatura/CAS íntegros; prova LRAT segue pendente.
+5k casos distintos contra Z3/tabela verdade, zero divergências;12 vetores,
+13 mutantes compilados capturados e fuzz9673/132990 execuções sem crash.
+Full verify/selftest VERIFY_OK, exit0;227 Python +25 TCB. Núcleo grounder/
+DAG/IR/Tseitin983 LOC, crate inteiro1337. Determinismo remoto aguarda CI.
 
 ## Etapas da Fase 0
 
@@ -143,8 +152,7 @@ Roteiro em [plano da Fase 1](docs/plans/fase-1.md).
 | 2.5 Model finder alternativo | ✅ concluída localmente | 296 obrigações distintas contra enumeração independente dos 682 modelos ≤3; 201/201 refutáveis encontrados e aceitos, 95 negativos. Limites/trabalho/timeout distinguem EXHAUSTED. MODEL_FINDER_SMOKE_OK com unknown nativo/fallback/checker; runtime-only e sem import Z3 passaram. 22 regressões novas + 19 da 2.4 passaram; full verify/selftest VERIFY_OK, exit 0. [Plano](docs/plans/etapa-2.5.md) §7/ADR 0018. CI ainda não observada; TCB inalterada. |
 | 2.6 Tradução de contramodelos | ✅ concluída localmente | explain_model com h(M)/gloss_pt/ordinais e relevância sintática de O; Defined sem vazamento, valorações verdadeiras/falsas preservadas. Checker Rust aceitou 20/20; 10 regressões, MODEL_EXPLAIN_SMOKE_OK e runtime-only passaram. Full verify/selftest VERIFY_OK, exit 0, 227 Python + 25 TCB. [Plano](docs/plans/etapa-2.6.md)/ADR 0019. CI ainda não observada; TCB e formatos inalterados. |
 
-Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem os mecanismos
-genéricos4.1 e grounder4.2 implementados localmente; Fases5–23 não iniciadas.
+Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem classificação, grounder e CNF/auditor4.1–4.3 implementados localmente; Fases5–23 não iniciadas.
 
 ## Etapas da Fase 3
 
@@ -164,8 +172,10 @@ genéricos4.1 e grounder4.2 implementados localmente; Fases5–23 não iniciadas
 | 4.1 Fragmento de domínio finito | ✅ concluída localmente | Proposta A do ADR0026: classificador global/limites e candidatos sem autenticação; fontes/O/used/deps preservados em6.1/7.3/7.5. Dez regressões, oito vetores,288 interpretações,12 mutantes e fuzz18372/61s passaram. Full verify/selftest VERIFY_OK, exit0. [Plano](docs/plans/etapa-4.1.md)/[spec](spec/finite-fragment.md). CI/ARM/fuzz longo pendentes. |
 | 4.2 Grounder | ⚠ implementada, falta CI de determinismo | ADR0027/A: ground/v1 e referências/axiomas explícitos;11 regressões,5k O/32 interpretações/256 valorações,12 vetores e13 mutantes passaram. Fuzz11287/61s sem crash; full verify/selftest VERIFY_OK, exit0. Primeiro critério demonstrado; segundo aguarda CI. [Plano](docs/plans/etapa-4.2.md)/[spec](spec/grounding.md). |
 
-Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder condicional implementado;
-CNF/LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenticação.
+| 4.3 Tseitin/CNF e proveniência | ⚠ implementada, falta CI de determinismo | 5k O/Z3/tabela verdade sem divergência,12 vetores e13 mutantes; auditor3/3 antes/depois do export, bytes/hash/versão conferidos. Fuzz9673/132990 sem crash; full verify/selftest VERIFY_OK, exit0. Núcleo983 LOC/crate1337; primeiro a terceiro critérios demonstrados, quarto aguarda CI. [Plano](docs/plans/etapa-4.3.md)/[spec](spec/cnf.md)/[ADR0028](docs/adr/0028-tseitin-canonico-e-rederivacao.md). |
+
+Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder/CNF e rederivação implementados;
+LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenticação.
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -217,6 +227,10 @@ CNF/LRAT/kernel/políticas ainda ausentes, fontes opacas não demonstram autenti
    Grounder4.2: diferencial5k, regressões/vetores/repetições/smoke ligados
    aos jobs nativos/Python. vocabulary_decode exercita O condicional e DAG;
    fuzz final11287/61s passou. Determinismo remoto e ≥1h ainda não observados.
+   CNF4.3: smoke DIMACS/vetores nas duas arquiteturas; script SAT5k no job
+   Python, rederivação3/3 em check-audit e testes nativos. Fuzz de vocabulário/
+   eventos exercita CNF/releitura e corpo v2;61s por alvo passou localmente.
+   Determinismo integrado remoto4.3/4.2 e ≥1h de fuzz ainda não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -286,35 +300,35 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.3 — contrato e plano de Tseitin/CNF/proveniência
+## Próximo passo: Etapa4.4 — checker LRAT próprio
 
-Prontos: GroundProgram/PropFormula/tabela de átomos4.2, h(O)/h(V), raízes
-de premissas/goal/restrições e referências de axiomas; CAS0.5 e auditor3.6
-reais. Independência remota3.6 e determinismo remoto4.2 continuam pendentes.
-Não existe CNF/DIMACS/clausify/ProvenanceMap; ler ROADMAP4.3 e criar
-docs/plans/etapa-4.3.md antes do código. Fixar spec/wire/versionamento/tag
-e limites em ADR; conferir as interfaces reais do auditor/eventos antes
-de assumir que a rederivação O→CNF já pode ser integrada.
+Prontos: DIMACS cnf/v1 e h(CNF), ProvenanceMap com IDs1-based e suporte
+domain_support da4.3, CAS/eventos/auditor com rederivação real, Budget/
+StepMeter/CheckOutcome da0.6. CI remota de determinismo4.2/4.3 e independência
+3.6 continuam pendentes. Nenhum parser/checker LRAT existe; logos-lrat é esqueleto.
 
-Manter diferencial5k com solver SAT de referência/enumeração, rederivação
-de h(CNF) pelo auditor e teste integrado DIMACS/hash estável em CI herdado
-da4.2 (ADR0027). Não antecipar LRAT/checkers4.4/4.5, produtor4.6 ou used4.7.
-Preservar o suporte de domain_axioms da transformação mesmo quando fecho/
-igualdade simplificarem premissas para tautologias; não perder fontes no
-mapa cláusula→premissa nem presumir autenticação de DomainSource opaco.
+Ler ROADMAP4.4 e criar docs/plans/etapa-4.4.md antes do código. Fixar formato,
+versão, limites, P2 e suporte RUP/deleções em ADR/spec. Implementar
+check_lrat(cnf_bytes,h_cnf,proof_bytes,budget), rejeição de provas malformadas
+e extração do fecho de cláusulas originais usadas; cada parser exige fuzz.
+Preparar corpus reproduzível ≥200 provas pequenas/médias e suíte corrompida.
+Não antecipar wrapper/registry/cake_lpr4.5, produtor4.6, used_premises4.7 ou kernel.
+Concordância com cake_lpr será demonstrada após4.5, como o próprio critério4.4 prevê.
 
-Riscos: primitivas de valores/Defined têm restrições globais; encoder deve
-preservar as raízes e referências do grounder. Medir a meta de LOC
-grounder+Tseitin<1000 na4.3 (crate atual1075 inclui a4.1); não prometer
-cumprimento antecipado. Se faltar dependência exigida, registrar bloqueio
-conforme AGENTS.md §1.3 antes de implementar. Integrações autenticadas
-6.1/7.3/7.5 e kernel/gateway continuam ausentes; sem push autorizado.
+Riscos: CNF conserva duplicatas/tautologias e ordenação exata; IDs de cláusulas
+são posições após ordenar. Domínio do hash é logos/cnf/v1\0, não SHA puro ou
+certificate. Budget/exaustão/Rejected não viram Refuted. domain_support precisa
+ser conservado na4.7 mesmo sem cláusula de axioma útil. É lista conservadora
+de contexto: testar precisão/alcance com o certificado, sem unir todas as
+referências automaticamente a used. Rederivação de CNF não checa prova nem autentica fonte. Faltando dependência
+exigida, registrar bloqueio
+conforme AGENTS.md §1.3. Sem push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 10361 LOC Rust próprios + 105199
-  de dependências Rust = 115560 (+64508 só de compilação), após4.2;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1075, logos-ledger3209.
+- **Tamanho da TCB de correção (execução):** 10686 LOC Rust próprios + 105199
+  de dependências Rust = 115885 (+64508 só de compilação), após4.3;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-ledger3271.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Maiores dependências Rust: `curve25519-dalek` 26 k, `unicode-normalization` 23,9 k (NFC),
@@ -330,9 +344,11 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - Uma tag nova exige atualizar spec/domains.md, constante e catálogo RESERVED,
   regenerar tools/gen_crypto_vectors.py, incluir o tipo/caso no helper Rust
   de vetores e atualizar as contagens em py/tests/test_crypto_vectors.py.
-  Rodar os13 geradores --check e a suíte Python antes do full verify evita
-  descobrir essa sincronização depois do benchmark de1M. Os16 namespaces
+  Rodar os14 geradores --check e a suíte Python antes do full verify evita
+  descobrir essa sincronização depois do benchmark de1M. Os17 namespaces
   do CAS são catálogo separado: ground/v1 não é persistível implicitamente.
+  Atualizar também a contagem em gen_cas_vectors.py e o despacho de domínios
+  do GC; regressão da4.3 cobre CNF raw e o último domínio reservado.
 - SQLite read-only pode criar/manter sidecars WAL/SHM; GC3.5 preserva objetos
   CAS/banco principal e lê WAL confirmado. Não usar immutable para esconder
   sidecars e acabar omitindo eventos. Testes de preservação distinguem esses arquivos.
@@ -356,6 +372,7 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   passou; não contar a primeira execução como fuzz bem-sucedido nem desativar
   sanitizers. Evitar fuzz/comandos sandbox concorrentes durante o autoteste:
   corpus e montagem dos diretórios protegidos podem gerar avisos do tar.
+
 
 
 ## Diário (apenas acrescentar)
@@ -1103,3 +1120,59 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   precisa sobreviver a simplificações ao gerar CNF/used nas4.3/4.7; fontes reais
   permanecem nas6.1/7.3/7.5. Memória, dois fontes fuzz alheios, logs e mutants.out
   preexistentes preservados fora do commit. Sem push; próximo: contrato4.3.
+
+- 2026-10-15: **Etapa4.3 implementada; determinismo remoto pendente.** Plano,
+  ADR0028 e spec/cnf.md fixados antes do código; dependências reais presentes.
+  Tseitin completo sobre DAG inteiro, assertivas de constraints/Γ/¬goal,
+  literais/cláusulas/origens ordenados juntos; duplicatas/tautologias preservadas.
+  domain_support mantém fontes exigidas pela transformação sem inventar used.
+  Leitura contextual para auditor reutiliza decoder sem criar Obligation selada;
+  revisão manteve hash da entrada selada depois dos limites de classificação.
+  Novo domínio/raw cnf-v1 (16MiB), h(CNF) com tag própria; artifact preserva
+  SHA-256 cru. ObligationCreated usa corpo v2 somente com registro CNF/Lrat/
+  encoder1.22 vetores históricos intactos,23 ao todo; CAS tem4 vetores (3 antigos
+  preservados) e hash.tsv72 (68 antigos preservados). Auditor sem ledger/kernel
+  rederiva3/3 CNFs no ledger real e após export sem SQLite; provas seguem
+  proofs_unchecked. Adulterações assinadas/CAS íntegro em cada posição recusadas,
+  assim como ausência/versão/metadata/artifact. CAS exige CNF antes do Signer;
+  inventário/GC conserva raw sem ler como CBOR. Revisão corrigiu despacho GC
+  fixo em16 índices, com regressão do último domínio e CNF retida.
+  5k O distintas/Z3×tabela verdade completa:2247 válidas/2753 inválidas,
+  zero divergências; Unknown não contado.12 vetores independentes de DIMACS/
+  digest/origens, oito repetições por vetor;5 novas regressões do encoder.
+  Primeiras compilações apontaram match do novo domínio e borrow em teste;
+  Clippy apontou if aninhado; Ruff/mypy exigiram captura/tipagem explícitas e
+  declaração de biblioteca Z3 sem stubs. Corrigidos. Pré-check inicial usou
+  caminho relativo incorreto, corrigido; gerador CAS ainda esperava16 domínios,
+  ajustado para17 e4 exemplos antes da verificação integral.
+  Primeiro lote de mutações:4 capturadas, Or com sinal errado sobreviveu ao
+  teste de unicidade. Oráculo reforçado para conferir valores de cada auxiliar
+  contra avaliação independente do DAG; rodada final13/13 compiladas capturadas
+  por asserções, fontes restauradas. Casos/comandos/substituições em
+  target/cnf-mutations/results.json, primeiro lote preservado em
+  target/cnf-mutations-first/; runner /tmp/logos-cnf-mutations.py. Enumeração
+  integral dos vetores pequenos e DPLL de teste cruzado com enumeração cobrem
+  contexto maior sem substituir o oráculo SAT5k. Teto inicial de enumeração
+  do teste recusou um contexto maior; oráculo de teste ampliado, sem reduzir casos.
+  Fuzz oficial/nightly-2026-09-28: vocabulary_decode9673 e event_decode132990,
+  ambos61s/exit0 sem crash,23 seeds de evento; logs preexistentes restaurados.
+  Nenhum parser DIMACS novo; extensão de decoder de evento exercitada no alvo.
+  Primeira verificação integral falhou101 em replay histórico: a nova fixture
+  CNF usava época7 após vetor u64::MAX. Época nova corrigida para a corrente,
+  preservando os22 vetores anteriores. Replay já passou pela cadeia; asserção
+  de head ainda fixava21 (22 eventos), ajustada22 para23 eventos e repetida. Fuzz de evento
+  repetido sobre o corpus atualizado: 132990/61s sem crash; primeira
+  rodada140616/61s também passou.
+  Verificação integral ci/verify.sh --selftest: VERIFY_OK, exit0 persistido em
+  target/verify-4.3-final.exit; Rust/Clippy/smokes/TCB/supply-chain/vetores passaram,
+  227 Python em92.02s e25 TCB em1.46s; autoteste sem avisos.
+  Crash10k/24 SIGKILLs/9997 ACKs/63.32s sem perder append reconhecido; rebuild100k/cinco
+  tabelas exatas;1M/20000 consultas p99=21392ns, cold rebuild263042ms
+  fora da latência. TCB Rust10686+105199=115885 (+325 próprios), build-only64508;
+  ground1337/ledger3271/crypto645; SQLite C176466 separado. Núcleo ground/dag/
+  prop/cnf983 LOC;354 LOC restantes de classificação/axiomas/infraestrutura
+  continuam no relatório do crate, sem alegar TCB total abaixo de1000.
+  Nenhum pacote externo novo; única aresta runtime nova audit→ground registrada
+  no ADR/deny/lock. Critérios1–3 da4.3 marcados; determinismo remoto4.3/4.2,
+  ARM e fuzz longo pendentes. Fontes/memória/logs alheios e mutants.out preservados.
+  Sem push; próximo:4.4, checker LRAT, concordância cake_lpr após4.5.

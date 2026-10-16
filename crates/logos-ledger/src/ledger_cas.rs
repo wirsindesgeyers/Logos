@@ -10,8 +10,8 @@ use logos_obligation::Obligation;
 use rusqlite::{Connection, OpenFlags};
 
 use crate::{
-    Cas, Certificate, CheckRecord, Checker, Consistency, EventBody, LedgerError, LedgerHead,
-    ModelObject, ledger, ledger_store,
+    Cas, Certificate, CheckRecord, Checker, CnfObject, Consistency, EventBody, LedgerError,
+    LedgerHead, ModelObject, ledger, ledger_store,
 };
 
 /// Endereço de objeto explicitamente referenciado pelo catálogo atual.
@@ -27,6 +27,8 @@ pub enum CasReference {
     Checker(Hash<Checker>),
     /// Modelo registrado em refutação ou testemunha.
     Model(Hash<ModelObject>),
+    /// DIMACS canônico registrado em ObligationCreated.
+    Cnf(Hash<CnfObject>),
 }
 
 impl CasReference {
@@ -39,6 +41,7 @@ impl CasReference {
             Self::Certificate(_) => "certificate-v1",
             Self::Checker(_) => "checker-v1",
             Self::Model(_) => "model-v1",
+            Self::Cnf(_) => "cnf-v1",
         }
     }
     /// Digest dentro do domínio explícito.
@@ -50,6 +53,7 @@ impl CasReference {
             Self::Certificate(h) => *h.as_bytes(),
             Self::Checker(h) => *h.as_bytes(),
             Self::Model(h) => *h.as_bytes(),
+            Self::Cnf(h) => *h.as_bytes(),
         }
     }
     pub(crate) fn require(self, cas: &Cas) -> Result<(), LedgerError> {
@@ -59,6 +63,7 @@ impl CasReference {
             Self::Certificate(h) => cas.verified_present(&h),
             Self::Checker(h) => cas.verified_present(&h),
             Self::Model(h) => cas.verified_present(&h),
+            Self::Cnf(h) => cas.verified_present(&h),
         }?;
         if !present {
             return Err(LedgerError::MissingObject(self));
@@ -99,8 +104,13 @@ impl EventBody {
             Self::Proposed { proposal, .. } => {
                 result.insert(CasReference::Vocabulary(proposal.vocabulary));
             }
-            Self::ObligationCreated { obligation, .. } => {
+            Self::ObligationCreated {
+                obligation, cnf, ..
+            } => {
                 result.insert(CasReference::Obligation(*obligation));
+                if let Some(c) = cnf {
+                    result.insert(CasReference::Cnf(c.hash));
+                }
             }
             Self::Verified {
                 check, consistency, ..

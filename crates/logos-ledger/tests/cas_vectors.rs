@@ -71,6 +71,7 @@ fn cas_addresses_match_independent_vectors() {
         match columns[0] {
             "certificate-empty" | "certificate-binary" => check::<Certificate>(&temp, &columns),
             "obligation-canonical" => check::<Obligation>(&temp, &columns),
+            "cnf-empty" => check::<logos_ledger::CnfObject>(&temp, &columns),
             name => panic!("unknown vector: {name}"),
         }
     }

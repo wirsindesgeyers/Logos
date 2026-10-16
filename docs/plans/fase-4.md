@@ -43,3 +43,8 @@ fases seguintes; cada etapa recebe plano próprio. Marco: Verified com certifica
 LRAT rechecado por checkers independentes e pelo auditor, bytes de O/CNF
 vinculados e dependências normativas extraídas. Documentação de bloqueio
 não demonstra esse marco nem encerra etapas da Fase4.
+
+
+4.3 implementada/verificada localmente; CI de determinismo pendente: [plano](etapa-4.3.md)/[ADR0028](../adr/0028-tseitin-canonico-e-rederivacao.md).
+CNF, registro versionado/CAS e rederivação são entregáveis da própria etapa;
+nenhum checker LRAT antecipado. Determinismo remoto continua pendente.

@@ -130,6 +130,11 @@ def build_vectors() -> list[dict[str, Any]]:
     add("EpochAdvanced-vocab", [2, 10, 3, "vocabulário", [], [vocabulary]], 3)
     add("EpochAdvanced-both", [2, 10, 4, "ambos", [b"\x72" * 32], [vocabulary]], 4)
     add("EpochAdvanced-max", [2, 10, 2**64 - 1, "limite", [bytes(32)], [bytes(32)]], 2**64 - 1)
+    add(
+        "ObligationCreatedCnf",
+        [2, 3, obligation, 1, b"\x8b" * 32, [b"\x8c" * 32, 1]],
+        epoch=(1 << 64) - 1,
+    )
     return vectors
 
 

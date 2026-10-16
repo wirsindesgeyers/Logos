@@ -40,6 +40,12 @@ pub(crate) struct Recheck {
     pub consistency: bool,
 }
 
+pub(crate) struct Derivation {
+    pub obligation: Hash<Obligation>,
+    pub artifact: [u8; 32],
+    pub cnf: Option<[u8; 32]>,
+}
+
 pub(crate) struct Parsed {
     pub seq: u64,
     pub epoch: u64,
@@ -49,6 +55,7 @@ pub(crate) struct Parsed {
     pub proof: bool,
     pub refs: Vec<(&'static str, [u8; 32])>,
     pub rechecks: Vec<Recheck>,
+    pub derivation: Option<Derivation>,
 }
 
 pub(crate) fn arr(v: &Value) -> Result<&[Value]> {
@@ -179,6 +186,7 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         proof: false,
         refs: Vec::new(),
         rechecks: Vec::new(),
+        derivation: None,
     };
     let b = arr(body)?;
     match b {
@@ -226,6 +234,32 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             }
             digest(artifact)?;
             p.refs.push(("obligation", digest(o)?));
+            if number(route)? == 1 {
+                p.derivation = Some(Derivation {
+                    obligation: Hash::from_bytes(digest(o)?),
+                    artifact: digest(artifact)?,
+                    cnf: None,
+                });
+            }
+        }
+        [
+            Value::Unsigned(2),
+            Value::Unsigned(3),
+            o,
+            Value::Unsigned(1),
+            artifact,
+            record,
+        ] => {
+            let [h, Value::Unsigned(1)] = arr(record)? else {
+                return Err(fail("CNF encoder version/record"));
+            };
+            let cnf = digest(h)?;
+            p.refs.extend([("obligation", digest(o)?), ("cnf", cnf)]);
+            p.derivation = Some(Derivation {
+                obligation: Hash::from_bytes(digest(o)?),
+                artifact: digest(artifact)?,
+                cnf: Some(cnf),
+            });
         }
         [
             Value::Unsigned(1),
@@ -373,12 +407,12 @@ mod tests {
     }
 
     #[test]
-    fn independently_decodes_all_22_historical_vectors_byte_for_byte() {
+    fn independently_decodes_all_23_vectors_byte_for_byte() {
         let fixture: serde_json::Value =
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 22);
+        assert_eq!(vectors.len(), 23);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

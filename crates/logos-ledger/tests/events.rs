@@ -171,6 +171,7 @@ fn test_kill_key_id_mutant_cross_signer() {
         obligation: Hash::<Obligation>::from_bytes([0x55; 32]),
         route: Route::Model,
         artifact: [0x66; 32],
+        cnf: None,
     };
 
     // Monta o array unsigned com key_b
@@ -572,6 +573,7 @@ fn test_invariants_envelope_rules() {
         obligation: Hash::from_bytes([0x01; 32]),
         route: Route::Model,
         artifact: [0x02; 32],
+        cnf: None,
     };
     assert!(
         Event::sign(

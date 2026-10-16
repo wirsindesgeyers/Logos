@@ -52,6 +52,10 @@ fn store(cas: &Cas, reference: CasReference, bytes: &[u8]) {
         CasReference::Certificate(_) => *cas.put::<Certificate>(bytes).unwrap().as_bytes(),
         CasReference::Checker(_) => *cas.put::<Checker>(bytes).unwrap().as_bytes(),
         CasReference::Model(_) => *cas.put::<ModelObject>(bytes).unwrap().as_bytes(),
+        CasReference::Cnf(_) => *cas
+            .put::<logos_ledger::CnfObject>(bytes)
+            .unwrap()
+            .as_bytes(),
     };
     assert_eq!(digest, reference.digest());
 }
@@ -171,6 +175,7 @@ fn every_direct_and_nested_reference_is_required_before_signing_or_sql() {
                 obligation: ho,
                 route: Route::Model,
                 artifact: [0; 32],
+                cnf: None,
             },
             vec![CasReference::Obligation(ho)],
         ),
@@ -352,6 +357,7 @@ fn corruption_limits_wrong_domain_and_nonregular_paths_are_errors_not_absence() 
         obligation: ho,
         route: Route::Model,
         artifact: [0; 32],
+        cnf: None,
     };
     let head = ledger.head().unwrap();
     fs::write(&object, b"corrupt").unwrap();
@@ -378,6 +384,7 @@ fn corruption_limits_wrong_domain_and_nonregular_paths_are_errors_not_absence() 
         obligation: Hash::from_bytes(*certificate.as_bytes()),
         route: Route::Model,
         artifact: [0; 32],
+        cnf: None,
     };
     assert!(matches!(
         ledger.append(confused),
@@ -400,6 +407,7 @@ fn symlinks_at_object_shard_domain_and_root_are_not_followed() {
         obligation: ho,
         route: Route::Model,
         artifact: [0; 32],
+        cnf: None,
     };
     for original in [
         object.clone(),
@@ -462,4 +470,60 @@ fn reference_reader_observes_committed_wal_and_does_not_create_missing_paths() {
     fs::remove_file(temp.0.join("writer.lock")).unwrap();
     assert!(ledger_references(&temp.0, signer.public_key()).is_err());
     assert!(!temp.0.join("writer.lock").exists());
+}
+
+#[test]
+fn cnf_metadata_requires_known_route_and_cas_before_signing_and_survives_gc_inventory() {
+    use logos_ledger::{CnfObject, CnfRecord};
+    let temp = Temp::new();
+    let signer = Counting {
+        inner: signer(),
+        calls: Cell::new(0),
+    };
+    let mut ledger = Ledger::open(&temp.0, &signer).unwrap();
+    ledger.append(genesis(&signer)).unwrap();
+    let obligation = ledger.cas().put::<Obligation>(&[0x80]).unwrap();
+    let bytes = b"p cnf 1 1\n1 0\n";
+    let hc = logos_crypto::hash_raw::<CnfObject>(bytes);
+    let body = EventBody::ObligationCreated {
+        obligation,
+        route: Route::Lrat,
+        artifact: *logos_crypto::ExternalDigest::of(bytes).as_bytes(),
+        cnf: Some(CnfRecord {
+            hash: hc,
+            encoder_version: 1,
+        }),
+    };
+    let calls = signer.calls.get();
+    assert!(
+        matches!(ledger.append(body.clone()),Err(LedgerError::MissingObject(CasReference::Cnf(h))) if h==hc)
+    );
+    assert_eq!(signer.calls.get(), calls);
+    assert_eq!(ledger.cas().put::<CnfObject>(bytes).unwrap(), hc);
+    let event = ledger.append(body.clone()).unwrap();
+    assert_eq!(
+        Event::decode(&logos_canon::to_canon(&event).unwrap()).unwrap(),
+        event
+    );
+    for (route, version) in [(Route::Model, 1), (Route::Lrat, 0), (Route::Lrat, 2)] {
+        let mut bad = body.clone();
+        if let EventBody::ObligationCreated {
+            route: r,
+            cnf: Some(c),
+            ..
+        } = &mut bad
+        {
+            *r = route;
+            c.encoder_version = version;
+        }
+        assert!(bad.validate().is_err());
+        assert!(logos_canon::to_canon(&bad).is_err());
+    }
+    drop(ledger);
+    assert!(
+        ledger_references(&temp.0, signer.public_key())
+            .unwrap()
+            .objects
+            .contains(&CasReference::Cnf(hc))
+    );
 }

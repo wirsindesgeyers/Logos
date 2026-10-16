@@ -47,7 +47,7 @@ def test_rfc8032_vectors_hold_for_the_python_reference() -> None:
 
 def test_spec_tags_are_nul_terminated_and_prefix_free() -> None:
     hash_tags, sig_tags = gen.spec_tags()
-    assert len(hash_tags) == 17
+    assert len(hash_tags) == 18
     assert len(sig_tags) == 8
     tags = [*hash_tags.values(), *sig_tags.values()]
     for i, a in enumerate(tags):
@@ -61,8 +61,8 @@ def test_hash_domains_separate() -> None:
     by_msg: dict[str, set[str]] = {}
     for _dom, mname, _msg, digest in rows("domains/hash.tsv"):
         by_msg.setdefault(mname, set()).add(digest)
-    # 17 domínios x mesma mensagem => 17 digests distintos
-    assert all(len(v) == 17 for v in by_msg.values())
+    # 18 domínios x mesma mensagem => 18 digests distintos
+    assert all(len(v) == 18 for v in by_msg.values())
     # e nenhum coincide com o SHA-256 puro (sem tag)
     plain = {hashlib.sha256(bytes.fromhex(r[2])).hexdigest() for r in rows("domains/hash.tsv")}
     assert not plain & {r[3] for r in rows("domains/hash.tsv")}

@@ -169,6 +169,7 @@ fn statuses_dependencies_and_real_generation_bind_event_ids_to_cas_objects() {
                 obligation: ho,
                 route: Route::Model,
                 artifact: [0; 32],
+                cnf: None,
             })
             .unwrap(),
     )
@@ -270,6 +271,7 @@ fn noncitable_outcomes_never_become_premises_and_unprepared_lookup_is_unavailabl
                 obligation: ho,
                 route: Route::Model,
                 artifact: [0; 32],
+                cnf: None,
             })
             .unwrap(),
     )

@@ -226,6 +226,7 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-ground",
  "logos-model",
  "logos-obligation",
  "rusqlite",
