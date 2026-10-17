@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-16 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
+> Última atualização: 2026-10-17 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
 > (`git log origin/main..HEAD`) ainda **não foram enviados**.
 
 ## Resumo
@@ -122,7 +122,7 @@ corrupções,14 vetores,28160 traces e11 mutantes compilados passaram. Fuzz fina
 844911/533686 execuções sem crash. Full verify/selftest VERIFY_OK, exit0;
 227 Python +25 TCB, autoteste sem avisos. TCB logos-lrat417 LOC; corpus XZ56MB
 com manifesto/hashes/reprodução offline. Concordância cake_lpr demonstrada
-na4.5; produtor SAT público e used_premises continuam nas4.6/4.7.
+na4.5; produtor SAT na4.6 e used_premises ainda previsto na4.7.
 
 4.5: A/ADR0030 adotada; teste local de substituição implementado e teste
 integrado no kernel preservado na5.4. Cake_lpr upstream fixado com ELF estático
@@ -136,6 +136,16 @@ e2 limites de perfil/recursos registrados (duplicates/sparse). Verificação
 completa com selftest: VERIFY_OK, exit0;227 Python +25 TCB. Rebuild em segundo
 host/CI/ARM não observados. ADR0031/spec/plano registram
 TCB Rust758679 como cota superior e componentes nativos separados.
+
+4.6: produtor SAT fora da TCB implementado sob ADR0032, CaDiCaL3.0.1 por
+fonte fixada/build offline, ponte às APIs CNF existentes e candidatos LRAT/
+FiniteModel com limites explícitos.300/300 provas aceitas nos dois checkers,
+300/300 contramodelos e300 testemunhas de consistência no ModelChecker;
+300 CNFs distintas/10 famílias.25 testes novos passaram; TCB/dependências
+inalteradas. Sete controles de reconstrução, protocolo adulterado/limites e
+ausência de Z3 exercitados. Métricas de bytes por O/camada emitidas no relatório.
+Verificação completa com selftest: VERIFY_OK, exit0;252 Python +25 TCB.
+CI remota ainda não observada.
 
 ## Etapas da Fase 0
 
@@ -195,7 +205,8 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem classificação, g
 | 4.3 Tseitin/CNF e proveniência | ⚠ implementada, falta CI de determinismo | 5k O/Z3/tabela verdade sem divergência,12 vetores e13 mutantes; auditor3/3 antes/depois do export, bytes/hash/versão conferidos. Fuzz9673/132990 sem crash; full verify/selftest VERIFY_OK, exit0. Núcleo983 LOC/crate1337; primeiro a terceiro critérios demonstrados, quarto aguarda CI. [Plano](docs/plans/etapa-4.3.md)/[spec](spec/cnf.md)/[ADR0028](docs/adr/0028-tseitin-canonico-e-rederivacao.md). |
 | 4.4 Checker LRAT próprio | ✅ concluída localmente no corpus exigido | P2/RUP/deleções/fecho;200/200 provas e600/600 corrupções concordam com cake_lpr na4.5 (380.65s), sem filtro Rust.14 vetores Rust preservados; dois controles de perfil/recursos diferem no cake_lpr (duplicates/sparse), explicitados no ADR0031. [Plano](docs/plans/etapa-4.4.md). CI/ARM/fuzz longo pendentes. |
 | 4.5 Integração do cake_lpr | ⚠ implementada, falta rebuild em segundo host/CI | A/ADR0030 adotada; build estático fixado e rebuild x86_64 idêntico localmente; wrapper/registry/P2/isolamento e auditor3/3 com dois checkers.10 testes LRAT+1 auditor,11 mutantes e fuzz final2821026/61s passaram. Corpus200/600 concordou; dois controles manuais de perfil diferem. Verificação completa com selftest: VERIFY_OK, exit0. Primeiro critério aguarda segundo host; execução CI/ARM e fuzz longo pendentes. [Plano](docs/plans/etapa-4.5.md). |
-| 4.6 Produtor SAT | ⏳ não iniciada | CNF4.3, checkers4.4/4.5, ModelChecker2.3 e encoder Python0.3 prontos. Próximo: produtor fora da TCB e corpus de300 obrigações, respeitando os limites de perfil documentados. |
+| 4.6 Produtor SAT | ✅ concluída localmente | [Plano](docs/plans/etapa-4.6.md)/ADR0032 e fonte CaDiCaL fixados.300/300 válidas,300/300 pares SAT e300 consistências aceitas;300 CNFs distintas/10 famílias e sete controles.25 testes Python novos; métricas por O/camada emitidas. Verificação completa com selftest: VERIFY_OK, exit0;252 Python +25 TCB. Nenhum runtime/dependência TCB alterado; CI remota pendente. |
+| 4.7 Dependências extraídas do certificado | ⏳ não iniciada | ProvenanceMap4.3, IDs originais usados4.4 e produtor real4.6 prontos. Próximo: mapear dependências com vínculo à CNF e analisar domain_support; eventos/kernel ficam na5.4. |
 
 Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder/CNF e rederivação implementados;
 Checker LRAT4.4 e recheck duplo4.5 demonstrados no corpus exigido. Kernel/políticas ainda ausentes,
@@ -270,6 +281,10 @@ fontes opacas não demonstram autenticação.
    diferenças. Certificados futuros precisam de Accepted nos dois checkers.
    cake_output é o17º alvo da matriz; fuzz local2821026/61s sem crash,
    mas ≥1h e execução remota permanecem pendentes.
+   SAT4.6: ci/check-sat.sh no job Python prepara solver offline/encoder/
+   cake_lpr e exige300/300 provas,300/300 contramodelos e premissas consistentes.
+   Testes de protocolo/limites/reconstrução e25 regressões também no pytest;
+   nenhum resultado remoto observado. Etapa não acrescenta parser na TCB.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -339,38 +354,40 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.6 — produtor SAT fora da TCB
+## Próximo passo: Etapa4.7 — dependências extraídas do certificado
 
-Implementar logos_provers.sat conforme ROADMAP4.6. Estão prontos o encoder
-Python0.3, a CNF/tabela de átomos4.3, o checker LRAT4.4 e o ModelChecker2.3;
-cake_lpr4.5 fornece a validação externa exigida pelo critério ponta a ponta.
-Ler o contrato e registrar o plano/decisões antes de implementar.
+Ler ROADMAP4.7 e preparar plano/ADR antes de implementar used_premises.
+Prontos: ProvenanceMap4.3 com origens alinhadas aos IDs originais da CNF e
+domain_support, check_with_used4.4 com fecho histórico da prova conferida,
+produtor SAT4.6, dois checkers4.4/4.5 e DAG/índices3.3.
 
-O produtor executa CaDiCaL ou Kissat e, se necessário, conversão DRAT→LRAT,
-tudo fora da TCB. Demonstrar obrigação finita→CNF→solver→LRAT→cake_lpr em
-≥95% de300 obrigações de política; para SAT, reconstruir FiniteModel pela
-tabela de átomos e demonstrar100% dos contramodelos aceitos pelo ModelChecker.
-Políticas autenticadas ainda não existem: usar obrigações explícitas no
-corpus, sem antecipar Policy/fatos/kernel. Portfólio/cache10.2,
-used_premises4.7 e kernel5.4 estão fora do escopo.
+Mapear IDs originais realmente usados para PremiseRef, distinguindo premissa,
+axioma de domínio, definição e negação do objetivo. Preservar o vínculo entre
+prova/CNF/mapa; IDs inválidos ou resultado inconclusivo não geram dependências
+válidas. Demonstrar as cinco premissas citadas/duas usadas e a impossibilidade
+de usar premissa ausente de O, conforme os critérios. Registro em evento e
+handler do kernel continuam fora do escopo4.7 (5.4); examinar como demonstrar
+o critério de deps com as interfaces existentes, sem antecipar o kernel.
 
-Riscos: perfis LRAT diferem em duplicates e sparse; não normalizar bytes/IDs
-silenciosamente. Fixar solver/conversor e preservar h(CNF)/h(certificado),
-limites positivos e resultados inconclusivos sem convertê-los em aceitação.
-Decisões em aberto: solver, formato de prova e eventual conversor; resolver
-com ADR conforme a evidência, sem acrescentar dependências à TCB.
+Decisão em aberto: domain_support preserva referências exigidas pela
+transformação mesmo quando os axiomas viram tautologias. Analisar a precisão
+e justificar o tratamento em ADR antes de uni-lo automaticamente a used.
+Os limites duplicates/sparse do cake_lpr continuam explícitos; não normalizar
+CNF/IDs no wrapper. Fontes autenticadas permanecem nas6.1/7.3/7.5.
 
-4.5 passou integralmente em ci/verify.sh --selftest: VERIFY_OK/exit0 em
-target/verify-4.5-final.log/.exit;200/600 em380.65s, onze mutantes e fuzz final
-2821026/61s. Primeiro critério permanece desmarcado até rebuild em segundo
-host; CI/ARM/fuzz longo também pendentes. O teste integrado de substituição
-no kernel está preservado na5.4 (ADR0030/A). Alterações preexistentes de
-memória/fontes de fuzz/logs/mutants.out preservadas; nenhum push autorizado.
+4.6 passou em ci/verify.sh --selftest: VERIFY_OK/exit0 em
+target/verify-4.6-final.log/.exit;252 Python +25 TCB. Relatório por O/camada em
+target/sat-producer-report.json:300/300 válidas,300/300 SAT e sete controles,
+com recheck de301 provas/306 modelos e300 consistências. Métricas finais
+revalidadas em177.15s/exit0. Nenhum runtime/dependência TCB alterado.
+CI remota4.6, rebuild em segundo host4.5 e ARM/fuzz longo anteriores seguem
+pendentes. Alterações preexistentes de memória/fontes de fuzz/logs/mutants.out
+preservadas; nenhum push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
 - **Tamanho da TCB de correção (execução):** 11549 LOC Rust próprios + 747130
-  de dependências Rust = 758679 (+64508 só de compilação), após4.5;
+  de dependências Rust = 758679 (+64508 só de compilação), após4.5/inalterado na4.6;
   logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-lrat865, logos-ledger3271.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
@@ -1305,3 +1322,45 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Três critérios4.5 demonstrados; rebuild segundo host/CI/ARM/fuzz longo pendentes.
   Memória, dois fontes fuzz alheios, logs e mutants.out preexistentes preservados
   fora do commit. Sem push; próximo:4.6, produtor SAT fora da TCB.
+
+
+- 2026-10-17 — Etapa4.6 concluída localmente (sessão iniciada em16/10,
+  basea6d3f37). Plano/ADR0032 fixados antes do código; estimativa P→M pelo
+  build/transporte/reconstrução contextual, sem alterar escopo ou ordem.
+  CaDiCaL3.0.1/c607304… conservado em archive upstream integral, SHA256
+  57943c9d7305…; build offline com g++/make, licença e relatório por hash.
+  logos_provers.sat retorna candidatos UNSAT/LRAT, SAT/model-v1 ou EXHAUSTED;
+  nenhum claim/autoridade. Ponte de apoio compõe ground_for_check/clausify
+  existentes, sem novo src/ ou dependência TCB. Prazo/memória/tamanho,
+  ambiente sem opções herdadas e kill do grupo; erro não vira aceite.
+  Modelos reconstruídos pelos átomos primitivos, representantes Enum,
+  tabelas totais/únicas e Defined rederivado; Open não denotado completado
+  com singleton. Cauda LRAT cortada depois da vazia, sem alterar CNF/IDs.
+  Corpus fixado antes do solver:300 obrigações válidas/300 pares SAT,
+  10 famílias/300 CNFs distintas; todas aceitas pelos dois checkers ou
+  ModelChecker, respectivamente.300 consistências também conferidas;
+  sete controles extras incluem dois sorts/resultados não zero/nullary,
+  Defined/representante Defined/Open/singleton/enum vazio.301 provas e306
+  modelos rechecados,907 checks ao todo.25 regressões Python novas passaram;
+  solver mentiroso, SAT incompleto/inválido, modelo adulterado/CNF trocada,
+  transporte/limites e runtime sem Z3 exercitados. Uma corrida de observação
+  /proc na fixture foi corrigida: processo já recolhido conta como encerrado,
+  sem ignorar descendente ativo. Sintaxe AIR/controle General e anotações
+  mypy/Ruff iniciais corrigidas; histórico fiel no plano§7.
+  ApêndiceD conferido: relatório recebeu métricas de bytes por O/camada.
+  Repetição final177.15s/exit0 manteve todos os hashes/resultados anteriores;
+  607 registros com layer/certificate_bytes/cnf_bytes. Incluindo controles,
+  camada0:306 modelos/43–121bytes,total33583; camada1:301 provas/37–6727bytes,
+  total861151. Relatório target/sat-producer-report.json e receita ci/check-sat.sh;
+  workflow Python arquiva relatório e metadados de fonte/compilador; CI não observada.
+  Full ci/verify.sh --selftest: VERIFY_OK/exit0,1981.19s; Rust/Clippy/smokes/
+  TCB/manifesto/independência/supply-chain/vetores passaram;252 Python92.87s
+  +25 TCB1.35s, autoteste com diagnósticos corretos. Avisos conhecidos deny e
+  aviso RTK sem hook, sem falha. Corpus legado200/600 concordou em446.75s.
+  Crash10k/24 SIGKILLs/10000 ACKs/111.11s sem perdas; rebuild100k/cinco tabelas
+  exatas;1M/20000 consultas p99=41740ns, cold rebuild421536ms fora da latência.
+  TCB11549+747130=758679, build-only64508, inalterada; nenhum parser runtime
+  novo, portanto sem novo alvo fuzz/mutação de TCB. Ambos os critérios4.6
+  marcados com evidência local; CI/ARM/fuzz longo e rebuild segundo host4.5
+  preservados pendentes. Memória, fontes fuzz, logs e mutants.out anteriores
+  fora do commit. Sem push; próximo4.7, com análise de domain_support/used.

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "upstream": "https://github.com/arminbiere/cadical",
+  "revision": "c60730422e758ef1cebe7aeddf2dda31c996bf04",
+  "solver_version": "3.0.1",
+  "source_sha256": "57943c9d730528dfc3ad25a5f191edd153317f138a38d98ffc076cd4f2a06dad"
+}

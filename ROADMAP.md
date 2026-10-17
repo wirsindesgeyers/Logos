@@ -901,7 +901,7 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 
 ---
 
-### Etapa 4.6 — Produtor SAT (fora da TCB) · `P`
+### Etapa 4.6 — Produtor SAT (fora da TCB) · `M`
 
 **Depende de (recebe pronto).** 4.3, 4.4; 2.3 — checker de refutação (para o caso `sat`); 0.3 — encoder Python.
 
@@ -912,8 +912,8 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 - Se o solver diz `sat`, devolve o modelo como **contramodelo** (convertido de volta para `FiniteModel` via a tabela de átomos) → vai para o checker da camada 0.
 
 **Critério de conclusão.**
-- [ ] Ponta a ponta: obrigação de domínio finito → CNF → CaDiCaL → LRAT → `cake_lpr` aceita, em ≥ 95% de um corpus de 300 obrigações de política.
-- [ ] Caso `sat`: contramodelo aceito pela camada 0 em 100% dos casos.
+- [x] Ponta a ponta: obrigação de domínio finito → CNF → CaDiCaL → LRAT → `cake_lpr` aceita, em ≥ 95% de um corpus de 300 obrigações de política. Demonstrado localmente:300/300,10 famílias/300 CNFs distintas, sem filtrar inconclusivos. Recheck Rust também aceitou todas; premissas consistentes nos300 casos. Fonte/corpus fixados, receita em ci/check-sat.sh e [plano](docs/plans/etapa-4.6.md).
+- [x] Caso `sat`: contramodelo aceito pela camada 0 em 100% dos casos.300/300 pares SAT aceitos no ModelChecker, reconstruídos da tabela de átomos sem Z3; controles extras de nullary/singleton/Defined/Open/tabelas. Sem objetos Policy/Fact autenticados antecipados.
 
 ---
 

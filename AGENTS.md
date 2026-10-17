@@ -51,7 +51,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 
 ```sh
 ci/verify.sh              # instala cake_lpr offline fixado, fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
-                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr)
+                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr, produtor SAT300/300 +contramodelos)
                           # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); crash ledger (SIGKILL, 10k appends), índices (rebuild 100k, p99 com 1M); vetores --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
@@ -136,3 +136,6 @@ fuzz/       alvos de cargo fuzz (workspace próprio)
   de usuário/rede habilitados. Ausência/falha não tem fallback sem isolamento.
   Build offline: `python3 tools/build_cake_lpr.py`; rebuild do assembly/FFI
   fixados: `python3 tools/build_cake_lpr.py --rebuild` (Zig0.15.1 por hash).
+- Produtor SAT4.6: `python3 tools/build_cadical.py` compila a fonte fixada
+  offline com g++/GNU make; cache por hash e log em target/cadical-build.log.
+  `ci/check-sat.sh` prepara o encoder de apoio e executa o corpus real.

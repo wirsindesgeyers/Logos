@@ -25,6 +25,7 @@ cargo run -p logos-ground --example cnf_smoke
 cargo run -p logos-lrat --example lrat_smoke
 ci/check-cnf.sh
 ci/check-audit.sh
+ci/check-sat.sh
 ci/check-ledger-crash.sh
 ci/check-ledger-index.sh
 ci/check-tcb-lints.sh
@@ -37,7 +38,7 @@ cargo audit
   uv run ruff check . ../tcb ../tools
   uv run ruff format --check . ../tcb ../tools
   uv run mypy
-  uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
+  uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/build_cadical.py ../tools/gen_sat_vectors.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
   uv run python ../tools/gen_unicode_assigned.py --check
   uv run python ../tools/gen_crypto_vectors.py --check
   uv run python ../tools/gen_cas_vectors.py --check

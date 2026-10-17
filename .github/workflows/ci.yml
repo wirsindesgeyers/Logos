@@ -190,7 +190,7 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/build_cadical.py ../tools/gen_sat_vectors.py ../tools/check_cnf.py ../tools/check_ledger_crash.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
       - run: uv run python ../tools/gen_crypto_vectors.py --check
       - run: uv run python ../tools/gen_cas_vectors.py --check
@@ -209,6 +209,18 @@ jobs:
       - run: uv run python ../tools/lrat_corpus.py --check
       - name: CNF contra SAT Z3 e tabela verdade (5 mil O)
         run: ../ci/check-cnf.sh
+      - name: Dependências do produtor SAT e isolamento do checker
+        run: sudo apt-get update && sudo apt-get install -y g++ make bubblewrap util-linux
+      - name: Produtor SAT real e três checkers (300 políticas e300 contramodelos)
+        run: ../ci/check-sat.sh
+      - name: Arquivar evidência do produtor SAT
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sat-producer
+          path: |
+            target/sat-producer-report.json
+            target/cadical/cadical.build.json
       - name: Smoke público do produtor Z3 com checker Rust
         run: uv run python -m logos_provers.z3_models_smoke
       - name: Smoke público do finder e fallback com unknown nativo
