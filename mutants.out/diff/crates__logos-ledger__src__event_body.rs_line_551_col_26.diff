@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::verify_authority
+@@ -543,17 +543,17 @@
+             None => {
+                 return Err(EventError::Invalid(
+                     "event body does not have authority signature",
+                 ));
+             }
+         };
+ 
+         let expected_key_id = public_key.key_id()?;
+-        if authority.key != expected_key_id {
++        if authority.key == /* ~ changed by cargo-mutants ~ */ expected_key_id {
+             return Err(EventError::Invalid("authority key mismatch"));
+         }
+ 
+         let message_bytes = self
+             .authority_message()?
+             .ok_or(EventError::Invalid("missing authority payload"))?;
+ 
+         logos_crypto::verify::<Event>(&message_bytes, &authority.sig, public_key)?;

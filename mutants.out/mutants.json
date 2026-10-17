@@ -1,0 +1,578 @@
+[
+  {
+    "diff": "--- crates/logos-ledger/src/event.rs\n+++ replace Event::verify -> Result<(), EventError> with Ok(())\n@@ -179,38 +179,17 @@\n         })\n     }\n \n     /// Confere estrutura, KeyId e assinatura externa contra chave confiada pelo caller.\n     ///\n     /// # Errors\n     /// Não corresponde a chave/assinatura esperada, estrutura ou limite inválido.\n     pub fn verify(&self, public_key: &PublicKey) -> Result<(), EventError> {\n-        header(self.seq, self.epoch, self.prev, &self.body, self.kernel_key)?;\n-        if public_key.key_id()? != self.kernel_key {\n-            return Err(EventError::Invalid(\"kernel KeyId mismatch\"));\n-        }\n-        let unsigned = Value::Array(Array::new(fields(\n-            self.seq,\n-            self.epoch,\n-            self.prev,\n-            &self.body,\n-            self.kernel_key,\n-        )?)?);\n-        let size = encoded_size(&unsigned)?;\n-        if size\n-            .checked_add(encoded_size(&self.sig.to_value()?)?)\n-            .is_none_or(|size| size > MAX_EVENT_BYTES)\n-        {\n-            return Err(EventError::Limit(\"wire bytes\"));\n-        }\n-        let mut bytes = Vec::with_capacity(size);\n-        unsigned.encode_into(&mut bytes);\n-        logos_crypto::verify::<Event>(&bytes, &self.sig, public_key)?;\n-        Ok(())\n+        Ok(()) /* ~ changed by cargo-mutants ~ */\n     }\n \n     /// Decodifica bytes completos, conferindo limite antes de materializar Value.\n     /// Não verifica assinatura ou proveniência.\n     ///\n     /// # Errors\n     /// Formato/limites/invariantes inválidos; bytes sobrando não são ignorados.\n     pub fn decode(bytes: &[u8]) -> Result<Self, EventError> {\n",
+    "file": "crates/logos-ledger/src/event.rs",
+    "function": {
+      "function_name": "Event::verify",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 209
+        },
+        "start": {
+          "column": 5,
+          "line": 182
+        }
+      }
+    },
+    "genre": "FnValue",
+    "name": "crates/logos-ledger/src/event.rs:187:9: replace Event::verify -> Result<(), EventError> with Ok(())",
+    "package": "logos-ledger",
+    "replacement": "Ok(())",
+    "span": {
+      "end": {
+        "column": 15,
+        "line": 208
+      },
+      "start": {
+        "column": 9,
+        "line": 187
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event.rs\n+++ replace != with == in Event::verify\n@@ -180,17 +180,17 @@\n     }\n \n     /// Confere estrutura, KeyId e assinatura externa contra chave confiada pelo caller.\n     ///\n     /// # Errors\n     /// Não corresponde a chave/assinatura esperada, estrutura ou limite inválido.\n     pub fn verify(&self, public_key: &PublicKey) -> Result<(), EventError> {\n         header(self.seq, self.epoch, self.prev, &self.body, self.kernel_key)?;\n-        if public_key.key_id()? != self.kernel_key {\n+        if public_key.key_id()? == /* ~ changed by cargo-mutants ~ */ self.kernel_key {\n             return Err(EventError::Invalid(\"kernel KeyId mismatch\"));\n         }\n         let unsigned = Value::Array(Array::new(fields(\n             self.seq,\n             self.epoch,\n             self.prev,\n             &self.body,\n             self.kernel_key,\n",
+    "file": "crates/logos-ledger/src/event.rs",
+    "function": {
+      "function_name": "Event::verify",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 209
+        },
+        "start": {
+          "column": 5,
+          "line": 182
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event.rs:188:33: replace != with == in Event::verify",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 35,
+        "line": 188
+      },
+      "start": {
+        "column": 33,
+        "line": 188
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace Consistency::validate -> Result<(), EventError> with Ok(())\n@@ -308,29 +308,17 @@\n             return Err(EventError::Limit(\"check reason text exceeds 64 KiB\"));\n         }\n         Ok(())\n     }\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n-        match self {\n-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n-                return Err(EventError::Invalid(\"Witness requires Accepted\"));\n-            }\n-            Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n-                return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n-            }\n-            _ => {}\n-        }\n-        match self {\n-            Self::Witness { check, .. } | Self::Unknown { check: Some(check) } => check.validate(),\n-            Self::Unknown { check: None } => Ok(()),\n-        }\n+        Ok(()) /* ~ changed by cargo-mutants ~ */\n     }\n }\n \n impl EventBody {\n     /// Retorna a tag numérica normatizada da variante (`spec/events.md` §3).\n     #[must_use]\n     pub const fn tag(&self) -> u64 {\n         match self {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "FnValue",
+    "name": "crates/logos-ledger/src/event_body.rs:316:9: replace Consistency::validate -> Result<(), EventError> with Ok(())",
+    "package": "logos-ledger",
+    "replacement": "Ok(())",
+    "span": {
+      "end": {
+        "column": 10,
+        "line": 328
+      },
+      "start": {
+        "column": 9,
+        "line": 316
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace match guard check.outcome != CheckOutcome::Accepted with true in Consistency::validate\n@@ -309,17 +309,17 @@\n         }\n         Ok(())\n     }\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n+            Self::Witness { check, .. } if true /* ~ changed by cargo-mutants ~ */ => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n             Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "MatchArmGuard",
+    "name": "crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with true in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "true",
+    "span": {
+      "end": {
+        "column": 83,
+        "line": 317
+      },
+      "start": {
+        "column": 44,
+        "line": 317
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace match guard check.outcome != CheckOutcome::Accepted with false in Consistency::validate\n@@ -309,17 +309,17 @@\n         }\n         Ok(())\n     }\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n+            Self::Witness { check, .. } if false /* ~ changed by cargo-mutants ~ */ => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n             Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "MatchArmGuard",
+    "name": "crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with false in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "false",
+    "span": {
+      "end": {
+        "column": 83,
+        "line": 317
+      },
+      "start": {
+        "column": 44,
+        "line": 317
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace match guard check.outcome == CheckOutcome::Accepted with true in Consistency::validate\n@@ -312,17 +312,17 @@\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n             Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n-            Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n+            Self::Unknown { check: Some(check) } if true /* ~ changed by cargo-mutants ~ */ => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n             Self::Witness { check, .. } | Self::Unknown { check: Some(check) } => check.validate(),\n             Self::Unknown { check: None } => Ok(()),\n         }\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "MatchArmGuard",
+    "name": "crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with true in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "true",
+    "span": {
+      "end": {
+        "column": 92,
+        "line": 320
+      },
+      "start": {
+        "column": 53,
+        "line": 320
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace match guard check.outcome == CheckOutcome::Accepted with false in Consistency::validate\n@@ -312,17 +312,17 @@\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n             Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n-            Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n+            Self::Unknown { check: Some(check) } if false /* ~ changed by cargo-mutants ~ */ => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n             Self::Witness { check, .. } | Self::Unknown { check: Some(check) } => check.validate(),\n             Self::Unknown { check: None } => Ok(()),\n         }\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "MatchArmGuard",
+    "name": "crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with false in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "false",
+    "span": {
+      "end": {
+        "column": 92,
+        "line": 320
+      },
+      "start": {
+        "column": 53,
+        "line": 320
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in Consistency::validate\n@@ -309,17 +309,17 @@\n         }\n         Ok(())\n     }\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n+            Self::Witness { check, .. } if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n             Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:317:58: replace != with == in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 60,
+        "line": 317
+      },
+      "start": {
+        "column": 58,
+        "line": 317
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace == with != in Consistency::validate\n@@ -312,17 +312,17 @@\n }\n \n impl Consistency {\n     pub(crate) fn validate(&self) -> Result<(), EventError> {\n         match self {\n             Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Witness requires Accepted\"));\n             }\n-            Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {\n+            Self::Unknown { check: Some(check) } if check.outcome != /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted => {\n                 return Err(EventError::Invalid(\"Unknown cannot contain Accepted\"));\n             }\n             _ => {}\n         }\n         match self {\n             Self::Witness { check, .. } | Self::Unknown { check: Some(check) } => check.validate(),\n             Self::Unknown { check: None } => Ok(()),\n         }\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "Consistency::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 329
+        },
+        "start": {
+          "column": 5,
+          "line": 315
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:320:67: replace == with != in Consistency::validate",
+    "package": "logos-ledger",
+    "replacement": "!=",
+    "span": {
+      "end": {
+        "column": 69,
+        "line": 320
+      },
+      "start": {
+        "column": 67,
+        "line": 320
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace EventBody::validate -> Result<(), EventError> with Ok(())\n@@ -363,111 +363,17 @@\n     }\n \n     /// Valida invariantes estruturais, limites e consistência sem sort-check de lógica.\n     ///\n     /// # Errors\n     /// Retorna [`EventError::Invalid`] para inconsistências lógicas de estado ou ordenação,\n     /// ou [`EventError::Limit`] para violações de limites inclusivos de tamanho.\n     pub fn validate(&self) -> Result<(), EventError> {\n-        match self {\n-            Self::Genesis { ledger_version, .. } => {\n-                if *ledger_version != 1 {\n-                    return Err(EventError::Invalid(\"Genesis ledger_version must be 1\"));\n-                }\n-            }\n-            Self::VocabPublished { .. } => {}\n-            Self::Proposed { proposal, .. } => proposal.validate()?,\n-            Self::ObligationCreated { .. } => {}\n-            Self::Verified {\n-                check,\n-                cited,\n-                used,\n-                consistency,\n-            } => {\n-                check.validate()?;\n-                consistency.validate()?;\n-                if check.outcome != CheckOutcome::Accepted {\n-                    return Err(EventError::Invalid(\n-                        \"Verified check outcome must be Accepted\",\n-                    ));\n-                }\n-                validate_strictly_sorted_refs(cited)?;\n-                validate_strictly_sorted_refs(used)?;\n-                for u in used {\n-                    if cited.binary_search(u).is_err() {\n-                        return Err(EventError::Invalid(\"used must be a subset of cited\"));\n-                    }\n-                }\n-                match consistency {\n-                    Consistency::Witness {\n-                        check: witness_check,\n-                        ..\n-                    } => {\n-                        if witness_check.obligation != check.obligation {\n-                            return Err(EventError::Invalid(\n-                                \"Consistency Witness obligation must match main check\",\n-                            ));\n-                        }\n-                    }\n-                    Consistency::Unknown {\n-                        check: Some(unknown_check),\n-                    } => {\n-                        if unknown_check.obligation != check.obligation {\n-                            return Err(EventError::Invalid(\n-                                \"Consistency Unknown obligation must match main check\",\n-                            ));\n-                        }\n-                    }\n-                    Consistency::Unknown { check: None } => {}\n-                }\n-            }\n-            Self::Refuted { check, .. } => {\n-                check.validate()?;\n-                if check.outcome != CheckOutcome::Accepted {\n-                    return Err(EventError::Invalid(\n-                        \"Refuted check outcome must be Accepted\",\n-                    ));\n-                }\n-            }\n-            Self::UnknownRecorded { check, machine } => {\n-                check.validate()?;\n-                if !matches!(check.outcome, CheckOutcome::Unknown(_)) {\n-                    return Err(EventError::Invalid(\n-                        \"UnknownRecorded check outcome must be Unknown\",\n-                    ));\n-                }\n-                validate_text(machine, \"machine text exceeds 64 KiB\")?;\n-            }\n-            Self::AssumptionDeclared { formula, scope, .. } => {\n-                validate_formula(formula)?;\n-                validate_text(scope, \"scope text exceeds 64 KiB\")?;\n-            }\n-            Self::Retracted { reason, .. } => {\n-                validate_text(reason, \"reason text exceeds 64 KiB\")?;\n-            }\n-            Self::Invalidated { causes, .. } => {\n-                if causes.is_empty() {\n-                    return Err(EventError::Invalid(\"causes path must not be empty\"));\n-                }\n-                if causes.len() > MAX_REFS {\n-                    return Err(EventError::Limit(\"causes path exceeds 1024\"));\n-                }\n-            }\n-            Self::EpochAdvanced { reason, .. } => {\n-                validate_text(reason, \"reason text exceeds 64 KiB\")?;\n-            }\n-            Self::CheckerRegistered { format, .. } => {\n-                validate_text(format, \"format text exceeds 64 KiB\")?;\n-            }\n-            Self::CheckerRevoked { reason, .. } => {\n-                validate_text(reason, \"reason text exceeds 64 KiB\")?;\n-            }\n-        }\n-        Ok(())\n+        Ok(()) /* ~ changed by cargo-mutants ~ */\n     }\n \n     /// Produz os bytes canônicos da mensagem a ser assinada pela autoridade (`spec/events.md` §4).\n     ///\n     /// O payload é `canon([1, 1, body_without_authority_signature])`, substituindo\n     /// `Authority` por apenas `KeyId`. Retorna `Ok(None)` para eventos sem autoridade.\n     ///\n     /// # Errors\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "FnValue",
+    "name": "crates/logos-ledger/src/event_body.rs:371:9: replace EventBody::validate -> Result<(), EventError> with Ok(())",
+    "package": "logos-ledger",
+    "replacement": "Ok(())",
+    "span": {
+      "end": {
+        "column": 15,
+        "line": 465
+      },
+      "start": {
+        "column": 9,
+        "line": 371
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::validate\n@@ -365,17 +365,17 @@\n     /// Valida invariantes estruturais, limites e consistência sem sort-check de lógica.\n     ///\n     /// # Errors\n     /// Retorna [`EventError::Invalid`] para inconsistências lógicas de estado ou ordenação,\n     /// ou [`EventError::Limit`] para violações de limites inclusivos de tamanho.\n     pub fn validate(&self) -> Result<(), EventError> {\n         match self {\n             Self::Genesis { ledger_version, .. } => {\n-                if *ledger_version != 1 {\n+                if *ledger_version == /* ~ changed by cargo-mutants ~ */ 1 {\n                     return Err(EventError::Invalid(\"Genesis ledger_version must be 1\"));\n                 }\n             }\n             Self::VocabPublished { .. } => {}\n             Self::Proposed { proposal, .. } => proposal.validate()?,\n             Self::ObligationCreated { .. } => {}\n             Self::Verified {\n                 check,\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:373:36: replace != with == in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 38,
+        "line": 373
+      },
+      "start": {
+        "column": 36,
+        "line": 373
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::validate\n@@ -380,17 +380,17 @@\n             Self::Verified {\n                 check,\n                 cited,\n                 used,\n                 consistency,\n             } => {\n                 check.validate()?;\n                 consistency.validate()?;\n-                if check.outcome != CheckOutcome::Accepted {\n+                if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted {\n                     return Err(EventError::Invalid(\n                         \"Verified check outcome must be Accepted\",\n                     ));\n                 }\n                 validate_strictly_sorted_refs(cited)?;\n                 validate_strictly_sorted_refs(used)?;\n                 for u in used {\n                     if cited.binary_search(u).is_err() {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:388:34: replace != with == in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 36,
+        "line": 388
+      },
+      "start": {
+        "column": 34,
+        "line": 388
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::validate\n@@ -397,17 +397,17 @@\n                         return Err(EventError::Invalid(\"used must be a subset of cited\"));\n                     }\n                 }\n                 match consistency {\n                     Consistency::Witness {\n                         check: witness_check,\n                         ..\n                     } => {\n-                        if witness_check.obligation != check.obligation {\n+                        if witness_check.obligation == /* ~ changed by cargo-mutants ~ */ check.obligation {\n                             return Err(EventError::Invalid(\n                                 \"Consistency Witness obligation must match main check\",\n                             ));\n                         }\n                     }\n                     Consistency::Unknown {\n                         check: Some(unknown_check),\n                     } => {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:405:53: replace != with == in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 55,
+        "line": 405
+      },
+      "start": {
+        "column": 53,
+        "line": 405
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::validate\n@@ -406,17 +406,17 @@\n                             return Err(EventError::Invalid(\n                                 \"Consistency Witness obligation must match main check\",\n                             ));\n                         }\n                     }\n                     Consistency::Unknown {\n                         check: Some(unknown_check),\n                     } => {\n-                        if unknown_check.obligation != check.obligation {\n+                        if unknown_check.obligation == /* ~ changed by cargo-mutants ~ */ check.obligation {\n                             return Err(EventError::Invalid(\n                                 \"Consistency Unknown obligation must match main check\",\n                             ));\n                         }\n                     }\n                     Consistency::Unknown { check: None } => {}\n                 }\n             }\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:414:53: replace != with == in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 55,
+        "line": 414
+      },
+      "start": {
+        "column": 53,
+        "line": 414
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::validate\n@@ -417,17 +417,17 @@\n                             ));\n                         }\n                     }\n                     Consistency::Unknown { check: None } => {}\n                 }\n             }\n             Self::Refuted { check, .. } => {\n                 check.validate()?;\n-                if check.outcome != CheckOutcome::Accepted {\n+                if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted {\n                     return Err(EventError::Invalid(\n                         \"Refuted check outcome must be Accepted\",\n                     ));\n                 }\n             }\n             Self::UnknownRecorded { check, machine } => {\n                 check.validate()?;\n                 if !matches!(check.outcome, CheckOutcome::Unknown(_)) {\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:425:34: replace != with == in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 36,
+        "line": 425
+      },
+      "start": {
+        "column": 34,
+        "line": 425
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ delete ! in EventBody::validate\n@@ -425,17 +425,17 @@\n                 if check.outcome != CheckOutcome::Accepted {\n                     return Err(EventError::Invalid(\n                         \"Refuted check outcome must be Accepted\",\n                     ));\n                 }\n             }\n             Self::UnknownRecorded { check, machine } => {\n                 check.validate()?;\n-                if !matches!(check.outcome, CheckOutcome::Unknown(_)) {\n+                if  /* ~ changed by cargo-mutants ~ */matches!(check.outcome, CheckOutcome::Unknown(_)) {\n                     return Err(EventError::Invalid(\n                         \"UnknownRecorded check outcome must be Unknown\",\n                     ));\n                 }\n                 validate_text(machine, \"machine text exceeds 64 KiB\")?;\n             }\n             Self::AssumptionDeclared { formula, scope, .. } => {\n                 validate_formula(formula)?;\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::validate",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 466
+        },
+        "start": {
+          "column": 5,
+          "line": 365
+        }
+      }
+    },
+    "genre": "UnaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:433:20: delete ! in EventBody::validate",
+    "package": "logos-ledger",
+    "replacement": "",
+    "span": {
+      "end": {
+        "column": 21,
+        "line": 433
+      },
+      "start": {
+        "column": 20,
+        "line": 433
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace EventBody::verify_authority -> Result<(), EventError> with Ok(())\n@@ -533,30 +533,11 @@\n     }\n \n     /// Confere a assinatura de autoridade e a correspondência do KeyId com a chave pública esperada.\n     ///\n     /// # Errors\n     /// Retorna [`EventError::Invalid`] se o evento não contiver autoridade ou a chave divergir,\n     /// ou erro criptográfico caso a assinatura não verifique no domínio `logos/sig/event/v1\\0`.\n     pub fn verify_authority(&self, public_key: &PublicKey) -> Result<(), EventError> {\n-        let authority = match self.authority() {\n-            Some(auth) => auth,\n-            None => {\n-                return Err(EventError::Invalid(\n-                    \"event body does not have authority signature\",\n-                ));\n-            }\n-        };\n-\n-        let expected_key_id = public_key.key_id()?;\n-        if authority.key != expected_key_id {\n-            return Err(EventError::Invalid(\"authority key mismatch\"));\n-        }\n-\n-        let message_bytes = self\n-            .authority_message()?\n-            .ok_or(EventError::Invalid(\"missing authority payload\"))?;\n-\n-        logos_crypto::verify::<Event>(&message_bytes, &authority.sig, public_key)?;\n-        Ok(())\n+        Ok(()) /* ~ changed by cargo-mutants ~ */\n     }\n }\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::verify_authority",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 561
+        },
+        "start": {
+          "column": 5,
+          "line": 535
+        }
+      }
+    },
+    "genre": "FnValue",
+    "name": "crates/logos-ledger/src/event_body.rs:541:9: replace EventBody::verify_authority -> Result<(), EventError> with Ok(())",
+    "package": "logos-ledger",
+    "replacement": "Ok(())",
+    "span": {
+      "end": {
+        "column": 15,
+        "line": 560
+      },
+      "start": {
+        "column": 9,
+        "line": 541
+      }
+    }
+  },
+  {
+    "diff": "--- crates/logos-ledger/src/event_body.rs\n+++ replace != with == in EventBody::verify_authority\n@@ -543,17 +543,17 @@\n             None => {\n                 return Err(EventError::Invalid(\n                     \"event body does not have authority signature\",\n                 ));\n             }\n         };\n \n         let expected_key_id = public_key.key_id()?;\n-        if authority.key != expected_key_id {\n+        if authority.key == /* ~ changed by cargo-mutants ~ */ expected_key_id {\n             return Err(EventError::Invalid(\"authority key mismatch\"));\n         }\n \n         let message_bytes = self\n             .authority_message()?\n             .ok_or(EventError::Invalid(\"missing authority payload\"))?;\n \n         logos_crypto::verify::<Event>(&message_bytes, &authority.sig, public_key)?;\n",
+    "file": "crates/logos-ledger/src/event_body.rs",
+    "function": {
+      "function_name": "EventBody::verify_authority",
+      "return_type": "-> Result<(), EventError>",
+      "span": {
+        "end": {
+          "column": 6,
+          "line": 561
+        },
+        "start": {
+          "column": 5,
+          "line": 535
+        }
+      }
+    },
+    "genre": "BinaryOperator",
+    "name": "crates/logos-ledger/src/event_body.rs:551:26: replace != with == in EventBody::verify_authority",
+    "package": "logos-ledger",
+    "replacement": "==",
+    "span": {
+      "end": {
+        "column": 28,
+        "line": 551
+      },
+      "start": {
+        "column": 26,
+        "line": 551
+      }
+    }
+  }
+]

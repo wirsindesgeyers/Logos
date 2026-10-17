@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -397,17 +397,17 @@
+                         return Err(EventError::Invalid("used must be a subset of cited"));
+                     }
+                 }
+                 match consistency {
+                     Consistency::Witness {
+                         check: witness_check,
+                         ..
+                     } => {
+-                        if witness_check.obligation != check.obligation {
++                        if witness_check.obligation == /* ~ changed by cargo-mutants ~ */ check.obligation {
+                             return Err(EventError::Invalid(
+                                 "Consistency Witness obligation must match main check",
+                             ));
+                         }
+                     }
+                     Consistency::Unknown {
+                         check: Some(unknown_check),
+                     } => {

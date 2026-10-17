@@ -1,0 +1,42 @@
+--- crates/logos-ledger/src/event.rs
++++ replace Event::verify -> Result<(), EventError> with Ok(())
+@@ -179,38 +179,17 @@
+         })
+     }
+ 
+     /// Confere estrutura, KeyId e assinatura externa contra chave confiada pelo caller.
+     ///
+     /// # Errors
+     /// Não corresponde a chave/assinatura esperada, estrutura ou limite inválido.
+     pub fn verify(&self, public_key: &PublicKey) -> Result<(), EventError> {
+-        header(self.seq, self.epoch, self.prev, &self.body, self.kernel_key)?;
+-        if public_key.key_id()? != self.kernel_key {
+-            return Err(EventError::Invalid("kernel KeyId mismatch"));
+-        }
+-        let unsigned = Value::Array(Array::new(fields(
+-            self.seq,
+-            self.epoch,
+-            self.prev,
+-            &self.body,
+-            self.kernel_key,
+-        )?)?);
+-        let size = encoded_size(&unsigned)?;
+-        if size
+-            .checked_add(encoded_size(&self.sig.to_value()?)?)
+-            .is_none_or(|size| size > MAX_EVENT_BYTES)
+-        {
+-            return Err(EventError::Limit("wire bytes"));
+-        }
+-        let mut bytes = Vec::with_capacity(size);
+-        unsigned.encode_into(&mut bytes);
+-        logos_crypto::verify::<Event>(&bytes, &self.sig, public_key)?;
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Decodifica bytes completos, conferindo limite antes de materializar Value.
+     /// Não verifica assinatura ou proveniência.
+     ///
+     /// # Errors
+     /// Formato/limites/invariantes inválidos; bytes sobrando não são ignorados.
+     pub fn decode(bytes: &[u8]) -> Result<Self, EventError> {

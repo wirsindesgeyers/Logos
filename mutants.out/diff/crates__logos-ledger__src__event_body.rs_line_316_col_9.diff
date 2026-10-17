@@ -1,0 +1,33 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace Consistency::validate -> Result<(), EventError> with Ok(())
+@@ -308,29 +308,17 @@
+             return Err(EventError::Limit("check reason text exceeds 64 KiB"));
+         }
+         Ok(())
+     }
+ }
+ 
+ impl Consistency {
+     pub(crate) fn validate(&self) -> Result<(), EventError> {
+-        match self {
+-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {
+-                return Err(EventError::Invalid("Witness requires Accepted"));
+-            }
+-            Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {
+-                return Err(EventError::Invalid("Unknown cannot contain Accepted"));
+-            }
+-            _ => {}
+-        }
+-        match self {
+-            Self::Witness { check, .. } | Self::Unknown { check: Some(check) } => check.validate(),
+-            Self::Unknown { check: None } => Ok(()),
+-        }
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl EventBody {
+     /// Retorna a tag numérica normatizada da variante (`spec/events.md` §3).
+     #[must_use]
+     pub const fn tag(&self) -> u64 {
+         match self {

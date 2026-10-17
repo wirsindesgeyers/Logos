@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -417,17 +417,17 @@
+                             ));
+                         }
+                     }
+                     Consistency::Unknown { check: None } => {}
+                 }
+             }
+             Self::Refuted { check, .. } => {
+                 check.validate()?;
+-                if check.outcome != CheckOutcome::Accepted {
++                if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted {
+                     return Err(EventError::Invalid(
+                         "Refuted check outcome must be Accepted",
+                     ));
+                 }
+             }
+             Self::UnknownRecorded { check, machine } => {
+                 check.validate()?;
+                 if !matches!(check.outcome, CheckOutcome::Unknown(_)) {

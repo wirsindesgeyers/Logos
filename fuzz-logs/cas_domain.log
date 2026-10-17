@@ -1,0 +1,20 @@
+   Compiling logos-fuzz v0.0.0 (/home/kauan/Documentos/LOGOS/fuzz)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1.53s
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.10s
+     Running `target/x86_64-unknown-linux-gnu/release/cas_domain -artifact_prefix=/home/kauan/Documentos/LOGOS/fuzz/artifacts/cas_domain/ -max_total_time=60 /home/kauan/Documentos/LOGOS/fuzz/corpus/cas_domain`
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 2860385732
+INFO: Loaded 1 modules   (518 inline 8-bit counters): 518 [0x55deff5445b0, 0x55deff5447b6), 
+INFO: Loaded 1 PC tables (518 PCs): 518 [0x55deff5447b8,0x55deff546818), 
+INFO:       33 files found in /home/kauan/Documentos/LOGOS/fuzz/corpus/cas_domain
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: seed corpus: files: 33 min: 1b max: 21b total: 348b rss: 32Mb
+#34	INITED cov: 96 ft: 136 corp: 29/344b exec/s: 0 rss: 33Mb
+#115	NEW    cov: 96 ft: 137 corp: 30/345b lim: 21 exec/s: 0 rss: 34Mb L: 1/21 MS: 1 ChangeBit-
+#32768	pulse  cov: 96 ft: 137 corp: 30/345b lim: 341 exec/s: 10922 rss: 51Mb
+#65536	pulse  cov: 96 ft: 137 corp: 30/345b lim: 670 exec/s: 13107 rss: 65Mb
+#131072	pulse  cov: 96 ft: 137 corp: 30/345b lim: 1320 exec/s: 13107 rss: 94Mb
+#262144	pulse  cov: 96 ft: 137 corp: 30/345b lim: 2622 exec/s: 13107 rss: 152Mb
+#524288	pulse  cov: 96 ft: 137 corp: 30/345b lim: 4096 exec/s: 13107 rss: 270Mb
+#798945	DONE   cov: 96 ft: 137 corp: 30/345b lim: 4096 exec/s: 13097 rss: 392Mb
+Done 798945 runs in 61 second(s)

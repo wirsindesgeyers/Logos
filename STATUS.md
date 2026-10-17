@@ -2,8 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-17 · referência local `origin/main` registrada em `7c5e8a3`; os commits seguintes
-> (`git log origin/main..HEAD`) ainda **não foram enviados**.
+> Última atualização: 2026-10-17 · sincronizado com `origin/main` após envio dos commits locais até a Etapa 4.7.
 
 ## Resumo
 
@@ -1415,3 +1414,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Ambos os critérios4.7 demonstrados localmente. CI/ARM/fuzz longo e segundo
   host4.5 continuam pendentes. Memória/dois fontes fuzz/logs/mutants.out
   preexistentes preservados fora do commit. Sem push; próximo5.1.
+- 2026-10-17 — Sincronização completa com `origin/main`: envio dos commits acumulados (Etapas 0.5 a 4.7), proposta de memória de longo prazo (ADR 0008), formatação de fontes de fuzz e logs de verificação/mutantes persistidos. Próximo: Etapa 5.1 (typestate de claims).

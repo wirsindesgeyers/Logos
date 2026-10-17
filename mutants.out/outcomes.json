@@ -1,0 +1,1219 @@
+{
+  "outcomes": [
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event.rs:187:9: replace Event::verify -> Result<(), EventError> with Ok(())",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event.rs",
+          "function": {
+            "function_name": "Event::verify",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 182,
+                "column": 5
+              },
+              "end": {
+                "line": 209,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 187,
+              "column": 9
+            },
+            "end": {
+              "line": 208,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event.rs_line_187_col_9.log",
+      "diff_path": "diff/crates__logos-ledger__src__event.rs_line_187_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 41.297440301,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.186983102,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event.rs:188:33: replace != with == in Event::verify",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event.rs",
+          "function": {
+            "function_name": "Event::verify",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 182,
+                "column": 5
+              },
+              "end": {
+                "line": 209,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 188,
+              "column": 33
+            },
+            "end": {
+              "line": 188,
+              "column": 35
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event.rs_line_188_col_33.log",
+      "diff_path": "diff/crates__logos-ledger__src__event.rs_line_188_col_33.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 39.9072002,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 18.978378419,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:316:9: replace Consistency::validate -> Result<(), EventError> with Ok(())",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 316,
+              "column": 9
+            },
+            "end": {
+              "line": 328,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_316_col_9.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_316_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.6853834800000005,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.925723149,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with true in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 317,
+              "column": 44
+            },
+            "end": {
+              "line": 317,
+              "column": 83
+            }
+          },
+          "replacement": "true",
+          "genre": "MatchArmGuard"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_317_col_44.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_317_col_44.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.38367706,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 14.970909173999999,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with true in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 320,
+              "column": 53
+            },
+            "end": {
+              "line": 320,
+              "column": 92
+            }
+          },
+          "replacement": "true",
+          "genre": "MatchArmGuard"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_320_col_53.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_320_col_53.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 4.6038119,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.715186595,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with false in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 317,
+              "column": 44
+            },
+            "end": {
+              "line": 317,
+              "column": 83
+            }
+          },
+          "replacement": "false",
+          "genre": "MatchArmGuard"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_317_col_44_001.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_317_col_44_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.769551054,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 24.846042561,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with false in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 320,
+              "column": 53
+            },
+            "end": {
+              "line": 320,
+              "column": 92
+            }
+          },
+          "replacement": "false",
+          "genre": "MatchArmGuard"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_320_col_53_001.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_320_col_53_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.469172022,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 23.354083983,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:317:58: replace != with == in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 317,
+              "column": 58
+            },
+            "end": {
+              "line": 317,
+              "column": 60
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_317_col_58.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_317_col_58.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.673117898,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 13.500338641,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:320:67: replace == with != in Consistency::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "Consistency::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 315,
+                "column": 5
+              },
+              "end": {
+                "line": 329,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 320,
+              "column": 67
+            },
+            "end": {
+              "line": 320,
+              "column": 69
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_320_col_67.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_320_col_67.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.561690338,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 5.135830215,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:373:36: replace != with == in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 373,
+              "column": 36
+            },
+            "end": {
+              "line": 373,
+              "column": 38
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_373_col_36.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_373_col_36.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.720557072,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 1.3551038819999999,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:388:34: replace != with == in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 388,
+              "column": 34
+            },
+            "end": {
+              "line": 388,
+              "column": 36
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_388_col_34.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_388_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.9336628769999997,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.816716568,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:371:9: replace EventBody::validate -> Result<(), EventError> with Ok(())",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 371,
+              "column": 9
+            },
+            "end": {
+              "line": 465,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_371_col_9.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_371_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 6.417829002,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 26.998204627,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:414:53: replace != with == in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 414,
+              "column": 53
+            },
+            "end": {
+              "line": 414,
+              "column": 55
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_414_col_53.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_414_col_53.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.368019815,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.614665918,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:405:53: replace != with == in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 405,
+              "column": 53
+            },
+            "end": {
+              "line": 405,
+              "column": 55
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_405_col_53.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_405_col_53.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.628986387,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 14.388127312,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:425:34: replace != with == in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 425,
+              "column": 34
+            },
+            "end": {
+              "line": 425,
+              "column": 36
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_425_col_34.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_425_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 6.135927339,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 6.189180857,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:433:20: delete ! in EventBody::validate",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::validate",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 5
+              },
+              "end": {
+                "line": 466,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 433,
+              "column": 20
+            },
+            "end": {
+              "line": 433,
+              "column": 21
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_433_col_20.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_433_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 6.802995985,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 7.583408275,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:541:9: replace EventBody::verify_authority -> Result<(), EventError> with Ok(())",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::verify_authority",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 535,
+                "column": 5
+              },
+              "end": {
+                "line": 561,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 541,
+              "column": 9
+            },
+            "end": {
+              "line": 560,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_541_col_9.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_541_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 3.724069768,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 23.478699241,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/logos-ledger/src/event_body.rs:551:26: replace != with == in EventBody::verify_authority",
+          "package": "logos-ledger",
+          "file": "crates/logos-ledger/src/event_body.rs",
+          "function": {
+            "function_name": "EventBody::verify_authority",
+            "return_type": "-> Result<(), EventError>",
+            "span": {
+              "start": {
+                "line": 535,
+                "column": 5
+              },
+              "end": {
+                "line": 561,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 551,
+              "column": 26
+            },
+            "end": {
+              "line": 551,
+              "column": 28
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__logos-ledger__src__event_body.rs_line_551_col_26.log",
+      "diff_path": "diff/crates__logos-ledger__src__event_body.rs_line_551_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.614570093,
+          "process_status": "Success",
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=logos-ledger@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 20.862728412,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=logos-ledger@0.0.0",
+            "--test",
+            "events"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 18,
+  "missed": 0,
+  "caught": 18,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-10-06T02:46:11.78546953Z",
+  "end_time": "2026-10-06T02:49:35.677058529Z",
+  "cargo_mutants_version": "27.1.0"
+}

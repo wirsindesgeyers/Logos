@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace match guard check.outcome != CheckOutcome::Accepted with true in Consistency::validate
+@@ -309,17 +309,17 @@
+         }
+         Ok(())
+     }
+ }
+ 
+ impl Consistency {
+     pub(crate) fn validate(&self) -> Result<(), EventError> {
+         match self {
+-            Self::Witness { check, .. } if check.outcome != CheckOutcome::Accepted => {
++            Self::Witness { check, .. } if true /* ~ changed by cargo-mutants ~ */ => {
+                 return Err(EventError::Invalid("Witness requires Accepted"));
+             }
+             Self::Unknown { check: Some(check) } if check.outcome == CheckOutcome::Accepted => {
+                 return Err(EventError::Invalid("Unknown cannot contain Accepted"));
+             }
+             _ => {}
+         }
+         match self {

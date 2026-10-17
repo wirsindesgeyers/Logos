@@ -1,0 +1,37 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling logos-fuzz v0.0.0 (/home/kauan/Documentos/LOGOS/fuzz)
+    Finished `release` profile [optimized + debuginfo] target(s) in 41.50s
+    Blocking waiting for file lock on package cache
+    Finished `release` profile [optimized + debuginfo] target(s) in 1.48s
+     Running `target/x86_64-unknown-linux-gnu/release/model_eval -artifact_prefix=/home/kauan/Documentos/LOGOS/fuzz/artifacts/model_eval/ -max_total_time=60 /home/kauan/Documentos/LOGOS/fuzz/corpus/model_eval`
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 4162461216
+INFO: Loaded 1 modules   (15712 inline 8-bit counters): 15712 [0x555d31b167f0, 0x555d31b1a550), 
+INFO: Loaded 1 PC tables (15712 PCs): 15712 [0x555d31b1a550,0x555d31b57b50), 
+INFO:      426 files found in /home/kauan/Documentos/LOGOS/fuzz/corpus/model_eval
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: seed corpus: files: 426 min: 1b max: 90b total: 8447b rss: 36Mb
+#427	INITED cov: 1576 ft: 4946 corp: 334/6681b exec/s: 47 rss: 75Mb
+#512	pulse  cov: 1576 ft: 4946 corp: 334/6681b lim: 90 exec/s: 39 rss: 81Mb
+#618	REDUCE cov: 1576 ft: 4946 corp: 334/6680b lim: 96 exec/s: 41 rss: 85Mb L: 29/90 MS: 1 EraseBytes-
+#869	NEW    cov: 1576 ft: 4947 corp: 335/6770b lim: 96 exec/s: 41 rss: 98Mb L: 90/90 MS: 1 InsertRepeatedBytes-
+#1015	REDUCE cov: 1576 ft: 4947 corp: 335/6768b lim: 96 exec/s: 39 rss: 108Mb L: 35/90 MS: 1 EraseBytes-
+#1024	pulse  cov: 1576 ft: 4947 corp: 335/6768b lim: 96 exec/s: 39 rss: 108Mb
+#1262	REDUCE cov: 1576 ft: 4947 corp: 335/6765b lim: 96 exec/s: 43 rss: 122Mb L: 33/90 MS: 2 CopyPart-EraseBytes-
+#2048	pulse  cov: 1576 ft: 4947 corp: 335/6765b lim: 102 exec/s: 55 rss: 167Mb
+#2184	NEW    cov: 1576 ft: 4948 corp: 336/6822b lim: 102 exec/s: 54 rss: 173Mb L: 57/90 MS: 2 CMP-CMP- DE: "\001\000"-"\377\000\031="-
+#2195	NEW    cov: 1576 ft: 4950 corp: 337/6856b lim: 102 exec/s: 54 rss: 174Mb L: 34/90 MS: 1 InsertRepeatedBytes-
+#2437	REDUCE cov: 1576 ft: 4950 corp: 337/6847b lim: 102 exec/s: 54 rss: 188Mb L: 60/90 MS: 2 ShuffleBytes-EraseBytes-
+#2812	NEW    cov: 1576 ft: 4951 corp: 338/6943b lim: 102 exec/s: 56 rss: 210Mb L: 96/96 MS: 5 InsertRepeatedBytes-CrossOver-ChangeBinInt-CopyPart-ChangeByte-
+#2871	NEW    cov: 1576 ft: 4952 corp: 339/6977b lim: 102 exec/s: 57 rss: 214Mb L: 34/96 MS: 4 ChangeBinInt-InsertByte-PersAutoDict-ChangeBinInt- DE: "\377\000\031="-
+#3314	REDUCE cov: 1576 ft: 4952 corp: 339/6976b lim: 102 exec/s: 59 rss: 241Mb L: 18/96 MS: 3 ChangeByte-CrossOver-EraseBytes-
+#3345	NEW    cov: 1576 ft: 4954 corp: 340/7012b lim: 102 exec/s: 59 rss: 243Mb L: 36/96 MS: 1 CopyPart-
+#3451	REDUCE cov: 1576 ft: 4954 corp: 340/7011b lim: 102 exec/s: 59 rss: 250Mb L: 32/96 MS: 1 EraseBytes-
+#3659	REDUCE cov: 1576 ft: 4954 corp: 340/7009b lim: 102 exec/s: 62 rss: 262Mb L: 88/96 MS: 3 CrossOver-CrossOver-InsertRepeatedBytes-
+#3909	DONE   cov: 1576 ft: 4954 corp: 340/7009b lim: 102 exec/s: 64 rss: 277Mb
+###### Recommended dictionary. ######
+"\001\000" # Uses: 82
+"\377\000\031=" # Uses: 81
+###### End of recommended dictionary. ######
+Done 3909 runs in 61 second(s)

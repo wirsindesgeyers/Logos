@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -406,17 +406,17 @@
+                             return Err(EventError::Invalid(
+                                 "Consistency Witness obligation must match main check",
+                             ));
+                         }
+                     }
+                     Consistency::Unknown {
+                         check: Some(unknown_check),
+                     } => {
+-                        if unknown_check.obligation != check.obligation {
++                        if unknown_check.obligation == /* ~ changed by cargo-mutants ~ */ check.obligation {
+                             return Err(EventError::Invalid(
+                                 "Consistency Unknown obligation must match main check",
+                             ));
+                         }
+                     }
+                     Consistency::Unknown { check: None } => {}
+                 }
+             }

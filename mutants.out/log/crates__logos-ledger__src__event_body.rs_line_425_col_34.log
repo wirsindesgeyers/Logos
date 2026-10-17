@@ -1,0 +1,169 @@
+
+*** crates/logos-ledger/src/event_body.rs:425:34: replace != with == in EventBody::validate
+
+*** mutation diff:
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -417,17 +417,17 @@
+                             ));
+                         }
+                     }
+                     Consistency::Unknown { check: None } => {}
+                 }
+             }
+             Self::Refuted { check, .. } => {
+                 check.validate()?;
+-                if check.outcome != CheckOutcome::Accepted {
++                if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted {
+                     return Err(EventError::Invalid(
+                         "Refuted check outcome must be Accepted",
+                     ));
+                 }
+             }
+             Self::UnknownRecorded { check, machine } => {
+                 check.validate()?;
+                 if !matches!(check.outcome, CheckOutcome::Unknown(_)) {
+
+
+*** /home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo test --no-run --verbose --package=logos-ledger@0.0.0
+       Fresh version_check v0.9.5
+       Fresh typenum v1.20.1
+       Fresh unicode-ident v1.0.26
+       Fresh semver v1.0.28
+       Fresh tinyvec v1.13.3
+       Fresh cpufeatures v0.2.17
+       Fresh cfg-if v1.0.5
+       Fresh generic-array v0.14.7
+       Fresh rustc_version v0.4.1
+       Fresh unicode-normalization v0.1.24
+       Fresh subtle v2.6.1
+       Fresh signature v2.2.0
+       Fresh proc-macro2 v1.0.107
+       Fresh crypto-common v0.1.7
+       Fresh block-buffer v0.10.4
+       Fresh logos-canon v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-canon)
+       Fresh ed25519 v2.2.3
+       Fresh quote v1.0.47
+       Fresh digest v0.10.7
+       Fresh logos-core v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-core)
+       Fresh zmij v1.0.23
+       Fresh serde_core v1.0.229
+       Fresh itoa v1.0.18
+       Fresh memchr v2.8.3
+       Fresh syn v2.0.119
+       Fresh sha2 v0.10.9
+       Fresh serde_json v1.0.151
+       Fresh curve25519-dalek-derive v0.1.1
+       Fresh curve25519-dalek v4.1.3
+       Fresh ed25519-dalek v2.2.0
+       Fresh logos-crypto v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-crypto)
+       Fresh logos-air v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-air)
+       Fresh logos-obligation v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-obligation)
+       Dirty logos-ledger v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-ledger): the file `crates/logos-ledger/src/event_body.rs` has changed (1791254933.951070637s, 6s after last build at 1791254927.052016813s)
+   Compiling logos-ledger v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-ledger)
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name logos_ledger --edition=2024 crates/logos-ledger/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=be61eaf404361e58 -C extra-filename=-225f489643be4f9d --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rlib --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rlib --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rlib --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rlib --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rlib --extern serde_json=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/libserde_json-a13cdc6166da4c6b.rlib`
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name logos_ledger --edition=2024 crates/logos-ledger/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=df2429c6b48f975a -C extra-filename=-0474cc56a99a4e9c --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rmeta --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rmeta --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rmeta --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rmeta --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rmeta`
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name events_smoke --edition=2024 crates/logos-ledger/examples/events_smoke.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=8960aa2da99a11a5 -C extra-filename=-e7ef9fc08515bd22 --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/examples -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rlib --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rlib --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rlib --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rlib --extern logos_ledger=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_ledger-0474cc56a99a4e9c.rlib --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rlib --extern serde_json=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/libserde_json-a13cdc6166da4c6b.rlib`
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name cas_vectors --edition=2024 crates/logos-ledger/tests/cas_vectors.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=ee40e56766ea45d0 -C extra-filename=-61bc772b0f3ffc32 --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rlib --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rlib --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rlib --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rlib --extern logos_ledger=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_ledger-0474cc56a99a4e9c.rlib --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rlib --extern serde_json=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/libserde_json-a13cdc6166da4c6b.rlib`
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name events --edition=2024 crates/logos-ledger/tests/events.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=6ef027572d244805 -C extra-filename=-0ed459fb7e0ca490 --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rlib --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rlib --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rlib --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rlib --extern logos_ledger=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_ledger-0474cc56a99a4e9c.rlib --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rlib --extern serde_json=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/libserde_json-a13cdc6166da4c6b.rlib`
+     Running `/home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name cas --edition=2024 crates/logos-ledger/tests/cas.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::all' --forbid=unsafe_code --warn=missing_docs --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=ad00ce6bcc1ec541 -C extra-filename=-3b81b8803e387cd8 --out-dir /tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps -L dependency=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps --extern logos_air=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_air-d9030b1447b27663.rlib --extern logos_canon=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_canon-d192d01b6751fab0.rlib --extern logos_core=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_core-2c4408d446c1dc81.rlib --extern logos_crypto=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_crypto-05875e698aa85924.rlib --extern logos_ledger=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_ledger-0474cc56a99a4e9c.rlib --extern logos_obligation=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/liblogos_obligation-2b7e1c763d1efb19.rlib --extern serde_json=/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/libserde_json-a13cdc6166da4c6b.rlib`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.07s
+  Executable `/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/logos_ledger-225f489643be4f9d`
+  Executable `/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/cas-3b81b8803e387cd8`
+  Executable `/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/cas_vectors-61bc772b0f3ffc32`
+  Executable `/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/events-0ed459fb7e0ca490`
+
+*** result: Success
+
+*** /home/kauan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo test --verbose --package=logos-ledger@0.0.0 --test events
+       Fresh version_check v0.9.5
+       Fresh typenum v1.20.1
+       Fresh unicode-ident v1.0.26
+       Fresh semver v1.0.28
+       Fresh cpufeatures v0.2.17
+       Fresh cfg-if v1.0.5
+       Fresh generic-array v0.14.7
+       Fresh rustc_version v0.4.1
+       Fresh tinyvec v1.13.3
+       Fresh signature v2.2.0
+       Fresh subtle v2.6.1
+       Fresh proc-macro2 v1.0.107
+       Fresh crypto-common v0.1.7
+       Fresh block-buffer v0.10.4
+       Fresh unicode-normalization v0.1.24
+       Fresh ed25519 v2.2.3
+       Fresh quote v1.0.47
+       Fresh digest v0.10.7
+       Fresh logos-canon v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-canon)
+       Fresh syn v2.0.119
+       Fresh sha2 v0.10.9
+       Fresh logos-core v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-core)
+       Fresh zmij v1.0.23
+       Fresh memchr v2.8.3
+       Fresh curve25519-dalek-derive v0.1.1
+       Fresh serde_core v1.0.229
+       Fresh itoa v1.0.18
+       Fresh curve25519-dalek v4.1.3
+       Fresh serde_json v1.0.151
+       Fresh ed25519-dalek v2.2.0
+       Fresh logos-crypto v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-crypto)
+       Fresh logos-air v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-air)
+       Fresh logos-obligation v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-obligation)
+       Fresh logos-ledger v0.0.0 (/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/crates/logos-ledger)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.21s
+     Running `/tmp/cargo-mutants-LOGOS-f0eXhf.tmp/target/debug/deps/events-0ed459fb7e0ca490`
+
+running 15 tests
+test test_invariants_cited_and_used_refs ... ok
+test test_invariants_consistency_rules ... ok
+test decoder_and_encoder_preserve_outcome_boundaries ... FAILED
+test test_invariants_rejected_and_invalid_outcomes ... FAILED
+test test_invariants_envelope_rules ... ok
+test test_limits_and_bounds_enforcement ... ok
+test test_tainted_text_preserves_non_nfc_and_roundtrips ... ok
+test unknown_versions_tags_routes_and_extra_fields_are_not_accepted ... ok
+test test_extra_trailing_bytes_and_invalid_formats ... ok
+test test_kill_key_id_mutant_cross_signer ... ok
+test test_kill_verify_crypto_mutant ... ok
+test presentation_fields_have_symmetric_inclusive_limits ... ok
+test test_all_canonical_vectors_decode_encode_verify ... FAILED
+test authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature ... ok
+test every_field_of_every_body_is_signature_bound ... FAILED
+
+failures:
+
+---- decoder_and_encoder_preserve_outcome_boundaries stdout ----
+
+thread 'decoder_and_encoder_preserve_outcome_boundaries' (2322394) panicked at crates/logos-ledger/tests/events.rs:731:13:
+assertion `left == right` failed
+  left: false
+ right: true
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- test_invariants_rejected_and_invalid_outcomes stdout ----
+
+thread 'test_invariants_rejected_and_invalid_outcomes' (2322402) panicked at crates/logos-ledger/tests/events.rs:405:5:
+assertion failed: matches!(body_refuted_rej.validate(), Err(EventError::Invalid(_)))
+
+---- test_all_canonical_vectors_decode_encode_verify stdout ----
+
+thread 'test_all_canonical_vectors_decode_encode_verify' (2322397) panicked at crates/logos-ledger/tests/events.rs:79:33:
+vector Refuted decode failed: Canon(WrongType)
+
+---- every_field_of_every_body_is_signature_bound stdout ----
+
+thread 'every_field_of_every_body_is_signature_bound' (2322395) panicked at crates/logos-ledger/tests/events.rs:320:42:
+called `Result::unwrap()` on an `Err` value: Canon(WrongType)
+
+
+failures:
+    decoder_and_encoder_preserve_outcome_boundaries
+    every_field_of_every_body_is_signature_bound
+    test_all_canonical_vectors_decode_encode_verify
+    test_invariants_rejected_and_invalid_outcomes
+
+test result: FAILED. 11 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.89s
+
+error: test failed, to rerun pass `-p logos-ledger --test events`
+
+*** result: Failure(101)

@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ delete ! in EventBody::validate
+@@ -425,17 +425,17 @@
+                 if check.outcome != CheckOutcome::Accepted {
+                     return Err(EventError::Invalid(
+                         "Refuted check outcome must be Accepted",
+                     ));
+                 }
+             }
+             Self::UnknownRecorded { check, machine } => {
+                 check.validate()?;
+-                if !matches!(check.outcome, CheckOutcome::Unknown(_)) {
++                if  /* ~ changed by cargo-mutants ~ */matches!(check.outcome, CheckOutcome::Unknown(_)) {
+                     return Err(EventError::Invalid(
+                         "UnknownRecorded check outcome must be Unknown",
+                     ));
+                 }
+                 validate_text(machine, "machine text exceeds 64 KiB")?;
+             }
+             Self::AssumptionDeclared { formula, scope, .. } => {
+                 validate_formula(formula)?;

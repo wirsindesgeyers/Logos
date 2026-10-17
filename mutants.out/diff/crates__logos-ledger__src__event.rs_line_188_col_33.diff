@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event.rs
++++ replace != with == in Event::verify
+@@ -180,17 +180,17 @@
+     }
+ 
+     /// Confere estrutura, KeyId e assinatura externa contra chave confiada pelo caller.
+     ///
+     /// # Errors
+     /// Não corresponde a chave/assinatura esperada, estrutura ou limite inválido.
+     pub fn verify(&self, public_key: &PublicKey) -> Result<(), EventError> {
+         header(self.seq, self.epoch, self.prev, &self.body, self.kernel_key)?;
+-        if public_key.key_id()? != self.kernel_key {
++        if public_key.key_id()? == /* ~ changed by cargo-mutants ~ */ self.kernel_key {
+             return Err(EventError::Invalid("kernel KeyId mismatch"));
+         }
+         let unsigned = Value::Array(Array::new(fields(
+             self.seq,
+             self.epoch,
+             self.prev,
+             &self.body,
+             self.kernel_key,

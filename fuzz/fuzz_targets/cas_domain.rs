@@ -8,12 +8,21 @@ use cas_domain::{DOMAINS, resolve};
 fuzz_target!(|data: &[u8]| {
     if let Some(index) = resolve(data) {
         assert_eq!(DOMAINS[index].tag, data);
-        assert!(logos_crypto::tags::RESERVED.iter().any(|(_, tag, _)| *tag == data));
+        assert!(
+            logos_crypto::tags::RESERVED
+                .iter()
+                .any(|(_, tag, _)| *tag == data)
+        );
     }
     for (index, entry) in DOMAINS.iter().enumerate() {
         assert_eq!(resolve(entry.tag), Some(index));
         assert!(!entry.directory.is_empty());
-        assert!(entry.directory.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-'));
+        assert!(
+            entry
+                .directory
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-')
+        );
         for other in &DOMAINS[index + 1..] {
             assert_ne!(entry.tag, other.tag);
             assert_ne!(entry.directory, other.directory);

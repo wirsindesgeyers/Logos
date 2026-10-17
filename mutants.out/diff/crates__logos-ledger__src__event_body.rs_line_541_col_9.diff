@@ -1,0 +1,34 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace EventBody::verify_authority -> Result<(), EventError> with Ok(())
+@@ -533,30 +533,11 @@
+     }
+ 
+     /// Confere a assinatura de autoridade e a correspondência do KeyId com a chave pública esperada.
+     ///
+     /// # Errors
+     /// Retorna [`EventError::Invalid`] se o evento não contiver autoridade ou a chave divergir,
+     /// ou erro criptográfico caso a assinatura não verifique no domínio `logos/sig/event/v1\0`.
+     pub fn verify_authority(&self, public_key: &PublicKey) -> Result<(), EventError> {
+-        let authority = match self.authority() {
+-            Some(auth) => auth,
+-            None => {
+-                return Err(EventError::Invalid(
+-                    "event body does not have authority signature",
+-                ));
+-            }
+-        };
+-
+-        let expected_key_id = public_key.key_id()?;
+-        if authority.key != expected_key_id {
+-            return Err(EventError::Invalid("authority key mismatch"));
+-        }
+-
+-        let message_bytes = self
+-            .authority_message()?
+-            .ok_or(EventError::Invalid("missing authority payload"))?;
+-
+-        logos_crypto::verify::<Event>(&message_bytes, &authority.sig, public_key)?;
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ }

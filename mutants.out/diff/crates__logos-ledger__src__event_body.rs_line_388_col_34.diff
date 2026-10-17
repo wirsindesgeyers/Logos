@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -380,17 +380,17 @@
+             Self::Verified {
+                 check,
+                 cited,
+                 used,
+                 consistency,
+             } => {
+                 check.validate()?;
+                 consistency.validate()?;
+-                if check.outcome != CheckOutcome::Accepted {
++                if check.outcome == /* ~ changed by cargo-mutants ~ */ CheckOutcome::Accepted {
+                     return Err(EventError::Invalid(
+                         "Verified check outcome must be Accepted",
+                     ));
+                 }
+                 validate_strictly_sorted_refs(cited)?;
+                 validate_strictly_sorted_refs(used)?;
+                 for u in used {
+                     if cited.binary_search(u).is_err() {

@@ -1,0 +1,21 @@
+--- crates/logos-ledger/src/event_body.rs
++++ replace != with == in EventBody::validate
+@@ -365,17 +365,17 @@
+     /// Valida invariantes estruturais, limites e consistência sem sort-check de lógica.
+     ///
+     /// # Errors
+     /// Retorna [`EventError::Invalid`] para inconsistências lógicas de estado ou ordenação,
+     /// ou [`EventError::Limit`] para violações de limites inclusivos de tamanho.
+     pub fn validate(&self) -> Result<(), EventError> {
+         match self {
+             Self::Genesis { ledger_version, .. } => {
+-                if *ledger_version != 1 {
++                if *ledger_version == /* ~ changed by cargo-mutants ~ */ 1 {
+                     return Err(EventError::Invalid("Genesis ledger_version must be 1"));
+                 }
+             }
+             Self::VocabPublished { .. } => {}
+             Self::Proposed { proposal, .. } => proposal.validate()?,
+             Self::ObligationCreated { .. } => {}
+             Self::Verified {
+                 check,

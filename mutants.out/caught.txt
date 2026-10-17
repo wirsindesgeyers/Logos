@@ -1,0 +1,18 @@
+crates/logos-ledger/src/event.rs:187:9: replace Event::verify -> Result<(), EventError> with Ok(())
+crates/logos-ledger/src/event.rs:188:33: replace != with == in Event::verify
+crates/logos-ledger/src/event_body.rs:316:9: replace Consistency::validate -> Result<(), EventError> with Ok(())
+crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with true in Consistency::validate
+crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with true in Consistency::validate
+crates/logos-ledger/src/event_body.rs:317:44: replace match guard check.outcome != CheckOutcome::Accepted with false in Consistency::validate
+crates/logos-ledger/src/event_body.rs:320:53: replace match guard check.outcome == CheckOutcome::Accepted with false in Consistency::validate
+crates/logos-ledger/src/event_body.rs:317:58: replace != with == in Consistency::validate
+crates/logos-ledger/src/event_body.rs:320:67: replace == with != in Consistency::validate
+crates/logos-ledger/src/event_body.rs:373:36: replace != with == in EventBody::validate
+crates/logos-ledger/src/event_body.rs:388:34: replace != with == in EventBody::validate
+crates/logos-ledger/src/event_body.rs:371:9: replace EventBody::validate -> Result<(), EventError> with Ok(())
+crates/logos-ledger/src/event_body.rs:414:53: replace != with == in EventBody::validate
+crates/logos-ledger/src/event_body.rs:405:53: replace != with == in EventBody::validate
+crates/logos-ledger/src/event_body.rs:425:34: replace != with == in EventBody::validate
+crates/logos-ledger/src/event_body.rs:433:20: delete ! in EventBody::validate
+crates/logos-ledger/src/event_body.rs:541:9: replace EventBody::verify_authority -> Result<(), EventError> with Ok(())
+crates/logos-ledger/src/event_body.rs:551:26: replace != with == in EventBody::verify_authority
