@@ -51,10 +51,12 @@ uma adição vazia deve ser validada. Não converter Rejected/Unknown em veredic
 Arestas de cada adição apontam aos hints validados. Deleções só desativam
 cláusulas para novos passos. Fecho iterativo da primeira vazia derivada produz
 IDs originais únicos e crescentes; inclui somente o ramo alcançável. Relatório
-expõe IDs somente quando Accepted. Não é um núcleo mínimo nem used_premises.
+expõe IDs somente quando Accepted, junto a h(CNF) e h(certificado inteiro).
+Não é um núcleo mínimo; projeção4.7 em [used-premises.md](used-premises.md).
 
 size_bytes limita soma CNF+prova antes do hash; steps cobra esses bytes mais
-CNF pelo hash, operações por literal/hint/consulta e fecho. Uma única execução
+CNF pelo hash, operações por literal/hint/consulta, fecho e hash do certificado
+aceito. Uma única execução
 StepMeter impede reinicialização por cláusula. mem_bytes contabiliza capacidades reservadas de
 cláusulas, literais, arestas, atribuição, marcação/pilha e saída; reservas são
 falíveis, contabilização monotônica e conservadora (sem restituição por deleção, crescimento geométrico).

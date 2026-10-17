@@ -293,6 +293,7 @@ dependencies = [
  "logos-core",
  "logos-crypto",
  "logos-ground",
+ "logos-obligation",
  "rustix",
 ]
 

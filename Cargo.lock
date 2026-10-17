@@ -314,6 +314,8 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-ground",
+ "logos-lrat",
  "logos-model",
  "logos-obligation",
  "rusqlite",
@@ -324,10 +326,12 @@ dependencies = [
 name = "logos-lrat"
 version = "0.0.0"
 dependencies = [
+ "logos-air",
  "logos-canon",
  "logos-core",
  "logos-crypto",
  "logos-ground",
+ "logos-obligation",
  "rustix",
  "serde_json",
 ]

@@ -35,7 +35,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 11549+747130=758679 LOC de correção, build-only64508;
+TCB atual Rust: 12004+747130=759134 LOC de correção, build-only64508;
 logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -147,6 +147,15 @@ ausência de Z3 exercitados. Métricas de bytes por O/camada emitidas no relató
 Verificação completa com selftest: VERIFY_OK, exit0;252 Python +25 TCB.
 CI remota ainda não observada.
 
+4.7: used_premises extrai referências do fecho aceito com suporte contextual
+por cláusula e vínculo h(O)/h(CNF)/h(certificado).13 regressões novas passaram,
+incluindo cinco citadas/duas usadas no índice real e CNF satisfatível quando
+falta a premissa necessária.14 mutações compiladas detectadas; fuzz oficial
+62502/5447 execuções em61s por alvo, exit0 sem crash. Metadados só em memória,
+nenhum formato/parser/pacote externo novo. TCB12004+747130=759134 LOC.
+Full ci/verify.sh --selftest: VERIFY_OK/exit0;252 Python +25 TCB.
+CI/ARM/fuzz longo continuam pendentes; nenhum kernel/gateway implementado.
+
 ## Etapas da Fase 0
 
 | Etapa | Estado | Evidência / pendência |
@@ -206,11 +215,17 @@ Roteiro em [plano da Fase 2](docs/plans/fase-2.md). Fase4 tem classificação, g
 | 4.4 Checker LRAT próprio | ✅ concluída localmente no corpus exigido | P2/RUP/deleções/fecho;200/200 provas e600/600 corrupções concordam com cake_lpr na4.5 (380.65s), sem filtro Rust.14 vetores Rust preservados; dois controles de perfil/recursos diferem no cake_lpr (duplicates/sparse), explicitados no ADR0031. [Plano](docs/plans/etapa-4.4.md). CI/ARM/fuzz longo pendentes. |
 | 4.5 Integração do cake_lpr | ⚠ implementada, falta rebuild em segundo host/CI | A/ADR0030 adotada; build estático fixado e rebuild x86_64 idêntico localmente; wrapper/registry/P2/isolamento e auditor3/3 com dois checkers.10 testes LRAT+1 auditor,11 mutantes e fuzz final2821026/61s passaram. Corpus200/600 concordou; dois controles manuais de perfil diferem. Verificação completa com selftest: VERIFY_OK, exit0. Primeiro critério aguarda segundo host; execução CI/ARM e fuzz longo pendentes. [Plano](docs/plans/etapa-4.5.md). |
 | 4.6 Produtor SAT | ✅ concluída localmente | [Plano](docs/plans/etapa-4.6.md)/ADR0032 e fonte CaDiCaL fixados.300/300 válidas,300/300 pares SAT e300 consistências aceitas;300 CNFs distintas/10 famílias e sete controles.25 testes Python novos; métricas por O/camada emitidas. Verificação completa com selftest: VERIFY_OK, exit0;252 Python +25 TCB. Nenhum runtime/dependência TCB alterado; CI remota pendente. |
-| 4.7 Dependências extraídas do certificado | ⏳ não iniciada | ProvenanceMap4.3, IDs originais usados4.4 e produtor real4.6 prontos. Próximo: mapear dependências com vínculo à CNF e analisar domain_support; eventos/kernel ficam na5.4. |
+| 4.7 Dependências extraídas do certificado | ✅ concluída localmente | ADR0033;13 regressões,14 mutações e fuzz oficial passaram. Cinco citadas/duas usadas no índice real; vínculo O/CNF/prova e suporte finito preservados. Full verify/selftest: VERIFY_OK/exit0. |
 
 Roteiro em [plano da Fase4](docs/plans/fase-4.md). Grounder/CNF e rederivação implementados;
 Checker LRAT4.4 e recheck duplo4.5 demonstrados no corpus exigido. Kernel/políticas ainda ausentes,
 fontes opacas não demonstram autenticação.
+
+## Etapas da Fase 5
+
+| Etapa | Estado | Evidência / próximo trabalho |
+| --- | --- | --- |
+| 5.1 Typestate de claims | ⏳ não iniciada | Eventos3.1 e Verdict0.6 existem. Próximo: plano/ADR, `Claim<S>`, transições consumidoras, tabela normativa e testes compile-fail/evento único. |
 
 ## Pendências de verificação (nada disso depende de código novo)
 
@@ -285,6 +300,9 @@ fontes opacas não demonstram autenticação.
    cake_lpr e exige300/300 provas,300/300 contramodelos e premissas consistentes.
    Testes de protocolo/limites/reconstrução e25 regressões também no pytest;
    nenhum resultado remoto observado. Etapa não acrescenta parser na TCB.
+   Used4.7:13 regressões no workspace, inclusive ledger/CAS/índice reais;
+   fuzz lrat_decode/vocabulary_decode ampliado.14 mutações detectadas e
+   full verify/selftest passaram localmente; CI/ARM/≥1h não observados.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -354,41 +372,39 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa4.7 — dependências extraídas do certificado
+## Próximo passo: Etapa5.1 — typestate de claims
 
-Ler ROADMAP4.7 e preparar plano/ADR antes de implementar used_premises.
-Prontos: ProvenanceMap4.3 com origens alinhadas aos IDs originais da CNF e
-domain_support, check_with_used4.4 com fecho histórico da prova conferida,
-produtor SAT4.6, dois checkers4.4/4.5 e DAG/índices3.3.
+Preparar plano/ADR e implementar somente ROADMAP5.1. Prontos: catálogo de
+eventos assinados3.1, Verdict/`CheckOutcome`/Budget0.6, appender3.2 e extração
+de dependências4.7. O kernel continua esqueleto; transporte5.2 e formalização
+12.1 ficam fora do escopo desta próxima etapa.
 
-Mapear IDs originais realmente usados para PremiseRef, distinguindo premissa,
-axioma de domínio, definição e negação do objetivo. Preservar o vínculo entre
-prova/CNF/mapa; IDs inválidos ou resultado inconclusivo não geram dependências
-válidas. Demonstrar as cinco premissas citadas/duas usadas e a impossibilidade
-de usar premissa ausente de O, conforme os critérios. Registro em evento e
-handler do kernel continuam fora do escopo4.7 (5.4); examinar como demonstrar
-o critério de deps com as interfaces existentes, sem antecipar o kernel.
+Entregar `Claim<S>` para Draft/Pending/Verified/Refuted/Unknown/Invalidated,
+construtores privados e transições que consomem o estado anterior, junto à
+tabela normativa `spec/state-machine.md`. Demonstrar compile-fail de construção
+externa de `Claim<Verified>` e ausência de Refuted→Verified, mais evento único
+por transição em sequências aleatórias. Definir no plano como representar
+`SignedEvent<Verified>` usando o catálogo existente e como vincular transição e
+append sem duplicar eventos ou publicar estado antes de persistir. `CheckOutcome`
+bruto não pode ser tratado como autorização; handlers CERTIFY ficam na5.4.
 
-Decisão em aberto: domain_support preserva referências exigidas pela
-transformação mesmo quando os axiomas viram tautologias. Analisar a precisão
-e justificar o tratamento em ADR antes de uni-lo automaticamente a used.
-Os limites duplicates/sparse do cake_lpr continuam explícitos; não normalizar
-CNF/IDs no wrapper. Fontes autenticadas permanecem nas6.1/7.3/7.5.
+4.7 concluída localmente:13 regressões/14 mutações/fuzz oficial e
+ci/verify.sh --selftest passaram; VERIFY_OK/exit0 em target/verify-4.7-final.log/.exit.
+TCB12004+747130=759134, build-only64508; nenhum pacote externo/formato/parser
+novo. Suporte por fórmula/sort é conservador; constraints global continua
+assertiva indivisível (ADR0033). Não promete núcleo mínimo de dependências.
 
-4.6 passou em ci/verify.sh --selftest: VERIFY_OK/exit0 em
-target/verify-4.6-final.log/.exit;252 Python +25 TCB. Relatório por O/camada em
-target/sat-producer-report.json:300/300 válidas,300/300 SAT e sete controles,
-com recheck de301 provas/306 modelos e300 consistências. Métricas finais
-revalidadas em177.15s/exit0. Nenhum runtime/dependência TCB alterado.
-CI remota4.6, rebuild em segundo host4.5 e ARM/fuzz longo anteriores seguem
+CI remota, rebuild em segundo host4.5 e ARM/fuzz longo anteriores continuam
 pendentes. Alterações preexistentes de memória/fontes de fuzz/logs/mutants.out
 preservadas; nenhum push autorizado.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 11549 LOC Rust próprios + 747130
-  de dependências Rust = 758679 (+64508 só de compilação), após4.5/inalterado na4.6;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1337, logos-lrat865, logos-ledger3271.
+- **Tamanho da TCB de correção (execução):** 12004 LOC Rust próprios + 747130
+  de dependências Rust = 759134 (+64508 só de compilação), após4.7;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3271.
+  Acréscimo de455 LOC próprios (inclui testes em src/); pacotes externos inalterados.
+  Relatório atual target/tcb-4.7.json/.md.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -1364,3 +1380,38 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   marcados com evidência local; CI/ARM/fuzz longo e rebuild segundo host4.5
   preservados pendentes. Memória, fontes fuzz, logs e mutants.out anteriores
   fora do commit. Sem push; próximo4.7, com análise de domain_support/used.
+
+- 2026-10-17 — Início da4.7 (base709dc45): dependências reais presentes.
+  Ledger3.3 permite o teste de deps sem antecipar kernel5.4; plano/ADR0033
+  preparados antes de código. Decidido suporte contextual alcançado pelo
+  certificado, evitando união global automática. Sem push.
+
+- 2026-10-17 — Etapa4.7 concluída localmente (base709dc45). Plano/ADR0033
+  preparados antes do código; dependências presentes e teste de deps feito
+  com ledger/CAS/índice existentes, sem antecipar kernel/evento/cascata.
+  ProvenanceMap privado liga h(O)/h(CNF), suporte por assertiva conservado;
+  Defined transitivo/sorts/guardas globais não perdem suas hipóteses. Relatório
+  LRAT liga fecho aceito ao certificado inteiro; used_premises valida contexto,
+  IDs e limites separados explícitos, sem lista parcial/claim em erro.
+  Treze regressões novas passaram (11 LRAT/1 unitária/1 ledger): cinco citadas/
+  duas usadas no índice real, certificado conferido também pelo cake_lpr,
+  omissão da necessária com valoração SAT completa e prova antiga recusada;
+  contexto trocado/IDs inválidos/Unknown/duplicatas/domínio irrelevante cobertos.
+  Catorze mutações compiladas detectadas, fontes restauradas; receita em
+  docs/plans/etapa-4.7-mutacoes.json e logs em target/used-mutations/.
+  Revisão evitou aresta dev lrat→ledger que quebraria independência do auditor;
+  teste integrado movido ao ledger. Imports e carga duplicada de módulo
+  apontados por compilação/Clippy foram corrigidos antes da rodada completa.
+  Fuzz oficial/nightly-2026-09-28:62502 lrat_decode/5447 vocabulary_decode,
+  ambos61s/exit0 sem crash; logs anteriores restaurados byte a byte.
+  Full ci/verify.sh --selftest: VERIFY_OK/exit0 em2245.4s;252 Python +25 TCB,
+  Rust/Clippy/smokes/TCB/manifesto/independência/supply-chain/vetores/autoteste
+  passaram. Corpus legado200/600 concordou em546.38s; SAT300/300+300 modelos,
+  300 consistências e sete controles passaram (607 casos/907 rechecks).
+  Crash10k/24 SIGKILLs/9998 ACKs/107.64s sem perdas; rebuild100k/cinco tabelas
+  exatas;1M/20000 consultas p99=36897ns, cold rebuild430479ms fora da latência.
+  TCB12004+747130=759134 (+455 próprios), build-only64508; ground1534/lrat1123.
+  Nenhum pacote externo ou formato/parser novo; metadados só em memória.
+  Ambos os critérios4.7 demonstrados localmente. CI/ARM/fuzz longo e segundo
+  host4.5 continuam pendentes. Memória/dois fontes fuzz/logs/mutants.out
+  preexistentes preservados fora do commit. Sem push; próximo5.1.

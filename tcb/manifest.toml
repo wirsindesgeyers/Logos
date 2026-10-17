@@ -91,14 +91,14 @@ name = "logos-ground"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/axioms.rs", "src/classify.rs", "src/cnf.rs", "src/dag.rs", "src/error.rs", "src/ground.rs", "src/lib.rs", "src/prop.rs"]
+files = ["src/axioms.rs", "src/classify.rs", "src/cnf.rs", "src/dag.rs", "src/error.rs", "src/ground.rs", "src/lib.rs", "src/prop.rs", "src/support.rs"]
 
 [[crate]]
 name = "logos-lrat"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/cake.rs", "src/cake_known.rs", "src/cake_output.rs", "src/checker.rs", "src/lib.rs", "src/parse.rs", "src/resources.rs", "src/sandbox.rs"]
+files = ["src/cake.rs", "src/cake_known.rs", "src/cake_output.rs", "src/checker.rs", "src/lib.rs", "src/parse.rs", "src/resources.rs", "src/sandbox.rs", "src/used.rs"]
 
 [[crate]]
 name = "logos-ledger"

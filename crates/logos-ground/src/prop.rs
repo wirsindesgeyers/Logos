@@ -47,6 +47,9 @@ pub struct GroundProgram {
     pub(crate) goal: PropFormula,
     pub(crate) root: PropFormula,
     pub(crate) domain_axioms: Vec<PremiseRef>,
+    // Métadados somente em memória; não fazem parte de ground/v1.
+    pub(crate) premise_support: Vec<Vec<PremiseRef>>,
+    pub(crate) goal_support: Vec<PremiseRef>,
 }
 impl GroundProgram {
     /// Obrigação exata que foi traduzida.

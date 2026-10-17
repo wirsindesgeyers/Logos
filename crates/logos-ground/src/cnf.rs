@@ -1,8 +1,8 @@
 //! Equivalências completas de Tseitin e DIMACS canônico, conforme spec/cnf.md.
 use std::fmt::Write;
 
-use logos_crypto::{Domain, tags};
-use logos_obligation::PremiseRef;
+use logos_crypto::{Domain, Hash, hash_raw, tags};
+use logos_obligation::{Obligation, PremiseRef};
 
 use crate::dag::{push, size, space};
 use crate::{GroundError, GroundProgram, PropNode};
@@ -20,13 +20,28 @@ pub enum ClauseOrigin {
     Definitional,
 }
 
-/// Mapa alinhado aos IDs 1-based de cláusulas; não calcula used de prova.
+/// Mapa privado ligado a O/CNF e IDs 1-based; não calcula o fecho de prova.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProvenanceMap {
     origins: Vec<ClauseOrigin>,
     domain_support: Vec<PremiseRef>,
+    clause_support: Vec<Vec<PremiseRef>>,
+    obligation: Hash<Obligation>,
+    cnf: Hash<Cnf>,
 }
 impl ProvenanceMap {
+    /// Obrigação exata da qual o mapa foi rederivado.
+    pub fn obligation(&self) -> Hash<Obligation> {
+        self.obligation
+    }
+    /// Identidade dos bytes exatos das cláusulas alinhadas ao mapa.
+    pub fn cnf_hash(&self) -> Hash<Cnf> {
+        self.cnf
+    }
+    /// Suporte contextual por ID original (posição i corresponde a i+1).
+    pub fn clause_support(&self) -> &[Vec<PremiseRef>] {
+        &self.clause_support
+    }
     /// Origem da cláusula i+1 na posição i.
     pub fn origins(&self) -> &[ClauseOrigin] {
         &self.origins
@@ -87,7 +102,8 @@ impl Default for CnfLimits {
 struct Builder {
     limits: CnfLimits,
     literals: usize,
-    records: Vec<(Vec<i32>, ClauseOrigin)>,
+    records: Vec<(Vec<i32>, ClauseOrigin, Vec<PremiseRef>)>,
+    support_refs: usize,
 }
 impl Builder {
     fn clause(
@@ -114,7 +130,20 @@ impl Builder {
             return Err(GroundError::InvalidContext);
         }
         out.sort_unstable();
-        push(&mut self.records, (out, origin))
+        push(&mut self.records, (out, origin, Vec::new()))
+    }
+    fn support(&mut self, refs: &[PremiseRef]) -> Result<(), GroundError> {
+        self.support_refs = self.support_refs.checked_add(refs.len()).ok_or_else(size)?;
+        if self.support_refs > 1_000_000 {
+            return Err(size());
+        }
+        let mut support = space(refs.len(), 1_000_000)?;
+        support.extend_from_slice(refs);
+        self.records
+            .last_mut()
+            .ok_or(GroundError::InvalidContext)?
+            .2 = support;
+        Ok(())
     }
 }
 
@@ -147,6 +176,7 @@ pub fn clausify_with_limits(
         limits,
         literals: 0,
         records: Vec::new(),
+        support_refs: 0,
     };
     for n in g.nodes() {
         let id = if let PropNode::Atom(a) = n {
@@ -188,18 +218,27 @@ pub fn clausify_with_limits(
     }
     let root = |n: usize| ids.get(n).copied().ok_or(GroundError::InvalidContext);
     b.clause(ClauseOrigin::Definitional, 1, [root(g.constraints())?])?;
-    for (r, n) in g.premises() {
+    if g.constraints() != 1 {
+        b.support(g.domain_axioms())?;
+    }
+    for (index, (r, n)) in g.premises().iter().enumerate() {
         let origin = if g.domain_axioms().contains(r) {
             ClauseOrigin::DomainAxiom(*r)
         } else {
             ClauseOrigin::Premise(*r)
         };
         b.clause(origin, 1, [root(*n)?])?;
+        b.support(
+            g.premise_support
+                .get(index)
+                .ok_or(GroundError::InvalidContext)?,
+        )?;
     }
     b.clause(ClauseOrigin::NegatedGoal, 1, [-root(g.goal())?])?;
+    b.support(&g.goal_support)?;
     b.records.sort_unstable();
     let mut bytes = format!("p cnf {variables} {}\n", b.records.len()).len();
-    for (c, _) in &b.records {
+    for (c, _, _) in &b.records {
         bytes = bytes.checked_add(2).ok_or_else(size)?; // zero e LF
         for x in c {
             bytes = bytes
@@ -221,16 +260,19 @@ pub fn clausify_with_limits(
         .map_err(|_| GroundError::InvalidContext)?;
     let mut clauses = space(b.records.len(), limits.max_clauses)?;
     let mut origins = space(b.records.len(), limits.max_clauses)?;
-    for (c, origin) in b.records {
+    let mut clause_support = space(b.records.len(), limits.max_clauses)?;
+    for (c, origin, support) in b.records {
         for x in &c {
             write!(dimacs, "{x} ").map_err(|_| GroundError::InvalidContext)?;
         }
         dimacs.push_str("0\n");
         clauses.push(c);
         origins.push(origin);
+        clause_support.push(support);
     }
     let mut domain_support = space(g.domain_axioms().len(), usize::MAX)?;
     domain_support.extend_from_slice(g.domain_axioms());
+    let cnf = hash_raw::<Cnf>(dimacs.as_bytes());
     Ok((
         Cnf {
             variables,
@@ -240,6 +282,9 @@ pub fn clausify_with_limits(
         ProvenanceMap {
             origins,
             domain_support,
+            clause_support,
+            obligation: g.obligation(),
+            cnf,
         },
     ))
 }

@@ -930,8 +930,8 @@ Objetivo da fase: o primeiro `VERIFIED` do sistema, sobre domínios finitos, ter
 - O evento `Verified` registra `cited` (do agente, informativo) e `used` (do certificado, normativo). Só `used` entra no DAG de dependências.
 
 **Critério de conclusão.**
-- [ ] Teste: agente cita 5 premissas, prova usa 2 → `deps` do claim contém exatamente as 2.
-- [ ] Teste: agente não cita uma premissa necessária → obrigação não é provável (o certificado não pode usar o que não está em `O`) — o agente não consegue "esconder" dependências.
+- [x] Teste: agente cita 5 premissas, prova usa 2 → `deps` do claim contém exatamente as 2. Demonstrado em logos-ledger/tests/used.rs com ledger/CAS/índice reais e LRAT aceito nos dois checkers; evento existente alimentado pelo conjunto extraído, sem handler novo.
+- [x] Teste: agente não cita uma premissa necessária → obrigação não é provável (o certificado não pode usar o que não está em `O`) — o agente não consegue "esconder" dependências. Testes LRAT/ledger geram O sem a premissa; certificado antigo/hint externo recusados e valoração independente satisfaz toda a CNF enquanto nega goal.
 
 ---
 

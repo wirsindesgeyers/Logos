@@ -39,11 +39,15 @@ senão Premise; assertiva de goal negado é NegatedGoal.
 domain_support conserva a lista domain_axioms do grounder, inclusive para
 premissas transformadas em tautologia. É suporte da transformação, não cláusula
 SAT inventada. É uma lista conservadora de requisitos de contexto, não
-used. Etapa4.7 deve conservá-la e analisar seu alcance junto com as origens
-alcançadas pelo certificado, testando precisão. Não unir automaticamente
-todas as referências a used, inclusive em provas independentes do domínio.
+used. Etapa4.7 conserva suporte contextual por assertiva e só une o suporte
+alcançado pelo fecho conferido: ver [used-premises.md](used-premises.md).
+Não unir automaticamente todas as referências a used, inclusive em provas
+independentes do domínio.
 Fontes opacas não se tornam autenticadas.
-ProvenanceMap é somente saída em memória, sem decoder/wire nesta etapa.
+ProvenanceMap é somente saída em memória, sem decoder/wire. Liga h(O) e
+h(CNF) aos metadados privados; clause_support é alinhado a origins. O suporte
+não altera a ordem/bytes de cláusulas. Até1M referências agregadas de suporte
+na construção CNF; exceder dá Unknown(Size), sem mapa parcial.
 
 ## Bytes DIMACS e identidade
 

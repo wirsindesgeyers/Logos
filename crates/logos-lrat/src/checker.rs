@@ -40,10 +40,16 @@ impl LratChecker {
         budget: &Budget,
     ) -> LratReport {
         let mut used = None;
+        let mut certificate = None;
         let outcome = StepMeter::run(budget, |meter| {
             let mut res = Resources::new(meter, budget.mem_bytes);
-            match run(bytes, expected, proof, budget, &mut res) {
+            let checked = run(bytes, expected, proof, budget, &mut res).and_then(|ids| {
+                res.step(proof.len())?;
+                Ok(ids)
+            });
+            match checked {
                 Ok(ids) => {
+                    certificate = Some(hash_raw::<crate::LratCertificate>(proof));
                     used = Some(ids);
                     CheckOutcome::Accepted
                 }
@@ -53,8 +59,14 @@ impl LratChecker {
         });
         if outcome != CheckOutcome::Accepted {
             used = None;
+            certificate = None;
         }
-        LratReport { outcome, used }
+        LratReport {
+            outcome,
+            used,
+            cnf: expected,
+            certificate,
+        }
     }
 }
 

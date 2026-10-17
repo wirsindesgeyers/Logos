@@ -1,0 +1,298 @@
+{
+  "stage": "4.7",
+  "method": "Substituir before por after, executar command, restaurar fonte. caught exige compilação e falha do teste; rejeitar erro de compilação como evidência.",
+  "results": [
+    {
+      "name": "origem-perdida",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "resources.push(&mut premises, *r)?\n            }",
+      "after": "if false { resources.push(&mut premises, *r)?; }\n            }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "five_cited_two_used_excludes_unreachable_proof_branches",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.57,
+      "caught": true
+    },
+    {
+      "name": "uniao-global",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "    premises.sort_unstable();",
+      "after": "    premises.extend_from_slice(map.domain_support());\n    premises.sort_unstable();",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "unrelated_enumerated_domain_is_not_unconditionally_used",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.56,
+      "caught": true
+    },
+    {
+      "name": "suporte-perdido",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "        for r in support {",
+      "after": "        for r in support.iter().take(0) {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "finite_translation_support_survives_tautological_domain_assertions",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.53,
+      "caught": true
+    },
+    {
+      "name": "obrigacao-trocada",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "if map.obligation() != expected",
+      "after": "if false && map.obligation() != expected",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "accepted_report_cannot_be_projected_into_another_cnf_or_obligation",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.56,
+      "caught": true
+    },
+    {
+      "name": "cnf-trocada",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "|| report.cnf_hash() != Some(map.cnf_hash())",
+      "after": "|| false && report.cnf_hash() != Some(map.cnf_hash())",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "accepted_report_cannot_be_projected_into_another_cnf_or_obligation",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.63,
+      "caught": true
+    },
+    {
+      "name": "ids-invalidos",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "if id <= previous {",
+      "after": "if false && id <= previous {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "used::tests::invalid_original_ids_and_incomplete_private_reports_never_project",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.44,
+      "caught": true
+    },
+    {
+      "name": "resultado-inconclusivo",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "if report.outcome() != &CheckOutcome::Accepted {",
+      "after": "if false && report.outcome() != &CheckOutcome::Accepted {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--lib",
+        "used::tests::invalid_original_ids_and_incomplete_private_reports_never_project",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.52,
+      "caught": true
+    },
+    {
+      "name": "suporte-defined",
+      "file": "crates/logos-ground/src/support.rs",
+      "before": "if let Grounding::Defined(body) = &v.symbols()[id].grounding {",
+      "after": "if false && let Grounding::Defined(body) = &v.symbols()[id].grounding {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "defined_transitive_body_contributes_its_domain_support",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.97,
+      "caught": true
+    },
+    {
+      "name": "suporte-guardas",
+      "file": "crates/logos-ground/src/cnf.rs",
+      "before": "if g.constraints() != 1 {",
+      "after": "if false && g.constraints() != 1 {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "global_inconsistent_defined_guard_keeps_its_domain_requirements",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.82,
+      "caught": true
+    },
+    {
+      "name": "hash-certificado",
+      "file": "crates/logos-lrat/src/checker.rs",
+      "before": "hash_raw::<crate::LratCertificate>(proof)",
+      "after": "hash_raw::<crate::LratCertificate>(b\"wrong\")",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "five_cited_two_used_excludes_unreachable_proof_branches",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 2.01,
+      "caught": true
+    },
+    {
+      "name": "passos-ignorados",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "StepMeter::run(budget, |meter| {",
+      "after": "StepMeter::run(&Budget {steps:u64::MAX,..*budget}, |meter| {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "projection_limits_are_inclusive_and_never_return_partial_sets",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.57,
+      "caught": true
+    },
+    {
+      "name": "memoria-ignorada",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "Resources::new(meter, budget.mem_bytes)",
+      "after": "Resources::new(meter, u64::MAX)",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "projection_limits_are_inclusive_and_never_return_partial_sets",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.79,
+      "caught": true
+    },
+    {
+      "name": "tamanho-ignorado",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "if u64::try_from(bytes).map_err(|_| size())? > budget.size_bytes {",
+      "after": "if false && u64::try_from(bytes).map_err(|_| size())? > budget.size_bytes {",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "projection_limits_are_inclusive_and_never_return_partial_sets",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.56,
+      "caught": true
+    },
+    {
+      "name": "referencias-duplicadas",
+      "file": "crates/logos-lrat/src/used.rs",
+      "before": "    premises.dedup();",
+      "after": "    if false { premises.dedup(); }",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-lrat",
+        "--test",
+        "used",
+        "repeated_formula_support_is_deduplicated_with_explicit_premise",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit": 101,
+      "seconds": 1.48,
+      "caught": true
+    }
+  ]
+}

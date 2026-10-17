@@ -194,6 +194,12 @@ fn ground_probe(v: &Vocabulary) {
         if let Ok((cnf, map)) = translated {
             assert_eq!(cnf.clauses().len(), map.origins().len());
             assert_eq!(map.domain_support(), g.domain_axioms());
+            assert_eq!(map.obligation(), hash(&o).expect("hO"));
+            assert_eq!(map.cnf_hash(), logos_crypto::hash_raw::<logos_ground::Cnf>(cnf.dimacs()));
+            assert_eq!(map.clause_support().len(), map.origins().len());
+            for support in map.clause_support() {
+                assert!(support.iter().all(|r| map.domain_support().contains(r)));
+            }
             assert!(cnf.dimacs().len() <= cnf_limits.max_bytes);
             assert!(cnf.clauses().windows(2).all(|c| c[0] <= c[1]));
             for c in cnf.clauses() {

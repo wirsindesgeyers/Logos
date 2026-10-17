@@ -496,6 +496,7 @@ fn ground_parts(
     let obligation = identify()?;
     let mut e = Engine::new(v, limits)?;
     let mut references = Vec::new();
+    let mut sort_support = Vec::new();
     for sort in v.sorts() {
         if matches!(sort.domain, SortDomain::Enumerated { .. }) {
             let c = domain_axioms(
@@ -504,6 +505,7 @@ fn ground_parts(
                     name: sort.name.clone(),
                 },
             )?;
+            let start = references.len();
             for f in std::iter::once(c.closure()).chain(c.distinct()) {
                 let mut found = None;
                 for (r, p) in source {
@@ -518,18 +520,37 @@ fn ground_parts(
                     found.ok_or(GroundError::MissingDomainAxiom)?,
                 )?;
             }
+            let mut refs = space(references.len() - start, limits.max_cells)?;
+            refs.extend_from_slice(&references[start..]);
+            push(&mut sort_support, (sort.name.clone(), refs))?;
         }
     }
     e.tables()?;
     let constraints = e.dag.and(std::mem::take(&mut e.guards))?;
     let mut premises = Vec::new();
+    let mut premise_support = Vec::new();
+    let mut support_count = 0usize;
     let mut antecedents = vec![constraints];
     for (r, f) in source {
         let n = e.formula(f, Vec::new())?;
+        let support = crate::support::formula_support(v, f, &sort_support, &mut e.dag)?;
+        support_count = support_count.checked_add(support.len()).ok_or_else(size)?;
+        if support_count > limits.max_cells {
+            return Err(size());
+        }
+        push(&mut premise_support, support)?;
         push(&mut premises, (*r, n))?;
         push(&mut antecedents, n)?;
     }
     let goal = e.formula(goal_formula, Vec::new())?;
+    let goal_support = crate::support::formula_support(v, goal_formula, &sort_support, &mut e.dag)?;
+    if support_count
+        .checked_add(goal_support.len())
+        .ok_or_else(size)?
+        > limits.max_cells
+    {
+        return Err(size());
+    }
     let antecedent = e.dag.and(antecedents)?;
     let root = e.dag.implies(antecedent, goal)?;
     let p = GroundProgram {
@@ -542,6 +563,8 @@ fn ground_parts(
         goal,
         root,
         domain_axioms: references,
+        premise_support,
+        goal_support,
     };
     if to_canon(&p)?.len() > limits.max_bytes {
         return Err(size());
