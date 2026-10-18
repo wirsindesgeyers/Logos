@@ -228,16 +228,21 @@ fontes opacas não demonstram autenticação.
 
 ## Pendências de verificação (execução remota; o item 1 inclui o fix do userns)
 
-1. **Actions**: commits 0.5–4.7 enviados (run `39077203473`). A primeira run da CI nova
-   falhou nos jobs `rust` (x86_64 e aarch64) em `cargo test --workspace` (exit 101) e no
-   job `python` em `ci/check-sat.sh` (exit 1) — exatamente os caminhos que usam o sandbox
-   bwrap do checker; localmente (Fedora, mesmo commit) tudo passa. Causa: runners Ubuntu
-   24.04 mantêm `kernel.apparmor_restrict_unprivileged_userns=1` sem perfil AppArmor do
-   bubblewrap. Corrigido com `ci/enable-userns.sh` ligado aos dois jobs (ver Armadilhas).
-   **Falta observar a próxima run**: se os jobs rust/python ficarem verdes, remover esta
-   ressalva. O `fuzz.yml` noturno vem vermelho desde 4/out por causa da definição antiga
-   do workflow (cargo fuzz sob stable); a nova definição (`ci/fuzz.sh`) vale desde este
-   push — confirmar na próxima run agendada.
+1. **Actions**: commits 0.5–4.7 enviados. Com o fix do userns (run `39083213702`,
+   commit `ef14f87`) os jobs `rust` x86_64/aarch64 ficaram verdes e o job `python`
+   passou do produtor SAT, mas **ainda falhou** em `pytest ../tcb/tests`: os quatro
+   testes de grafo Cargo do `tcb.build_report` medem LOC com `tokei`, que o runner
+   não traz — reproduzido localmente (sem `tokei` no PATH: 4 falham; com: 25 passam).
+   O job `python` agora instala `tokei` via `taiki-e/install-action` como o
+   `tcb-report`. Histórico da run `39077203473`: jobs `rust` (x86_64 e aarch64) em
+   `cargo test --workspace` (exit 101) e `python` em `ci/check-sat.sh` (exit 1) por
+   causa do AppArmor dos runners Ubuntu 24.04
+   (`kernel.apparmor_restrict_unprivileged_userns=1` sem perfil do bubblewrap,
+   ver Armadilhas; corrigido com `ci/enable-userns.sh` nos dois jobs). **Falta
+   observar a próxima run**: com `rust` e `python` verdes, remover esta ressalva.
+   O `fuzz.yml` noturno veio vermelho desde 4/out com a definição antiga do
+   workflow (cargo fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde o push de
+   17/out — confirmar na próxima run agendada.
 2. Abrir PRs de teste deliberados e confirmar o bloqueio (`unsafe {}` em crate de TCB; dependência
    fora da allowlist; arquivo de TCB fora do manifesto) e o comentário automático de diff da TCB.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
@@ -474,6 +479,10 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   cada workflow precisa habilitar. `ci/enable-userns.sh` aplica perfil AppArmor mínimo
   para /usr/bin/bwrap e, se preciso, desliga o sysctl; termina com controle positivo do
   próprio bwrap e falha alto se não conseguiu habilitar (nunca falso verde).
+- `pytest ../tcb/tests` mede LOC real com `tokei` (via `tcb.build_report`); sem ele no
+  PATH os quatro testes de grafo Cargo falham com "tokei não encontrado". O job
+  `python` do CI instala via `taiki-e/install-action`, como o `tcb-report`; local já
+  está instalado.
 
 
 
@@ -1451,3 +1460,15 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   p99=23047ns, cold342598ms fora da latência. Memória/fontes de fuzz/logs/mutants.out
   preexistentes preservados fora do commit. CI verde do fix pendente de observação;
   próximo5.1.
+
+- 2026-10-17 — A run da CI do fix do userns (`39083213702`, `ef14f87`) mostrou `rust`
+  x86_64/aarch64 verdes e o `python` passando do produtor SAT, mas vermelho em
+  `pytest ../tcb/tests`: os quatro testes de grafo Cargo do `tcb.build_report` medem
+  LOC com `tokei`, ausente no runner (reproduzido localmente: sem `tokei` no PATH,
+  4 falham com "tokei não encontrado"; com, 25 passam). O job `python` do `ci.yml`
+  agora instala `tokei` via `taiki-e/install-action`, como o `tcb-report`; Armadilhas
+  e AGENTS.md registram. Full `ci/verify.sh --selftest` antes do commit: VERIFY_OK/
+  exit0 em 1638s (`target/verify-2026-10-17-tokei.{log,exit,seconds}`);252 Python125.73s
+  +25 TCB2.00s; SAT300/300 e 907 rechecks; corpus SAT-2002 200/200; crash10k/
+  24 SIGKILLs/9997 ACKs/85.06s; rebuild100k/exato;1M p99=32434ns cold340223ms.
+  CI verde (python incluído) pendente de observação; próximo5.1.

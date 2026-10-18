@@ -140,6 +140,8 @@ fuzz/       alvos de cargo fuzz (workspace próprio)
   (`kernel.apparmor_restrict_unprivileged_userns=1`) e não vão desativar por padrão
   (actions/runner-images#10015). Os jobs `rust` e `python` do `ci.yml` rodam
   `ci/enable-userns.sh` antes dos testes; sem isso o sandbox bwrap do checker não inicia.
+- `pytest ../tcb/tests` exige `tokei` no PATH (medição real de LOC via `tcb.build_report`);
+  o job `python` do `ci.yml` instala com `taiki-e/install-action`, como o `tcb-report`.
 - Produtor SAT4.6: `python3 tools/build_cadical.py` compila a fonte fixada
   offline com g++/GNU make; cache por hash e log em target/cadical-build.log.
   `ci/check-sat.sh` prepara o encoder de apoio e executa o corpus real.

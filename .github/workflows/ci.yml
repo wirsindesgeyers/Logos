@@ -232,6 +232,9 @@ jobs:
       - name: Smoke público de 20 contramodelos em português
         run: uv run python -m logos_provers.model_explain_smoke
       - run: uv run pytest -q # canon 100k/direção e AIR-text 500 fórmulas
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: tokei
       - run: uv run pytest -q ../tcb/tests
 
   selftest:
