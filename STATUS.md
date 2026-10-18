@@ -226,23 +226,16 @@ fontes opacas não demonstram autenticação.
 | --- | --- | --- |
 | 5.1 Typestate de claims | ⏳ não iniciada | Eventos3.1 e Verdict0.6 existem. Próximo: plano/ADR, `Claim<S>`, transições consumidoras, tabela normativa e testes compile-fail/evento único. |
 
-## Pendências de verificação (execução remota; o item 1 inclui o fix do userns)
+## Pendências de verificação (execução remota)
 
-1. **Actions**: commits 0.5–4.7 enviados. Com o fix do userns (run `39083213702`,
-   commit `ef14f87`) os jobs `rust` x86_64/aarch64 ficaram verdes e o job `python`
-   passou do produtor SAT, mas **ainda falhou** em `pytest ../tcb/tests`: os quatro
-   testes de grafo Cargo do `tcb.build_report` medem LOC com `tokei`, que o runner
-   não traz — reproduzido localmente (sem `tokei` no PATH: 4 falham; com: 25 passam).
-   O job `python` agora instala `tokei` via `taiki-e/install-action` como o
-   `tcb-report`. Histórico da run `39077203473`: jobs `rust` (x86_64 e aarch64) em
-   `cargo test --workspace` (exit 101) e `python` em `ci/check-sat.sh` (exit 1) por
-   causa do AppArmor dos runners Ubuntu 24.04
-   (`kernel.apparmor_restrict_unprivileged_userns=1` sem perfil do bubblewrap,
-   ver Armadilhas; corrigido com `ci/enable-userns.sh` nos dois jobs). **Falta
-   observar a próxima run**: com `rust` e `python` verdes, remover esta ressalva.
-   O `fuzz.yml` noturno veio vermelho desde 4/out com a definição antiga do
-   workflow (cargo fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde o push de
-   17/out — confirmar na próxima run agendada.
+1. **Actions**: ✅ verde na run `39085765358` (`3f902d8`) — todos os jobs passaram,
+   incluindo os dois `rust` e o `python`. Os BOs dos primeiros envios ficaram
+   fechados: userns/AppArmor (runners Ubuntu 24.04; `ci/enable-userns.sh` nos dois
+   jobs) e `tokei` ausente no job `python` (agora via `taiki-e/install-action`;
+   4 testes de `tcb.build_report` falhavam com "tokei não encontrado"). Resta só o
+   `fuzz.yml` noturno: vinha vermelho desde 4/out com a definição antiga (cargo
+   fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde o push de 17/out — confirmar
+   na próxima run agendada.
 2. Abrir PRs de teste deliberados e confirmar o bloqueio (`unsafe {}` em crate de TCB; dependência
    fora da allowlist; arquivo de TCB fora do manifesto) e o comentário automático de diff da TCB.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
@@ -1472,3 +1465,10 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   +25 TCB2.00s; SAT300/300 e 907 rechecks; corpus SAT-2002 200/200; crash10k/
   24 SIGKILLs/9997 ACKs/85.06s; rebuild100k/exato;1M p99=32434ns cold340223ms.
   CI verde (python incluído) pendente de observação; próximo5.1.
+
+- 2026-10-17 — CI 100% verde após as duas correções: run `39085765358` (`3f902d8`)
+  com todos os jobs `success` (rust x86_64/aarch64, python com `tokei`, selftest,
+  tcb-rules, tcb-report, deny/audit, sort-coverage, cake-rebuild). O BO dos
+  primeiros envios ficou fechado; resta só confirmar o fuzz noturno com a
+  definição nova (`ci/fuzz.sh`) na próxima run agendada. Sem mudança de etapa;
+  próximo5.1.
