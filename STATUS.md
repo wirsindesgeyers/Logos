@@ -226,11 +226,18 @@ fontes opacas não demonstram autenticação.
 | --- | --- | --- |
 | 5.1 Typestate de claims | ⏳ não iniciada | Eventos3.1 e Verdict0.6 existem. Próximo: plano/ADR, `Claim<S>`, transições consumidoras, tabela normativa e testes compile-fail/evento único. |
 
-## Pendências de verificação (nada disso depende de código novo)
+## Pendências de verificação (execução remota; o item 1 inclui o fix do userns)
 
-1. `git push` dos commits locais (0.4 etc.) e conferir **Actions**:
-   `ci.yml` (jobs `rust`, `sort-coverage`, `tcb-rules`, `tcb-report`, `supply-chain`, `python`, `selftest`) e
-   `fuzz.yml` (smoke no PR / noturno).
+1. **Actions**: commits 0.5–4.7 enviados (run `39077203473`). A primeira run da CI nova
+   falhou nos jobs `rust` (x86_64 e aarch64) em `cargo test --workspace` (exit 101) e no
+   job `python` em `ci/check-sat.sh` (exit 1) — exatamente os caminhos que usam o sandbox
+   bwrap do checker; localmente (Fedora, mesmo commit) tudo passa. Causa: runners Ubuntu
+   24.04 mantêm `kernel.apparmor_restrict_unprivileged_userns=1` sem perfil AppArmor do
+   bubblewrap. Corrigido com `ci/enable-userns.sh` ligado aos dois jobs (ver Armadilhas).
+   **Falta observar a próxima run**: se os jobs rust/python ficarem verdes, remover esta
+   ressalva. O `fuzz.yml` noturno vem vermelho desde 4/out por causa da definição antiga
+   do workflow (cargo fuzz sob stable); a nova definição (`ci/fuzz.sh`) vale desde este
+   push — confirmar na próxima run agendada.
 2. Abrir PRs de teste deliberados e confirmar o bloqueio (`unsafe {}` em crate de TCB; dependência
    fora da allowlist; arquivo de TCB fora do manifesto) e o comentário automático de diff da TCB.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
@@ -459,6 +466,14 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   passou; não contar a primeira execução como fuzz bem-sucedido nem desativar
   sanitizers. Evitar fuzz/comandos sandbox concorrentes durante o autoteste:
   corpus e montagem dos diretórios protegidos podem gerar avisos do tar.
+- Runners do GitHub (Ubuntu 24.04) mantêm `kernel.apparmor_restrict_unprivileged_userns=1`
+  e o bubblewrap do sistema não traz perfil AppArmor: `bwrap` falha com
+  "setting up uid map: Permission denied" e todo job que usa o sandbox do checker morre
+  junto (testes de logos-lrat/audit/ledger, `ci/check-audit.sh`, `ci/check-sat.sh`).
+  Os mantenedores do runner não desativam isso por padrão (actions/runner-images#10015);
+  cada workflow precisa habilitar. `ci/enable-userns.sh` aplica perfil AppArmor mínimo
+  para /usr/bin/bwrap e, se preciso, desliga o sysctl; termina com controle positivo do
+  próprio bwrap e falha alto se não conseguiu habilitar (nunca falso verde).
 
 
 
@@ -1415,3 +1430,24 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   host4.5 continuam pendentes. Memória/dois fontes fuzz/logs/mutants.out
   preexistentes preservados fora do commit. Sem push; próximo5.1.
 - 2026-10-17 — Sincronização completa com `origin/main`: envio dos commits acumulados (Etapas 0.5 a 4.7), proposta de memória de longo prazo (ADR 0008), formatação de fontes de fuzz e logs de verificação/mutantes persistidos. Próximo: Etapa 5.1 (typestate de claims).
+
+- 2026-10-17 — Revisão do BO de CI após o primeiro push de 0.5–4.7 (run `39077203473`):
+  jobs `rust` x86_64/aarch64 falharam em `cargo test --workspace` (exit 101) e `python` em
+  `ci/check-sat.sh` (exit 1) — exatamente os caminhos que usam o sandbox bwrap do checker;
+  localmente (Fedora, mesmo commit) ambos passam, apontando o ambiente. Logs da API dão 403
+  e `gh` não existe; diagnóstico por reprodução local + evidência externa: runners Ubuntu
+  24.04 mantêm `kernel.apparmor_restrict_unprivileged_userns=1` e os mantenedores recusam
+  desativar por padrão (actions/runner-images#10015). Correção: `ci/enable-userns.sh`
+  (perfil AppArmor mínimo para `/usr/bin/bwrap`; fallback sysctl; controle positivo do
+  próprio bwrap — falha alto em vez de falso verde) ligado aos jobs rust/python antes dos
+  testes; caminho positivo e negativo testados localmente, caminho Ubuntu real aguarda a
+  run remota. Fuzz noturno vermelho desde 4/out era a definição antiga do workflow
+  (cargo fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde este push — confirmar na
+  próxima agendada. Full `ci/verify.sh --selftest` antes do commit: VERIFY_OK/exit0 em
+  1648s (`target/verify-2026-10-17-cifix.{log,exit,seconds}`); Rust/Clippy/smokes/
+  TCB/manifesto/independência/supply-chain/vetores/autoteste passaram;252 Python124.64s
+  +25 TCB2.40s; corpus SAT-2002 200/200; SAT300/300 +300 modelos/907 rechecks; crash10k/
+  24 SIGKILLs/9999 ACKs/82.95s; rebuild100k/cinco tabelas exatas;1M/20000 consultas
+  p99=23047ns, cold342598ms fora da latência. Memória/fontes de fuzz/logs/mutants.out
+  preexistentes preservados fora do commit. CI verde do fix pendente de observação;
+  próximo5.1.

@@ -136,6 +136,10 @@ fuzz/       alvos de cargo fuzz (workspace próprio)
   de usuário/rede habilitados. Ausência/falha não tem fallback sem isolamento.
   Build offline: `python3 tools/build_cake_lpr.py`; rebuild do assembly/FFI
   fixados: `python3 tools/build_cake_lpr.py --rebuild` (Zig0.15.1 por hash).
+- Runners do GitHub (Ubuntu 24.04) mantêm o AppArmor restringindo user namespaces
+  (`kernel.apparmor_restrict_unprivileged_userns=1`) e não vão desativar por padrão
+  (actions/runner-images#10015). Os jobs `rust` e `python` do `ci.yml` rodam
+  `ci/enable-userns.sh` antes dos testes; sem isso o sandbox bwrap do checker não inicia.
 - Produtor SAT4.6: `python3 tools/build_cadical.py` compila a fonte fixada
   offline com g++/GNU make; cache por hash e log em target/cadical-build.log.
   `ci/check-sat.sh` prepara o encoder de apoio e executa o corpus real.

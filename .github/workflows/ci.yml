@@ -34,6 +34,8 @@ jobs:
         run: test "$(uname -m)" = "${{ matrix.arch }}" && uname -m
       - name: Dependências do isolamento do cake_lpr
         run: sudo apt-get update && sudo apt-get install -y bubblewrap util-linux
+      - name: Habilitar user namespaces do bwrap (AppArmor do Ubuntu 24.04)
+        run: ci/enable-userns.sh
       - name: Instalar checker offline fixado
         run: python3 tools/build_cake_lpr.py
       - run: cargo fmt --all --check
@@ -211,6 +213,8 @@ jobs:
         run: ../ci/check-cnf.sh
       - name: Dependências do produtor SAT e isolamento do checker
         run: sudo apt-get update && sudo apt-get install -y g++ make bubblewrap util-linux
+      - name: Habilitar user namespaces do bwrap (AppArmor do Ubuntu 24.04)
+        run: ../ci/enable-userns.sh
       - name: Produtor SAT real e três checkers (300 políticas e300 contramodelos)
         run: ../ci/check-sat.sh
       - name: Arquivar evidência do produtor SAT
