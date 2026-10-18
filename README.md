@@ -297,4 +297,11 @@ conforme [`ADR0027`](docs/adr/0027-contrato-de-grounding-e-determinismo.md).
 Etapa4.3 acrescenta Tseitin canônico, mapa de proveniência com suporte dos
 axiomas, cnf-v1 no CAS e rederivação O→CNF pelo auditor. Contrato em
 [`spec/cnf.md`](spec/cnf.md); provas LRAT ainda aguardam as4.4/4.5.
-Kernel e gateway continuam sem implementação; estado em [`STATUS.md`](STATUS.md).
+
+Etapa5.1 inicia `logos-kernel` com `Claim<S>` e recibos `SignedEvent<S>`
+imutáveis. Transições internas consomem o claim anterior e só publicam o novo
+estado após append confirmado; não existe emissão pública a partir de
+`Event` ou `CheckOutcome`. Estados, vínculos e tabela em
+[`spec/state-machine.md`](spec/state-machine.md). Servidor, handlers de
+certificação e gateway permanecem nas próximas etapas; estado em
+[`STATUS.md`](STATUS.md).

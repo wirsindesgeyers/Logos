@@ -1,0 +1,10 @@
+error[E0308]: mismatched types
+ --> tests/ui/refuted_to_verified.rs:2:52
+  |
+2 | fn promote(c: Claim<Refuted>) -> Claim<Verified> { c }
+  |                                  ---------------   ^ expected `Claim<Verified>`, found `Claim<Refuted>`
+  |                                  |
+  |                                  expected `Claim<Verified>` because of return type
+  |
+  = note: expected struct `Claim<Verified>`
+             found struct `Claim<Refuted>`

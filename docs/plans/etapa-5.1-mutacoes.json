@@ -1,0 +1,61 @@
+{
+  "source": "crates/logos-kernel/src/transitions.rs",
+  "command_prefix": ["cargo", "test", "-p", "logos-kernel", "--lib"],
+  "recipe": "Aplicar uma substituição por vez à fonte original; executar o teste indicado sem TRYBUILD=overwrite; exigir compilação bem-sucedida e falha por asserção; restaurar os bytes originais em finally. Resultados em target/claim-mutations/results.json.",
+  "mutations": [
+    {
+      "name": "wrong_session",
+      "old": "if !Arc::ptr_eq(&self.session, &claim.origin.session) {",
+      "new": "if false && !Arc::ptr_eq(&self.session, &claim.origin.session) {",
+      "test": "receipt_cannot_be_reused_in_another_session_even_with_identical_ledger_head"
+    },
+    {
+      "name": "stale_epoch",
+      "old": "if current_epoch && head.epoch != claim.epoch() {",
+      "new": "if false && current_epoch && head.epoch != claim.epoch() {",
+      "test": "epoch_changes_block_logical_transitions_but_allow_invalidation"
+    },
+    {
+      "name": "wrong_obligation",
+      "old": "if claim.obligation() != Some(check.obligation) {",
+      "new": "if false && claim.obligation() != Some(check.obligation) {",
+      "test": "obligation_mismatch_is_rejected_for_all_check_transitions"
+    },
+    {
+      "name": "changed_citations",
+      "old": "if cited != claim.origin.cited {",
+      "new": "if false && cited != claim.origin.cited {",
+      "test": "verified_preserves_proposal_citations_and_catalogue_validation"
+    },
+    {
+      "name": "wrong_proposal",
+      "old": "proposal: receipt.hash(),",
+      "new": "proposal: Hash::from_bytes([0; 32]),",
+      "test": "random_interleaved_sequences_emit_exactly_one_signed_event_per_transition"
+    },
+    {
+      "name": "lost_obligation",
+      "old": "origin.obligation = Some(obligation);",
+      "new": "origin.obligation = None;",
+      "test": "random_interleaved_sequences_emit_exactly_one_signed_event_per_transition"
+    },
+    {
+      "name": "wrong_invalidation_target",
+      "old": "claim: claim.receipt().hash(),",
+      "new": "claim: claim.proposal(),",
+      "test": "epoch_changes_block_logical_transitions_but_allow_invalidation"
+    },
+    {
+      "name": "duplicate_append",
+      "old": "let event = self.ledger.append(body)?;",
+      "new": "let event = self.ledger.append(body.clone())?;\n        self.ledger.append(body)?;",
+      "test": "random_interleaved_sequences_emit_exactly_one_signed_event_per_transition"
+    },
+    {
+      "name": "wrong_receipt_hash",
+      "old": "let hash = hash(&event)?;",
+      "new": "let hash = hash(&event)?;\n        let hash = Hash::from_bytes([hash.as_bytes()[0]; 32]);",
+      "test": "random_interleaved_sequences_emit_exactly_one_signed_event_per_transition"
+    }
+  ]
+}

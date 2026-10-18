@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `SignedEvent<logos_kernel::state::Verified>: From<logos_ledger::Event>` is not satisfied
+ --> tests/ui/raw_event.rs:3:59
+  |
+3 | fn promote(event: Event) -> SignedEvent<Verified> { event.into() }
+  |                                                           ^^^^ the trait `From<logos_ledger::Event>` is not implemented for `SignedEvent<logos_kernel::state::Verified>`
+  |
+  = note: required for `logos_ledger::Event` to implement `Into<SignedEvent<logos_kernel::state::Verified>>`

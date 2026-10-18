@@ -1,0 +1,61 @@
+# Máquina de estados de claims — Etapa5.1
+
+Tabela normativa para logos-kernel e a futura formalização12.1. Versão da
+tabela: 1 (somente memória; não é novo formato wire). Referências: spec
+conceitual §3–4, ROADMAP5.1/5.3/5.4/5.9/5.10, ADR0034 e events.md.
+
+## 1. Estados e transições
+
+Claim<S> MUST ter estado fantasma S e construção restrita ao módulo de
+transições. O claim e seu SignedEvent<S> MUST NOT ser clonáveis, mutáveis ou
+decodificáveis. O recibo é produzido exclusivamente pelo append confirmado;
+um Event público e uma assinatura válida não bastam para construí-lo.
+
+| ID | Origem | Operação interna | Destino | Evento único | Precondições |
+| --- | --- | --- | --- | --- | --- |
+| propose | ∅ | propose | Draft | Proposed | Catálogo válido; writer iniciado |
+| submit | Draft | submit | Pending | ObligationCreated | Mesma sessão/época; h(O) atribuído pelo kernel |
+| accept | Pending | accept | Verified | Verified | Mesma sessão/época/h(O); Accepted de prova; cited exatas da proposta; used⊆cited |
+| refute | Pending | refute | Refuted | Refuted | Mesma sessão/época/h(O); Accepted de contramodelo |
+| unknown | Pending | unknown | Unknown | UnknownRecorded | Mesma sessão/época/h(O); outcome Unknown com limite explícito |
+| invalidate | Verified | invalidate | Invalidated | Invalidated | Mesma sessão; alvo é h(Event Verified); causas não vazias |
+
+Não há outras transições nesta tabela. Refuted, Unknown e Invalidated são
+terminais para esta instância. Enfraquecer a fórmula/declarar hipótese cria
+outra proposta, sujeito às regras dos handlers. Refuted→Verified e
+Unknown→Verified MUST NOT existir. Rejected MUST NOT virar Refuted.
+
+Draft é a proposta já registrada, ainda sem obrigação. Entrada não registrada
+é dado candidato, não Claim<Draft>. PROPOSE5.3 compõe propose e submit,
+gerando dois eventos; cada operação da tabela gera exatamente um.
+
+## 2. Vínculos e persistência
+
+O claim conserva h(Proposed), época de origem, citações normalizadas e h(O)
+quando atribuído. Cada passo MUST consumir o claim anterior. Intercalar
+claims da mesma sessão é permitido. Trocar a sessão/writer MUST falhar antes
+de escrever, mesmo com mesma chave ou época. Invalidação permite época
+posterior; decisões lógicas exigem a época original ainda corrente.
+
+O novo estado MUST ser publicado somente após Ledger::append retornar com
+sucesso. Validação falha não acrescenta evento. Falha de escrita/hash não
+devolve novo claim e não permite repetir automaticamente com o anterior:
+reabertura/replay resolve commit sem resposta. Evento único por sucesso não
+é uma garantia de entrega exactly-once em presença de crash.
+
+## 3. Fronteiras de autorização e extensão
+
+Nenhum construtor/transição é exposto ao agente. Verdict/CheckOutcome brutos
+ou eventos externos MUST NOT habilitar uma API pública de emissão.
+Os futuros handlers5.3/5.4 são responsáveis por generate/citações/contexto,
+checker ativo por hash, bytes/CAS/certificado e used conferidos; os guardas
+de h(O)/outcome desta etapa são necessários, mas não substituem esses checks.
+Claim<Verified> isolado não prova citabilidade na época presente; consultar
+o ledger e as regras de autorização apropriadas.
+
+Rejected mantém Pending e não é uma transição desta tabela. Registro de
+tentativas, Unknown mantendo Pending e política de novas tentativas são
+da5.4; não se inventa CertificateRejected usando outro evento do catálogo.
+Consistência usa o campo existente, sem implementar WITNESS5.5. Cascata,
+retratação e recheck/revogação pertencem à5.9/5.10; atualizar esta tabela
+explicitamente quando essas etapas acrescentarem transições.

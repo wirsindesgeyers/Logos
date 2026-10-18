@@ -1,0 +1,5 @@
+error: cannot construct `SignedEvent<Verified>` with struct literal syntax due to private fields
+ --> tests/ui/receipt_literal.rs:2:21
+  |
+2 | fn main() { let _ = SignedEvent::<Verified> {}; }
+  |                     ^^^^^^^^^^^^^^^^^^^^^^^

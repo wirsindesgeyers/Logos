@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-17 · sincronizado com `origin/main` após envio dos commits locais até a Etapa 4.7.
+> Última atualização: 2026-10-18 · Etapa5.1 concluída localmente sobre a74d2b9; sem push nesta sessão.
 
 ## Resumo
 
@@ -10,8 +10,8 @@ Fase 0 (Fundação): **7 etapas implementadas; P2 dos controles 0.1/0.2 corrigid
 Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`,
-`logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`;
-demais crates continuam esqueletos. Nenhum kernel/gateway implementado.
+`logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`.
+Kernel possui typestate5.1; servidor, handlers e gateway seguem sem implementação.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -34,7 +34,7 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 12004+747130=759134 LOC de correção, build-only64508;
+TCB atual Rust: 12245+747130=759375 LOC de correção, build-only64508;
 logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -155,6 +155,16 @@ nenhum formato/parser/pacote externo novo. TCB12004+747130=759134 LOC.
 Full ci/verify.sh --selftest: VERIFY_OK/exit0;252 Python +25 TCB.
 CI/ARM/fuzz longo continuam pendentes; nenhum kernel/gateway implementado.
 
+5.1: Claim<S> e SignedEvent<S> imutáveis, sem construção/conversão pública;
+seis estados e transições consumidoras com append real antes da publicação.
+Sessão/época/h(O)/citações conferidos; Refuted/Unknown não promovidos.
+Oito regressões com1024 transições intercaladas e replay,12 compile-fail e
+controle positivo passaram; nove mutações compiladas detectadas.
+Full ci/verify.sh --selftest: VERIFY_OK/exit0 em2415.30s fora do sandbox;
+tentativa isolada falhou em bwrap NETLINK_ROUTE e foi preservada.
+252 Python +25 TCB; kernel243 LOC, acréscimo próprio241, sem pacote externo,
+parser ou wire novo. ADR0034/tabela normativa; handlers5.3/5.4 ficam pendentes.
+
 ## Etapas da Fase 0
 
 | Etapa | Estado | Evidência / pendência |
@@ -224,7 +234,8 @@ fontes opacas não demonstram autenticação.
 
 | Etapa | Estado | Evidência / próximo trabalho |
 | --- | --- | --- |
-| 5.1 Typestate de claims | ⏳ não iniciada | Eventos3.1 e Verdict0.6 existem. Próximo: plano/ADR, `Claim<S>`, transições consumidoras, tabela normativa e testes compile-fail/evento único. |
+| 5.1 Typestate de claims | ✅ concluída localmente | Claim<S>/SignedEvent<S> selados; seis operações com evento único após append confirmado. Oito testes/1024 transições,12 compile-fail+controle positivo, nove mutações compiladas; full verify/selftest VERIFY_OK/exit0. [Plano](docs/plans/etapa-5.1.md), ADR0034 e spec/state-machine.md. CI desta etapa ainda não observada. |
+| 5.2 Servidor do protocolo | ⏳ não iniciada | Proposal1.6/canon0.3/CAS0.5 prontos; próximo: plano/ADR do schema/frame canônico, socket Unix autenticado pelo SO, staging e limites por conexão. |
 
 ## Pendências de verificação (execução remota)
 
@@ -307,6 +318,9 @@ fontes opacas não demonstram autenticação.
    Used4.7:13 regressões no workspace, inclusive ledger/CAS/índice reais;
    fuzz lrat_decode/vocabulary_decode ampliado.14 mutações detectadas e
    full verify/selftest passaram localmente; CI/ARM/≥1h não observados.
+   Typestate5.1: oito testes/1024 transições e12 compile-fail no workspace,
+   nove mutações compiladas e full verify/selftest passaram localmente.
+   CI/ARM desta etapa ainda não observados; sem parser/decoder novo.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -376,39 +390,41 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa5.1 — typestate de claims
+## Próximo passo: Etapa5.2 — servidor do protocolo
 
-Preparar plano/ADR e implementar somente ROADMAP5.1. Prontos: catálogo de
-eventos assinados3.1, Verdict/`CheckOutcome`/Budget0.6, appender3.2 e extração
-de dependências4.7. O kernel continua esqueleto; transporte5.2 e formalização
-12.1 ficam fora do escopo desta próxima etapa.
+Preparar plano/ADR e implementar somente ROADMAP5.2. Dependências presentes:
+Proposal1.6 fora da TCB, canon0.3 e CAS0.5 para staging. Typestate5.1 e o
+appender3.2 também estão disponíveis. PROPOSE5.3, CERTIFY/registry5.4,
+vários agentes por socket e MCP10.3 não entram nesta etapa.
 
-Entregar `Claim<S>` para Draft/Pending/Verified/Refuted/Unknown/Invalidated,
-construtores privados e transições que consomem o estado anterior, junto à
-tabela normativa `spec/state-machine.md`. Demonstrar compile-fail de construção
-externa de `Claim<Verified>` e ausência de Refuted→Verified, mais evento único
-por transição em sequências aleatórias. Definir no plano como representar
-`SignedEvent<Verified>` usando o catálogo existente e como vincular transição e
-append sem duplicar eventos ou publicar estado antes de persistir. `CheckOutcome`
-bruto não pode ser tratado como autorização; handlers CERTIFY ficam na5.4.
+Entregar socket Unix com frames u32 length + CBOR canônico, schema v1 estrito
+das mensagens Propose/Certify/Refute/Witness/Assume/Query/Subscribe, staging de
+certificados grandes com recálculo de hash, handlers por mensagem e limites
+por conexão autenticada pelo SO. Definir no plano endian do frame, schemas,
+credenciais do peer, publicação do staging e política de limites; não expor
+emissão de Claim a partir de CheckOutcome/Event brutos. Demonstrar rejeição
+de campos extras/tipos desconhecidos e integrar fuzz do decoder (critério
+de ≥4h só marcado após evidência real).
 
-4.7 concluída localmente:13 regressões/14 mutações/fuzz oficial e
-ci/verify.sh --selftest passaram; VERIFY_OK/exit0 em target/verify-4.7-final.log/.exit.
-TCB12004+747130=759134, build-only64508; nenhum pacote externo/formato/parser
-novo. Suporte por fórmula/sort é conservador; constraints global continua
-assertiva indivisível (ADR0033). Não promete núcleo mínimo de dependências.
+5.1 concluída localmente: oito testes/1024 transições,12 compile-fail+controle
+positivo e nove mutações compiladas detectadas. ci/verify.sh --selftest:
+VERIFY_OK/exit0 em2415.30s; logs target/verify-5.1-final.{log,exit,seconds}.
+TCB12245+747130=759375, build-only64508; kernel243. Sem parser/wire/pacote
+externo novo. Transitions mantém sessão própria; erros consomem o handle e
+exigem recuperação por replay se necessário (ADR0034).
 
-CI remota, rebuild em segundo host4.5 e ARM/fuzz longo anteriores continuam
-pendentes. Alterações preexistentes de memória/fontes de fuzz/logs/mutants.out
-preservadas; nenhum push autorizado.
+CI desta etapa, rebuild em segundo host4.5 e ARM/fuzz longo anteriores
+continuam pendentes. O catálogo não contém CertificateRejected: resolver
+o contrato ao planejar5.4, sem reutilizar UnknownRecorded. Nenhum push
+autorizado; logos-code.zip/logos-docs.zip preexistentes preservados.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 12004 LOC Rust próprios + 747130
-  de dependências Rust = 759134 (+64508 só de compilação), após4.7;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3271.
-  Acréscimo de455 LOC próprios (inclui testes em src/); pacotes externos inalterados.
-  Relatório atual target/tcb-4.7.json/.md.
+- **Tamanho da TCB de correção (execução):** 12245 LOC Rust próprios + 747130
+  de dependências Rust = 759375 (+64508 só de compilação), após5.1;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3271, logos-kernel243.
+  Acréscimo de241 LOC próprios nesta etapa; pacotes externos inalterados.
+  Relatório atual target/tcb-5.1.json/.md.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -426,6 +442,15 @@ preservadas; nenhum push autorizado.
   (`docs/plans/fase-0.md`); a partir da 0.5 vale seguir `AGENTS.md` §2.
 
 ## Armadilhas conhecidas
+
+- Typestate5.1: Transitions empresta exclusivamente o writer e não permite
+  reutilizar claims em outra sessão. API interna até handlers5.3/5.4;
+  CheckOutcome/Event público não é autorização. O catálogo3.1 não contém
+  CertificateRejected: resolver o contrato do evento ao planejar5.4, sem
+  reinterpretar UnknownRecorded ou promover rejeição a refutação.
+- No sandbox do Codex, o bwrap falha ao criar socket NETLINK_ROUTE
+  (`Operation not permitted`). A verificação completa precisa rodar com
+  autorização externa ao sandbox; não remover o isolamento do checker.
 
 Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `gen` reservado).
 - Executar Ruff de tools/ a partir de py/, como ci/verify.sh. Selecionar
@@ -1472,3 +1497,33 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   primeiros envios ficou fechado; resta só confirmar o fuzz noturno com a
   definição nova (`ci/fuzz.sh`) na próxima run agendada. Sem mudança de etapa;
   próximo5.1.
+
+- 2026-10-18 — Etapa5.1 concluída localmente (basea74d2b9). Plano de fase/
+  etapa, ADR0034 e tabela normativa preparados antes do código. Claim<S> e
+  SignedEvent<S> sem construtores/conversões públicos, Clone/Copy/Default ou
+  decoder; seis operações internas consomem o anterior e publicam estado
+  somente após append confirmado. Identidade Arc da sessão, época/h(O) e
+  citações conferidos; Proposed cria Draft e ObligationCreated cria Pending,
+  mantendo dois eventos no futuro PROPOSE5.3. Erro não cria estado nem retry
+  automático; persistência ambígua exige replay. Accepted bruto não confere
+  autoridade; handlers5.3/5.4/consistência5.5/cascata5.9 ficam nas etapas donas.
+  Oito testes passaram (1024 transições em oito sequências com quatro claims
+  intercalados, assinaturas/hash/seq/prev/reabertura e erros de contexto/CAS/
+  assinante).12 compile-fail+controle positivo passaram sem overwrite na
+  rodada integral. Nove mutações compiladas detectadas; receita em
+  docs/plans/etapa-5.1-mutacoes.json, fontes restauradas e snapshot35 conferido.
+  Primeira full isolada exit101/29.39s: auditor encontrou bwrap NETLINK_ROUTE
+  Operation not permitted; logs preservados em target/verify-5.1-sandbox.*.
+  Reexecução externa autorizada, sem remover isolamento do checker:
+  ci/verify.sh --selftest VERIFY_OK/exit0 em2415.30s;252 Python174.01s +25 TCB2.61s,
+  Rust/Clippy/smokes/manifesto/independência/deny/audit/vetores/autoteste OK.
+  Avisos conhecidos deny de licença/syn, sem falhas. Corpus200/600 concordou
+  em474.75s; SAT300/300+300 modelos+300 consistências/sete controles/907 rechecks.
+  Crash10k/24 SIGKILLs/9997 ACKs/119.30s sem perdas; rebuild100k/cinco tabelas
+  exatas;1M/20000 consultas p99=36964ns, cold465562ms fora da medida.
+  TCB Rust12245+747130=759375 (+241 próprios), kernel243, build-only64508;
+  nenhum pacote externo/decoder/parser/wire novo. Critérios5.1 marcados com
+  evidência local; CI desta etapa e pendências remotas anteriores preservadas.
+  Catálogo não tem CertificateRejected, registrar contrato na5.4 sem remapear
+  UnknownRecorded. logos-code.zip/logos-docs.zip preexistentes preservados.
+  Sem push; próximo5.2, servidor do protocolo.

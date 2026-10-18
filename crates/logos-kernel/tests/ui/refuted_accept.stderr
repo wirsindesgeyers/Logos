@@ -1,0 +1,5 @@
+error[E0599]: no method named `accept` found for struct `Claim<S>` in the current scope
+ --> tests/ui/refuted_accept.rs:2:54
+  |
+2 | fn promote(c: Claim<Refuted>) -> Claim<Verified> { c.accept() }
+  |                                                      ^^^^^^ method not found in `Claim<Refuted>`

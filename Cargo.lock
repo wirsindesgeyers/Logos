@@ -305,6 +305,15 @@ dependencies = [
 [[package]]
 name = "logos-kernel"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ledger",
+ "logos-obligation",
+ "trybuild",
+]
 
 [[package]]
 name = "logos-ledger"

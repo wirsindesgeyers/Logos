@@ -1,0 +1,17 @@
+error[E0382]: use of moved value: `c`
+ --> tests/ui/consumed_claim.rs:6:27
+  |
+4 | fn reuse(c: Claim<Pending>) {
+  |          - move occurs because `c` has type `Claim<logos_kernel::state::Pending>`, which does not implement the `Copy` trait
+5 |     let _first = consume(c);
+  |                          - value moved here
+6 |     let _second = consume(c);
+  |                           ^ value used here after move
+  |
+note: consider changing this parameter type in function `consume` to borrow instead if owning the value isn't necessary
+ --> tests/ui/consumed_claim.rs:2:15
+  |
+2 | fn consume(c: Claim<Pending>) -> Claim<Pending> { c }
+  |    -------    ^^^^^^^^^^^^^^ this parameter takes ownership of the value
+  |    |
+  |    in this function

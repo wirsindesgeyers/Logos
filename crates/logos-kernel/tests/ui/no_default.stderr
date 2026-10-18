@@ -1,0 +1,5 @@
+error[E0277]: the trait bound `Claim<Verified>: Default` is not satisfied
+ --> tests/ui/no_default.rs:2:38
+  |
+2 | fn main() { let _: Claim<Verified> = Default::default(); }
+  |                                      ^^^^^^^^^^^^^^^^^^ the trait `Default` is not implemented for `Claim<Verified>`

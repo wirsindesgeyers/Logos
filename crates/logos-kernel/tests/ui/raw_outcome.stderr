@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `Claim<logos_kernel::state::Verified>: From<CheckOutcome>` is not satisfied
+ --> tests/ui/raw_outcome.rs:3:61
+  |
+3 | fn main() { let _: Claim<Verified> = CheckOutcome::Accepted.into(); }
+  |                                                             ^^^^ the trait `From<CheckOutcome>` is not implemented for `Claim<logos_kernel::state::Verified>`
+  |
+  = note: required for `CheckOutcome` to implement `Into<Claim<logos_kernel::state::Verified>>`

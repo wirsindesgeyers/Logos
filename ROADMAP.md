@@ -951,8 +951,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Tabela de transições permitidas em `spec/state-machine.md` (é a mesma que a Fase 12 formaliza).
 
 **Critério de conclusão.**
-- [ ] Testes compile-fail: construir `Claim<Verified>` fora do crate não compila; transição `Refuted → Verified` não existe.
-- [ ] Toda transição gera exatamente um evento do ledger (teste por propriedade sobre sequências aleatórias de comandos).
+- [x] Testes compile-fail: construir `Claim<Verified>` fora do crate não compila; transição `Refuted → Verified` não existe.
+- [x] Toda transição gera exatamente um evento do ledger (teste por propriedade sobre sequências aleatórias de comandos).
 
 ---
 

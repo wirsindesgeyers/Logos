@@ -1,0 +1,5 @@
+error: cannot construct `Claim<Verified>` with struct literal syntax due to private fields
+ --> tests/ui/claim_literal.rs:2:21
+  |
+2 | fn main() { let _ = Claim::<Verified> {}; }
+  |                     ^^^^^^^^^^^^^^^^^

@@ -1,0 +1,5 @@
+error[E0599]: no associated function or constant named `new` found for struct `Claim<S>` in the current scope
+ --> tests/ui/no_constructor.rs:2:40
+  |
+2 | fn main() { let _ = Claim::<Verified>::new(); }
+  |                                        ^^^ associated function or constant not found in `Claim<Verified>`

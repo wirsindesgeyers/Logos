@@ -1,0 +1,5 @@
+error[E0599]: no method named `clone` found for struct `Claim<S>` in the current scope
+ --> tests/ui/no_clone.rs:3:8
+  |
+3 |     (c.clone(), c)
+  |        ^^^^^ method not found in `Claim<Verified>`
