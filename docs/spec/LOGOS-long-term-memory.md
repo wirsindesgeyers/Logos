@@ -4,7 +4,15 @@ Extensão proposta da [especificação LOGOS](LOGOS-proof-carrying-agents.md), a
 
 Decisões propostas: [ADR 0008](../adr/0008-memoria-de-longo-prazo.md), estado proposto. Extensão documental; adoção e etapas de código são distintas.
 
-Referência técnica obrigatória: [Victor Taelin, OptChat — Technical specification, §§1–11](https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449), versão consultada em 2026-10-04. Preservam-se log original, árvore puramente binária, free nodes, compactor contextual separado, folding incremental, settle, zoom e turnos fresh. Divergências deliberadas estão explicitadas abaixo, não atribuídas ao OptChat.
+Referência de implementação obrigatória: **UniiChat**, commit
+[`0500bf6`](https://github.com/VictorTaelin/uniichat/tree/0500bf6a8ea4bf0ce047488562022b1b6532cc30),
+consultado em 2026-10-19. O [relatório de código](../research/uniichat-memory.md)
+fixa também OptMem `1fb164c`, funções/linhas, testes e divergências. O
+[gist OptChat](https://gist.github.com/VictorTaelin/91837951a5ce5b38f341ec1ba1df6449)
+foi a referência descritiva de 04/out; não substitui o código para cache,
+compactor ou folding. [ADR 0039](../adr/0039-memoria-baseada-no-codigo-uniichat.md)
+registra esta revisão. As etapas propostas estão no ROADMAP, Apêndice F
+(MEM.0–MEM.7); não são os invariantes M1–M13 nem etapas já executadas.
 
 ## 1. Purpose
 
@@ -82,23 +90,61 @@ Prioridade: (1) decisões explícitas do usuário; (2) correções; (3) requisit
 
 ### Contexto limitado
 
-A entrada distingue Context (resumos anteriores, só para compreensão) de Target (evento completo ou os dois children). O contexto é congelado no job e só usa eventos anteriores ao start do alvo. Para pai, os children trazem o intervalo-alvo. Contexto não vira conteúdo pertencente ao intervalo nem prova de uma correção posterior.
+A entrada distingue Context (view auxiliar só para compreensão) de Target (evento completo ou os dois children). O contexto é congelado no job e não ultrapassa o fim do alvo; para folha, não inclui o próprio evento. Para pai, os children trazem o intervalo-alvo e o contexto pode mostrá-lo com maior resolução. Contexto não vira conteúdo pertencente ao intervalo nem prova de uma correção posterior.
 
-Construir projeção de prefixo `[0,start)` de nodes completos; se uma part cruza start, descer somente a fronteira na projeção privada, sem expandir a Memory View. Dobrar pares prontos quando necessário; se ainda excede COMPACTOR_CONTEXT_BYTES, omitir parts completas mais antigas com omitted_prefix explícito. Metadados reply_to/references permitem acrescentar poucas referências anteriores, com budget separado. Ausência de contexto suficiente exige registrar referência não resolvida, não inventar antecedente. Modelo não busca tools nem vê summaries pendentes.
+Manter **ContextView persistida própria**, distinta da ConversationView. Sua
+fronteira avança até a primeira folha não READY da geração (frontier), sem
+esperar o job que a está lendo. Para folha, `ctx=start`; para pai,
+`ctx=start+count`: o contexto pode mostrar os children/descendentes já prontos
+com mais detalhe que os dois textos do Target. Essa é a regra de
+`Memory.ctx/build` do código, corrigindo a exigência antiga de prefixo sempre
+anterior a start. Nenhum evento posterior ao alvo é incluído. Context é
+auxiliar e pode sobrepor o Target; não muda o intervalo de origem do node.
 
-Contexto/render/template/policy hashes ficam fixados no job. A prioridade de folhas segue o primeiro evento ainda sem folha READY, prevenindo dependência circular entre contexto e o próprio summary. Merges prontos podem executar paralelamente. Fila dependency-driven evita rescans da história inteira a cada append.
+Congelar a projeção já disponível até `min(ctx,frontier)` quando o job começa.
+Incluir somente parts inteiras com end <= cutoff; não refinar parts antigas
+para fabricar um contexto novo por job, nem chamar settle recursivamente.
+Uma part que cruza o cutoff fica de fora; registrar ranges omitidos. A view
+contextual também dobra em lotes, nominalmente 32.000→16.000 bytes. Como a
+floresta mínima pode exceder esse orçamento, ela pode omitir parts antigas
+inteiras e registrar omitted_prefix, conservando um sufixo. **Essa permissão
+não existe para a view histórica da conversa**, que cobre tudo. Metadados de
+omissão/referências ficam após o prefixo cacheável. Reply_to/references podem
+acrescentar poucas referências anteriores autorizadas no tail com budget
+separado. Nenhuma fonte ausente é inventada.
+
+Fila dependency-driven, por store/geração, sem rescans de toda a história.
+Window de agendamento limitada pelas primeiras COMPACTION_JOBS folhas ainda
+pendentes; entre fontes prontas nessa janela, ordenar por ctx crescente e,
+em empate, maior nível primeiro. Pais exigem dois children READY; jobs não
+esperam contexto ainda por construir. Free nodes são publicados em lote sem
+gastar chamada. Context/render/template/policy/provider e os blocos iniciais
+ficam congelados no job, inclusive após retry/restart. Leases/backoff e limite
+de concorrência são do LOGOS; 64 jobs **por lado** (chat/import) no upstream
+não é o default LOGOS nem autorização para multiplicar concorrência por agente.
 
 ### Enforcement e falhas
 
-Defaults configuráveis e experimentais: NODE_SIZE=512 bytes, VIEW_SIZE=128000 bytes, COMPACTION_JOBS=8, COMPACTION_RETRIES=5 tentativas totais, TOOL_OUTPUT_INLINE_CAP=30000 caracteres Unicode. Não equivalem a limites de tokens. A implementação verifica capacidade do provider antes da chamada.
+Defaults configuráveis e experimentais: NODE_SIZE=512 bytes, VIEW_SIZE=128000 bytes, COMPACTOR_CONTEXT_BYTES=32000, CACHE_BLOCK_LINES=4, COMPACTION_JOBS=8, COMPACTION_RETRIES=5 respostas candidatas totais, TOOL_OUTPUT_INLINE_CAP=30000 caracteres Unicode. Não equivalem a limites de tokens. A implementação verifica capacidade do provider antes da chamada. Falhas de transporte têm contador/deadline separado e também limitado; uma tentativa interrompida fica registrada, sem permitir reiniciar contadores indefinidamente.
 
-Medir UTF-8 após trim externo; não confiar no LLM. Summary deve ser não vazio, UTF-8 válido, sem C0 exceto LF/CR/TAB e sem DEL. Originais não passam por essa restrição. Resposta acima do budget recebe tamanho real/limite e pedido de compressão; não se entrega corte parcial como memória. Feedback pode mostrar a tentativa inteira se cabe no contexto. Guardar a menor tentativa válida (desempate: primeira) para diagnóstico. Publicar a primeira que cabe; nenhuma tentativa oversized vira READY.
+Medir UTF-8 após trim externo; não confiar no LLM. Summary deve ser não vazio, UTF-8 válido, sem C0 exceto LF/CR/TAB e sem DEL. Originais não passam por essa restrição. Guardar a menor tentativa válida (desempate: primeira) para diagnóstico. Publicar a primeira que cabe; nenhuma tentativa oversized vira READY.
+
+O compactor usa o preâmbulo estável de interpretação de memória, **sem tools
+de usuário, busca web ou tool schema ativo**, e tarefa no último bloco não
+cacheado. Os IDs são montados pelo serviço. Uma régua sem conteúdo semântico
+pode indicar o tamanho; não usar exemplo cuja história possa ser copiada.
+Retry por tamanho é uma **nova chamada com os mesmos blocos iniciais + uma
+única nota não marcada**, substituindo a nota anterior: tamanho real, limite,
+prefixo UTF-8 bounded da tentativa e posição do corte. O corte é feedback,
+nunca node nem original. Não reenviar transcript de tentativas/respostas,
+raciocínio do modelo ou notas acumuladas; não duplicar Context/Target a cada
+retry. Contexto+Target+feedback têm teto de input verificado pelo adapter.
 
 Depois das tentativas/deadline: publicar, quando autorizado pelo perfil, um **Locator** determinístico: “Resumo semântico indisponível; use zoom.” Ele referencia o evento/children completos, tem mode=Locator e degradation explícita, não é placeholder de trabalho ainda pendente nem summary semântico fictício. Se Locator desabilitado, settle bloqueia/cancela. Melhor tentativa oversized pode existir só em diagnóstico restrito, nunca na view.
 
-Inputs integrais que excedem o contexto do provider produzem InputTooLarge/Locator, não compressão de prefixo disfarçada de mensagem inteira. Tool output grande pode usar o descriptor completo do artefato como alvo com source_coverage=ArtifactDescriptorOnly; não se afirma ter resumido bytes não lidos. Retry de transporte usa atraso curto configurável, lease e deadline, não laço infinito que bloqueie o usuário. São desvios explícitos do retry infinito e NODE soft do OptChat.
+Inputs integrais que excedem o contexto do provider produzem InputTooLarge/Locator, não compressão de prefixo disfarçada de mensagem inteira. Tool output grande pode usar o descriptor completo do artefato como alvo com source_coverage=ArtifactDescriptorOnly; não se afirma ter resumido bytes não lidos. Retry de transporte usa atraso configurável, lease e deadline, liberando vaga durante backoff. Distinguir interrupção/indisponibilidade, bloqueio de orçamento/egress e recusa semântica do modelo. Nenhum desses vira summary de erro como se fosse memória. São desvios explícitos de `AskAI.patient` (retenta indisponibilidade a cada 60s), `Memory.build` (guarda a menor resposta mesmo oversized ou recorta fonte em recusa) do UniiChat fixado.
 
-TOOL_OUTPUT_INLINE_CAP limita somente a entrega inline ao modelo do turno: até o cap, resultado textual completo; acima dele, descriptor completo FullOutputStored com hash/bytes/ref e leitura explícita. Os bytes originais completos são persistidos antes da entrega. Não se mantém apenas head/tail no histórico, nem se apresenta preview como mensagem completa. Esse é outro desvio deliberado do CAP destrutivo da referência.
+TOOL_OUTPUT_INLINE_CAP limita somente a entrega inline ao modelo do turno: até o cap, resultado textual completo; acima dele, descriptor completo FullOutputStored com hash/bytes/ref e leitura explícita. Os bytes originais completos são persistidos antes da entrega. Não se mantém apenas head/tail no histórico, nem se apresenta preview como mensagem completa. O código upstream pagina mensagens guardadas (`Memory.pages/Clip.clip_pages`), mas recorta head/tail do output de comandos **antes** da memória (`Machine.ts/Clip.clip`). Distinguir esses caminhos; o LOGOS não adota o segundo como retenção integral.
 
 ## 6. Memory View
 
@@ -121,9 +167,20 @@ Renderer normativo: `start+count|payload\n`. Percent-escape com hex uppercase `%
 
 ### Folding incremental
 
-Append adiciona folha na cauda; fit substitui apenas siblings adjacentes pelo pai READY. Nunca divide uma part antiga automaticamente. Entre pares elegíveis, maximizar `(H-start)/(4*count)`; comparar razões exatamente, desempatar menor start. Isso reduz resolução dos mais antigos relativamente à escala. Não depende de score semântico que reorganize a cronologia.
+Append adiciona folha na cauda; fit substitui apenas siblings adjacentes pelo pai READY. Nunca divide uma part antiga automaticamente. Entre pares elegíveis, maximizar **`(H+1-start)/count`**, onde H é o end exclusivo da view e count é a escala de **um child**. É a tradução literal de `(t+1)/2^l-i` em `Memory.merge`, não uma fórmula reconstruída da descrição. Desempatar menor start. Não depende de score semântico nem reorganiza a cronologia.
 
-Comparação de due não usa divisão inteira ou floats: comparar `(H-a.start)*b.count` com `(H-b.start)*a.count` em u128 checked; fator 4 cancela. Com o MAX_EVENTS declarado, os produtos cabem; overflow fora do perfil é erro de configuração.
+Comparar `(H+1-a.start)*b.count` com `(H+1-b.start)*a.count` em u128 checked;
+não floats/divisão inteira. Com MAX_EVENTS<=2^63-1, cabe inclusive H+1.
+Regressão obrigatória: H=8, pairs `(0+2,2+2)` e `(4+1,5+1)` têm scores 4,5 e
+5; escolher o segundo. A fórmula antiga empatava e escolhia o primeiro.
+
+**Histerese persistida:** HIGH=VIEW_SIZE; uma view sem batch e <=HIGH só apenda
+cauda. Ao ultrapassar HIGH, abrir batch e dobrar até LOW, não apenas até HIGH.
+Guardar batch/parts/revisão, inclusive o progresso privado. Conclusões de jobs
+fora de batch não reotimizam a view. No LOGOS, publicar a nova revisão de batch
+somente quando pronta e <=LOW; o upstream aceita alguns lotes incompletos em
+fronteiras de append (`Memory.fit(next=true)`). Essa diferença dá ao LOGOS um
+contrato simples de publicação dentro do teto, podendo aumentar settle.
 
 Pai pode ser maior que a soma textual dos children. Mesmo assim, merge diminui número de parts; não exigir redução imediata de bytes, que poderia causar deadlock. Nada oversized é enviado: fit/settle continuam até caber. Nodes ausentes são agendados; view interna pode exceder budget enquanto aguarda, view publicada não.
 
@@ -131,9 +188,67 @@ Medir **frame renderizado inteiro**: header/trailer, IDs, separadores, escapes e
 
 `VIEW_SIZE >= 1024 + bit_length(MAX_EVENTS) * (3*NODE_SIZE + 44)`.
 
-Esse piso cobre a floresta mínima em todos os H permitidos, inclusive summaries adversariais. NODE_SIZE deve caber Locator e ser >=64. Defaults passam para MAX_EVENTS=2^63-1. Budgets menores exigem outro perfil compatível, não truncamento. História matematicamente ilimitada não cabe em IDs finitos; sob o limite declarado, a view tem teto fixo. Crescimento do log/árvore/disco não é constante.
+Esse piso F cobre a floresta mínima em todos os H permitidos, inclusive summaries adversariais. NODE_SIZE deve caber Locator e ser >=64. Definir **LOW=max(floor(HIGH/2),F)** e exigir F<HIGH. Com MAX_EVENTS=2^63-1, F=100564 e LOW=100564 para HIGH=128000; não prometer faixa 64–128KB com esse renderer/limite. Um perfil com MAX_EVENTS=2^32-1 permite LOW=64000. O UniiChat mede só textos dos nodes e usa LOW=HIGH/2, sem esta garantia de frame escapado. Budgets menores exigem outro perfil compatível, não truncamento. História matematicamente ilimitada não cabe em IDs finitos; sob o limite declarado, a view tem teto fixo. Crescimento do log/árvore/disco não é constante.
 
 Persistir parts, revisão, geração, watermark H e digest em commit atômico. Restart retoma esse snapshot e replay somente da cauda; não calcula livremente outra view de toda a história. Mudança de política/renderer/budget é migração explícita; conserva ranges ou os coarsens, nunca afina história silenciosamente. Cache é otimização de provider, não fonte de persistência.
+
+### Blocos e caches
+
+Renderizar header constante, blocos de **quatro linhas completas** e tail com
+0–3 linhas + fechamento. Marcar para cache somente o último bloco completo;
+se não existe, marcar o header. Fechamento, IDs de snapshot/cutoff, contexto
+documental, devices/work e tarefa atual vão depois dessa fronteira. Marca
+móvel não muda os bytes/limites dos blocos anteriores. Escapes, quebras de
+linha, roles e schema/order de tools são determinísticos. Não juntar a view
+toda num único bloco que muda a cada append. Cada geração fixa renderer e
+CACHE_BLOCK_LINES; restart preserva parts e segmentação, mesmo com cache frio.
+
+Há quatro mecanismos distintos:
+
+| Mecanismo | Identidade/vida | Falta ou invalidação |
+| --- | --- | --- |
+| Nodes já publicados | store/generation/source/context/recipe pinados | não gerar outra resposta sobre o mesmo NodeRef imutável |
+| Prompt cache remoto | prefixo **serializado** pelo adapter, modelo/config/tools/roles/blocos | miss/TTL/eviction só muda custo/latência; reenvio completo continua válido |
+| Coordenação local de cache | namespace de acesso + fingerprint exato do prefixo/modelo/adapter | efêmera, reconstruível; não é cache de resposta nem confirmação de hit |
+| Retrieval/rerank | corpus/profile/generation/scope + query/recipe | invalidar geração e revalidar acesso; não confundir com cache de provas h(O) da10.2 |
+
+Coordenador **single flight de aquecimento**, por prefixo: após autorização
+de egress/orçamento e admissão à concorrência, imediatamente antes do send,
+uma chamada lidera o prefixo frio. Outra que compartilha o prefixo ainda em
+escrita espera até o evento em que o adapter considera o prefixo reutilizável
+(upstream: `message_start` ou `response.output_item.added`), não até o fim da
+geração. Usar o maior prefixo conhecido; um sufixo novo pode ganhar seu próprio
+líder após aproveitar o prefixo quente. Erro/cancel antes desse evento remove
+a liderança e acorda seguidores; timeout/cancel do seguidor não mata o líder.
+Nenhum await de crédito, fila, lock SQL ou backoff acontece como líder. Usar
+deadlines/fencing e relógio monotônico; cache frio ou coordenador offline não
+bloqueia a correção do request.
+
+Fingerprint LOGOS: SHA-256 de representação tipada dos campos realmente
+enviados, incluindo endpoint/provider, namespace de credencial sem segredo,
+domínio de acesso, modelo/revisão, opções que alteram cache, tools/schema em
+ordem, system e prefixos de blocos/roles/imagens. Não copiar o hash Bun64 nem
+o cache global entre usuários do upstream. Invalidar por mudança desses
+campos/ACL; não por tarefa atual que está fora do prefixo. Permissões atuais
+sempre são conferidas, inclusive ao reutilizar resultado/local state.
+
+O adapter separa identidade de conteúdo e **diretivas de cache**:
+`cache_boundary`/`cache_control` escolhem quais fronteiras oferecem chaves,
+mas não entram no hash do conteúdo de um prefixo. Assim, mover a marca para
+o bloco seguinte conserva a chave do anterior. Campos fora do input, como
+teto de output/streaming, só entram se o contrato do provider disser que
+alteram identidade de cache; não hashear o JSON inteiro indiscriminadamente.
+Guardar trace do wire e da projeção usada para conferir essa correspondência.
+
+Adapters declaram suporte/minimum tokens/TTL estimado/limite de breakpoints,
+lookback e evento de disponibilidade; verificar o wire atual e registrar sua
+versão antes de ativar. Valores 300s/1800s e campos de API de `AskAI`/adapters
+são observações do commit auditado, não contrato de provider do LOGOS. No
+perfil simulado Anthropic do upstream, o total permitido é quatro marcas:
+system + view + fim do input/tail + marcador automático. Uma marca só na view
+deixa espaço; tools estáveis vêm antes do system. Compactor sem tools e em
+outro modelo tem cache próprio: mesmo preâmbulo não garante hits entre ele e
+o agente. Adapter sem cache mantém as mesmas entradas e a mesma semântica.
 
 ### Settling e turno fresh
 
@@ -282,6 +397,8 @@ dados. Links cross-store não copiam corpos sem autorização.
 | EpisodicEvent | linhas append-only com canon bytes/hash + blobs pinados | histórico original |
 | SummaryNode | linhas imutáveis por geração + input/context refs | derivado; não descartado se snapshot o referencia |
 | MemoryViewPart/snapshots | commit atômico de revisão/parts/watermark | projeção com estado incremental persistido |
+| ConversationView/ContextView working state | parts, size, high/low, batch, frontier, omission ranges e geração | estados distintos; cache remoto não é backup de nenhum deles |
+| Prefix flights/TTL estimado | somente memória privada do adapter, namespace de acesso | otimização efêmera; restart pode aumentar custo sem perder história |
 | CompactionJob/attempts | leases/receitas/result refs no DB | trabalho retomável/diagnóstico |
 | KnowledgeDocument versions/source manifests | registry append-only + originais pinados | documentos canônicos para recuperação, não fatos verdadeiros |
 | extraction/chunks/manifests | CAS/DB por recipe/generation; pins de resultados/snapshots | derivados reproduzíveis ou snapshots persistidos se não determinísticos |
@@ -334,6 +451,13 @@ Reusar telemetria da Etapa 10.8: namespace memory.*, métricas/JSONL sem conteú
 
 Episodic: event_count, tree_node_count/depth, pending/leasing jobs, frontier_lag, view_bytes/parts/resolution_distribution, compaction_latency/calls/retries/cost/cache_hit/free_ratio/locator_ratio, settle_latency/cancels, zoom_depth/frequency, search_hit_rate/original_resolution_failures, inbox_lag e recovery incidents.
 
+Cache/folding: high/low/batch e tamanho de cada view, lotes/revisões publicados,
+primeiro bloco alterado/prefixo comum em bytes, tokens de input/read/write
+**reportados pelo provider** separados por turn/compactor/modelo, tarefa/tail
+incluídos e excluídos em métricas distintas, cold/TTL/eviction/config change,
+leaders/followers/wait_ms/abort/timeout e custo de escrita/leitura. Contagem de
+bytes/UTF-16 de simulador não é token nem desconto monetário garantido.
+
 Knowledge: document/version/chunk counts, original/extraction/index/vector bytes, ingestion/index/rebuild latency, retrieval p50/p95/p99, reranking latency, source/method distribution, source_resolution_failures, degraded_query_ratio, egress/cost e generation/model identifiers.
 
 Não medir “truth score” com cosine ou usar cache-hit como qualidade de memória. Contadores e spans não se autoingerem como eventos a cada job, evitando feedback infinito. Registros de incidente relevantes podem ser admitidos como system_event pelo capture owner.
@@ -361,7 +485,7 @@ spec/vectors/knowledge/      futuros vetores independentes
 
 CAS permanece em logos-ledger; dois novos domínios e seus limites requerem ADR, atualização aditiva/versionada de spec/domains.md e spec/cas.md e vetores, sem mudar endereços existentes. Mudança em módulos TCB existentes exige manifesto/fuzz/lints conforme regras atuais. O serviço de memória não entra automaticamente na propriedade correctness. Dependências novas, inclusive fora da TCB, devem respeitar deny.toml e decisões aprovadas.
 
-Protocolos/CLI/TUI/providers/kernel futuro ainda não implementados são dependências de integração, não justificativa para criar substitutos nesta extensão. Adoção/ordem no ROADMAP é decisão explícita posterior; nenhum checkmark de implementação nasce desta documentação.
+Protocolos/CLI/TUI/providers e handlers futuros do kernel são dependências de integração, não justificativa para criar substitutos nesta extensão. A trilha proposta está no ROADMAP Apêndice F; adoção/formatos são gate MEM.0. Nenhum checkmark de implementação nasce desta documentação.
 
 ## 19. Data Schemas
 
@@ -403,17 +527,27 @@ MemoryViewPart = { node_ref: NodeRef }  # start/count derivam da ref
 WorkingViewPart = PendingNode(NodeId,generation) | ReadyPart(MemoryViewPart)
 MemorySnapshot = {
   snapshot_id, store_id, generation, revision, represented_end: u64,
-  parts: [MemoryViewPart], renderer_version, rendered_bytes, digest,
+  parts: [MemoryViewPart], renderer_version, cache_block_lines,
+  rendered_bytes, digest,
   degradation: [Code]
 }
 # WorkingViewPart é estado privado do writer; MemorySnapshot só contém ReadyPart.
+
+WorkingView = {
+  store_id, generation, kind: Conversation|Context, revision, represented_end,
+  parts: [WorkingViewPart], high, low, batch: bool, renderer_version,
+  cache_block_lines, omitted_ranges  # vazio em Conversation; permitido em Context
+}
+ProviderBlock = { role, text_utf8: Bytes, cache_boundary: bool }
+# ProviderBlock é contrato interno; não é novo formato aceito pelo kernel.
 
 CompactionJob = {
   job_id, target: NodeId, generation, immutable_source_refs,
   context_snapshot_ref, input_digest, policy_ref, provider_profile,
   state: Queued|Leased|Retryable|Ready|Failed|Cancelled,
   lease_owner?, lease_until?, attempt_token?, retry_at?, attempts: u32, max_attempts,
-  deadline, best_attempt_ref?, result_node_ref?, last_error?
+  deadline, frozen_block_refs, byte_feedback?, candidate_responses,
+  transport_attempts, best_attempt_ref?, result_node_ref?, last_error?
 }
 
 KnowledgeDocument = {
@@ -528,27 +662,33 @@ compact(job):
   if not provider_input_fits(context,target): return explicit_locator_or_failure(job)
   best = load best prior attempt if present
   prior_byte_feedback = load prior feedback if present, else none
-  for attempt from job.attempts+1 through job.max_attempts inclusive:
+  while job.attempts < job.max_attempts and job.candidate_responses < COMPACTION_RETRIES:
     if cancelled_or_deadline(): break
-    persist claimed attempt with current attempt_token before provider call
+    persist incremented attempts + claimed attempt_token before provider call
     reply = generate_without_tools(context, target, budget, prior_byte_feedback)
-    if provider_error(reply): persist retry_at; release execution slot; return Retryable
+    if provider_error(reply):
+      increment transport_attempts; persist retry_at/error
+      release execution slot; return Retryable if under caps else explicit_failure
+    persist incremented candidate_responses  # inválida/vazia também consome candidato
     text = trim_outer_whitespace(reply)
     if not valid_summary_text(text): record invalid attempt; continue
     best = smaller_utf8_then_earlier(best,text); persist best diagnostic ref
     if utf8_bytes(text) <= NODE_SIZE: return text with mode=Model
-    prior_byte_feedback = {actual:utf8_bytes(text), limit:NODE_SIZE, full_attempt:text}
+    prior_byte_feedback = {actual:utf8_bytes(text), limit:NODE_SIZE,
+                           diagnostic_prefix:utf8_safe_bounded_prefix(text)}
   persist best as restricted diagnostic if present
   return explicit_locator_or_failure(job)
 
 pump_compactor():
   while active_jobs < COMPACTION_JOBS:
     f = first committed event without READY leaf in this generation, else H
-    leaves = candidate_leaf(f) if f < H and not leased/backing_off else none
-    merges = source-ready pairs with end <= f and no live lease
-    j = choose leaves first, then waiter-unblocking merges by due, then maintenance
+    window_end = COMPACTION_JOBS-th pending leaf's start, else H
+    candidates = unpublished source-ready targets with ctx(target) <= window_end
+                 and no live lease/backoff/blocked access
+    j = minimum (ctx(target), -level(target)) among candidates
     if no j: return
-    ctx = reuse frozen context or bounded_ready_prefix_context(end=j.start,generation=g)
+    ctx = reuse frozen context or whole_ready_parts(context_view,
+          cutoff=min(ctx(j),f), no_refinement=true, omissions_explicit=true)
     lease j with unique attempt_token, frozen inputs/context and deadline
     start/resume compact(j) outside locks
   on completion:
@@ -570,19 +710,22 @@ append_to_view(event_id):  # dentro da transação do append, sem espera/model c
   working_view.end += 1
   persist admission journal/working parts revision
 
-fit_view(view,H):
+fit_view(view,H):  # Conversation; Context tem projeção/omissões próprias de E§5
   require view partitions [0,H)
   if any part is not READY:
     schedule required leaf/ancestors; return Pending
-  while exact_rendered_bytes(view) > VIEW_SIZE:
+  if exact_rendered_bytes(view) > view.high: persist view.batch = true
+  target = view.low if view.batch else view.high
+  while exact_rendered_bytes(view) > target:
     eligible = adjacent siblings with READY parent pinning these exact child refs
     if no eligible:
       schedule missing parents of sibling pairs
       return Pending if such parents exist else ConfigurationOrIntegrityError
-    pair = max rational due, tie smallest start
-    replace pair with parent; persist owner revision atomically
+    pair = max rational (H+1-start)/child_count, tie smallest start
+    replace pair with parent; persist private owner revision atomically
     # parent pode aumentar bytes, mas reduz parts; não exigir economia imediata
-  validate geometry/generation; atomically persist pinned snapshot
+  view.batch = false
+  validate geometry/generation; atomically persist pinned snapshot + working state
   return Ready(snapshot)
 
 settle(H,cancel):
@@ -625,6 +768,24 @@ render(snapshot):
   write bounded trailer into frame  # volatile metadata never prepends history
   require exact utf8_bytes(frame) <= VIEW_SIZE else ContextBudgetMismatch
   return owned immutable frame bytes without a second full-frame copy
+
+provider_blocks(snapshot):
+  frame = render(snapshot)
+  # dividir sem alterar bytes; quatro linhas inteiras por bloco, sem reflow
+  blocks = [constant_header] + full_four_line_blocks + [remaining_lines_and_close]
+  mark only last full block, else header; never mark memory's partial tail
+  require concatenation(blocks.text) == frame
+  return immutable blocks
+
+send_provider(request,cancel):
+  revalidate current read + destination/egress + budget; obtain execution slot
+  wire = adapter.serialize(request)  # stable tools/system/view, then volatile tail
+  flight = coordinator.claim_or_wait(exact_prefix_keys(wire), deadline, cancel)
+  try:
+    send wire; on adapter.cache_available_event: flight.begun()
+    capture response and actual usage normally  # every task generates its own answer
+  finally: flight.end(); release slot
+  # no task result reuse; cold/miss/cancel cannot change node/claim authority
 
 get_event(snapshot,event_id):
   require same store, 0 <= seq < snapshot.H and current read permission
@@ -761,6 +922,10 @@ e não apenas custo do LLM.
 
 **M12.** Instruções históricas/recuperadas não herdam autoridade de system/developer/current user.
 
+**M13.** Entre lotes, blocos completos do prefixo conservam bytes/ordem/roles;
+cache miss, restart ou coordenador indisponível não altera histórico nem
+resultado epistêmico. Cache-hit real é medido, nunca inferido da tabela de TTL.
+
 Adicionalmente: commit pressupõe refs duráveis; cancel mantém inputs; permissões não derivam de modelo; todos os passos que criam status/efeito continuam sob os invariantes existentes de §§3/4/6/12/13.
 
 ## 22. Acceptance Tests
@@ -770,9 +935,9 @@ Casos de implementação futura, não resultados alegados desta extensão:
 1. **1M eventos:** após settle, frame UTF-8 inteiro <= VIEW_SIZE; union de ranges=[0,1000000); event #42 recuperável por descida e bytes iguais ao original. Validar todos os IDs estruturalmente, amostra de payloads e full sweep separado.
 2. **Todos os originais:** append de texto não NFC, Unicode multibyte, binário e artefato segmentado; folhas/zoom devolvem bytes/digest exatos antes/depois de reboot. Nenhuma conversão NFC do original.
 3. **Free:** texto literal que cabe e pai cuja concatenação+newline cabe fazem zero calls; um byte acima dispara compactor/Locator, sem corte. Verificar children ordenados.
-4. **Folding:** snapshots sucessivos; cada old part só permanece ou está contida em part maior alinhada. Par de maior due e tie menor start escolhido; parent maior em bytes não causa loop/stall.
+4. **Folding:** snapshots sucessivos; cada old part só permanece ou está contida em part maior alinhada. Par de maior due e tie menor start escolhido; incluir o caso H=8 de E§6. Parent maior em bytes não causa loop/stall. Entre LOW e HIGH sem batch, nenhuma revisão histórica muda; exceder HIGH inicia batch até LOW e restart retoma seu estado. Perfil de 63 bits satisfaz F/LOW, sem exigir 64KB impossíveis.
 5. **Byte enforcement:** modelo scriptado responde oversized cinco vezes, incluindo multibyte/control; nenhum oversized é publicado. Locator explicitamente marcado ou settle cancela. IDs/escapes/trailer contam no budget.
-6. **Settling:** última folha/modelo lento; nenhuma chamada principal/subagente recebe placeholder/partial. Cancel preserva input e retry idempotente. Context do compactor nunca inclui pending ou o próprio target como pré-condição.
+6. **Settling:** última folha/modelo lento; nenhuma chamada principal/subagente recebe placeholder/partial. Cancel preserva input e retry idempotente. Context do compactor nunca inclui pending ou o próprio target como pré-condição; pai pode ler children/descendentes já prontos até seu end, folha só vê anteriores. ContextView e ConversationView têm fronteiras independentes, persistidas; import/backoff não cria dependência circular.
 7. **Crash append:** SIGKILL antes/depois de CAS put, begin, insert e commit; acknowledged receipt conserva evento exato/mesmo ID, sem buraco/reuso committed. Retry com conteúdo diferente falha.
 8. **Crash jobs/view:** matar worker com lease, duplicar completion e reiniciar entre replace/persist; retomar sem node sobrescrito, coverage parcial ou expansão de view anterior.
 9. **Sem autoridade:** summary inventa X/Verified/assinatura; proposta que cita NodeId/SourceRef como PremiseRef é recusada; nenhum evento Verified/token aparece sem o fluxo existente.
@@ -788,19 +953,47 @@ Casos de implementação futura, não resultados alegados desta extensão:
 19. **Recuperação longa:** inserir dado cedo, aumentar H por ordens de magnitude, consultar depois; medir precisão/recall/zoom/custo, sem assumir que summary preservou todas as palavras.
 20. **Fencing/backoff/turn replay:** job com uma vaga; transporte falha e libera vaga, tentativa antiga retorna após lease nova, callback é recusado. Ao atingir max_attempts não reinicia contador. Head/fence mudou durante settle: inputs continuam na inbox e nenhum turno recebe snapshot stale. Crash após admissão retoma snapshot salvo sem incluir o input atual no histórico; receipt já entregue retorna resultado salvo, sem novo append/model call.
 
+21. **Retries bounded:** capturar cinco requests do provider scriptado. Cada um
+    conserva exatamente os blocos iniciais; após o primeiro só uma nota
+    substituída, de tamanho bounded, sem transcript/respostas/raciocínio
+    acumulados. Recusa, vazio, oversized, outage e crédito/egress negado têm
+    saídas distintas; nenhuma vira clipping silencioso. Free testa 512/513
+    bytes, newline e UTF-8 multibyte, não número de caracteres.
+22. **Cache wire:** 3/4/7/8/9 linhas, append, passagem de ID9→10, zoom e restart;
+    conferir conteúdo/ordem dos blocos e posição única da marca da view.
+    Mover a marca conserva chaves de prefixos anteriores; tail parcial e
+    knowledge/tarefa não alteram o prefixo. Teto de saída segue o contrato de
+    identidade declarado pelo adapter. Mutar tools,
+    role, system, endpoint/modelo/adapter ou ACL muda namespace/fingerprint.
+    Adapter sem cache envia o mesmo conteúdo. Simular lookback finito,
+    TTL, limite de marcas, prefixo mínimo e eviction; não só igualdade de hash.
+23. **Cache concorrente:** N compactações com prefixo frio compartilham um
+    aquecimento; cada uma ainda recebe sua própria resposta. Liberar seguidores
+    no evento de cache disponível, antes do fim da geração. Cobrir extensão
+    de prefixo, falha do líder, cancel/timeout do seguidor, crédito/fila/yield
+    antes da liderança, mudança de store/credencial/ACL e restart frio.
+24. **Replay de custo:** dataset/seed/wire/relógio fixados; separar input/read/
+    write/tarefa/tail e turn/compactor. Baseline sem lotes, bloco único,
+    contexto refeito por job e sem single flight devem piorar as métricas
+    correspondentes; falha de controle é reportada. >=95% é só referência do
+    simulador upstream, não gate universal ou medição do LOGOS real.
+
 Verificação estrutural desta proposta: runner descartável de árvore/view com
 1.000.000 eventos, 1.999.993 nodes, 161 parts; frame máximo 8.192/8.192 bytes;
 event #42 recuperado em 16 descidas com bytes não NFC preservados. Outro caso
 teve 236 folds que aumentaram bytes privados e terminou com frame 8.123;
 floresta adversarial de 63 raízes/512 bytes ficou em 98.794/128.000 bytes.
-Comparação do chooser indexado com enumeração exata: 1.000 partições, H<128.
+Comparação do chooser indexado com enumeração exata: 1.000 partições, H<128,
+**para a fórmula antiga**; não demonstra o chooser corrigido nesta revisão.
 Fixture SQLite WAL/FULL: SIGKILL antes de insert, após insert e após commit;
 inbox preservada e retry com mesmo ID. Resolver nativo recusou alteração e
 ausência do original. São referências estruturais, não módulos LOGOS, testes
 do kernel, implementação de ACL/provider, PDF/OCR ou benchmark de recall.
 Dois runners iniciais atingiram deadlines de 300s/90s; versões indexada e
-menor de comparação concluíram. Não houve verificação completa/CI nesta
-entrega documental; scripts/fixtures não foram adicionados ao repositório.
+menor de comparação concluíram. São resultados históricos de 04/out, sem
+full verify naquela entrega, e não verificam a nova política de lotes/cache.
+A revisão de 19/out tem evidências próprias no relatório de código; nenhum
+dos 24 critérios de implementação foi fechado por testar o upstream.
 
 Runner de 1M: NODE_SIZE=64, VIEW_SIZE=8192; evento i com bytes `event#i`,
 exceto #42 não NFC. Free quando concatenação cabe; demais nodes Locator,
@@ -815,7 +1008,7 @@ Long-term recall: informação rara/decisão cedo, distração em 10^3/10^4/10^5
 
 Knowledge: mesmos corpus/queries/relevance labels para lexical only, dense only, hybrid e hybrid+reranker; Recall@k, MRR/nDCG, cobertura/resolução de fonte, duplicate overlap, latência/custo, versões obsoletas e unavailable paths. Cross-memory: tarefas exigindo decisão+fonte; acerto dos dois IDs, localização original, status/taint preservado e claim/ação corretamente mediada.
 
-Baselines episódicas obrigatórias: full context (só onde cabe; reportar onde não cabe), recent sliding window, rolling summary, periodic compaction, vector-only memory, recent window+vector RAG e hierarchical binary memory. Igualar budgets de tokens/custo/latência quando comparável; declarar original retention/recovery em cada baseline. Fazer ablations de free nodes, contexto do compactor, due folding, fresh turns e semantic episodic search. Variar defaults Node/View/jobs/retries, datasets, seeds e modelos; reportar intervalos, falhas e qualidade separada de acessibilidade estrutural. Não assumir superioridade OptChat-like ou segurança cognitiva.
+Baselines episódicas obrigatórias: full context (só onde cabe; reportar onde não cabe), recent sliding window, rolling summary, periodic compaction, vector-only memory, recent window+vector RAG e hierarchical binary memory. Igualar budgets de tokens/custo/latência quando comparável; declarar original retention/recovery em cada baseline. Fazer ablations de free nodes, ContextView persistida versus contexto reconstruído, due antigo versus literal do código, lotes HIGH/LOW versus fold mínimo, blocos de quatro versus bloco único, single flight, fresh turns e semantic episodic search. Variar defaults Node/View/jobs/retries, datasets, seeds e modelos; reportar intervalos, falhas e qualidade separada de acessibilidade estrutural. Não assumir superioridade OptChat-like ou segurança cognitiva. Em pelo menos um provider real autorizado, medir read/write/input tokens e custo com cache frio/quente/TTL; divergência do simulador não pode ser escondida removendo tarefa do denominador.
 
 ## 24. Implementation Order
 
@@ -825,18 +1018,19 @@ Somente destes módulos, condicionado à infraestrutura existente:
 2. Artifact refs/originais pinados, inbox, event append idempotente e recuperação.
 3. Binary tree/free nodes, validação geométrica e custódia de generations.
 4. Compactor contextual, leases, budgets/diagnósticos/Locator explícito.
-5. Incremental view, persistência, settle/cancel e cache-stable render.
-6. Zoom/range/neighbors/date e original resolution.
-7. Fresh-turn harness/subagents/MCP read-only; testes de mediação/taint existentes ampliados.
-8. Episodic lexical search; dense episódico opcional após baseline.
-9. Knowledge registry versionado, source/provenance e sandbox ingestion/chunking.
-10. Lexical retrieval e resolve_source; rebuild/ACL/failure paths antes de dense.
-11. Embedding profiles, vector generations e hybrid fusion.
-12. Reranker opcional, budgets/egress e degradação.
-13. Memory Router e cross-memory refs; CLI/TUI auxiliares sem mudar Seal.
-14. Observabilidade, benchmarks, ablations e fault injection de todos os itens.
+5. Duas views incrementais persistidas, lotes HIGH/LOW/due corrigido, settle/cancel e blocos estáveis.
+6. Adapters e single flight, deadlines, fingerprints/namespace, testes de wire e custo.
+7. Zoom/range/neighbors/date e original resolution.
+8. Fresh-turn harness/subagents/MCP read-only; testes de mediação/taint existentes ampliados.
+9. Episodic lexical search; dense episódico opcional após baseline.
+10. Knowledge registry versionado, source/provenance e sandbox ingestion/chunking.
+11. Lexical retrieval e resolve_source; rebuild/ACL/failure paths antes de dense.
+12. Embedding profiles, vector generations e hybrid fusion.
+13. Reranker opcional, budgets/egress e degradação.
+14. Memory Router e cross-memory refs; CLI/TUI auxiliares sem mudar Seal.
+15. Observabilidade, benchmarks, ablations e fault injection de todos os itens.
 
-Knowledge Graph fica fora desta ordem inicial; só uma extensão futura apoiada por ganho medido. Etapas dependentes de 5.2/6.6/8.x/10.x não são consideradas prontas no estado atual do repo. Esta proposta não desloca silenciosamente a ordem das Fases 0–23.
+Knowledge Graph fica fora desta ordem inicial; só uma extensão futura apoiada por ganho medido. O ROADMAP Apêndice F organiza estes entregáveis em MEM.0–MEM.7, com gates explícitos; este índice não cria uma segunda ordem concorrente. 5.2 está pronta localmente, mas 6.6/8.x/10.x continuam futuras. Esta proposta não desloca a próxima etapa principal 5.4 nem a ordem das Fases 0–23.
 
 # Changes Required Elsewhere in the Existing Spec
 
@@ -853,5 +1047,5 @@ Alterações propostas, não reescrita das seções originais:
 - **§12 — Arquitetura final:** adicionar os dois módulos e Router na faixa de processos não confiáveis; referenciar protocolo auxiliar/CAS scopes. Manter kernel/gateway/checkers/renderizador. Tokens seguem ADR 0001 vigente, não introduzir Biscuit por esta extensão.
 - **§13 — Integridade de justificativa:** adicionar: “Memória pode influenciar a busca; nunca satisfaz por si a exigência de origem de Γ. Conteúdo recuperado passa pelos mecanismos existentes de atribuição/extração/atestação, inclusive Says/Extracted.”
 - **Após §14, antes de Fontes:** adicionar §15 apontando para esta extensão; em Fontes acrescentar referência OptChat técnica. Não renumerar referências §N.k existentes.
-- **ROADMAP, alterações futuras pontuais:** após aprovação, anexar etapas de memória com dependências explícitas; adicionar referências nas 6.6, 10.3, 10.5–10.8 e 23.x. Sem marcar implementação, substituir etapas ou introduzir dependência dos checkers em memória.
+- **ROADMAP:** Apêndice F/MEM.0–MEM.7 e referências nas6.6/10.3/10.5–10.8/23.1/23.4 adicionados documentalmente em19/out. Critérios de implementação continuam abertos; memória não vira dependência dos checkers nem desloca fases. Aprovação da extensão base/formatos fica em MEM.0.
 - **Specs normativas futuras:** memory/knowledge encodings e vetores próprios; atualização aditiva/versionada de domains/CAS para blobs/manifests. Canon/v1 e AIR não mudam. Cas/v1 continua válido para objetos/domínios existentes.

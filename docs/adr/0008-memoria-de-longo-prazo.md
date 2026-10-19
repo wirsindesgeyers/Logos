@@ -3,6 +3,8 @@
 - Estado: proposta; especificada, não implementada.
 - Data: 2026-10-04.
 - Escopo: [extensão Long-Term Memory](../spec/LOGOS-long-term-memory.md).
+- Revisão documental: 2026-10-19, [ADR 0039](0039-memoria-baseada-no-codigo-uniichat.md)
+  e [auditoria do source](../research/uniichat-memory.md). Estado da adoção não mudou.
 
 ## Contexto
 
@@ -10,7 +12,9 @@ O mantenedor pediu extensão da spec madura, não redesign nem implementação a
 A spec §§3/5/12/13 já separa contexto/retrieval não confiável de justificativa checada.
 OptChat oferece histórico original, árvore binária, folding e zoom; CAS/SQLite,
 Source/ContentOf/Origin/Says/Extracted e os protocolos existentes resolvem partes
-que não devem ser duplicadas. O repo ainda não implementa kernel/gateway/harness.
+que não devem ser duplicadas. Em 04/out o repo ainda não implementava
+kernel/gateway/harness; em 19/out o kernel chega à5.3, gateway/harness seguem
+futuros. Não tratar esse contexto histórico como estado atual do STATUS.
 
 ## Decisões propostas
 
@@ -21,6 +25,10 @@ que não devem ser duplicadas. O repo ainda não implementa kernel/gateway/harne
 - Free nodes sem modelo, compactor contextual separado, view incremental persistida,
   settle e turnos fresh. Budgets reais de UTF-8/frame; Locator explícito em falha,
   nunca oversize/truncamento publicado. Defaults experimentais, não garantias empíricas.
+- Revisão do source: ContextView separada e cutoff de pai no end, batches
+  HIGH/LOW, due literal `(H+1-start)/child_count`, blocos estáveis de quatro
+  linhas e coordenação de aquecimento single flight. Retries não acumulam
+  transcript; caches/roles/tools/ACL são contratos explícitos em E§5–6.
 - Registry/versões/proveniência e locators; lexical+dense/RRF/rerank; índices reconstruíveis,
   extrações pinadas quando usadas, IEEE754 Bytes derivados e scores sem floats em canon/v1.
 - Reusar CAS com raiz de memória isolada do kernel. Novos domínios raw artifact/manifest
@@ -35,6 +43,8 @@ que não devem ser duplicadas. O repo ainda não implementa kernel/gateway/harne
 
 Extensão completa em E§1–24 com schemas, algoritmos, recovery, invariantes, critérios,
 benchmarks e pontos cirúrgicos para §§2–13/novo §15. Não altera AIR/canon/v1/Proof Ledger
-ou aceita semântica de conteúdo por similarity. A aprovação do ADR e inserção de etapas
-no ROADMAP são explícitas; nenhum checkmark de código é criado. Dependências futuras
-reais e regras TCB/deny/fuzz/manifesto continuam obrigatórias.
+ou aceita semântica de conteúdo por similarity. O mantenedor pediu a revisão
+baseada no código em19/out: etapas **propostas** MEM.0–MEM.7 foram inseridas no
+ROADMAP (Apêndice F), com dependências/exclusões e testes. Adoção/formatos ainda
+são gate MEM.0; nenhum checkmark de código é criado. Dependências futuras reais
+e regras TCB/deny/fuzz/manifesto continuam obrigatórias.

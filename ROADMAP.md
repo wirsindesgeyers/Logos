@@ -5,6 +5,13 @@
 
 Referência conceitual: `LOGOS — Proof-Carrying Agents` (Oct 1, 2026), em [`docs/spec/LOGOS-proof-carrying-agents.md`](docs/spec/LOGOS-proof-carrying-agents.md). As seções da especificação são citadas como `§N`; `§N.k` designa o **k-ésimo item numerado** da seção N (a especificação não tem subseções numeradas). Ex.: `§4.9` é o passo 9 (“Recheck”) do *Proof lifecycle*; `§12.1` é o item 1 da *Ordem de construção*. Citações às seções 1–5 deste roadmap são escritas “§N do roadmap” quando houver ambiguidade.
 
+> **Memória, revisão de 2026-10-19.** A extensão proposta do ADR 0008 ganhou
+> trilha própria no [Apêndice F](#apêndice-f--memória-persistente-trilha-proposta),
+> conferida no código oficial UniiChat `0500bf6` e OptMem `1fb164c`
+> ([auditoria](docs/research/uniichat-memory.md), ADR 0039). Contratos de cache,
+> lotes e compactor estão em E§5–6/20/22. MEM não está implementada, não muda
+> os critérios demonstrados e não desloca a próxima etapa principal 5.4.
+
 > **Revisão 2 (2026-10-01).** Fase 0 revisada contra a especificação. Corrigidos: 0.6 passa a depender da 0.3 (`Budget` e `CheckOutcome` são registrados nos eventos, §10 ameaça 18) e proíbe também `Rejected → Refuted` (§4.4); 0.4 com assinatura e `KeyId` agnósticos de algoritmo (passkeys usam ES256, §6) atrás de uma trait `Signer` (HSM, 13.1), hash de bytes crus (`h(checker)`, certificados de prover) e mecanismo `Domain` com tags reservadas; 0.3 com identificador de versão `canon/v1` (§4.1) e versão de Unicode fixada para NFC; 0.5 com `spec/cas.md` e API preparada para streaming (§4, §7); 0.7 com atacante que bifurca o ledger (ameaça 9) e TOCTOU (ameaça 10) em `limits.md`; 0.1 com ADR registrando as divergências em relação à especificação (token próprio em vez de Biscuit; tese da §13). Novo crate de TCB `logos-core` para os tipos da 0.6. Fuzz longo roda em job noturno. Especificação movida para `docs/spec/`; convenção `§N.k` explicitada.
 
 > **Revisão 1 (2026-10-01).** Toda etapa ganhou os campos *Depende de (recebe pronto)* e *Fora do escopo*. Corrigidos: semântica de negação entre a rota Datalog e a rota FOL (4.1, 7.3); critério de injetividade da paráfrase (9.1); recheck LRAT no auditor (4.5). Decidida a divisão de linguagens (§1, ADR 0002): TCB e TUI em Rust, agente/farm/avaliação em Python. AIR = *Argument Intermediate Representation*. Fases 19–22 marcadas fora do horizonte do primeiro ciclo (§5). Acrescentado o procedimento de geração de planos (§0).
@@ -48,6 +55,7 @@ Referência conceitual: `LOGOS — Proof-Carrying Agents` (Oct 1, 2026), em [`do
 - [Apêndice C — Catálogo de eventos do ledger](#apêndice-c--catálogo-de-eventos-do-ledger)
 - [Apêndice D — Métricas que o sistema precisa emitir](#apêndice-d--métricas-que-o-sistema-precisa-emitir)
 - [Apêndice E — Riscos do projeto e pontos de decisão](#apêndice-e--riscos-do-projeto-e-pontos-de-decisão)
+- [Apêndice F — Memória persistente (trilha proposta)](#apêndice-f--memória-persistente-trilha-proposta)
 
 ---
 
@@ -1241,6 +1249,10 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 
 **Objetivo.** Preparar a Fase 11 (§13): dados de e-mail, web, documentos entram como premissas atribuídas, nunca como fatos.
 
+Integração futura de memória: MEM.5/6 reutiliza este ingresso; resumo, NodeRef,
+chunk ou cache hit não satisfaz `Fact` nem recebe endosso automático. Esta etapa
+não depende de memória e não a implementa.
+
 **Entregáveis.**
 - Operador `Says(source, φ)` no AIR (`source` é um termo de sort `Source`).
 - Atestador de ingestão: dado um conteúdo bruto `c` de uma fonte `s`, atesta `ContentOf(s) = h(c)` e `Origin(s) = external|internal|user`. **O atestador atesta a proveniência dos bytes, não o significado.**
@@ -1634,6 +1646,10 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 
 **Objetivo.** §12: o MCP expõe `propose`, `certify`, `action_intent`; ferramentas reais só atrás do gateway.
 
+MEM.5 acrescentará navegação read-only com snapshot/store/ACL explícitos,
+separada das ferramentas de prova/ação. Nenhum output de `memory_zoom/search`
+vira premissa citável sem 6.6/fluxo existente; sem dependência reversa em MEM.
+
 **Entregáveis.**
 - Ferramentas MCP: `logos_vocab`, `logos_propose`, `logos_prove` (chama o farm e faz `CERTIFY`), `logos_refute`, `logos_assume`, `logos_action`, `logos_ledger_query`, `logos_explain`.
 - Nenhuma ferramenta que execute efeitos diretamente.
@@ -1671,6 +1687,10 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 - Modos: intercalado (padrão), intercalado com especulação, pós-hoc (para comparação — Fase 16).
 - Registro de enfraquecimentos (`Weakened { from: h(φ), to: h(φ') }`) para a métrica de informatividade (ameaça 14).
 - Uso da API do Claude (modelo configurável; padrão: o mais capaz disponível).
+- Ponto de integração **futuro** MEM.4/5: chamada fresh a cada turno,
+  snapshot settled antes dos inputs atuais, tools/system estáveis e blocos
+  de memória antes do tail variável. Não simular memória persistente com
+  transcript crescente/rolling summary. Até MEM, não alegar tais garantias.
 
 **Critério de conclusão.**
 - [ ] Agente completa 10 tarefas operacionais de exemplo (fs, db, http) ponta a ponta, com todo efeito mediado.
@@ -1689,6 +1709,8 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 **Entregáveis.**
 - A resposta final é um documento estruturado: blocos `ledger_ref(h)` (renderizados a partir do ledger, com selo — versão simples agora, completa na Fase 15) e blocos `free_text` (do LLM) marcados visualmente como **não verificado**.
 - O renderizador recebe o texto do LLM com marcações de citação; qualquer frase que afirme algo sem citação fica no bloco `free_text`.
+- Quando MEM.5/6 existir, citações de memória/source continuam derivadas;
+  só `ledger_ref` real recebe o estado conferido. Não criar Seal de summary.
 
 **Critério de conclusão.**
 - [ ] Nenhuma saída do agente mostra conteúdo não verificado sem marcação (teste com 50 respostas).
@@ -1705,6 +1727,8 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 - Crate `logos-tui` em Rust (Ratatui + crossterm), **fora da TCB**: conversa, DAG de claims com status, fila de autorizações (assinatura feita pela parte do kernel, não pela TUI), ledger ao vivo, refutações com contramodelo legível.
 - Fontes de dados: ledger via `Query`/`Subscribe` do kernel (somente leitura); conversa e passos do agente via um socket de eventos exposto pelo harness Python (10.5), em frames canônicos.
 - Strings de paráfrase e selos são exibidas exatamente como o kernel as produziu (com o hash ao lado); a TUI não reformata texto que o usuário vai assinar.
+- MEM.7 adicionará zoom/ranges/Free/Model/Locator e falhas explícitas à TUI;
+  navegação não refina automaticamente a view do provider nem pede efeito.
 
 **Critério de conclusão.**
 - [ ] Demo gravada da TUI executando a demo da Etapa 8.9 conduzida pelo LLM.
@@ -1719,6 +1743,9 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 
 **Entregáveis.**
 - Emissão das métricas do Apêndice D (OpenTelemetry ou JSONL), dashboards simples.
+- Preparar extensão `memory.*` para MEM.7/E§17: ConversationView/ContextView,
+  lotes/prefixo comum e uso real input/read/write por modelo/tarefa. Cache
+  simulado e tokens reais ficam em séries distintas, sem exigir MEM nesta etapa.
 
 **Critério de conclusão.**
 - [ ] Todas as métricas do Apêndice D marcadas como "Fase ≤ 10" aparecem numa execução da demo.
@@ -2616,6 +2643,9 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 
 **Entregáveis.**
 - `logos` com subcomandos (`kernel`, `gateway`, `audit`, `agent`, `tui`), mantendo processos e usuários de SO separados em runtime; pacotes (deb/rpm, container, Nix).
+- Se a trilha MEM for adotada/concluída, MEM.7 estende instalação/backup com
+  storage e adapter isolados; ausência de MEM não deve ser anunciada como
+  memória persistente. Não embutir credenciais no Python para empacotar.
 
 **Critério de conclusão.**
 - [ ] Instalação limpa em Fedora e Ubuntu até a demo da Etapa 8.9 em < 15 minutos seguindo o README.
@@ -2658,6 +2688,9 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 
 **Entregáveis.**
 - Docs de usuário, de operador, de auditor e de pesquisador; `docs/guarantees.md` atualizado com os teoremas provados e suas hipóteses; changelog; política de versão dos formatos.
+- Se memória integrar o produto, publicar garantias/limitações e formatos
+  demonstrados em MEM.7, incluindo retenção, perdas declaradas e custo real
+  de cache; não vender acesso estrutural ao original como recall garantido.
 
 **Critério de conclusão.**
 - [ ] Release 1.0 com builds reprodutíveis, hashes publicados e cabeça do ledger de demo publicada no log de transparência.
@@ -2781,6 +2814,212 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | Bit decisivo não quebra endosso por capacidade | Etapa 11.5 sem diferença | Publicar resultado negativo; deslocar ênfase do paper para trajetórias e reversão | Etapa 11.5 |
 | Estudo com usuários sem efeito | Etapa 16.3 | Resultado negativo é publicável (§11); investigar formatos alternativos de selo | Etapa 16.3 |
 | Escopo grande demais para uma pessoa | Caminho crítico até 11 > 12 meses | Cortar fases 19–22 do horizonte; o núcleo 0–13 é a contribuição | Revisão trimestral |
+
+---
+
+## Apêndice F — Memória persistente (trilha proposta)
+
+**Estado: proposta especificada, nenhuma etapa MEM implementada/concluída.**
+[ADR 0008](docs/adr/0008-memoria-de-longo-prazo.md) continua proposto;
+[ADR 0039](docs/adr/0039-memoria-baseada-no-codigo-uniichat.md) autoriza esta
+revisão documental solicitada. Fonte técnica: [extensão E§1–24](docs/spec/LOGOS-long-term-memory.md),
+[auditoria de código e evidências](docs/research/uniichat-memory.md).
+Não confundir MEM com invariantes M1–M13. Etapas com `M`/`G` exigem plano
+próprio conforme §0; os campos abaixo são contrato de escopo e conclusão.
+
+Esta trilha não é uma nova fase depois da 23 nem muda o próximo passo 5.4.
+MEM.0 pode ser planejada documentalmente; implementação começa só depois
+da adoção/formalização e das dependências reais. O caminho de integração é
+MEM.1→2→3→4→5, junto ao harness da Fase 10; Knowledge em MEM.6; avaliação/produto
+em MEM.7. Kernel/checkers/gateway continuam independentes da memória.
+Dependência ausente é bloqueio no STATUS; não implementá-la dentro de MEM.
+
+### Etapa MEM.0 — Adoção e contratos normativos · `M`
+
+**Depende de (recebe pronto).** ADR 0008/0039 e E§1–24; 0.3–0.5 (canon/hash/CAS),
+3.2 (padrão durável), 5.2 (staging/transporte como referência, sem reutilizar
+mensagens do kernel para memória). Essas bases já existem localmente.
+
+**Fora do escopo.** runtime, providers pagos, novos formatos de ledger/AIR,
+adotar todo o comportamento upstream ou mudar a ordem principal de fases.
+
+**Entregáveis.** Decisão explícita de adoção, protocolo de custódia/acesso e
+egress por processo, schemas/versionamento/domínios CAS de artifacts/manifests,
+vetores e limites de original/segmento/árvore/view; perfis high/low/F e de
+provider. Rust guarda/acessa; Python sem chaves/credenciais. Definir quem
+autentica capture owner/readers e revoga acesso antes do primeiro código.
+
+**Critério de conclusão.**
+
+- [ ] ADR 0008 com decisão e formatos/spec/domains/CAS/vetores consistentes,
+  antigos endereços/vetores preservados; bump quando exigido por serialização.
+- [ ] Tabela de permissões/processos e testes planejados para cada fronteira;
+  nenhuma dependência pressuposta como pronta sem evidência no STATUS.
+- [ ] Perfis validam F<HIGH e LOW=max(HIGH/2,F); caso de 63 bits não promete 64 KB.
+  Regras de ContextView/omissões e de adapter sem cache estão fechadas.
+
+### Etapa MEM.1 — Originais, inbox e recuperação · `M`
+
+**Depende de (recebe pronto).** MEM.0; CAS 0.5 e padrões de 3.2.
+
+**Fora do escopo.** summaries/LLM, índices semânticos, escrever no ledger/CAS
+privado do kernel, retenção só de preview/head-tail de ferramentas.
+
+**Entregáveis.** Store isolado, capture owner com fencing, receipt/inbox,
+sequência global por store, append idempotente WAL/FULL, artifacts integrais
+e pins/backup, streams interrompidos declarados. Leitura de originais por
+EventId/range/date com scope vigente e erros de fonte ausente/corrompida;
+zoom pela árvore e snapshots são integrações de MEM.3/5.
+
+**Critério de conclusão.**
+
+- [ ] E§22.2/7: não NFC/multibyte/binário/segmentos recuperam bytes exatos;
+  SIGKILL nos pontos de CAS/SQL/ack conserva inputs/IDs comprometidos.
+- [ ] Retry mesma chave retorna mesmo ID; bytes diferentes conflitam; IDs
+  não são reusados nem reiniciados por sessão. Falha de armazenamento não dá ack.
+- [ ] Revogação/namespace e fonte alterada/ausente são recusados também em
+  handle/referência antiga; pins/GC não perdem blob entre put e commit.
+
+### Etapa MEM.2 — Árvore e compactor contextual · `M`
+
+**Depende de (recebe pronto).** MEM.1; MEM.0 entrega interface de provider
+sem credenciais no Python, aqui exercida por test double local. Conexão
+remota autorizada é entrega de MEM.4; não criar um gateway paralelo.
+
+**Fora do escopo.** loop de agente, dense retrieval, clipping de fonte,
+tratar outage/recusa/crédito negado como summary semanticamente válido.
+
+**Entregáveis.** Árvore diádica, dois children por pai, Free sem modelo,
+generations/refs imutáveis; scheduler dependency-driven de ctx/nível e janela
+limitada. Projeção pronta para ContextView (persistência/cache em MEM.3).
+Leaf cutoff=start; parent cutoff=end; jobs congelam contexto/target/blocos.
+Compactor sem tools, cinco candidatos, feedback bounded substituído, leases,
+contadores/deadline/backoff e Locator explícito/limite rígido de 512 bytes.
+
+**Critério de conclusão.**
+
+- [ ] E§22.3/5/6/20/21: Free 512/513 bytes, pais ordenados, multibyte e controles;
+  nenhuma publicação oversized, pending, resposta de erro ou corte silencioso.
+- [ ] Captura de requests mostra blocos iniciais iguais + uma nota por retry;
+  total de input bounded, sem transcript crescente ou raciocínio reinjetado.
+- [ ] Pais consultam detalhe pronto até seu end; folhas só anteriores;
+  nenhum job espera o próprio summary. Callback antigo/lease expirada perde
+  publicação, backoff libera vaga, contadores não reiniciam após reboot.
+
+### Etapa MEM.3 — Duas views, lotes e blocos estáveis · `M`
+
+**Depende de (recebe pronto).** MEM.2 (nodes, jobs e frontier).
+
+**Fora do escopo.** cache real de fornecedor, ordenar por importância semântica,
+recalcular cover a cada turno, refinar view persistida por zoom.
+
+**Entregáveis.** ConversationView/ContextView próprias e persistidas, estados
+batch/parts/high/low/revisão/cutoff. Due `(H+1-start)/child_count` com comparação
+checked exata; heap/índice sem rescan histórico por append. Lotes só por high,
+publicação pronta em low. Frame completo contado com IDs/escapes/envelope;
+contexto pode omitir ranges declarados, conversa não. Blocos de quatro linhas,
+uma marca na view e tail parcial; settle/cancel e snapshots pinados.
+
+**Critério de conclusão.**
+
+- [ ] E§22.1/4/6/8/22: 1M eventos, coverage/original#42, high/low/F, parent maior
+  que children e progresso; H=8 escolhe4+1/5+1 antes de 0+2/2+2.
+- [ ] Entre low/high, job completion não refaz prefixo; batch/restart não
+  refina história. Simular crash durante lote e retomada das duas views.
+- [ ] Frames de 3/4/7/8/9 linhas, ID 9→10 e escapes: bytes anteriores preservados,
+  concatenação de blocos igual ao frame contado; marcador não cobre tail.
+  Mutation/control que volte ao due antigo ou fold mínimo falha nos testes.
+
+### Etapa MEM.4 — Adapters e coordenação de prompt cache · `M`
+
+**Depende de (recebe pronto).** MEM.3; 8.9/9.2 (mediação e autorização para
+efeitos/egress); interface/isolamento adotados em MEM.0. Adapter concretiza
+esses contratos via mecanismos existentes. Simulação não fecha o critério
+de medição remota; dependência ausente bloqueia a etapa.
+
+**Fora do escopo.** cache de respostas, prometer >=95% universal, compartilhar
+cache entre domínios/credenciais, hardcode dos campos de API do source.
+
+**Entregáveis.** Wire determinístico tools/system/view/tail, fingerprint
+SHA-256 dos campos reais/namespaces, adapter com capacidades/cache opcional;
+single flight de aquecimento após orçamento/fila e antes do send. Liberação
+no evento do adapter; erro/cancel/TTL/deadline/restart não afetam conteúdo ou
+autoridade. Tokens/custo reportados separados de estimativa/simulador.
+
+**Critério de conclusão.**
+
+- [ ] E§22.22–24: fake cache com prefixo mínimo/lookback finito/TTL/eviction,
+  orçamento de marcas; casos frios/quentes/model/tools/roles/ACL e sem cache.
+- [ ] N jobs compartilham aquecimento, recebem respostas próprias; follower
+  começa antes do fim da geração. Falha de líder/cancel de seguidor/yield/
+  falta de crédito/timeout não prende outras chamadas. Sem SQL lock em await.
+- [ ] Captura do wire atual e ensaio autorizado em pelo menos um provider,
+  input/read/write/custo reais com denominadores explícitos, frio/quente/TTL.
+  Não usar os 98,6%/96,4% simulados do UniiChat como prova deste item.
+
+### Etapa MEM.5 — Harness fresh, navegação e mediação · `G`
+
+**Depende de (recebe pronto).** MEM.1–4; 6.6 (ingresso Says/Extracted),
+10.3/10.5/10.6 (MCP/loop/taint), 8.9/9.2 (efeitos/autorização reais).
+
+**Fora do escopo.** alterar gates de prova/ação, usar histórico como autorização
+atual, capabilities de escrita no kernel para o serviço de memória.
+
+**Entregáveis.** Receipt→settle/pin→admissão→request fresh, replay de delivery
+e captura integral; work atribuído ao subagente, input atual uma vez. MCP
+read-only zoom/range/search/date com ACL/snapshot, lexical episódico e
+continuidade; IDs históricos nunca são PremiseRefs citáveis por si.
+
+**Critério de conclusão.**
+
+- [ ] E§22.6/9/10/15/16/18/20: inputs atrasados/cancel/crash entre snapshot e
+  send retomam a associação salva sem duplicar input no histórico do request.
+- [ ] LLM adversarial forja Verified, roles, autorização antiga e NodeRef;
+  mediação real recusa claim/efeito e preserva taint. Subagente não vira user.
+- [ ] Zoom muda só o tail da chamada; próximo turno conserva view persistida;
+  preferência corrigida e referência ambígua resolvem originais ou informam falta.
+
+### Etapa MEM.6 — Knowledge Memory e Router · `G`
+
+**Depende de (recebe pronto).** MEM.1/5, 6.6, interfaces autorizadas de
+ingestão/egress. O plano deve subdividir o trabalho de E§8–12 antes de código.
+
+**Fora do escopo.** Knowledge Graph sem ganho medido, transformar score em
+verdade, embeddings como única cópia ou pular lexical/source resolution.
+
+**Entregáveis.** Registry versionado/locators/proveniência e sandbox de
+ingestão; primeiro lexical+resolve/rebuild/falhas/ACL, depois profiles dense,
+hybrid/RRF e rerank opcional com ablations. Router e referências cross-memory;
+caches por geração/scope, documentos e extrações pinadas.
+
+**Critério de conclusão.**
+
+- [ ] E§22.11–14/17/18: fonte integral e hashes/locator conferidos, OCR declarado,
+  missing original é erro; índices apagados recuperam mesmos IDs sob mesma recipe.
+- [ ] Falhas embed/vector/rerank degradam explicitamente; modelo novo recebe
+  outra geração; ACL/egress valem antes do ranking e em caches/snapshots antigos.
+- [ ] Corpus/queries/gabarito comuns demonstram lexical/dense/hybrid/rerank,
+  decisão episódica + documento versionado e ausência de autoridade automática.
+
+### Etapa MEM.7 — Avaliação, operação e produto · `M`
+
+**Depende de (recebe pronto).** MEM.5/6; 10.7/10.8; 23.1 para empacotamento.
+
+**Fora do escopo.** alegar recall perfeito/segurança cognitiva por geometria,
+substituir renderizador Seal ou esconder resultados negativos.
+
+**Entregáveis.** E§17/23: métricas, baselines/ablations, long recall, custo e
+falhas; CLI/TUI auxiliares com Free/Model/Locator/degradation; backup/restore,
+migração e perfis de cache documentados. Release declara o que foi medido.
+
+**Critério de conclusão.**
+
+- [ ] E§22.1–24 mapeados a artefatos/tests do LOGOS e execução completa/CI
+  quando exigida; relatório separa estrutural, semântico, custo e acesso.
+- [ ] Benchmarks incluem sem lotes/bloco único/sem single flight/contexto
+  refeito, séries frias/quentes/TTL e falhas; provider real separado do fake.
+- [ ] Backup/restore preserva originais/refs/views/replay; TUI não emite Seal
+  para summary; instalação e docs de 23.x refletem só garantias demonstradas.
 
 ---
 

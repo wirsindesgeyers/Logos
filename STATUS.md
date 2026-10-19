@@ -354,6 +354,11 @@ fontes opacas não demonstram autenticação.
    Foi medido pelo contador corrigido num worktree isolado (dirty=false):
    correção 3424 LOC próprios + 78287 runtime, 51581 só compilação.
    Manter snapshots por commit; commits históricos anteriores não foram reconstituídos.
+6. **Revisão documental de memória (19/out):** full verify/selftest local
+   `VERIFY_OK`, exit0,1458.31s; CI remota desta revisão não observada.
+   Testes UniiChat/OptMem e oito casos extras são pesquisa local opcional,
+   sem job novo na CI e sem fechar MEM.0–MEM.7. Provider real/custo/recall e
+   critérios do runtime de memória continuam futuros, conforme Apêndice F.
 
 ## Achados da revisão — 2026-10-04 (corrigidos localmente)
 
@@ -394,10 +399,33 @@ run final passou. Fixtures/programa removidos; sem nova suíte/fuzz/CI remota.
 ## Extensão arquitetural proposta — Long-Term Memory
 
 [Extensão](docs/spec/LOGOS-long-term-memory.md) com 24 seções, schemas,
-pseudocódigo, M1–M12, 20 critérios concretos, benchmarks e mudanças cirúrgicas
+pseudocódigo, M1–M13, 24 critérios concretos, benchmarks e mudanças cirúrgicas
 para a spec original. [ADR 0008](docs/adr/0008-memoria-de-longo-prazo.md)
-**proposto**, não aceito/implementado. Kernel/gateway/harness continuam ausentes;
-nenhum checkmark do ROADMAP ou etapa de implementação foi criado.
+**proposto**, memória não implementada. Kernel até 5.3 pronto localmente;
+gateway/harness futuros. A revisão solicitada em 19/out acrescenta trilha
+proposta MEM.0–MEM.7 no ROADMAP, sem fechar critérios de implementação.
+
+| Etapa de memória | Estado | Gate / entrega |
+| --- | --- | --- |
+| MEM.0 Adoção/contratos | ⏳ não iniciada | decidir adoção ADR 0008, formatos/vetores/ACL/egress |
+| MEM.1 Originais/inbox | ⏳ não iniciada | MEM.0; custódia e recuperação integral |
+| MEM.2 Árvore/compactor | ⏳ não iniciada | MEM.1 + interface/test double de provider |
+| MEM.3 Views/lotes/blocos | ⏳ não iniciada | MEM.2; due e high/low/frame/settle |
+| MEM.4 Adapters/cache | ⏳ não iniciada | MEM.3, 8.9/9.2; fake separado de medição real |
+| MEM.5 Harness/navegação | ⏳ não iniciada | MEM.1–4, 6.6, 8.9, 9.2, 10.3/5/6 |
+| MEM.6 Knowledge/Router | ⏳ não iniciada | MEM.1/5, 6.6; lexical antes de dense/rerank |
+| MEM.7 Avaliação/produto | ⏳ não iniciada | MEM.5/6, 10.7/8 e 23.1 para empacotar |
+
+[Auditoria UniiChat/OptMem](docs/research/uniichat-memory.md), commits
+`0500bf6`/`1fb164c` e ADR 0039: corrigidos due, duas views/cutoffs, lotes,
+blocos de quatro linhas e single flight; retries mantêm input limitado.
+Mantidos originais integrais/Locator/limite rígido no LOGOS, com divergências
+upstream explícitas. Sete testes upstream passaram: replay simulado de 1503
+requests do loop/98,6% e 3831 requests de compactação/96,4%, sem tokens/custo
+reais. Oito casos extras/51 asserções chamaram funções reais e passaram;
+OptMem: 109099 checks/0 falhas. Primeira execução Bun no sandbox teve EPERM
+no flush e foi interrompida; repetição fora do sandbox passou. Esses testes
+não fecham MEM nem recall/ACL/durabilidade do LOGOS.
 
 Smoke estrutural descartável: 1M eventos, 1.999.993 nodes, 161 parts,
 frame máximo 8.192/8.192 bytes, original #42 não NFC em 16 descidas.
@@ -408,9 +436,14 @@ recusou fonte alterada/ausente. Isso não verifica módulos reais, LLM/recall,
 PDF/OCR, ACL/providers ou kernel. Dois runners iniciais atingiram 300s/90s;
 versões indexada e de comparação menor passaram; temporários removidos.
 
-Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
-dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
-Sem full verify/CI/commit/push nesta entrega documental.
+Adoção/formatos/domínios/vetores são MEM.0; dependências ausentes bloqueiam
+implementação, sem substitutos. O smoke acima é histórico de 04/out, com
+chooser antigo e sem lotes/cache: não demonstra os contratos corrigidos.
+A revisão de 19/out foi verificada: `ci/verify.sh --selftest`, `VERIFY_OK`,
+exit0 em1458.31s;252 testes Python+25 da TCB passaram. Os424 arquivos de
+runtime/formatos acompanhados conservaram os hashes; CI remota não observada.
+O próximo passo principal permanece 5.4. Se o mantenedor priorizar memória,
+o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
 ## Próximo passo: Etapa5.4 — `CERTIFY` e registry de checkers
 
@@ -1576,3 +1609,16 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-19 — Início da5.3 sobre6374755, após fechamento real da5.2. Dependências presentes. ADR0038 revê autoria (Genesis, sem atribuição persistida por UID), resultado novo propose-result/v1, teto explícito O≤1MiB e falhas entre appends. Handler implementado sem pacote/parser novo; oito testes passaram,50 ataques distintos P1 e STATE14/época9 com premissas citáveis existentes, sem antecipar Fact/Policy. Executável real também propõe e persiste Pending. Corrigidos bound Sync da fixture movendo só o cliente e vec desnecessário apontado pelo Clippy; Clippy final passou. Mutações/fuzz/full verify ainda pendentes; arquivos científicos/ZIPs/log smoke preexistentes preservados, sem push.
 
 - 2026-10-19 — Etapa5.3 concluída localmente sobre6374755. ADR0038/plano/spec fixam autoria pelo Genesis, scope vazio, O≤1MiB e resultado novo propose-result/v1;34 vetores de request preservados e três de resposta independentes adicionados ao --check existente. Handler PROPOSE usa generate/snapshot/CAS/transições; nenhum construtor público/credencial nova. Oito testes novos/50 ataques P1 distintos/STATE14 na época9 e executável real passaram; fixture usa premissas citáveis existentes sem antecipar ingestão Fact/Policy. Falha de assinatura entre appends deixa Proposed não citável, sem Pending fictício nem retry.14 mutações compilaram e falharam por asserção; fontes restauradas e hashes conferidos. Fuzz oficial560503/61s, exit0, pico555MiB; total116.34s com rebuild; log histórico5.2 restaurado byte a byte e log novo separado. Full ci/verify.sh --selftest VERIFY_OK/exit0 em1568.40s:252 Python101.41s+25 TCB1.53s, Rust/Clippy/smokes/TCB/manifesto/independência/deny/audit/vetores/autoteste passaram; avisos conhecidos licença/syn. Produtor SAT300/300+300 modelos+300 consistências/sete controles/907 rechecks; corpus LRAT200/200. Crash10k/24 SIGKILLs/9997 ACKs/66.97s sem perda reconhecida; rebuild100k/cinco tabelas exatas;1M/20000 consultas p99=36617ns, cold274590ms fora da latência. TCB13573+747130=760703 (+72 próprios), kernel1427, build-only64508; sem pacote/decoder novo de entrada. Fontes inalterados durante fuzz/fullverify; evidências em docs/plans/etapa-5.3-evidencias.json. Corrigidos durante desenvolvimento bound Sync indevido da fixture e vec desnecessário no Clippy; nenhuma falha completa foi ocultada. Proposta científica/ADR0037, ZIPs e smoke.log preexistentes preservados fora do commit. Critérios locais marcados; CI/ARM/noturno ainda não observados, sem push. Próximo5.4: planejar registry, recuperação privada de Pending e CertificateRejected antes de código.
+
+- **2026-10-19** — Revisão de memória solicitada pelo mantenedor a partir do
+  source oficial UniiChat0500bf6/OptMem1fb164c: auditoria com permalinks/hashes,
+  ADR0039 e trilha proposta MEM.0–MEM.7 no ROADMAP. Spec corrigida: duas views,
+  cutoff pai/folha, due literal, lotes HIGH/LOW/F, blocos de quatro linhas,
+  single flight e retry sem transcript crescente; divergências LOGOS explícitas.
+  Sete testes upstream + oito casos extras/51 asserções passaram; OptMem:
+  109099 checks/0falhas. Cache98,6%/96,4% é simulado, não token/custo real.
+  Tentativa Bun inicial interrompida por EPERM de flush; repetição autorizada
+  passou. Full verify/selftest VERIFY_OK, exit0,1458.31s;252 Python+25 TCB,
+  nenhum Rust ignorado;424 arquivos runtime/formatos com hashes inalterados.
+  Memória não implementada, critérios MEM abertos, próximo principal5.4.
+  CI remota não observada; arquivos alheios preservados, sem push.

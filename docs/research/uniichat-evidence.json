@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-19",
+  "logos_base": "d41a76c",
+  "uniichat": {
+    "repository": "https://github.com/VictorTaelin/uniichat",
+    "commit": "0500bf6a8ea4bf0ce047488562022b1b6532cc30",
+    "sha256": {
+      "Memory.ts": "a243258fa3be6a6a593709dc5009baaf9d9c6fc11db7758d1d80914e71289389",
+      "AskAI.ts": "9963c42e5720e6b9feb145a9aa0de642b35b5eb32468d822becdfaf9a89d5104",
+      "Agent.ts": "e7aaffd0aad993257242a5fe14dd7aff13b3526d6c28aa0dd5366dd46fe536d0",
+      "Anthropic.ts": "9eb169d56aa466bbd207032a3a2283db7951f8f8fa55b40e2254405526c347f5",
+      "OpenAI.ts": "1466529a05331d5cccf28acdd904bf57edfe3e2eda53001fa1fd66452b0afd69",
+      "Server.ts": "ad37b1504c5d631975fad1da523a5b84d00cc40727fba073c53ec363ce37b854",
+      "Clip.ts": "b06fc9d819a2b0f9dc48156eb47f8d49c21e7c11292960af1542fc62a7db08dc",
+      "Disk.ts": "ed4da28eb923f27fbcf858c9fd2674941ea62a51ab0a5c4c2ad97fbc0f4c1a94",
+      "Config.ts": "ec025485d5c77164e265e3d5bb5f33cfc30daa789350b142e1a3cf1a8fb8e964",
+      "cache.test.ts": "8c5a334b76150eb77797c04820b615075653c9e66011465efd1e3a151d7e5a25",
+      "failsafe.test.ts": "987f94b1a1e8b1a4a4e1cbcd9a3b469c38c9acb30afcddfdd6a18e5144fcc6c7",
+      "README.md": "27df98fcd64fed11e98091fa892364dc5584b0ff2a21e2082bdd26f60041fc56",
+      "Tools.ts": "b3183f43796c49e3e735d9b42fe07203378f4c4c7da51c1a15e13d26b7d656d2",
+      "Machine.ts": "5ecf7fbd0748504889e6c16d12b35cdb6b74f0cac6427abec30d1b13e850a48a"
+    }
+  },
+  "optmem": {
+    "repository": "https://github.com/VictorTaelin/OptMem",
+    "commit": "1fb164cf39028047781f72ac3bb1e5a691c1dcb0",
+    "sha256": {
+      "memo": "3dc120d01be3115ef6267eab4103e7909fc830d6227b549f20991ba999ee9ffb",
+      "test.py": "06111823e4acbfda73b564208f49e989eced71a4040762041bf11804dbba7e2e",
+      "README.md": "9f73e4374fc9dc1f58b3fcb228eff2064b9df313a012f88b7b925d2e401f663d"
+    }
+  },
+  "runs": {
+    "uniichat_upstream": {
+      "command": "bun test --isolate cache.test.ts failsafe.test.ts",
+      "bun": "1.3.14 (0d9b296a)",
+      "exit": 0,
+      "passed": 7,
+      "failed": 0,
+      "expect_calls": 9285,
+      "seconds_reported": 42.0,
+      "turn": {
+        "requests": 1503,
+        "simulated_read_percent": 98.6
+      },
+      "compaction": {
+        "requests": 3831,
+        "simulated_read_percent": 96.4
+      },
+      "caveat": "Simulador local de cache, comprimento de strings JSON; tarefa da compaction excluída do denominador; não são tokens/custo de provider real."
+    },
+    "optmem_upstream": {
+      "command": "python3 test.py",
+      "exit": 0,
+      "checks_passed": 109099,
+      "failed": 0,
+      "python": "3.14.7"
+    },
+    "sandbox_attempt": {
+      "command": "bun test --isolate cache.test.ts failsafe.test.ts",
+      "outcome": "EPERM em Disk.flush; interrompida com exit130, não conta como run bem-sucedida; repetida fora do sandbox."
+    },
+    "additional_reference_cases": {
+      "command": "LOGOS_UNIICHAT_REFERENCE=/tmp/logos-uniichat-audit bun test --isolate docs/research/uniichat-reference.test.ts",
+      "exit": 0,
+      "passed": 8,
+      "failed": 0,
+      "expect_calls": 51,
+      "seconds_reported": 0.804,
+      "scope": "Funções reais da referência com respostas falsas; inclui commit/hash/clone íntegro. Não é implementação de memória LOGOS."
+    }
+  },
+  "logos_verification": {
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1458.31,
+    "runtime_and_normative_files_unchanged": true,
+    "file_count": 424,
+    "verify_ok": true,
+    "log_sha256": "edd0382264f37064bb9d85d85313bd48472b67b51ae9f1d90e9ddb78865a5387",
+    "log": "target/verify-memoria-uniichat.log",
+    "pytest": {
+      "python_passed": 252,
+      "python_seconds": 98.65,
+      "tcb_passed": 25,
+      "tcb_seconds": 1.42
+    },
+    "rust_ignored": 0,
+    "remote_ci_observed": false
+  }
+}
