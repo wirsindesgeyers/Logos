@@ -52,7 +52,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ```sh
 ci/verify.sh              # instala cake_lpr offline fixado, fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
                           # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr, produtor SAT300/300 +contramodelos)
-                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); crash ledger (SIGKILL, 10k appends), índices (rebuild 100k, p99 com 1M); vetores --check
+                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); kernel-protocol/socket/staging nos testes Rust; crash ledger (SIGKILL, 10k appends), índices (rebuild 100k, p99 com 1M); vetores (inclui kernel-protocol/v1) --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 
@@ -67,7 +67,12 @@ Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o 
   nightly datado: `FUZZ_TOOLCHAIN=nightly-2026-09-28 ci/fuzz.sh 60 canon_decode`). **Não use
   `RUSTC_BOOTSTRAP=1`**: ele faz o fuzz rodar na stable e esconde exatamente o erro que a CI teria
   (o `rust-toolchain.toml` da raiz fixa `stable` e vale dentro de `fuzz/`). A meta de ≥ 1 h por alvo
-  roda na matriz noturna (um alvo por job, descoberta de `fuzz/Cargo.toml`).
+  roda na matriz noturna (um alvo por job, descoberta de `fuzz/Cargo.toml`);
+  `kernel_message` (5.2) exige ≥4h e usa14400s/timeout330min no noturno.
+  O script divide o tempo em lotes de `FUZZ_BATCH_SECONDS` (padrão1800s) com
+  processo novo por lote, corpus cumulativo e teto de RSS armado em cada lote:
+  o runtime ASAN acumula RSS por execução mesmo em alvo trivial, então uma
+  execução única longa não garante o teto padrão de2048MiB (5.2; ADR0036).
 - Cobertura de ramos da 1.3: `ci/check-sort-coverage.sh` — runner separado (também
   no job `sort-coverage`), exige 100% dos ramos LLVM de `src/sort_check.rs`. Instale
   `cargo install cargo-llvm-cov --version 0.9.1 --locked` e

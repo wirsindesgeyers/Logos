@@ -969,8 +969,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Limites por conexão (tamanho de frame, taxa) para negação de serviço.
 
 **Critério de conclusão.**
-- [ ] Fuzz do decoder de mensagens ≥ 4h sem crash.
-- [ ] Mensagem com campo extra ou tipo desconhecido → erro, nunca ignorada silenciosamente.
+- [x] Fuzz do decoder de mensagens ≥ 4h sem crash.
+- [x] Mensagem com campo extra ou tipo desconhecido → erro, nunca ignorada silenciosamente.
 
 ---
 

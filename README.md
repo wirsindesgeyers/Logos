@@ -302,6 +302,10 @@ Etapa5.1 inicia `logos-kernel` com `Claim<S>` e recibos `SignedEvent<S>`
 imutáveis. Transições internas consomem o claim anterior e só publicam o novo
 estado após append confirmado; não existe emissão pública a partir de
 `Event` ou `CheckOutcome`. Estados, vínculos e tabela em
-[`spec/state-machine.md`](spec/state-machine.md). Servidor, handlers de
-certificação e gateway permanecem nas próximas etapas; estado em
+[`spec/state-machine.md`](spec/state-machine.md).
+Etapa5.2 acrescenta o processo Linux, socket Unix autenticado por UID, frames
+canônicos estritos, quotas/prazos, captura de uploads e Query/Subscribe no
+ledger real. Uso e formato em [`spec/kernel-protocol.md`](spec/kernel-protocol.md).
+Handlers de proposta/certificação/fatos ficam nas etapas seguintes e respondem
+com erro explícito enquanto indisponíveis. Estado em
 [`STATUS.md`](STATUS.md).

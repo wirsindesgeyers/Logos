@@ -1,0 +1,170 @@
+{
+  "recipe": "Uma substituição por vez, exigindo compilação bem-sucedida e falha de teste por asserção. Restaurar os bytes em finally e conferir SHA-256 antes/depois. Executar cargo test + args de cada caso. Resultados locais: target/kernel-mutations/results.json. O executável de fuzz em andamento é independente dos binários de teste.",
+  "mutations": [
+    {
+      "name": "extra_envelope",
+      "source": "crates/logos-kernel/src/wire.rs",
+      "old": "let [Value::Unsigned(1), id, Value::Unsigned(tag), payload] = items(&value)? else {",
+      "new": "let [Value::Unsigned(1), id, Value::Unsigned(tag), payload, ..] = items(&value)? else {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "wire",
+        "no_extra_field_or_canonical_alias_is_ignored"
+      ]
+    },
+    {
+      "name": "unknown_tag_alias",
+      "source": "crates/logos-kernel/src/wire.rs",
+      "old": "(5, [Value::Unsigned(0)]) => Message::Query(Query::Head),",
+      "new": "(_, [Value::Unsigned(0)]) => Message::Query(Query::Head),",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "wire",
+        "independent_vectors_cover_every_message_and_preserve_exact_bytes"
+      ]
+    },
+    {
+      "name": "staging_hash_after_publish",
+      "source": "crates/logos-kernel/src/staging.rs",
+      "old": "if hash_raw::<T>(&bytes) != *hash {",
+      "new": "if false && hash_raw::<T>(&bytes) != *hash {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "staging",
+        "hash_mismatch_never_publishes_the_wrong_object_and_consumes_quota"
+      ]
+    },
+    {
+      "name": "staging_hardlink",
+      "source": "crates/logos-kernel/src/staging.rs",
+      "old": "|| meta.nlink() != 1",
+      "new": "|| false && meta.nlink() != 1",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "staging",
+        "symlinks_hardlinks_fifo_directories_and_traversal_do_not_reach_the_cas"
+      ]
+    },
+    {
+      "name": "staging_follows_symlink",
+      "source": "crates/logos-kernel/src/staging.rs",
+      "old": "OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,",
+      "new": "OFlags::RDONLY | OFlags::NONBLOCK | OFlags::CLOEXEC,",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "staging",
+        "symlinks_hardlinks_fifo_directories_and_traversal_do_not_reach_the_cas"
+      ]
+    },
+    {
+      "name": "peer_uid",
+      "source": "crates/logos-kernel/src/server.rs",
+      "old": "if cred.uid.as_raw() != allowed_uid {",
+      "new": "if false && cred.uid.as_raw() != allowed_uid {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "transport",
+        "peer_uid_is_authenticated_before_reading_any_bytes"
+      ]
+    },
+    {
+      "name": "frame_rate",
+      "source": "crates/logos-kernel/src/server.rs",
+      "old": "if self.count >= limits.frames_per_second {",
+      "new": "if false && self.count >= limits.frames_per_second {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "transport",
+        "frame_rate_total_bytes_and_frame_count_are_enforced_before_dispatch"
+      ]
+    },
+    {
+      "name": "frame_count",
+      "source": "crates/logos-kernel/src/server.rs",
+      "old": "self.frames = self\n            .frames\n            .checked_sub(1)\n            .ok_or(Error::Limit(\"connection frames\"))?;",
+      "new": "self.frames = self.frames.saturating_sub(1);",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "transport",
+        "frame_rate_total_bytes_and_frame_count_are_enforced_before_dispatch"
+      ]
+    },
+    {
+      "name": "connection_bytes",
+      "source": "crates/logos-kernel/src/server.rs",
+      "old": "self.bytes = self\n            .bytes\n            .checked_sub(n as u64)\n            .ok_or(Error::Limit(\"connection bytes\"))?;",
+      "new": "self.bytes = self.bytes.saturating_sub(n as u64);",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "transport",
+        "frame_rate_total_bytes_and_frame_count_are_enforced_before_dispatch"
+      ]
+    },
+    {
+      "name": "page_signature",
+      "source": "crates/logos-ledger/src/ledger.rs",
+      "old": "event.verify(&self.public_key)?;",
+      "new": "let _ = &self.public_key;",
+      "args": [
+        "-p",
+        "logos-ledger",
+        "--lib",
+        "event_pages_reject_bad_signatures_predecessors_heads_and_missing_rows"
+      ]
+    },
+    {
+      "name": "page_predecessor",
+      "source": "crates/logos-ledger/src/ledger.rs",
+      "old": "&& event.prev != Some(previous)",
+      "new": "&& false && event.prev != Some(previous)",
+      "args": [
+        "-p",
+        "logos-ledger",
+        "--lib",
+        "event_pages_reject_bad_signatures_predecessors_heads_and_missing_rows"
+      ]
+    },
+    {
+      "name": "page_head",
+      "source": "crates/logos-ledger/src/ledger.rs",
+      "old": "if event.seq == head.seq && digest != head.hash {",
+      "new": "if false && event.seq == head.seq && digest != head.hash {",
+      "args": [
+        "-p",
+        "logos-ledger",
+        "--lib",
+        "event_pages_reject_bad_signatures_predecessors_heads_and_missing_rows"
+      ]
+    },
+    {
+      "name": "page_missing_row",
+      "source": "crates/logos-ledger/src/ledger.rs",
+      "old": "if events.len() != expected_len {",
+      "new": "if false && events.len() != expected_len {",
+      "args": [
+        "-p",
+        "logos-ledger",
+        "--lib",
+        "event_pages_reject_bad_signatures_predecessors_heads_and_missing_rows"
+      ]
+    }
+  ]
+}

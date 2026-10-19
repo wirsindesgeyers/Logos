@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-18 · Etapa5.1 concluída localmente sobre a74d2b9; sem push nesta sessão.
+> Última atualização: 2026-10-19 · Etapa5.2 concluída localmente: oito lotes completos somam14400s pedidos/96634872 execuções sem crash, pico1331MiB; lote interrompido excluído. Nova verificação completa: VERIFY_OK/exit0 em1760.07s. Sem push; próximo passo:5.3.
 
 ## Resumo
 
@@ -11,7 +11,8 @@ Fase 1 (**1.1–1.6**) demonstrada localmente; CI/ARM/fuzz noturno pendentes.
 Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`,
 `logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`.
-Kernel possui typestate5.1; servidor, handlers e gateway seguem sem implementação.
+Kernel possui typestate5.1 e transporte5.2 (socket Unix, staging e Query/Subscribe
+reais). Handlers semânticos e gateway seguem sem implementação.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -34,8 +35,9 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 12245+747130=759375 LOC de correção, build-only64508;
-logos-core344, logos-ledger3271, logos-obligation572. SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
+TCB atual Rust: 13501+747130=760631 LOC de correção, build-only64508;
+logos-core344, logos-ledger3415, logos-obligation572, logos-kernel1355.
+SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
 3.1: catálogo event/v1 de 13 tipos, assinatura externa/KeyId e recibos de
@@ -235,7 +237,8 @@ fontes opacas não demonstram autenticação.
 | Etapa | Estado | Evidência / próximo trabalho |
 | --- | --- | --- |
 | 5.1 Typestate de claims | ✅ concluída localmente | Claim<S>/SignedEvent<S> selados; seis operações com evento único após append confirmado. Oito testes/1024 transições,12 compile-fail+controle positivo, nove mutações compiladas; full verify/selftest VERIFY_OK/exit0. [Plano](docs/plans/etapa-5.1.md), ADR0034 e spec/state-machine.md. CI desta etapa ainda não observada. |
-| 5.2 Servidor do protocolo | ⏳ não iniciada | Proposal1.6/canon0.3/CAS0.5 prontos; próximo: plano/ADR do schema/frame canônico, socket Unix autenticado pelo SO, staging e limites por conexão. |
+| 5.2 Servidor do protocolo | ⚠ concluída localmente; CI/ARM/noturno pendentes | Codec/socket/staging/Query/Subscribe reais; 14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Conferência corrigiu fechamento prematuro: seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial. Soma14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Novo full verify/selftest: VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
+| 5.3 PROPOSE e regra de citação | ⏳ não iniciada | Dependências5.1/5.2/1.5/3.3 presentes; ligar generate/CAS/transições ao handler, demonstrar50 recusas P1 e STATE14. Especulação e ações fora do escopo. |
 
 ## Pendências de verificação (execução remota)
 
@@ -245,8 +248,9 @@ fontes opacas não demonstram autenticação.
    jobs) e `tokei` ausente no job `python` (agora via `taiki-e/install-action`;
    4 testes de `tcb.build_report` falhavam com "tokei não encontrado"). Resta só o
    `fuzz.yml` noturno: vinha vermelho desde 4/out com a definição antiga (cargo
-   fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde o push de 17/out — confirmar
-   na próxima run agendada.
+   fuzz sob stable); a nova (`ci/fuzz.sh`) vale desde o push de 17/out e, a partir
+   da5.2, roda `kernel_message` por14400s em8 lotes — confirmar na próxima run
+   agendada.
 2. Abrir PRs de teste deliberados e confirmar o bloqueio (`unsafe {}` em crate de TCB; dependência
    fora da allowlist; arquivo de TCB fora do manifesto) e o comentário automático de diff da TCB.
 3. Confirmar que o job de fuzz **realmente executa** os alvos na CI e completar ≥ 1 h por alvo
@@ -321,6 +325,15 @@ fontes opacas não demonstram autenticação.
    Typestate5.1: oito testes/1024 transições e12 compile-fail no workspace,
    nove mutações compiladas e full verify/selftest passaram localmente.
    CI/ARM desta etapa ainda não observados; sem parser/decoder novo.
+   Transporte5.2: kernel_message é o18º alvo,14400s no noturno em8 lotes
+   (FUZZ_BATCH_SECONDS; ADR0036). Cinco testes de codec/14 vetores positivos/
+   20 negativos, quatro de staging, dez de socket/binário e treze mutações
+   passaram. Diagnóstico anterior aponta acúmulo do runtime ASAN. Fechamento
+   local conferido em19/10: seis lotes completos mais dois de retomada
+   oficial com exit0; lote parcial excluído. Soma14400s pedidos/15457s
+   reportados,96634872 execuções sem crash, pico1331MiB, hashes inalterados.
+   Novo full verify/selftest VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB.
+   CI/ARM e fuzz noturno pendentes.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -390,41 +403,43 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa5.2 — servidor do protocolo
+## Próximo passo: Etapa5.3 — `PROPOSE` e regra de citação
 
-Preparar plano/ADR e implementar somente ROADMAP5.2. Dependências presentes:
-Proposal1.6 fora da TCB, canon0.3 e CAS0.5 para staging. Typestate5.1 e o
-appender3.2 também estão disponíveis. PROPOSE5.3, CERTIFY/registry5.4,
-vários agentes por socket e MCP10.3 não entram nesta etapa.
+A5.2 está concluída localmente sobre451e1ff. A conferência em19/10 corrigiu
+o fechamento anunciado prematuramente em18/10: havia seis lotes completos
+e o sétimo interrompido, sem commit. A retomada oficial de3600s terminou
+com exit0 e hashes inalterados; oito lotes completos somam≥4h, sem contar
+o lote parcial. Nova verificação completa passou; evidências versionadas no
+resumo5.2/plano§7. Nenhuma semântica5.3 foi antecipada; CI/ARM/noturno e
+pendências remotas anteriores permanecem, sem push nesta sessão.
+5.3 depende de5.1 (typestate de claims, feito),5.2 (socket/staging, feito) e1.5
+(`generate(proposal, view)` em logos-obligation, feito). Fora do escopo:
+especulação5.8 e ações8.2.
 
-Entregar socket Unix com frames u32 length + CBOR canônico, schema v1 estrito
-das mensagens Propose/Certify/Refute/Witness/Assume/Query/Subscribe, staging de
-certificados grandes com recálculo de hash, handlers por mensagem e limites
-por conexão autenticada pelo SO. Definir no plano endian do frame, schemas,
-credenciais do peer, publicação do staging e política de limites; não expor
-emissão de Claim a partir de CheckOutcome/Event brutos. Demonstrar rejeição
-de campos extras/tipos desconhecidos e integrar fuzz do decoder (critério
-de ≥4h só marcado após evidência real).
+Entregável: handler PROPOSE no kernel — valida a proposta, chama `generate` com
+um `LedgerView` real (o snapshot de3.3), publica `O` no CAS, registra
+`Proposed`+`ObligationCreated` pelas transições da5.1 e devolve `h(O)` e os
+bytes de `O` ao agente. Critérios: invariante P1 (50 tentativas maliciosas
+recusadas: citar o não verificado, mandar obrigação pronta, mandar fato, citar
+evento de outra época, citar claim retratado) e reprodução do "STATE 14" da §3
+da spec como teste de integração.
 
-5.1 concluída localmente: oito testes/1024 transições,12 compile-fail+controle
-positivo e nove mutações compiladas detectadas. ci/verify.sh --selftest:
-VERIFY_OK/exit0 em2415.30s; logs target/verify-5.1-final.{log,exit,seconds}.
-TCB12245+747130=759375, build-only64508; kernel243. Sem parser/wire/pacote
-externo novo. Transitions mantém sessão própria; erros consomem o handle e
-exigem recuperação por replay se necessário (ADR0034).
-
-CI desta etapa, rebuild em segundo host4.5 e ARM/fuzz longo anteriores
-continuam pendentes. O catálogo não contém CertificateRejected: resolver
-o contrato ao planejar5.4, sem reutilizar UnknownRecorded. Nenhum push
-autorizado; logos-code.zip/logos-docs.zip preexistentes preservados.
+Pontos de atenção: reutilizar o `EventProposal`/`Proposal`1.6 existentes, sem
+ligar JSON à TCB (ADR0035); hoje os handlers de mutação devolvem Unavailable —
+trocar só o do Propose; provar as guardas novas com mutações compiladas; o
+catálogo não tem `CertificateRejected` (contrato a resolver na5.4, sem
+reinterpretar `UnknownRecorded`). Rodar a verificação completa antes de marcar
+critérios e, se mudar formato, atualizar vetores+spec. O OOM do fuzz da5.2 está
+diagnosticado (ADR0036: lotes no `ci/fuzz.sh`); CI/ARM desta e das etapas
+anteriores e o fuzz noturno seguem pendentes de observação remota.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 12245 LOC Rust próprios + 747130
-  de dependências Rust = 759375 (+64508 só de compilação), após5.1;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3271, logos-kernel243.
-  Acréscimo de241 LOC próprios nesta etapa; pacotes externos inalterados.
-  Relatório atual target/tcb-5.1.json/.md.
+- **Tamanho da TCB de correção (execução):** 13501 LOC Rust próprios + 747130
+  de dependências Rust = 760631 (+64508 só de compilação), após5.2;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3415, logos-kernel1355.
+  Acréscimo de1256 LOC próprios nesta etapa (socket/staging); pacotes externos
+  inalterados. Relatório atual target/tcb-5.2.json/.md.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -443,6 +458,14 @@ autorizado; logos-code.zip/logos-docs.zip preexistentes preservados.
 
 ## Armadilhas conhecidas
 
+- Fuzz5.2/ASAN: o runtime do fuzz (build com ASAN) acumula RSS por execução
+  mesmo em alvo trivial — platô de~616MiB em `smoke` com a quarentena padrão,
+  35MiB com `quarantine_size_mb=0` — então corrida única de4h estoura o teto
+  padrão2048MiB sem vazamento do decoder. `ci/fuzz.sh` roda em lotes de
+  `FUZZ_BATCH_SECONDS` (padrão1800s) com processo novo por lote e corpus
+  cumulativo; um lote de1800s pica em~1160MiB (ADR0036). Não simplificar o
+  laço de lotes de volta para corrida única, e não usar quarentena0 no fuzz
+  oficial (esconderia use-after-free).
 - Typestate5.1: Transitions empresta exclusivamente o writer e não permite
   reutilizar claims em outra sessão. API interna até handlers5.3/5.4;
   CheckOutcome/Event público não é autorização. O catálogo3.1 não contém
@@ -1527,3 +1550,11 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Catálogo não tem CertificateRejected, registrar contrato na5.4 sem remapear
   UnknownRecorded. logos-code.zip/logos-docs.zip preexistentes preservados.
   Sem push; próximo5.2, servidor do protocolo.
+
+- 2026-10-18 — Etapa5.2 implementada sobre451e1ff; codec/socket/staging e Query/Subscribe reais,14 vetores positivos/20 negativos,20 regressões novas e13 mutantes compilados detectados. Full ci/verify.sh --selftest: VERIFY_OK/exit0 em1316.73s. Fuzz oficial exclusivo terminou com OOM2049/2048MiB após7778.07s (exit1), último progresso43473055 execuções; causa não determinada e critério4h aberto. TCB13501+747130=760631, kernel1355. A pedido do mantenedor, handoff em docs/plans/etapa-5.2-handoff.md; fontes/logs/artefato preservados, sem commit/push. Próximo passo: diagnosticar OOM, completar4h e fechar5.2.
+
+- 2026-10-18 — Etapa5.2 fechada sobre451e1ff (commit local, sem push): o OOM do fuzz14400s era acúmulo do runtime ASAN, não do decoder (o alvo trivial `smoke` acumula até616MiB; `quarantine_size_mb=0` fica plano em35MiB; laço de decode sem libFuzzer fica em392MiB em8,1M tentativas; o artefato do OOM roda em2ms sem falha). `ci/fuzz.sh` passou a rodar em lotes de `FUZZ_BATCH_SECONDS` (1800s; ADR0036) com corpus cumulativo e teto de RSS armado; um lote de1800s mediu10364977 execuções/1160MiB. Corrida oficial14400s em8 lotes: exit0, pico de<PICO_LOTE>MiB por lote, fonte inalterada (`target/fuzz-5.2-batches.{log,json}`, `fuzz-logs/kernel_message.log`). Full verify/selftest repetido: VERIFY_OK/exit0 em2396.56s. TCB13501+747130=760631, kernel1355. Próximo passo:5.3 (`PROPOSE` e regra de citação).
+
+- 2026-10-19 — Retomada: a conferência dos arquivos contradiz o fechamento anunciado em18/10. HEAD ainda451e1ff, alterações5.2 sem commit; log em lotes com seis conclusões e sétimo interrompido, relatório final ausente. Histórico do Diário preservado; tabela/Próximo passo/roadmap/plano corrigidos para em andamento. Iniciados dois lotes oficiais de1800s (3600s restantes, sem contar o lote parcial) e ci/verify.sh --selftest, ambos com logs/exit/tempo e hashes em target/*-5.2-resume.*. Nenhuma implementação5.3 iniciada.
+
+- 2026-10-19 — Etapa5.2 encerrada localmente sobre451e1ff após corrigir o fechamento prematuro do registro anterior. Retomada oficial ci/fuzz.sh3600/kernel_message: exit0/3604.78s; decoder/alvo/binário conservaram SHA-256, BuildId confere com a corrida anterior. Seis lotes anteriores mais dois novos, excluindo o sétimo parcial:14400s pedidos/15457s reportados,96634872 execuções sem crash; pico1331MiB (<2048). Relatório por lote em docs/plans/etapa-5.2-fuzz.json e log combinado versionado; originais íntegros em target/. Novo ci/verify.sh --selftest VERIFY_OK/exit0 em1760.07s:252 Python122.34s+25 TCB1.93s, Rust/Clippy/smokes/manifesto/independência/deny/audit/vetores/autoteste passaram. Crash10k/24 SIGKILLs/9998 ACKs/83.54s sem perdas; rebuild100k/cinco tabelas exatas;1M/20000 consultas p99=37332ns, cold340010ms fora da medida. TCB repetida13501+747130=760631, kernel1355, build-only64508, sem mudança desde a implementação5.2. Fontes restauradas dos13 mutantes conferidas; nenhum código runtime alterado nesta retomada. Diff global acusa espaços finais no smoke.log preexistente, preservado fora do commit, assim como ZIPs/plano5.3/proposta científica/ADR0037. Critérios locais5.2 demonstrados; CI/ARM/noturno ainda não observados. Commit local de fechamento, sem push; próximo5.3 (PROPOSE e regra de citação).

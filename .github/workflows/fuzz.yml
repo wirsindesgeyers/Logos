@@ -2,14 +2,14 @@ name: Fuzz
 
 on:
   schedule:
-    - cron: "0 3 * * *" # noturno: ≥ 1h por target
+    - cron: "0 3 * * *" # noturno: ≥1h; kernel_message ≥4h (5.2)
   workflow_dispatch:
     inputs:
       seconds:
         description: "Segundos por target"
         default: "3600"
   pull_request:
-    paths: ["fuzz/**", "crates/**", "vendor/cake-lpr/**", "spec/cake-lpr.md", "spec/vectors/cake-lpr/**", "spec/lrat.md", "spec/vectors/lrat/**", "tools/gen_lrat_vectors.py", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py", "spec/finite-fragment.md", "spec/vectors/fragment/**", "tools/gen_fragment_vectors.py"] # smoke de poucos minutos
+    paths: ["fuzz/**", "crates/**", "vendor/cake-lpr/**", "spec/cake-lpr.md", "spec/vectors/cake-lpr/**", "spec/lrat.md", "spec/vectors/lrat/**", "tools/gen_lrat_vectors.py", "spec/core.md", "spec/vectors/core/**", "tools/gen_core_vectors.py", "spec/air.md", "spec/vectors/air/**", "tools/gen_air_vectors.py", "spec/vocabulary.md", "spec/vectors/vocabulary/**", "tools/gen_vocabulary_vectors.py", "spec/sort-check.md", "spec/obligation.md", "spec/vectors/obligation/**", "tools/gen_obligation_vectors.py", "spec/kernel-protocol.md", "spec/vectors/kernel-protocol/**", "tools/gen_kernel_protocol_vectors.py", "spec/model.md", "spec/evaluation.md", "spec/vectors/model/**", "tools/gen_model_vectors.py", "spec/events.md", "spec/vectors/events/**", "tools/gen_event_vectors.py", "spec/finite-fragment.md", "spec/vectors/fragment/**", "tools/gen_fragment_vectors.py"] # smoke de poucos minutos
 
 permissions:
   contents: read
@@ -39,14 +39,14 @@ jobs:
   fuzz:
     needs: targets
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 330
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
         target: ${{ fromJSON(needs.targets.outputs.targets) }}
     env:
-      SECONDS_PER_TARGET: ${{ github.event_name == 'pull_request' && '120' || inputs.seconds || '3600' }}
+      SECONDS_PER_TARGET: ${{ github.event_name == 'pull_request' && '120' || inputs.seconds || (matrix.target == 'kernel_message' && '14400' || '3600') }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

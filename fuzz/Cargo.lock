@@ -256,6 +256,7 @@ dependencies = [
  "logos-core",
  "logos-crypto",
  "logos-ground",
+ "logos-kernel",
  "logos-ledger",
  "logos-lrat",
  "logos-model",
@@ -271,6 +272,19 @@ dependencies = [
  "logos-core",
  "logos-crypto",
  "logos-obligation",
+]
+
+[[package]]
+name = "logos-kernel"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ledger",
+ "logos-obligation",
+ "rustix",
 ]
 
 [[package]]

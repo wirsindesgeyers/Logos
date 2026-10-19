@@ -178,6 +178,61 @@ impl<'a, S: Signer> Ledger<'a, S> {
         Ok(self.head)
     }
 
+    /// Página de eventos autenticados, em sequência, para assinatura de leitura.
+    /// Confere assinaturas/encadeamento da página e seu predecessor, sobre o
+    /// writer cujo prefixo já foi autenticado no open. Limite inclusivo256.
+    /// # Errors
+    /// Handle envenenado, limite, cadeia/assinatura/SQLite inválidos.
+    pub fn events_from(&self, from_seq: u64, limit: usize) -> Result<Vec<Event>, LedgerError> {
+        self.head()?;
+        if !(1..=256).contains(&limit) {
+            return Err(LedgerError::Invalid("event page limit"));
+        }
+        let Some(head) = self.head else {
+            return Ok(Vec::new());
+        };
+        if from_seq > head.seq {
+            return Ok(Vec::new());
+        }
+        let start = from_seq.saturating_sub(1);
+        let mut statement = self
+            .connection
+            .prepare("SELECT seq,wire FROM events WHERE seq>=?1 ORDER BY seq LIMIT ?2")?;
+        let mut rows =
+            statement.query((start as i64, (limit + usize::from(from_seq > 0)) as i64))?;
+        let mut events = Vec::new();
+        let mut expected = start;
+        let mut previous = None;
+        while let Some(row) = rows.next()? {
+            let seq: i64 = row.get(0)?;
+            let bytes: Vec<u8> = row.get(1)?;
+            let event = Event::decode(&bytes)?;
+            event.verify(&self.public_key)?;
+            if seq < 0 || seq as u64 != expected || event.seq != expected || event.seq > head.seq {
+                return Err(LedgerError::Invalid("event page sequence"));
+            }
+            if let Some(previous) = previous
+                && event.prev != Some(previous)
+            {
+                return Err(LedgerError::Invalid("event page predecessor"));
+            }
+            let digest = hash(&event)?;
+            if event.seq == head.seq && digest != head.hash {
+                return Err(LedgerError::Invalid("event page head"));
+            }
+            previous = Some(digest);
+            expected += 1;
+            if event.seq >= from_seq {
+                events.push(event);
+            }
+        }
+        let expected_len = (head.seq - from_seq + 1).min(limit as u64) as usize;
+        if events.len() != expected_len {
+            return Err(LedgerError::Invalid("missing event page row"));
+        }
+        Ok(events)
+    }
+
     /// Constrói índices conferidos, mantendo o writer emprestado pelo snapshot.
     ///
     /// # Errors
@@ -299,6 +354,102 @@ mod tests {
             .pragma_query_value(None, "journal_mode", |r| r.get(0))
             .unwrap();
         assert_eq!(mode, "wal");
+        drop(ledger);
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn event_pages_reject_bad_signatures_predecessors_heads_and_missing_rows() {
+        let path = std::env::temp_dir().join(format!("logos-ledger-pages-{}", std::process::id()));
+        let signer = FileSigner::from_seed(&[0x52; 32]).unwrap();
+        let mut ledger = Ledger::open(&path, &signer).unwrap();
+        ledger
+            .append(EventBody::Genesis {
+                ledger_version: 1,
+                kernel_binary: [0x52; 32],
+                kernel_key: signer.public_key().key_id().unwrap(),
+            })
+            .unwrap();
+        for epoch in 1..=2 {
+            ledger
+                .append(EventBody::EpochAdvanced {
+                    new_epoch: epoch,
+                    reason: logos_canon::Text::new("fixture").unwrap(),
+                    policy_root: None,
+                    vocab: None,
+                })
+                .unwrap();
+        }
+        let events = ledger.events_from(0, 256).unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(ledger.events_from(1, 1).unwrap(), events[1..2]);
+        let original = to_canon(&events[2]).unwrap();
+        let head = ledger.head;
+        let mut forged = events[2].clone();
+        forged.body = EventBody::EpochAdvanced {
+            new_epoch: 2,
+            reason: logos_canon::Text::new("altered").unwrap(),
+            policy_root: None,
+            vocab: None,
+        };
+        ledger
+            .connection
+            .execute(
+                "UPDATE events SET wire=?1 WHERE seq=2",
+                [to_canon(&forged).unwrap()],
+            )
+            .unwrap();
+        ledger.head.as_mut().unwrap().hash = hash(&forged).unwrap();
+        assert!(
+            ledger.events_from(2, 1).is_err(),
+            "signature even when head digest matches"
+        );
+        let bad_prev = Event::sign(
+            2,
+            2,
+            Some(Hash::from_bytes([0x99; 32])),
+            forged.body.clone(),
+            &signer,
+        )
+        .unwrap();
+        ledger
+            .connection
+            .execute(
+                "UPDATE events SET wire=?1 WHERE seq=2",
+                [to_canon(&bad_prev).unwrap()],
+            )
+            .unwrap();
+        ledger.head.as_mut().unwrap().hash = hash(&bad_prev).unwrap();
+        assert!(
+            ledger.events_from(2, 1).is_err(),
+            "predecessor even when signatures/head match"
+        );
+        let other = Event::sign(2, 2, events[2].prev, forged.body, &signer).unwrap();
+        ledger
+            .connection
+            .execute(
+                "UPDATE events SET wire=?1 WHERE seq=2",
+                [to_canon(&other).unwrap()],
+            )
+            .unwrap();
+        ledger.head = head;
+        assert!(
+            ledger.events_from(2, 1).is_err(),
+            "signed alternate head is not the confirmed head"
+        );
+        ledger
+            .connection
+            .execute("UPDATE events SET wire=?1 WHERE seq=2", [original])
+            .unwrap();
+        assert_eq!(ledger.events_from(2, 1).unwrap(), events[2..]);
+        ledger
+            .connection
+            .execute("DELETE FROM events WHERE seq=2", [])
+            .unwrap();
+        assert!(
+            ledger.events_from(2, 1).is_err(),
+            "missing row is not an empty page"
+        );
         drop(ledger);
         fs::remove_dir_all(path).unwrap();
     }

@@ -312,6 +312,9 @@ dependencies = [
  "logos-crypto",
  "logos-ledger",
  "logos-obligation",
+ "logos-protocol",
+ "rustix",
+ "serde_json",
  "trybuild",
 ]
 

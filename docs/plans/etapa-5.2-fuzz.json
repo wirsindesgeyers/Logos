@@ -1,0 +1,95 @@
+{
+  "stage": "5.2",
+  "date": "2026-10-19",
+  "toolchain": "nightly-2026-09-28",
+  "method": "ci/fuzz.sh; seis lotes completos anteriores mais dois de retomada; lote interrompido excluído",
+  "original_whole_script_exit": null,
+  "original_whole_script_completed": false,
+  "resumed_script_exit": 0,
+  "requested_seconds_in_completed_batches": 14400,
+  "reported_seconds_in_completed_batches": 15457,
+  "executions_in_completed_batches": 96634872,
+  "peak_rss_mib": 1331,
+  "prior_observed_build_id": "3b46da11997ced9c153248fdb34aea39a1437f41",
+  "resume_sources_and_executable_unchanged": true,
+  "sha256": {
+    "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+    "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd",
+    "fuzz/target/x86_64-unknown-linux-gnu/release/kernel_message": "195a8f6a8726faebf83dc00f89afd9d623a146731d6c7280702a95a69c1759cb"
+  },
+  "combined_log": "fuzz-logs/kernel_message.log",
+  "stored_log_normalization": "Somente espaços finais removidos; logs originais preservados em target/.",
+  "combined_log_sha256": "bc865323dae975c70d80074dba5cf0789cae8b55e5f5bc43e39501aac5a7eff8",
+  "batches": [
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 1,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 10307288,
+      "peak_rss_mib": 1026
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 2,
+      "requested_seconds": 1800,
+      "reported_seconds": 2850,
+      "executions": 5851014,
+      "peak_rss_mib": 1026
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 3,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 10613889,
+      "peak_rss_mib": 1028
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 4,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 13087619,
+      "peak_rss_mib": 1069
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 5,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 11223507,
+      "peak_rss_mib": 1256
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume-prior.log",
+      "source_batch": 6,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 16126976,
+      "peak_rss_mib": 1331
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume.log",
+      "source_batch": 1,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 13171563,
+      "peak_rss_mib": 1092
+    },
+    {
+      "source_log": "target/fuzz-5.2-resume.log",
+      "source_batch": 2,
+      "requested_seconds": 1800,
+      "reported_seconds": 1801,
+      "executions": 16253016,
+      "peak_rss_mib": 1213
+    }
+  ],
+  "full_verify": {
+    "command": "ci/verify.sh --selftest",
+    "exit": 0,
+    "seconds": 1760.0726299830058,
+    "log": "target/verify-5.2-resume.log"
+  }
+}
