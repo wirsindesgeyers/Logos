@@ -65,10 +65,21 @@ Subscribe envia [0,Event] por evento e termina com [1,next_seq] ao atingir
 max_events (1..256) ou o prazo da assinatura. O cursor é explícito; nenhum
 evento é truncado ou descartado silenciosamente. Novos eventos podem entrar
 por outra conexão do mesmo UID. Frames de resposta têm teto independente.
+MUST verificar o prazo também antes de cada evento da página e limitar cada
+escrita pelo menor prazo entre frame e assinatura. O cursor final não renova
+o prazo: se a assinatura já expirou entre frames, tentar enviá-lo sem bloqueio;
+socket cheio ou expiração durante frame fecha com erro. Um frame parcial nunca
+é reconhecido por cursor; o cliente retoma do último evento completo observado.
+O prazo de I/O não preempta o handler/replay síncrono. Status e PROPOSE usam a
+projeção viva autenticada do writer (ADR0040/spec ledger-index), sem reconstruir
+e publicar o índice inteiro por requisição.
 Não manter lock do ledger enquanto espera/escreve no socket.
 Cada página relê e verifica no máximo257 eventos (até256 mais o predecessor),
 conferindo assinatura, sequência, links e a cabeça quando alcançada. A abertura
 do Ledger já autenticou o prefixo inteiro; paginação não substitui esse replay.
+O servidor busca um evento por página (e no máximo seu predecessor), para
+reavaliar o prazo e liberar o writer entre eventos; não materializa256 eventos
+grandes de uma vez. max_events continua1..256 para a assinatura inteira.
 
 ## Autenticação, limites e staging
 
@@ -89,6 +100,13 @@ link e com NONBLOCK impede FIFO de bloquear. Exigir arquivo regular, UID
 esperado e nlink1. Snapshot privado em memória limitado, hash conferido antes do CAS;
 caller recebe somente o hash dos bytes publicados. Nome/hash não autorizam
 prova; alterações por descritor antigo não alteram o snapshot conferido.
+Diretórios inválidos capturados MUST ser devolvidos intactos ao staging do
+agente por rename ancorado/NOREPLACE. Se o nome original já contiver um upload
+novo, preservá-lo e devolver sob nome `rejected-*` com nonce de128bits do SO, com até
+oito tentativas totais. Não percorrer/excluir filhos nem seguir symlinks.
+Falha de devolução/sync MUST ser erro explícito com a causa e nome capturado,
+nunca limpeza declarada como concluída. Outros tipos são removidos somente pelo
+nome capturado privado. Devolução de diretório não consome quota de bytes.
 Erros não produzem claim; captura pode consumir o arquivo, sem retry automático.
 
 Handlers PROPOSE/CERTIFY/REFUTE/WITNESS/ASSUME retornam Unavailable até suas

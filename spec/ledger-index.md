@@ -1,6 +1,6 @@
 # ledger-index/v1 — índices derivados e LedgerView
 
-Normativo para ROADMAP 3.3; ADR 0022. MUST/MUST NOT conforme RFC 2119.
+Normativo para ROADMAP 3.3; ADR 0022/0040. MUST/MUST NOT conforme RFC 2119.
 Novo formato de cache v1; event/v1, ledger-sqlite/v1 e obligation/v1 não mudam.
 
 ## 1. Fonte e snapshot
@@ -8,12 +8,35 @@ Novo formato de cache v1; event/v1, ledger-sqlite/v1 e obligation/v1 não mudam.
 MUST conferir a cadeia integral da 3.2 contra a chave pública externa antes
 de disponibilizar a projeção. MUST manter writer.lock enquanto o Index existir.
 Ledger::index empresta o escritor; appends ficam impedidos por esse empréstimo.
-Projeção SQLite privada em memória, imutável após construção. index.sqlite3
+Projeção SQLite privada em memória, imutável enquanto o snapshot existir. index.sqlite3
 é cópia derivada para comparação/reconstrução, MUST NOT autorizar premissas.
 Nunca abrir o cache como fonte das consultas. Nenhum índice novo na base
 ledger.sqlite3; o schema estrito da 3.2 permanece idêntico.
 
-Após construir, comparar todas as colunas de todas as linhas ordenadas do
+`Ledger::live_index` oferece a mesma semântica de consulta, com projeção privada
+mantida pelo writer (ADR0040). Na primeira chamada MUST autenticar a cadeia
+inteira e conferir a cabeça contra o writer antes de publicar qualquer cache.
+A varredura inicial MUST incluir todas as linhas, inclusive sequências
+negativas inválidas; o limite inferior de sequência só exclui prefixo quando
+esse prefixo já foi autenticado. Linhas inválidas MUST gerar erro, não sumir
+silenciosamente por filtro SQL.
+Nas chamadas seguintes sem append MUST reutilizar a projeção em memória sem
+replay, comparação ou publicação em disco. Com appends MUST autenticar somente
+o sufixo novo, encadeado à cabeça privada anterior, e exigir a cabeça final
+exata do writer (seq/época/hash). A mesma projeção de §3 e metadata avançam em
+transação; falha MUST retornar erro e descartar a projeção afetada, nunca uma
+view antiga ou parcialmente atualizada. Poisoned MUST bloquear a API viva.
+Cada view empresta o Ledger, impedindo append/Drop enquanto existir; a view é
+imutável. Reabrir o writer perde esse estado e exige replay integral.
+
+O relatório/comparação/publicação abaixo pertence às APIs explícitas de
+reconstrução `Ledger::index`/`LedgerIndex::open`; a API viva não oferece um
+relatório fictício por consulta. index.sqlite3 pode ficar antigo entre rebuilds,
+sem afetar as views privadas. Alteração do disco não revoga fatos já autenticados
+em memória; sufixos novos e reaberturas continuam conferidos. Nenhum checkpoint
+persistido ou confiança no cache foi acrescentado.
+
+Nas APIs explícitas de reconstrução, comparar todas as colunas/linhas ordenadas do
 cache anterior e classificar Missing/Equal/Different/Invalid. Erro de I/O
 MUST ser erro, não Missing. SQLite corrompido/versão/schema desconhecido é
 Invalid explícito. Publicar nova cópia por backup para arquivo temporário
@@ -110,5 +133,6 @@ reconstrução e refere-se ao snapshot SQLite privado em memória.
 
 Custo de memória e abertura cresce com o histórico. Ainda sem checkpoint,
 anti-rollback externo, rechecagem de certificados, janelas de fatos, UI,
-índices de ações, kernel ou autorização administrativa. Assinatura do registro
+índices de ações ou autorização administrativa. A integração com o kernel usa
+a API viva (Etapas5.2/5.3, ADR0040). Assinatura do registro
 não demonstra que a prova foi checada; auditor independente é a 3.6.

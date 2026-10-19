@@ -975,6 +975,10 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Upload de certificado grande via CAS (o agente escreve num diretório de staging; o kernel recalcula o hash e move).
 - Um handler por mensagem, sem estado compartilhado mutável fora do ledger.
 - Limites por conexão (tamanho de frame, taxa) para negação de serviço.
+- Correções pós-revisão (ADR0040): prazo de Subscribe por evento/escrita e
+  cursor sem renovar assinatura expirada; diretórios rejeitados devolvidos
+  sem sobrescrever upload novo; Status usa projeção viva autenticada,
+  verificando apenas sufixos após a abertura inicial (spec/ledger-index.md).
 
 **Critério de conclusão.**
 - [x] Fuzz do decoder de mensagens ≥ 4h sem crash.
@@ -991,6 +995,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 **Entregáveis.**
 - Handler: valida a proposta → `generate` (Etapa 1.5) → CAS `put(O)` → eventos `Proposed` + `ObligationCreated` → claim `Pending`.
 - Retorna `h(O)` e os bytes de `O` para o agente levar ao prover.
+- PROPOSE usa a projeção viva do writer (ADR0040): appends anteriores avançam
+  o sufixo autenticado, sem replay integral/publicação de cache por proposta.
 
 **Critério de conclusão.**
 - [x] **Teste de invariante P1**: suíte de 50 tentativas de um agente malicioso (citar o não verificado, mandar obrigação pronta, mandar fato, citar evento de outra época, citar claim retratado) — todas recusadas.

@@ -42,7 +42,7 @@ impl<S: Signer> Handlers<S> for ProposalHandlers {
             .map(|h| PremiseRef::from_event_hash(*h.as_bytes()))
             .collect();
         let obligation = {
-            let index = ledger.index()?;
+            let index = ledger.live_index()?;
             let view = index.snapshot(ledger.cas(), &references, "")?;
             generate(
                 Proposal {

@@ -119,6 +119,29 @@ fn candidate(v: Hash<Vocabulary>, goal: Formula, cites: Vec<Hash<Event>>) -> Eve
         vocabulary: v,
     }
 }
+
+#[test]
+fn successive_proposals_use_authenticated_suffixes_without_disk_cache_publication() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let hv = publish(&ledger, &vocabulary(&[]));
+    for n in 1..=4 {
+        let reply = reply(
+            &mut ledger,
+            Message::Propose(candidate(hv, truth(), vec![])),
+        );
+        let (ho, bytes) = obligation(&reply);
+        assert_eq!(ledger.cas().get(&ho).unwrap(), Some(bytes));
+        assert_eq!(ledger.head().unwrap().unwrap().seq, 2 * n);
+        if n == 1 {
+            let cache = temp.0.join("ledger/index.sqlite3");
+            std::fs::remove_file(&cache).unwrap();
+            std::fs::create_dir(&cache).unwrap();
+        }
+    }
+}
 fn frame(p: EventProposal) -> Vec<u8> {
     encode_frame(&Request {
         id: 14,

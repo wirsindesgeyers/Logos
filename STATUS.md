@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-19 · Etapa5.3 concluída localmente sobre6374755: PROPOSE com snapshot/CAS e Pending reais;50 recusas P1/STATE14,14 mutações e fuzz560503/61s passaram. Full verify/selftest VERIFY_OK/exit0 em1568.40s. Sem push; próximo:5.4.
+> Última atualização: 2026-10-19 · Três P2 corrigidos localmente sobrec647418 (ADR0040): prazos, staging e projeção viva autenticada. Treze regressões novas/17 mutações detectadas; full verify/selftest VERIFY_OK/exit0 em2006,93s;430 entradas com hashes inalterados. Próximo:5.4; CI/ARM pendentes, sem push.
 
 ## Resumo
 
@@ -13,8 +13,11 @@ Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`.
 Kernel possui typestate5.1 e transporte5.2 (socket Unix, staging e Query/Subscribe
 reais). PROPOSE5.3 gera O com snapshot autenticado, publica no CAS e persiste
-Pending; verificação completa passou. Certificação, demais handlers e gateway
-seguem pendentes.
+Pending; verificação completa anterior passou. A revisão de19/out confirmou
+três P2 no transporte/staging e na abertura de índices por requisição. As
+correções passaram no full verify/selftest (2006,93s, exit0/VERIFY_OK), com
+treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. Certificação, demais handlers e gateway seguem
+pendentes.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -37,8 +40,9 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 13573+747130=760703 LOC de correção, build-only64508;
-logos-core344, logos-ledger3415, logos-obligation572, logos-kernel1427.
+TCB atual Rust: 14116+747130=761246 LOC de correção, build-only64508;
+logos-core344, logos-ledger3791, logos-obligation572, logos-kernel1594.
+Medição da correção inclui testes em src/; dependências externas inalteradas.
 SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -239,8 +243,8 @@ fontes opacas não demonstram autenticação.
 | Etapa | Estado | Evidência / próximo trabalho |
 | --- | --- | --- |
 | 5.1 Typestate de claims | ✅ concluída localmente | Claim<S>/SignedEvent<S> selados; seis operações com evento único após append confirmado. Oito testes/1024 transições,12 compile-fail+controle positivo, nove mutações compiladas; full verify/selftest VERIFY_OK/exit0. [Plano](docs/plans/etapa-5.1.md), ADR0034 e spec/state-machine.md. CI desta etapa ainda não observada. |
-| 5.2 Servidor do protocolo | ⚠ concluída localmente; CI/ARM/noturno pendentes | Codec/socket/staging/Query/Subscribe reais; 14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Conferência corrigiu fechamento prematuro: seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial. Soma14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Novo full verify/selftest: VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
-| 5.3 PROPOSE e regra de citação | ⚠ concluída localmente; CI/ARM pendentes | Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
+| 5.2 Servidor do protocolo | ⚠ concluída localmente após correções; CI/ARM/noturno pendentes | Correções19/out (ADR0040): prazo por evento/escrita/cursor, diretórios devolvidos sem sobrescrever upload novo e Status com projeção viva.13 regressões/17 mutações; novo full verify/selftest VERIFY_OK/exit0 em2006,93s,520 Rust/252 Python/25 TCB; [reproduções](docs/reviews/2026-10-19-kernel.md). Evidências anteriores preservadas: codec/socket/staging/Query/Subscribe reais;14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial:14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Full verify/selftest anterior VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
+| 5.3 PROPOSE e regra de citação | ⚠ concluída localmente após correção do índice; CI/ARM pendentes | Correção19/out (ADR0040): PROPOSE usa projeção viva e sufixos autenticados. Quatro propostas sucessivas passam com cache de disco indisponível; com5mil eventos, propostas após abertura custaram3,32/3,31ms. Novo full verify/selftest VERIFY_OK/exit0 em2006,93s. Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
 | 5.4 CERTIFY e registry de checkers | ⏳ não iniciada | Dependências5.3/2.3/4.4/4.5/4.7/3.2 presentes. Planejar registry ativo/revogado, retomada privada de Pending pelo replay, CertificateRejected e roteamento dos checkers. Sem Alethe/camada2 nem avaliação direta. |
 
 ## Pendências de verificação (execução remota)
@@ -359,6 +363,37 @@ fontes opacas não demonstram autenticação.
    Testes UniiChat/OptMem e oito casos extras são pesquisa local opcional,
    sem job novo na CI e sem fechar MEM.0–MEM.7. Provider real/custo/recall e
    critérios do runtime de memória continuam futuros, conforme Apêndice F.
+7. **Correções da revisão da codebase (19/out):** três P2 corrigidos e
+   demonstrados localmente; full verify/selftest VERIFY_OK/exit0 em2006,93s,
+   520 Rust/0 ignorados,252 Python+25 TCB e430 entradas com hashes inalterados.
+   [Evidências](docs/plans/correcao-kernel-2026-10-19-evidencias.json).
+   CI/ARM/noturno desta correção ainda não observados; sem novo fuzz/parser.
+
+## Achados da revisão — 2026-10-19 (corrigidos localmente)
+
+[Relatório/reprodutor](docs/reviews/2026-10-19-kernel.md), basec647418,
+[ADR0040](docs/adr/0040-projecao-viva-e-limites-do-transporte.md) e
+[plano/evidências](docs/plans/correcao-kernel-2026-10-19.md):
+
+1. **Subscribe:** prazo conferido por evento e compartilhado nas escritas;
+   cursor final não renova prazo. Uma página por evento limita trabalho
+   síncrono. Reprodução20ms:3 eventos completos/24,54ms de servidor, em vez
+   dos32 eventos/1262,77ms; CPU síncrona não é preemptível.
+2. **Status/PROPOSE:** projeção privada por writer, primeiro replay integral
+   e somente sufixos autenticados depois. Status5mil após abertura0,18/0,20ms
+   (antes2527,80–4035,84ms); PROPOSE3,32/3,31ms. Rebuild/cache em disco
+   continua explícito; nunca se usa o cache persistido como autoridade.
+3. **Staging:** diretórios rejeitados voltam intactos ao agente, por rename
+   ancorado/NOREPLACE e nonce128bits no nome alternativo. Três tentativas:
+   três devoluções/zero resíduos; erro de tipo preservado, sem percorrer links.
+
+Treze regressões, dois compile-fail+controle positivo,17 mutações compiladas
+detectadas e fontes restauradas por hash. Incluem linhas negativas no replay
+inicial, assinatura/prev/época/cabeça, Poisoned, falha de entropia/devolução,
+colisões e comparação com reconstrução. Full verify/selftest VERIFY_OK/exit0,
+2006,93s;430 entradas inalteradas. Autoteste concluiu os diagnósticos certos,
+com aviso de metadata da raiz na cópia tar registrado no plano. Sem formato/
+pacote novo, novo fuzz ou observação remota. Evidências históricas preservadas.
 
 ## Achados da revisão — 2026-10-04 (corrigidos localmente)
 
@@ -442,10 +477,19 @@ chooser antigo e sem lotes/cache: não demonstra os contratos corrigidos.
 A revisão de 19/out foi verificada: `ci/verify.sh --selftest`, `VERIFY_OK`,
 exit0 em1458.31s;252 testes Python+25 da TCB passaram. Os424 arquivos de
 runtime/formatos acompanhados conservaram os hashes; CI remota não observada.
-O próximo passo principal permanece 5.4. Se o mantenedor priorizar memória,
+Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
+posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
 ## Próximo passo: Etapa5.4 — `CERTIFY` e registry de checkers
+
+As correções da revisão19/out estão concluídas localmente:13 regressões,
+17 mutações detectadas e full verify/selftest VERIFY_OK/exit0 em2006,93s.
+ADR0040 fixa projeção viva por writer, sufixos autenticados, prazo de Subscribe
+e devolução segura de diretórios. Nas consultas frequentes, usar
+`Ledger::live_index`; `Ledger::index`/`LedgerIndex::open` são rebuilds explícitos.
+CI/ARM e pendências remotas anteriores continuam abertas; nenhum push.
+
 
 A5.3 está concluída localmente sobre6374755: PROPOSE usa o snapshot autenticado,
 generate e CAS, registra Proposed+ObligationCreated e retorna propose-result/v1.
@@ -478,11 +522,11 @@ bruto do agente constitui autorização. Query::Status continua usando h(Event).
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 13573 LOC Rust próprios + 747130
-  de dependências Rust = 760703 (+64508 só de compilação), após5.3;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3415, logos-kernel1427.
-  Acréscimo de72 LOC próprios na5.3; pacotes externos inalterados.
-  Relatório atual target/tcb-5.3.json/.md.
+- **Tamanho da TCB de correção (execução):** 14116 LOC Rust próprios + 747130
+  de dependências Rust = 761246 (+64508 só de compilação), após as correções;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3791, logos-kernel1594.
+  Acréscimo de543 LOC próprios sobre5.3, incluindo testes em src/; pacotes externos inalterados.
+  Relatório atual target/tcb-kernel-review.json/.md.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -1622,3 +1666,51 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   nenhum Rust ignorado;424 arquivos runtime/formatos com hashes inalterados.
   Memória não implementada, critérios MEM abertos, próximo principal5.4.
   CI remota não observada; arquivos alheios preservados, sem push.
+
+- **2026-10-19** — Revisão da codebase solicitada pelo mantenedor, basec647418,
+  com foco em kernel/ledger e contratos: três P2 reproduzidos contra crates e
+  socket reais. Subscribe20ms enviou32 eventos64KiB em1262,77ms; Status repetiu
+  replay integral sob mutex,2527,80–4035,84ms com5mil eventos e cabeça estática;
+  três diretórios rejeitados deixaram três capturas privadas com EISDIR.
+  Relatório/reprodutor em docs/reviews/2026-10-19-kernel.md. Build offline release
+  e quatro execuções exit0 confirmam defeitos, não conformidade;41 dependências
+  externas conferidas contra Cargo.lock. Sem novo full verify/fuzz/CI remota,
+  sem correções de runtime, commit ou push.5.2 reaberta para correções e próximo
+  passo atualizado antes de retomar5.4; escolher vida útil da projeção com
+  plano/ADR, sem confiar no cache persistido. Arquivos alheios preservados.
+
+- **2026-10-19** — Correção dos P2 autorizada pelo mantenedor, em andamento
+  sobrec647418. ADR0040/plano; prazos de Subscribe por evento/escrita/cursor,
+  páginas de um evento, devolução de diretórios por NOREPLACE com nonce128bits
+  e projeção privada do writer com sufixos autenticados. Treze regressões novas,
+  dois compile-fail + controle positivo,17 mutações compiladas detectadas e
+  fontes restauradas por hash. Capturada e corrigida regressão do replay inicial
+  que escondia linhas negativas; teste falhou antes e passou depois. Reproduções
+  finais: assinatura20ms encerra em24,54ms de servidor (trabalho síncrono não
+  preemptível); diretórios3/3 devolvidos, zero resíduos; Status5mil após abertura
+  0,18/0,20ms e PROPOSE3,32/3,31ms. Dois full verifies interrompidos antes de fechar
+  (317,35s e972,66s, exit-15), preservados em target/; nova execução83807 ativa,
+  sem VERIFY_OK final até agora. Nenhum formato/dependência mudou. Sem commit/
+  push; próximo: terminar verificação, atualizar evidências e fechar correções,
+  depois retomar5.4. Arquivos alheios preservados.
+
+- **2026-10-19** — Correções da revisão encerradas localmente sobrec647418:
+  ADR0040/projeção viva por writer com sufixos autenticados, prazo compartilhado
+  de Subscribe e devolução intacta de diretórios com NOREPLACE/nonce do SO.
+  Treze regressões novas, dois compile-fail+controle positivo,17 mutações
+  compiladas detectadas; fontes restauradas por hash. Regressão do replay
+  inicial com linhas negativas detectada por teste vermelho e corrigida antes
+  do fechamento. Full ci/verify.sh --selftest VERIFY_OK/exit0 em2006,93s:
+  520 Rust/0 ignorados,252 Python107,52s+25 TCB1,67s; smokes, independência,
+  vetores, manifesto, deny/audit e autoteste passaram.430 entradas de runtime/
+  spec/CI/TCB conservaram hashes. Crash10k/24 SIGKILLs/9999 ACKs/67,78s sem
+  perda reconhecida; rebuild100k/cinco tabelas exatas;1M/20000 consultas,
+  p99=38874ns, cold285496ms fora da latência. TCB14116+747130=761246,
+  ledger3791/kernel1594, build-only64508, inclui testes em src/. Sem pacote,
+  formato ou parser novo, sem novo fuzz. Aviso tar de metadata da raiz durante
+  cópia temporária registrado; autoteste concluiu todas as recusas pelo motivo
+  certo. Duas verificações interrompidas e ajustes de fixtures mantidos no
+  plano, sem tratá-los como sucesso. Evidências/manifests em docs/plans/
+  correcao-kernel-2026-10-19-*.json. Commit local de correção; sem push/CI remota.
+  Arquivos científicos, ZIPs e smoke.log preexistentes preservados fora do commit.
+  Próximo: plano5.4 para registry/CERTIFY e retomada privada de Pending.

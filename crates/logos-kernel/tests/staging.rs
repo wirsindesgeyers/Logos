@@ -101,12 +101,54 @@ fn symlinks_hardlinks_fifo_directories_and_traversal_do_not_reach_the_cas() {
     assert!(staging.import(&reference(b""), &cas, &mut 100).is_err());
     fs::create_dir(&path).unwrap();
     assert!(staging.import(&reference(b""), &cas, &mut 100).is_err());
+    assert_eq!(fs::read_dir(&private).unwrap().count(), 0);
     let bad = ObjectRef::<Certificate>::Staged {
         name: Text::new("../target").unwrap(),
         hash: hash_raw(b"secret"),
     };
     assert!(staging.import(&bad, &cas, &mut 100).is_err());
     assert_eq!(cas.get(&hash_raw::<Certificate>(b"secret")).unwrap(), None);
+}
+
+#[test]
+fn rejected_directories_are_returned_intact_without_private_orphans() {
+    let temp = Temp::new();
+    let source = temp.dir("source");
+    let private = temp.dir("private");
+    let cas = Cas::open(temp.0.join("cas"), Limits::default()).unwrap();
+    let staging =
+        Staging::open(&source, &private, rustix::process::geteuid().as_raw(), 100).unwrap();
+    let path = source.join("a".repeat(64));
+    let target = temp.0.join("target");
+    fs::write(&target, b"outside").unwrap();
+    for populated in [false, true] {
+        fs::create_dir(&path).unwrap();
+        if populated {
+            fs::write(path.join("child"), b"inside").unwrap();
+            symlink(&target, path.join("link")).unwrap();
+        }
+        let mut quota = 100;
+        let error = staging
+            .import(&reference(b""), &cas, &mut quota)
+            .unwrap_err();
+        assert!(matches!(
+            error,
+            logos_kernel::TransportError::Invalid("staged object type/owner/links/mode")
+        ));
+        assert_eq!(quota, 100);
+        assert_eq!(fs::read_dir(&private).unwrap().count(), 0);
+        assert!(path.is_dir());
+        if populated {
+            assert_eq!(fs::read(path.join("child")).unwrap(), b"inside");
+            assert!(
+                fs::symlink_metadata(path.join("link"))
+                    .unwrap()
+                    .is_symlink()
+            );
+        }
+        assert_eq!(fs::read(&target).unwrap(), b"outside");
+        fs::remove_dir_all(&path).unwrap();
+    }
 }
 
 #[test]

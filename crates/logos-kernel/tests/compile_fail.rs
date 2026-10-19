@@ -15,5 +15,8 @@ fn compile_fail_ui() {
     t.compile_fail("tests/ui/no_clone.rs");
     t.compile_fail("tests/ui/no_default.rs");
     t.compile_fail("tests/ui/consumed_claim.rs");
+    t.compile_fail("tests/ui/live_index_blocks_append.rs");
+    t.compile_fail("tests/ui/live_index_blocks_drop.rs");
     t.pass("tests/ui/positive_control.rs");
+    t.pass("tests/ui/live_index_positive.rs");
 }

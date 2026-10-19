@@ -748,6 +748,154 @@ fn cache_tampering_is_reported_and_never_becomes_authority() {
 }
 
 #[test]
+fn live_projection_matches_rebuild_across_appends_epochs_and_invalidations() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    let mut references = vec![];
+    let compare = |ledger: &Ledger<'_, FileSigner>, references: &[Hash<Event>]| {
+        let live = ledger.live_index().unwrap();
+        let again = ledger.live_index().unwrap(); // leituras simultâneas não entram em borrow_mut
+        let rebuilt = ledger.index().unwrap();
+        assert_eq!(live.head(), ledger.head().unwrap());
+        assert_eq!(again.head(), rebuilt.head());
+        let epoch = live.head().unwrap().epoch;
+        for &reference in references {
+            assert_eq!(
+                live.status(reference).unwrap(),
+                rebuilt.status(reference).unwrap()
+            );
+            assert_eq!(
+                live.dependents(reference).unwrap(),
+                rebuilt.dependents(reference).unwrap()
+            );
+            for epoch in [0, 1, epoch, u64::MAX] {
+                assert_eq!(
+                    live.is_citable(reference, epoch).unwrap(),
+                    rebuilt.is_citable(reference, epoch).unwrap()
+                );
+            }
+            assert_eq!(
+                live.formula_of(reference, &fixture.cas).unwrap(),
+                rebuilt.formula_of(reference, &fixture.cas).unwrap()
+            );
+        }
+        let cites: Vec<_> = references.iter().copied().map(premise).collect();
+        let a = live.snapshot(&fixture.cas, &cites, "local").unwrap();
+        let b = rebuilt.snapshot(&fixture.cas, &cites, "local").unwrap();
+        assert_eq!(a.current_epoch(), b.current_epoch());
+        for reference in cites {
+            let a = a.lookup(reference).unwrap();
+            let b = b.lookup(reference).unwrap();
+            assert_eq!(
+                a.as_ref()
+                    .map(|e| (e.kind, e.epoch, e.retracted, e.formula)),
+                b.as_ref()
+                    .map(|e| (e.kind, e.epoch, e.retracted, e.formula))
+            );
+        }
+    };
+    compare(&ledger, &references); // inicialização em Genesis
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    references.push(a);
+    compare(&ledger, &references);
+    let ho = fixture.obligation(&ledger, &[a], &truth());
+    let b = hash(&ledger.append(verified(ho, vec![a], vec![a])).unwrap()).unwrap();
+    references.push(b);
+    compare(&ledger, &references);
+    let hc = fixture.obligation(&ledger, &[b], &truth());
+    let c = hash(&ledger.append(verified(hc, vec![b], vec![b])).unwrap()).unwrap();
+    references.push(c);
+    compare(&ledger, &references);
+    ledger.append(retract(a, &fixture.signer)).unwrap();
+    compare(&ledger, &references);
+    ledger.append(epoch(1)).unwrap();
+    let fresh = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    references.push(fresh);
+    compare(&ledger, &references); // mais de um evento no sufixo
+    let ho = fixture.obligation(&ledger, &[fresh], &truth());
+    let proof = hash(
+        &ledger
+            .append(verified(ho, vec![fresh], vec![fresh]))
+            .unwrap(),
+    )
+    .unwrap();
+    references.push(proof);
+    compare(&ledger, &references);
+    ledger.append(revoke(&fixture.signer)).unwrap();
+    let revoked = hash(
+        &ledger
+            .append(verified(ho, vec![fresh], vec![fresh]))
+            .unwrap(),
+    )
+    .unwrap();
+    references.push(revoked);
+    compare(&ledger, &references);
+    ledger
+        .append(EventBody::UnknownRecorded {
+            check: CheckRecord {
+                outcome: CheckOutcome::Unknown(Exhausted::Steps),
+                ..check(ho)
+            },
+            machine: Text::new("fixture").unwrap(),
+        })
+        .unwrap();
+    ledger.append(epoch(u64::MAX)).unwrap();
+    compare(&ledger, &references);
+    let head = ledger.head().unwrap();
+    drop(ledger);
+    let reopened = Ledger::open(&fixture.temp.0, &fixture.signer).unwrap();
+    assert_eq!(reopened.live_index().unwrap().head(), head);
+    compare(&reopened, &references);
+}
+
+#[test]
+fn live_queries_and_appends_never_reopen_or_republish_the_disk_cache() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    assert!(ledger.live_index().unwrap().is_citable(a, 0).unwrap());
+    fs::remove_file(fixture.cache()).unwrap();
+    fs::create_dir(fixture.cache()).unwrap(); // um rebuild tentaria abrir/publicar aqui e falharia
+    fs::write(fixture.cache().join("sentinel"), b"untouched").unwrap();
+    for _ in 0..3 {
+        let live = ledger.live_index().unwrap();
+        assert!(live.is_citable(a, 0).unwrap());
+        assert!(live.status(Hash::from_bytes([0xff; 32])).unwrap().is_none());
+    }
+    ledger.append(retract(a, &fixture.signer)).unwrap();
+    assert!(!ledger.live_index().unwrap().is_citable(a, 0).unwrap());
+    ledger.append(epoch(2)).unwrap();
+    let b = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    assert!(ledger.live_index().unwrap().is_citable(b, 2).unwrap());
+    assert_eq!(
+        fs::read(fixture.cache().join("sentinel")).unwrap(),
+        b"untouched"
+    );
+    assert_eq!(fs::read_dir(fixture.cache()).unwrap().count(), 1);
+}
+
+#[test]
+fn live_projection_never_returns_old_snapshot_after_an_invalid_suffix() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    assert!(ledger.live_index().unwrap().is_citable(a, 0).unwrap());
+    let ho = fixture.cas.put::<Obligation>(&[0x80]).unwrap();
+    let missing = Hash::from_bytes([0xff; 32]);
+    ledger
+        .append(verified(ho, vec![missing], vec![missing]))
+        .unwrap();
+    for _ in 0..2 {
+        assert!(matches!(
+            ledger.live_index(),
+            Err(LedgerError::Invalid(
+                "used premise is not an earlier citable claim in this epoch"
+            ))
+        ));
+    }
+}
+
+#[test]
 fn deleting_or_corrupting_cache_reconstructs_without_changing_source_head() {
     let fixture = Fixture::new();
     let mut ledger = fixture.ledger();

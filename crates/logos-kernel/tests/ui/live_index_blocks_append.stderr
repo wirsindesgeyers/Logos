@@ -1,0 +1,9 @@
+error[E0502]: cannot borrow `*ledger` as mutable because it is also borrowed as immutable
+ --> tests/ui/live_index_blocks_append.rs:6:5
+  |
+5 |     let view = ledger.live_index().unwrap();
+  |                ------ immutable borrow occurs here
+6 |     ledger.append(body).unwrap();
+  |     ^^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
+7 |     drop(view);
+  |          ---- immutable borrow later used here

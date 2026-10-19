@@ -472,6 +472,241 @@ fn live_subscription_receives_a_new_committed_event_from_another_connection() {
     assert!(ledger.events_from(0, 257).is_err());
 }
 
+struct SlowPage;
+impl Handlers<FileSigner> for SlowPage {
+    fn subscribe(
+        &self,
+        ledger: &mut Ledger<'_, FileSigner>,
+        _: &Peer,
+        cursor: u64,
+        max: usize,
+    ) -> Result<Vec<Event>, TransportError> {
+        let events = ledger.events_from(cursor, max)?;
+        std::thread::sleep(Duration::from_millis(100));
+        Ok(events)
+    }
+}
+
+struct ReadyPage(Vec<Event>);
+impl Handlers<FileSigner> for ReadyPage {
+    fn subscribe(
+        &self,
+        _: &mut Ledger<'_, FileSigner>,
+        _: &Peer,
+        _: u64,
+        _: usize,
+    ) -> Result<Vec<Event>, TransportError> {
+        Ok(self.0.clone())
+    }
+}
+
+#[test]
+fn subscription_deadline_is_checked_after_fetch_before_sending_the_page() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let (server, staging) = setup(
+        &temp,
+        ConnectionLimits {
+            subscription_timeout: Duration::from_millis(20),
+            ..Default::default()
+        },
+    );
+    let writer = Mutex::new(&mut ledger);
+    let (mut client, stream) = UnixStream::pair().unwrap();
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 1,
+                message: Message::Subscribe {
+                    from_seq: 0,
+                    max_events: 1,
+                },
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    client.shutdown(Shutdown::Write).unwrap();
+    std::thread::scope(|scope| {
+        let worker = scope.spawn(|| server.serve_stream(stream, &writer, &SlowPage, &staging));
+        let end = response(&mut client);
+        worker.join().unwrap().unwrap();
+        assert_eq!(
+            values(&values(&end)[3]),
+            [Value::Unsigned(1), Value::Unsigned(0)]
+        );
+    });
+}
+
+#[test]
+fn subscription_deadline_caps_a_blocked_frame_and_does_not_hold_the_writer() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let vocabulary = Vocabulary::new(1, vec![], vec![]).unwrap();
+    let hv = ledger.cas().put(&to_canon(&vocabulary).unwrap()).unwrap();
+    ledger
+        .append(EventBody::Proposed {
+            proposal: logos_ledger::EventProposal {
+                text_pt: logos_ledger::TaintedText::new("x".repeat(64 * 1024)).unwrap(),
+                goal: Formula::new(vec![FormulaNode::True], Limits::default()).unwrap(),
+                cites: vec![],
+                speculative_on: vec![],
+                vocabulary: hv,
+            },
+            author: signer.key_id().unwrap(),
+        })
+        .unwrap();
+    let ready = ReadyPage(ledger.events_from(1, 1).unwrap());
+    let (server, staging) = setup(
+        &temp,
+        ConnectionLimits {
+            subscription_timeout: Duration::from_secs(1),
+            frame_timeout: Duration::from_secs(5),
+            ..Default::default()
+        },
+    );
+    let writer = Mutex::new(&mut ledger);
+    let (mut client, stream) = UnixStream::pair().unwrap();
+    rustix::net::sockopt::set_socket_send_buffer_size(&stream, 4096).unwrap();
+    client
+        .set_read_timeout(Some(Duration::from_secs(3)))
+        .unwrap();
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 1,
+                message: Message::Subscribe {
+                    from_seq: 1,
+                    max_events: 1,
+                },
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    client.shutdown(Shutdown::Write).unwrap();
+    let (done, received) = std::sync::mpsc::channel();
+    std::thread::scope(|scope| {
+        let worker = scope.spawn(|| {
+            let result = server.serve_stream(stream, &writer, &ready, &staging);
+            done.send(()).unwrap();
+            result
+        });
+        let mut prefix = [0; 4];
+        client.read_exact(&mut prefix).unwrap(); // frame iniciou, mas cliente não lê o payload
+        assert!(
+            u32::from_be_bytes(prefix) > 4096,
+            "a fixture precisa bloquear um frame de evento, não o cursor final"
+        );
+        assert!(writer.try_lock().is_ok());
+        let within_subscription = received.recv_timeout(Duration::from_secs(3)).is_ok();
+        drop(client); // também libera o worker defeituoso antes da asserção
+        let result = worker.join().unwrap();
+        assert!(
+            within_subscription,
+            "frame_timeout não pode renovar o prazo da assinatura"
+        );
+        assert!(
+            matches!(&result, Err(TransportError::Io(e)) if matches!(e.kind(), std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock)),
+            "unexpected subscription result: {result:?}"
+        );
+    });
+}
+
+#[test]
+fn status_reuses_the_private_projection_without_reopening_the_disk_cache() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let (server, staging) = setup(&temp, Default::default());
+    let writer = Mutex::new(&mut ledger);
+    let (mut client, stream) = UnixStream::pair().unwrap();
+    std::thread::scope(|scope| {
+        let worker =
+            scope.spawn(|| server.serve_stream(stream, &writer, &ReadOnlyHandlers, &staging));
+        for id in 1..=3 {
+            client
+                .write_all(
+                    &encode_frame(&Request {
+                        id,
+                        message: Message::Query(Query::Status(Hash::from_bytes([0xff; 32]))),
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
+            let reply = response(&mut client);
+            assert_eq!(values(&reply)[2], Value::Unsigned(1));
+            assert!(values(&values(&reply)[3]).is_empty());
+            if id == 1 {
+                let cache = temp.0.join("ledger/index.sqlite3");
+                std::fs::remove_file(&cache).unwrap();
+                std::fs::create_dir(&cache).unwrap();
+            }
+        }
+        client.shutdown(Shutdown::Write).unwrap();
+        worker.join().unwrap().unwrap();
+    });
+}
+
+#[test]
+fn expired_subscription_does_not_wait_for_a_final_cursor_on_a_full_socket() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let (server, staging) = setup(
+        &temp,
+        ConnectionLimits {
+            subscription_timeout: Duration::from_millis(20),
+            frame_timeout: Duration::from_secs(3),
+            ..Default::default()
+        },
+    );
+    let writer = Mutex::new(&mut ledger);
+    let (mut client, mut stream) = UnixStream::pair().unwrap();
+    rustix::net::sockopt::set_socket_send_buffer_size(&stream, 4096).unwrap();
+    stream.set_nonblocking(true).unwrap();
+    loop {
+        match stream.write(&[0; 4096]) {
+            Ok(_) => (),
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+            Err(e) => panic!("fixture: {e}"),
+        }
+    }
+    stream.set_nonblocking(false).unwrap();
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 1,
+                message: Message::Subscribe {
+                    from_seq: 0,
+                    max_events: 1,
+                },
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    client.shutdown(Shutdown::Write).unwrap();
+    let (done, received) = std::sync::mpsc::channel();
+    std::thread::scope(|scope| {
+        let worker = scope.spawn(|| {
+            let result = server.serve_stream(stream, &writer, &SlowPage, &staging);
+            done.send(()).unwrap();
+            result
+        });
+        let timely = received.recv_timeout(Duration::from_secs(1)).is_ok();
+        drop(client);
+        let result = worker.join().unwrap();
+        assert!(timely, "cursor final não renova a assinatura expirada");
+        assert!(
+            matches!(result, Err(TransportError::Io(e)) if e.kind() == std::io::ErrorKind::WouldBlock)
+        );
+    });
+}
+
 #[test]
 fn binding_never_removes_existing_paths_and_rejects_writable_parent() {
     let temp = Temp::new();

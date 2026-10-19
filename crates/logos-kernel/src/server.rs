@@ -170,7 +170,7 @@ pub trait Handlers<S: Signer>: Sync {
                 None => array(vec![]),
             },
             Query::Status(reference) => {
-                let index = ledger.index()?;
+                let index = ledger.live_index()?;
                 match index.status(reference)? {
                     None => array(vec![]),
                     Some(status) => {
@@ -289,16 +289,40 @@ fn write_frame(
     budget: &mut Budget,
     limits: &ConnectionLimits,
 ) -> Result<(), Error> {
+    write_frame_until(
+        stream,
+        payload,
+        budget,
+        Instant::now() + limits.frame_timeout,
+    )
+}
+
+fn write_frame_until(
+    stream: &mut UnixStream,
+    payload: &[u8],
+    budget: &mut Budget,
+    deadline: Instant,
+) -> Result<(), Error> {
+    write_frame_io(stream, payload, budget, Some(deadline))
+}
+
+fn write_frame_io(
+    stream: &mut UnixStream,
+    payload: &[u8],
+    budget: &mut Budget,
+    deadline: Option<Instant>,
+) -> Result<(), Error> {
     if payload.len() > wire::MAX_RESPONSE_BYTES {
         return Err(Error::Limit("response frame"));
     }
     budget.charge(payload.len() + 4)?;
     let length = u32::try_from(payload.len()).map_err(|_| Error::Limit("response length"))?;
     let prefix = length.to_be_bytes();
-    let deadline = Instant::now() + limits.frame_timeout;
     for mut bytes in [&prefix[..], payload] {
         while !bytes.is_empty() {
-            stream.set_write_timeout(Some(remaining(deadline)?))?;
+            if let Some(deadline) = deadline {
+                stream.set_write_timeout(Some(remaining(deadline)?))?;
+            }
             match stream.write(bytes) {
                 Ok(0) => {
                     return Err(Error::Io(std::io::Error::new(
@@ -543,7 +567,9 @@ impl Server {
                     .lock()
                     .map_err(|_| Error::Invalid("ledger lock poisoned"))?;
                 if ledger.head()?.is_some_and(|h| h.seq >= cursor) {
-                    handlers.subscribe(&mut ledger, peer, cursor, (max - sent) as usize)?
+                    // Limita trabalho síncrono e memória antes de reavaliar o
+                    // prazo; não materializa até256 eventos grandes de uma vez.
+                    handlers.subscribe(&mut ledger, peer, cursor, 1)?
                 } else {
                     Vec::new()
                 }
@@ -553,25 +579,40 @@ impl Server {
                 continue;
             }
             for event in events {
+                if Instant::now() >= deadline {
+                    break;
+                }
                 if event.seq != cursor {
                     return Err(Error::Invalid("handler event cursor"));
                 }
                 let payload = array(vec![Value::Unsigned(0), event.to_value()?])?;
-                write_frame(
+                write_frame_until(
                     stream,
                     &wire::response(id, Ok(payload))?,
                     budget,
-                    &self.limits,
+                    deadline.min(Instant::now() + self.limits.frame_timeout),
                 )?;
                 cursor = cursor.checked_add(1).ok_or(Error::Limit("event cursor"))?;
                 sent += 1;
             }
         }
-        write_frame(
-            stream,
-            &wire::response(id, Ok(array(vec![Value::Unsigned(1), cursor.to_value()?])?))?,
-            budget,
-            &self.limits,
-        )
+        let payload = wire::response(id, Ok(array(vec![Value::Unsigned(1), cursor.to_value()?])?))?;
+        if Instant::now() < deadline {
+            write_frame_until(
+                stream,
+                &payload,
+                budget,
+                deadline.min(Instant::now() + self.limits.frame_timeout),
+            )
+        } else {
+            // O cursor final não renova o prazo de uma assinatura expirada.
+            // Se o socket estiver cheio, fecha sem reconhecer evento parcial.
+            stream.set_nonblocking(true)?;
+            let result = write_frame_io(stream, &payload, budget, None);
+            let reset = stream.set_nonblocking(false);
+            result?;
+            reset?;
+            Ok(())
+        }
     }
 }

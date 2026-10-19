@@ -6,7 +6,9 @@ use crate::{
 };
 use logos_crypto::{Domain, Hash, hash_raw};
 use logos_ledger::Cas;
-use rustix::fs::{AtFlags, Mode, OFlags, RenameFlags, open, openat, renameat_with, unlinkat};
+use rustix::fs::{
+    AtFlags, FileType, Mode, OFlags, RenameFlags, open, openat, renameat_with, statat, unlinkat,
+};
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::fs::MetadataExt;
@@ -157,17 +159,154 @@ impl Staging {
                 })();
                 // Só remove o nome capturado no diretório privado; nunca reabre o
                 // nome do agente, que pode já apontar para outro upload.
-                unlinkat(&self.private, captured.as_str(), AtFlags::empty())
-                    .map_err(std::io::Error::from)?;
-                self.private.sync_all()?;
+                let cleanup = self.release_capture(captured.as_str(), name.as_str());
+                if let Err(cleanup) = cleanup {
+                    return Err(Error::Io(std::io::Error::other(format!(
+                        "staging capture {captured}: {}; cleanup: {cleanup}",
+                        match &result {
+                            Ok(_) => "validated".to_owned(),
+                            Err(error) => error.to_string(),
+                        }
+                    ))));
+                }
                 result
             }
         }
+    }
+
+    fn release_capture(&self, captured: &str, original: &str) -> Result<(), Error> {
+        self.release_capture_with(captured, original, || {
+            let mut nonce = [0; 16];
+            File::open("/dev/urandom")?.read_exact(&mut nonce)?;
+            Ok(format!("rejected-{:032x}", u128::from_be_bytes(nonce)))
+        })
+    }
+
+    fn release_capture_with(
+        &self,
+        captured: &str,
+        original: &str,
+        mut rejected_name: impl FnMut() -> Result<String, Error>,
+    ) -> Result<(), Error> {
+        let meta = statat(&self.private, captured, AtFlags::SYMLINK_NOFOLLOW)
+            .map_err(std::io::Error::from)?;
+        if FileType::from_raw_mode(meta.st_mode).is_dir() {
+            // Diretórios podem conter dados arbitrários e descritores do agente.
+            // Devolver sem percorrê-los e sem sobrescrever um upload novo.
+            let mut name = original.to_owned();
+            let mut restored = false;
+            for _ in 0..8 {
+                match renameat_with(
+                    &self.private,
+                    captured,
+                    &self.source,
+                    name.as_str(),
+                    RenameFlags::NOREPLACE,
+                ) {
+                    Ok(()) => {
+                        restored = true;
+                        break;
+                    }
+                    Err(rustix::io::Errno::EXIST) => {
+                        name = rejected_name()?;
+                    }
+                    Err(error) => return Err(std::io::Error::from(error).into()),
+                }
+            }
+            if !restored {
+                return Err(Error::Limit("staging return collisions"));
+            }
+            self.source.sync_all()?;
+        } else {
+            unlinkat(&self.private, captured, AtFlags::empty()).map_err(std::io::Error::from)?;
+        }
+        self.private.sync_all()?;
+        Ok(())
     }
     fn charge(&self, quota: &mut u64, count: u64) -> Result<(), Error> {
         *quota = quota
             .checked_sub(count)
             .ok_or(Error::Limit("import quota"))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    #[test]
+    fn directory_return_preserves_a_new_upload_and_does_not_follow_child_links() {
+        let root = std::env::temp_dir().join(format!(
+            "logos-staging-return-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&root).unwrap();
+        let source = root.join("source");
+        let private = root.join("private");
+        for path in [&source, &private] {
+            fs::create_dir(path).unwrap();
+            fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        let staging =
+            Staging::open(&source, &private, rustix::process::geteuid().as_raw(), 100).unwrap();
+        let captured = private.join("captured");
+        fs::create_dir(&captured).unwrap();
+        fs::write(captured.join("child"), b"rejected").unwrap();
+        let outside = root.join("outside");
+        fs::write(&outside, b"outside").unwrap();
+        symlink(&outside, captured.join("link")).unwrap();
+        let original = "a".repeat(64);
+        fs::write(source.join(&original), b"new upload").unwrap();
+        staging.release_capture("captured", &original).unwrap();
+        assert_eq!(fs::read_dir(&private).unwrap().count(), 0);
+        assert_eq!(fs::read(source.join(&original)).unwrap(), b"new upload");
+        let returned = fs::read_dir(&source)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .find(|p| {
+                p.file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .starts_with("rejected-")
+            })
+            .unwrap();
+        assert_eq!(fs::read(returned.join("child")).unwrap(), b"rejected");
+        assert!(
+            fs::symlink_metadata(returned.join("link"))
+                .unwrap()
+                .is_symlink()
+        );
+        assert_eq!(fs::read(outside).unwrap(), b"outside");
+        fs::create_dir(private.join("collisions")).unwrap();
+        fs::write(source.join("forced-collision"), b"collision").unwrap();
+        let mut attempts = 0;
+        assert!(matches!(
+            staging.release_capture_with("collisions", &original, || {
+                attempts += 1;
+                Ok("forced-collision".to_owned())
+            }),
+            Err(Error::Limit("staging return collisions"))
+        ));
+        assert_eq!(attempts, 8);
+        assert!(
+            matches!(staging.release_capture_with("collisions", &original, || Err(Error::Io(std::io::Error::other("fixture entropy failure")))), Err(Error::Io(e)) if e.to_string() == "fixture entropy failure")
+        );
+        assert!(private.join("collisions").is_dir());
+        assert_eq!(fs::read(source.join(&original)).unwrap(), b"new upload");
+        // Falha de devolução é explícita, nunca sucesso que esconda resíduos.
+        fs::create_dir(private.join("second")).unwrap();
+        fs::remove_dir_all(&source).unwrap();
+        assert!(staging.release_capture("second", &original).is_err());
+        assert!(private.join("second").is_dir());
+        drop(staging);
+        fs::remove_dir_all(root).unwrap();
     }
 }

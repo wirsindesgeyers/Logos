@@ -32,8 +32,8 @@ pub struct ClaimStatus {
 /// Mantém o lock de escritor até Drop. index.sqlite3 é somente cópia derivada;
 /// consultas usam SQLite em memória reconstruído, nunca o cache anterior.
 pub struct LedgerIndex<'a> {
-    connection: Connection,
-    head: Option<LedgerHead>,
+    pub(crate) connection: Connection,
+    pub(crate) head: Option<LedgerHead>,
     report: RebuildReport,
     _owned_lock: Option<File>,
     _borrowed_lock: Option<&'a File>,
@@ -47,7 +47,7 @@ impl LedgerIndex<'static> {
     pub fn open(directory: &Path, public_key: &PublicKey) -> Result<Self, LedgerError> {
         let path = std::fs::canonicalize(directory)?;
         let lock = ledger::writer_lock(&path)?;
-        Self::build(&path, public_key, Some(lock), None)
+        Self::build(&path, public_key, Some(lock), None, None)
     }
 }
 
@@ -57,14 +57,15 @@ impl<'a> LedgerIndex<'a> {
         public_key: &PublicKey,
         lock: &'a File,
     ) -> Result<Self, LedgerError> {
-        Self::build(path, public_key, None, Some(lock))
+        Self::build(path, public_key, None, Some(lock), None)
     }
 
-    fn build(
+    pub(crate) fn build(
         path: &Path,
         public_key: &PublicKey,
         owned: Option<File>,
         borrowed: Option<&'a File>,
+        expected: Option<Option<LedgerHead>>,
     ) -> Result<Self, LedgerError> {
         let mut source = Connection::open_with_flags(
             path.join("ledger.sqlite3"),
@@ -86,13 +87,10 @@ impl<'a> LedgerIndex<'a> {
         let head = ledger::scan(&source_transaction, public_key, |event, head| {
             index_project::apply(&transaction, event, head)
         })?;
-        let seq = head.map(|h| h.seq as i64);
-        let epoch = head.map(|h| h.epoch.to_be_bytes().to_vec());
-        let hash = head.map(|h| h.hash.as_bytes().to_vec());
-        transaction.execute(
-            "INSERT INTO metadata(singleton,seq,epoch,hash) VALUES(1,?1,?2,?3)",
-            params![seq, epoch, hash],
-        )?;
+        if expected.is_some_and(|expected| expected != head) {
+            return Err(LedgerError::Invalid("live index head"));
+        }
+        write_head(&transaction, head)?;
         transaction.commit()?;
         source_transaction.commit()?;
         let report = index_store::publish(path, &connection, head)?;
@@ -257,6 +255,20 @@ impl<'a> LedgerIndex<'a> {
             _index: PhantomData,
         })
     }
+}
+
+pub(crate) fn write_head(
+    connection: &Connection,
+    head: Option<LedgerHead>,
+) -> Result<(), LedgerError> {
+    let seq = head.map(|h| h.seq as i64);
+    let epoch = head.map(|h| h.epoch.to_be_bytes().to_vec());
+    let hash = head.map(|h| h.hash.as_bytes().to_vec());
+    connection.execute(
+        "INSERT INTO metadata(singleton,seq,epoch,hash) VALUES(1,?1,?2,?3) ON CONFLICT(singleton) DO UPDATE SET seq=excluded.seq,epoch=excluded.epoch,hash=excluded.hash",
+        params![seq, epoch, hash],
+    )?;
+    Ok(())
 }
 
 /// LedgerView de referências preparadas e objetos contextualizados/conferidos.

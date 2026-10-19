@@ -1,5 +1,6 @@
 //! Appender exclusivo com replay completo e commits WAL/FULL.
 
+use std::cell::RefCell;
 use std::fs::{self, File, OpenOptions, TryLockError};
 use std::path::Path;
 
@@ -64,9 +65,24 @@ pub(crate) fn scan(
     public_key: &PublicKey,
     mut visit: impl FnMut(&Event, LedgerHead) -> Result<(), LedgerError>,
 ) -> Result<Option<LedgerHead>, LedgerError> {
-    let mut head = None;
-    let mut statement = connection.prepare("SELECT seq, wire FROM events ORDER BY seq")?;
-    let mut rows = statement.query([])?;
+    scan_after(connection, public_key, None, &mut visit)
+}
+
+pub(crate) fn scan_after(
+    connection: &Connection,
+    public_key: &PublicKey,
+    mut head: Option<LedgerHead>,
+    mut visit: impl FnMut(&Event, LedgerHead) -> Result<(), LedgerError>,
+) -> Result<Option<LedgerHead>, LedgerError> {
+    let start = match head {
+        Some(head) => i64::try_from(head.seq + 1).map_err(|_| LedgerError::SequenceExhausted)?,
+        // O replay inicial inclui TODAS as linhas: uma linha negativa é erro,
+        // não conteúdo que possa desaparecer por causa do filtro do sufixo.
+        None => i64::MIN,
+    };
+    let mut statement =
+        connection.prepare("SELECT seq, wire FROM events WHERE seq>=?1 ORDER BY seq")?;
+    let mut rows = statement.query([start])?;
     while let Some(row) = rows.next()? {
         let seq: i64 = row.get(0)?;
         let ValueRef::Blob(bytes) = row.get_ref(1)? else {
@@ -94,12 +110,13 @@ pub struct Ledger<'a, S: Signer> {
     connection: Connection,
     directory: File,
     directory_path: std::path::PathBuf,
-    _writer_lock: File,
     signer: &'a S,
     public_key: PublicKey,
     head: Option<LedgerHead>,
     poisoned: bool,
     cas: crate::Cas,
+    live_projection: RefCell<Option<crate::LedgerIndex<'static>>>,
+    _writer_lock: File,
 }
 
 impl<'a, S: Signer> Ledger<'a, S> {
@@ -158,6 +175,7 @@ impl<'a, S: Signer> Ledger<'a, S> {
             head,
             poisoned: false,
             cas,
+            live_projection: RefCell::new(None),
         })
     }
 
@@ -242,6 +260,20 @@ impl<'a, S: Signer> Ledger<'a, S> {
         crate::LedgerIndex::from_writer(&self.directory_path, &self.public_key, &self._writer_lock)
     }
 
+    /// Empresta a projeção privada do writer, verificando apenas o sufixo novo.
+    /// A primeira chamada faz replay integral; nunca lê o cache como autoridade.
+    /// # Errors
+    /// Poisoned, cadeia/projeção inválida, empréstimo conflitante ou I/O.
+    pub fn live_index(&self) -> Result<crate::LedgerLiveIndex<'_>, LedgerError> {
+        crate::live_index::borrow(
+            &self.connection,
+            &self.directory_path,
+            &self.public_key,
+            self.head()?,
+            &self.live_projection,
+        )
+    }
+
     /// Única operação de escrita de eventos: calcula cabeçalho, assina e commita.
     /// Só devolve o evento depois do commit e sync do diretório.
     ///
@@ -306,6 +338,246 @@ pub(crate) fn writer_lock(path: &Path) -> Result<File, LedgerError> {
 mod tests {
     use super::*;
     use logos_crypto::FileSigner;
+
+    #[test]
+    fn full_replay_rejects_negative_rows_instead_of_filtering_them_out() {
+        let path = std::env::temp_dir().join(format!(
+            "logos-live-negative-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let signer = FileSigner::from_seed(&[0x43; 32]).unwrap();
+        let mut ledger = Ledger::open(&path, &signer).unwrap();
+        let event = ledger
+            .append(EventBody::Genesis {
+                ledger_version: 1,
+                kernel_binary: [0x43; 32],
+                kernel_key: signer.key_id().unwrap(),
+            })
+            .unwrap();
+        ledger
+            .connection
+            .execute_batch("PRAGMA ignore_check_constraints=ON")
+            .unwrap();
+        ledger
+            .connection
+            .execute(
+                "INSERT INTO events(seq,wire) VALUES(-1,?1)",
+                [to_canon(&event).unwrap()],
+            )
+            .unwrap();
+        assert!(ledger.index().is_err());
+        assert!(ledger.live_index().is_err());
+        drop(ledger);
+        assert!(Ledger::open(&path, &signer).is_err());
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn live_projection_rejects_corrupt_suffixes_and_never_returns_a_stale_head() {
+        let path = std::env::temp_dir().join(format!(
+            "logos-live-integrity-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let signer = FileSigner::from_seed(&[0x40; 32]).unwrap();
+        let mut ledger = Ledger::open(&path, &signer).unwrap();
+        assert_eq!(ledger.live_index().unwrap().head(), None);
+        ledger
+            .append(EventBody::Genesis {
+                ledger_version: 1,
+                kernel_binary: [0x40; 32],
+                kernel_key: signer.key_id().unwrap(),
+            })
+            .unwrap();
+        assert_eq!(ledger.live_index().unwrap().head(), ledger.head().unwrap());
+        for case in 1..=6 {
+            let event = ledger
+                .append(EventBody::EpochAdvanced {
+                    new_epoch: case,
+                    reason: logos_canon::Text::new("original").unwrap(),
+                    policy_root: None,
+                    vocab: None,
+                })
+                .unwrap();
+            let mut body = event.body.clone();
+            if let EventBody::EpochAdvanced { reason, .. } = &mut body {
+                *reason = logos_canon::Text::new("alternate").unwrap();
+            }
+            let forged = match case {
+                1 => {
+                    let mut forged = event.clone();
+                    forged.body = body;
+                    forged
+                }
+                2 => Event::sign(
+                    event.seq + 1,
+                    event.epoch,
+                    event.prev,
+                    event.body.clone(),
+                    &signer,
+                )
+                .unwrap(),
+                3 => Event::sign(
+                    event.seq,
+                    event.epoch + 1,
+                    event.prev,
+                    EventBody::ObligationCreated {
+                        obligation: Hash::from_bytes([0x40; 32]),
+                        route: crate::Route::Model,
+                        artifact: [0; 32],
+                        cnf: None,
+                    },
+                    &signer,
+                )
+                .unwrap(),
+                4 => Event::sign(
+                    event.seq,
+                    event.epoch,
+                    Some(Hash::from_bytes([0xff; 32])),
+                    event.body.clone(),
+                    &signer,
+                )
+                .unwrap(),
+                _ => Event::sign(event.seq, event.epoch, event.prev, body, &signer).unwrap(),
+            };
+            let confirmed = ledger.head;
+            if [1, 3, 4].contains(&case) {
+                // Isolar assinatura/época/prev: não deixar o guard de cabeça
+                // esconder a ausência dessas verificações em um mutante.
+                ledger.head = Some(LedgerHead {
+                    seq: forged.seq,
+                    epoch: forged.epoch,
+                    hash: hash(&forged).unwrap(),
+                });
+            }
+            if case == 6 {
+                ledger
+                    .connection
+                    .execute("DELETE FROM events WHERE seq=?1", [event.seq as i64])
+                    .unwrap();
+            } else {
+                ledger
+                    .connection
+                    .execute(
+                        "UPDATE events SET wire=?1 WHERE seq=?2",
+                        (to_canon(&forged).unwrap(), event.seq as i64),
+                    )
+                    .unwrap();
+            }
+            assert!(
+                ledger.live_index().is_err(),
+                "case {case}: invalid suffix is not an old snapshot"
+            );
+            assert!(
+                ledger.live_projection.borrow().is_none(),
+                "discard failed private transaction"
+            );
+            ledger.head = confirmed;
+            ledger
+                .connection
+                .execute(
+                    "INSERT OR REPLACE INTO events(seq,wire) VALUES(?1,?2)",
+                    (event.seq as i64, to_canon(&event).unwrap()),
+                )
+                .unwrap();
+            assert_eq!(ledger.live_index().unwrap().head(), ledger.head().unwrap());
+        }
+        ledger
+            .append(EventBody::EpochAdvanced {
+                new_epoch: 7,
+                reason: logos_canon::Text::new("valid suffix").unwrap(),
+                policy_root: None,
+                vocab: None,
+            })
+            .unwrap();
+        let index = ledger.live_index().unwrap();
+        let cached = ledger.live_projection.borrow();
+        let connection = &cached.as_ref().unwrap().connection;
+        let (seq, epoch, digest): (i64, Vec<u8>, Vec<u8>) = connection
+            .query_row("SELECT seq,epoch,hash FROM metadata", [], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?))
+            })
+            .unwrap();
+        let head = index.head().unwrap();
+        assert_eq!(seq as u64, head.seq);
+        assert_eq!(epoch, head.epoch.to_be_bytes());
+        assert_eq!(digest, head.hash.as_bytes());
+        drop(cached);
+        drop(index);
+        ledger.poisoned = true;
+        assert!(matches!(ledger.live_index(), Err(LedgerError::Poisoned)));
+        ledger.poisoned = false;
+        let borrow = ledger.live_projection.borrow_mut();
+        assert!(matches!(
+            ledger.live_index(),
+            Err(LedgerError::Invalid("live index borrow"))
+        ));
+        drop(borrow);
+        drop(ledger);
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn initial_live_projection_must_match_writer_head_before_publishing_cache() {
+        let path = std::env::temp_dir().join(format!(
+            "logos-live-head-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let signer = FileSigner::from_seed(&[0x41; 32]).unwrap();
+        let mut ledger = Ledger::open(&path, &signer).unwrap();
+        let event = ledger
+            .append(EventBody::Genesis {
+                ledger_version: 1,
+                kernel_binary: [0x41; 32],
+                kernel_key: signer.key_id().unwrap(),
+            })
+            .unwrap();
+        let alternate = Event::sign(
+            0,
+            0,
+            None,
+            EventBody::Genesis {
+                ledger_version: 1,
+                kernel_binary: [0x42; 32],
+                kernel_key: signer.key_id().unwrap(),
+            },
+            &signer,
+        )
+        .unwrap();
+        ledger
+            .connection
+            .execute(
+                "UPDATE events SET wire=?1 WHERE seq=0",
+                [to_canon(&alternate).unwrap()],
+            )
+            .unwrap();
+        assert!(matches!(
+            ledger.live_index(),
+            Err(LedgerError::Invalid("live index head"))
+        ));
+        assert!(!path.join("index.sqlite3").exists());
+        ledger
+            .connection
+            .execute(
+                "UPDATE events SET wire=?1 WHERE seq=0",
+                [to_canon(&event).unwrap()],
+            )
+            .unwrap();
+        assert_eq!(ledger.live_index().unwrap().head(), ledger.head().unwrap());
+        drop(ledger);
+        fs::remove_dir_all(path).unwrap();
+    }
 
     #[test]
     fn sqlite_sequence_limit_is_explicit() {

@@ -1,0 +1,43 @@
+{
+  "base": "c647418",
+  "command": "target/release/logos-review-probes MODE COUNT",
+  "configuration": {
+    "subscription_timeout_ms": 20,
+    "frame_timeout_ms": 3000,
+    "client_delay_per_event_ms": 30
+  },
+  "records": [
+    {
+      "mode": "subscribe",
+      "count": 32,
+      "exit": 0,
+      "output": "SUBSCRIBE received=3 configured_timeout_ms=20 client_ms=95.59\nTRANSPORT mode=subscribe events=32 server_ms=24.54 request_ms=[] root=/tmp/logos-review-subscribe-2353339\n"
+    },
+    {
+      "mode": "staging",
+      "count": 3,
+      "exit": 0,
+      "output": "rejected=invalid transport: staged object type/owner/links/mode\nrejected=invalid transport: staged object type/owner/links/mode\nrejected=invalid transport: staged object type/owner/links/mode\nSTAGING directory_attempts=3 returned=3 private_entries=0 quota=1017 root=/tmp/logos-review-staging-2353360\n"
+    },
+    {
+      "mode": "query",
+      "count": 1000,
+      "exit": 0,
+      "output": "TRANSPORT mode=query events=1000 server_ms=258.06 request_ms=[0.189759, 256.98541400000005, 0.284749, 0.271293, 0.075915] root=/tmp/logos-review-query-2353365\n"
+    },
+    {
+      "mode": "query",
+      "count": 5000,
+      "exit": 0,
+      "output": "TRANSPORT mode=query events=5000 server_ms=1681.04 request_ms=[0.166966, 1679.940556, 0.17875000000000002, 0.20027, 0.137667] root=/tmp/logos-review-query-2353399\n"
+    },
+    {
+      "mode": "propose",
+      "count": 5000,
+      "exit": 0,
+      "output": "TRANSPORT mode=propose events=5000 server_ms=1560.87 request_ms=[0.181798, 1553.6672459999997, 3.323186, 3.3132650000000003, 0.09471500000000001] root=/tmp/logos-review-propose-2353599\n"
+    }
+  ],
+  "probe_source_sha256": "6210f618dbf226d04a32166c1b9948f19e8ad64801e85e53f3c52d0b671feb3c",
+  "probe_binary_sha256": "2ffd989373c29047953a1fad24539e2056600a5168aaa14baaf86c27a7c0b150"
+}

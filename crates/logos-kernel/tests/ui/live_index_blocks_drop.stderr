@@ -1,0 +1,11 @@
+error[E0505]: cannot move out of `ledger` because it is borrowed
+ --> tests/ui/live_index_blocks_drop.rs:6:10
+  |
+4 | fn blocked(ledger: Ledger<'_, FileSigner>) {
+  |            ------ binding `ledger` declared here
+5 |     let view = ledger.live_index().unwrap();
+  |                ------ borrow of `ledger` occurs here
+6 |     drop(ledger);
+  |          ^^^^^^ move out of `ledger` occurs here
+7 |     drop(view);
+  |          ---- borrow later used here

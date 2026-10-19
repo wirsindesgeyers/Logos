@@ -1,0 +1,142 @@
+{
+  "status": "verified_locally",
+  "base_commit": "c647418ccd71f0cc285f4975b65fbdbc5723fa29",
+  "runtime_tests_added": 13,
+  "compile_fail_added": 2,
+  "compile_positive_added": 1,
+  "mutation_report": {
+    "path": "docs/plans/correcao-kernel-2026-10-19-mutacoes.json",
+    "sha256": "6f61da312702f79e4e6851c698d590451e0e8017b24e7f428934e5a76b98c15a",
+    "compiled_and_killed": 17,
+    "restored": true
+  },
+  "probe_report": {
+    "path": "docs/plans/correcao-kernel-2026-10-19-probes.json",
+    "sha256": "f4a0ebc4107fc59ae50543093621733ad1564e2d954819aa06bfd6b6d1104fd0"
+  },
+  "tcb": {
+    "own_rust": 14116,
+    "runtime_dependencies_rust": 747130,
+    "correctness_total_rust": 761246,
+    "build_only_rust": 64508,
+    "kernel_own_rust": 1594,
+    "ledger_own_rust": 3791,
+    "own_includes_cfg_test": true
+  },
+  "serialized_formats_changed": false,
+  "dependency_changes": false,
+  "new_fuzz_run": false,
+  "fuzz_reason": "No new decoder/parser; kernel wire and event decoders unchanged",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 2006.93,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 430,
+    "verify_ok": true,
+    "log_sha256": "2de05fddefce120d15560c459efcdd3a16236fc8073104071253f513c26fed90",
+    "input_manifest_sha256": "bf9db6a8e1b4a6e6fae73a99490e8197b601488faefbe7d4e37a16b010382a24"
+  },
+  "remote_ci": "not_observed",
+  "push": false,
+  "interrupted_verifications": [
+    {
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": -15,
+      "seconds": 317.35,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 430,
+      "verify_ok": false,
+      "log_sha256": "7315a315f1a5f200369cae4a5d88f9fe23bc9e43ee0dc38b30521ddf893a5298",
+      "input_manifest_sha256": "5de669301fc0ec76e46bfb242d7ce024fe6f0b8e725b400fd8e9ab172cc277f0"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": -15,
+      "seconds": 972.66,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 430,
+      "verify_ok": false,
+      "log_sha256": "0f100f462a5cf71de3eca2f64bbaa0d544791b2fe83c34f258d87fbc939036ba",
+      "input_manifest_sha256": "a19de38c90fb3a948ef5890930caf48cf61e92db9f1eadbac3c03d8f52c4c94f"
+    }
+  ],
+  "completed_checks": {
+    "workspace_rust": {
+      "suite_summaries": 100,
+      "passed": 520,
+      "failed": 0,
+      "ignored": 0
+    },
+    "ledger_crash": {
+      "events": 10000,
+      "sigkill": 24,
+      "seed": 320026,
+      "acknowledged": 9999,
+      "seconds": 67.78
+    },
+    "ledger_index_rebuild": {
+      "events": 100000,
+      "tables": 5,
+      "exact": true
+    },
+    "ledger_index_scale": {
+      "fixture": "ledger-index-scale/v1",
+      "key": "public deterministic fixture 0x11",
+      "latency": {
+        "build_ms": 285496,
+        "elapsed_ms": 287381,
+        "events": 1000000,
+        "max_ns": 461665,
+        "mode": "private in-memory SQLite rebuilt from signed ledger; query latency excludes cold build",
+        "negative": 14858,
+        "p50_ns": 11369,
+        "p99_ns": 38874,
+        "positive": 5142,
+        "samples": 20000
+      },
+      "rebuild": {
+        "build_ms": 26845,
+        "elapsed_ms": 55498,
+        "events": 100000,
+        "rebuild_equal": true,
+        "tables": 5
+      }
+    },
+    "python": {
+      "passed": 252,
+      "seconds": 107.52
+    },
+    "tcb_python": {
+      "passed": 25,
+      "seconds": 1.67
+    }
+  },
+  "verification_inputs": {
+    "path": "docs/plans/correcao-kernel-2026-10-19-inputs.json",
+    "sha256": "bf9db6a8e1b4a6e6fae73a99490e8197b601488faefbe7d4e37a16b010382a24"
+  },
+  "verification_warnings": [
+    "warning[license-not-encountered]: license was not encountered",
+    "warning[duplicate]: found 2 duplicate entries for crate 'syn'",
+    "tar: .: file changed as we read it"
+  ],
+  "selftest": {
+    "exit": 0,
+    "all_expected_diagnostics_confirmed": true
+  }
+}

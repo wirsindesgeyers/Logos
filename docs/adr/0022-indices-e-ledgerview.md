@@ -3,6 +3,9 @@
 - Estado: aceito
 - Data: 2026-10-15
 - Escopo: ROADMAP 3.3
+- Complementado pelo [ADR0040](0040-projecao-viva-e-limites-do-transporte.md):
+  `Ledger::live_index` mantém projeção autenticada por writer e verifica sufixos;
+  as APIs explícitas de reconstrução abaixo conservam o replay/cache descritos.
 
 ## Decisão
 
