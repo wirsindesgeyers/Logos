@@ -7,6 +7,8 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 #[cfg(target_os = "linux")]
+pub mod propose;
+#[cfg(target_os = "linux")]
 pub mod server;
 #[cfg(target_os = "linux")]
 pub mod staging;

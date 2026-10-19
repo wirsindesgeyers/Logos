@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-19 · Etapa5.2 concluída localmente: oito lotes completos somam14400s pedidos/96634872 execuções sem crash, pico1331MiB; lote interrompido excluído. Nova verificação completa: VERIFY_OK/exit0 em1760.07s. Sem push; próximo passo:5.3.
+> Última atualização: 2026-10-19 · Etapa5.3 concluída localmente sobre6374755: PROPOSE com snapshot/CAS e Pending reais;50 recusas P1/STATE14,14 mutações e fuzz560503/61s passaram. Full verify/selftest VERIFY_OK/exit0 em1568.40s. Sem push; próximo:5.4.
 
 ## Resumo
 
@@ -12,7 +12,9 @@ Há código real em `logos-canon`, `logos-crypto`, `logos-core`, `logos-air`,
 `logos-air-text`, `logos-obligation`, `logos-protocol`, `logos-model`, `logos-cli`,
 `logos-audit`, `logos-ground`, `logos-lrat` e CAS/eventos/índices de `logos-ledger`.
 Kernel possui typestate5.1 e transporte5.2 (socket Unix, staging e Query/Subscribe
-reais). Handlers semânticos e gateway seguem sem implementação.
+reais). PROPOSE5.3 gera O com snapshot autenticado, publica no CAS e persiste
+Pending; verificação completa passou. Certificação, demais handlers e gateway
+seguem pendentes.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -35,8 +37,8 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 13501+747130=760631 LOC de correção, build-only64508;
-logos-core344, logos-ledger3415, logos-obligation572, logos-kernel1355.
+TCB atual Rust: 13573+747130=760703 LOC de correção, build-only64508;
+logos-core344, logos-ledger3415, logos-obligation572, logos-kernel1427.
 SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -238,7 +240,8 @@ fontes opacas não demonstram autenticação.
 | --- | --- | --- |
 | 5.1 Typestate de claims | ✅ concluída localmente | Claim<S>/SignedEvent<S> selados; seis operações com evento único após append confirmado. Oito testes/1024 transições,12 compile-fail+controle positivo, nove mutações compiladas; full verify/selftest VERIFY_OK/exit0. [Plano](docs/plans/etapa-5.1.md), ADR0034 e spec/state-machine.md. CI desta etapa ainda não observada. |
 | 5.2 Servidor do protocolo | ⚠ concluída localmente; CI/ARM/noturno pendentes | Codec/socket/staging/Query/Subscribe reais; 14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Conferência corrigiu fechamento prematuro: seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial. Soma14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Novo full verify/selftest: VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
-| 5.3 PROPOSE e regra de citação | ⏳ não iniciada | Dependências5.1/5.2/1.5/3.3 presentes; ligar generate/CAS/transições ao handler, demonstrar50 recusas P1 e STATE14. Especulação e ações fora do escopo. |
+| 5.3 PROPOSE e regra de citação | ⚠ concluída localmente; CI/ARM pendentes | Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
+| 5.4 CERTIFY e registry de checkers | ⏳ não iniciada | Dependências5.3/2.3/4.4/4.5/4.7/3.2 presentes. Planejar registry ativo/revogado, retomada privada de Pending pelo replay, CertificateRejected e roteamento dos checkers. Sem Alethe/camada2 nem avaliação direta. |
 
 ## Pendências de verificação (execução remota)
 
@@ -334,6 +337,12 @@ fontes opacas não demonstram autenticação.
    reportados,96634872 execuções sem crash, pico1331MiB, hashes inalterados.
    Novo full verify/selftest VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB.
    CI/ARM e fuzz noturno pendentes.
+   PROPOSE5.3: oito testes novos e executável real no workspace nativo;
+   cinquenta recusas P1/STATE14,14 mutações e full verify/selftest passaram
+   localmente. propose-result/v1 tem três vetores novos no gerador/--check
+   já usado pela CI;34 requests históricos preservados. Decoder não mudou;
+   kernel_message560503/61s sem crash, log5.2 restaurado pelo hash. Falta
+   observar esta etapa nos runners/CI; não alegar execução remota.
 4. S3 da 0.6 e do avaliador 2.2 exige execução nativa em `ubuntu-24.04` e `ubuntu-24.04-arm`.
    Checker 2.3 também tem 1000 repetições locais; execução do teste/smoke nos
    dois runners nativos foi ligada ao workflow, ainda sem observação remota.
@@ -403,43 +412,44 @@ Adoção exige aprovação, formatos/domínios/vetores normativos e etapas com
 dependências explícitas. Próximo passo de código: Etapa 2.1; memória não implementada.
 Sem full verify/CI/commit/push nesta entrega documental.
 
-## Próximo passo: Etapa5.3 — `PROPOSE` e regra de citação
+## Próximo passo: Etapa5.4 — `CERTIFY` e registry de checkers
 
-A5.2 está concluída localmente sobre451e1ff. A conferência em19/10 corrigiu
-o fechamento anunciado prematuramente em18/10: havia seis lotes completos
-e o sétimo interrompido, sem commit. A retomada oficial de3600s terminou
-com exit0 e hashes inalterados; oito lotes completos somam≥4h, sem contar
-o lote parcial. Nova verificação completa passou; evidências versionadas no
-resumo5.2/plano§7. Nenhuma semântica5.3 foi antecipada; CI/ARM/noturno e
-pendências remotas anteriores permanecem, sem push nesta sessão.
-5.3 depende de5.1 (typestate de claims, feito),5.2 (socket/staging, feito) e1.5
-(`generate(proposal, view)` em logos-obligation, feito). Fora do escopo:
-especulação5.8 e ações8.2.
+A5.3 está concluída localmente sobre6374755: PROPOSE usa o snapshot autenticado,
+generate e CAS, registra Proposed+ObligationCreated e retorna propose-result/v1.
+Oito testes novos/50 recusas P1/STATE14, executável real,14 mutações e fuzz
+passaram; full verify/selftest VERIFY_OK/exit0 em1568.40s. Logs/evidências no
+plano5.3 e no resumo versionado. CI/ARM e pendências anteriores seguem sem
+observação remota; nenhum push nesta sessão.
 
-Entregável: handler PROPOSE no kernel — valida a proposta, chama `generate` com
-um `LedgerView` real (o snapshot de3.3), publica `O` no CAS, registra
-`Proposed`+`ObligationCreated` pelas transições da5.1 e devolve `h(O)` e os
-bytes de `O` ao agente. Critérios: invariante P1 (50 tentativas maliciosas
-recusadas: citar o não verificado, mandar obrigação pronta, mandar fato, citar
-evento de outra época, citar claim retratado) e reprodução do "STATE 14" da §3
-da spec como teste de integração.
+5.4 recebe prontos:5.3 (O/Pending/CAS reais),2.3 (ModelChecker),4.4/4.5 (Rust
+LRAT+cake_lpr e registry local por hash),4.7 (used ligado ao certificado),
+3.2 (appender) e transporte/staging5.2. Fora do escopo: camada2/Alethe e
+avaliação direta7.3. Preparar plano M antes de implementar.
 
-Pontos de atenção: reutilizar o `EventProposal`/`Proposal`1.6 existentes, sem
-ligar JSON à TCB (ADR0035); hoje os handlers de mutação devolvem Unavailable —
-trocar só o do Propose; provar as guardas novas com mutações compiladas; o
-catálogo não tem `CertificateRejected` (contrato a resolver na5.4, sem
-reinterpretar `UnknownRecorded`). Rodar a verificação completa antes de marcar
-critérios e, se mudar formato, atualizar vetores+spec. O OOM do fuzz da5.2 está
-diagnosticado (ADR0036: lotes no `ci/fuzz.sh`); CI/ARM desta e das etapas
-anteriores e o fuzz noturno seguem pendentes de observação remota.
+Entregáveis: CheckerRegistry por formato/hash, ativo/revogado; CERTIFY busca
+os bytes exatos de O/certificado, roteia e usa CheckOutcome de checkers ativos.
+Accepted habilita o caminho de Verified; Rejected registra CertificateRejected
+e preserva Pending, sem virar Refuted; Unknown registra limites sem autorizar.
+REFUTE usa o ModelChecker. Recusar fontes opacas de enumeração ainda sem
+autenticação (ADR0026); nunca promover DomainSource por cast.
+
+Decisões/riscos a resolver no plano/ADR: CertificateRejected não existe no
+catálogo atual e exige formato/spec/vetores; não reutilizar UnknownRecorded.
+Pending tipado vive na sessão interna de PROPOSE: CERTIFY precisa recuperá-lo
+privadamente de replay autenticado, preservando vínculo à proposta/época/h(O)
+e sem abrir construção pública de Claim. Definir ConsistencyUnknown explícito
+sem antecipar WITNESS5.5. Preservar o teste integrado de substituição do
+binário checker da4.5 (ADR0030), incluindo desconhecido/inativo, e P3/P4 +
+fluxo STATE15–16/refutação. Derivar used com as APIs existentes; nenhum aceite
+bruto do agente constitui autorização. Query::Status continua usando h(Event).
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 13501 LOC Rust próprios + 747130
-  de dependências Rust = 760631 (+64508 só de compilação), após5.2;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3415, logos-kernel1355.
-  Acréscimo de1256 LOC próprios nesta etapa (socket/staging); pacotes externos
-  inalterados. Relatório atual target/tcb-5.2.json/.md.
+- **Tamanho da TCB de correção (execução):** 13573 LOC Rust próprios + 747130
+  de dependências Rust = 760703 (+64508 só de compilação), após5.3;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3415, logos-kernel1427.
+  Acréscimo de72 LOC próprios na5.3; pacotes externos inalterados.
+  Relatório atual target/tcb-5.3.json/.md.
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -458,6 +468,10 @@ anteriores e o fuzz noturno seguem pendentes de observação remota.
 
 ## Armadilhas conhecidas
 
+- PROPOSE5.3 retorna propose-result/v1 `[1,h(O),O_bytes]`, sem credencial.
+  Query::Status usa h(Event), não h(O); obter ObligationCreated por Subscribe.
+  O autor registrado é a chave do Genesis/kernel; UID autenticado não é
+  persistido no evento. O teto de saída1MiB não é teto de RSS/wall da geração.
 - Fuzz5.2/ASAN: o runtime do fuzz (build com ASAN) acumula RSS por execução
   mesmo em alvo trivial — platô de~616MiB em `smoke` com a quarentena padrão,
   35MiB com `quarantine_size_mb=0` — então corrida única de4h estoura o teto
@@ -1558,3 +1572,7 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-19 — Retomada: a conferência dos arquivos contradiz o fechamento anunciado em18/10. HEAD ainda451e1ff, alterações5.2 sem commit; log em lotes com seis conclusões e sétimo interrompido, relatório final ausente. Histórico do Diário preservado; tabela/Próximo passo/roadmap/plano corrigidos para em andamento. Iniciados dois lotes oficiais de1800s (3600s restantes, sem contar o lote parcial) e ci/verify.sh --selftest, ambos com logs/exit/tempo e hashes em target/*-5.2-resume.*. Nenhuma implementação5.3 iniciada.
 
 - 2026-10-19 — Etapa5.2 encerrada localmente sobre451e1ff após corrigir o fechamento prematuro do registro anterior. Retomada oficial ci/fuzz.sh3600/kernel_message: exit0/3604.78s; decoder/alvo/binário conservaram SHA-256, BuildId confere com a corrida anterior. Seis lotes anteriores mais dois novos, excluindo o sétimo parcial:14400s pedidos/15457s reportados,96634872 execuções sem crash; pico1331MiB (<2048). Relatório por lote em docs/plans/etapa-5.2-fuzz.json e log combinado versionado; originais íntegros em target/. Novo ci/verify.sh --selftest VERIFY_OK/exit0 em1760.07s:252 Python122.34s+25 TCB1.93s, Rust/Clippy/smokes/manifesto/independência/deny/audit/vetores/autoteste passaram. Crash10k/24 SIGKILLs/9998 ACKs/83.54s sem perdas; rebuild100k/cinco tabelas exatas;1M/20000 consultas p99=37332ns, cold340010ms fora da medida. TCB repetida13501+747130=760631, kernel1355, build-only64508, sem mudança desde a implementação5.2. Fontes restauradas dos13 mutantes conferidas; nenhum código runtime alterado nesta retomada. Diff global acusa espaços finais no smoke.log preexistente, preservado fora do commit, assim como ZIPs/plano5.3/proposta científica/ADR0037. Critérios locais5.2 demonstrados; CI/ARM/noturno ainda não observados. Commit local de fechamento, sem push; próximo5.3 (PROPOSE e regra de citação).
+
+- 2026-10-19 — Início da5.3 sobre6374755, após fechamento real da5.2. Dependências presentes. ADR0038 revê autoria (Genesis, sem atribuição persistida por UID), resultado novo propose-result/v1, teto explícito O≤1MiB e falhas entre appends. Handler implementado sem pacote/parser novo; oito testes passaram,50 ataques distintos P1 e STATE14/época9 com premissas citáveis existentes, sem antecipar Fact/Policy. Executável real também propõe e persiste Pending. Corrigidos bound Sync da fixture movendo só o cliente e vec desnecessário apontado pelo Clippy; Clippy final passou. Mutações/fuzz/full verify ainda pendentes; arquivos científicos/ZIPs/log smoke preexistentes preservados, sem push.
+
+- 2026-10-19 — Etapa5.3 concluída localmente sobre6374755. ADR0038/plano/spec fixam autoria pelo Genesis, scope vazio, O≤1MiB e resultado novo propose-result/v1;34 vetores de request preservados e três de resposta independentes adicionados ao --check existente. Handler PROPOSE usa generate/snapshot/CAS/transições; nenhum construtor público/credencial nova. Oito testes novos/50 ataques P1 distintos/STATE14 na época9 e executável real passaram; fixture usa premissas citáveis existentes sem antecipar ingestão Fact/Policy. Falha de assinatura entre appends deixa Proposed não citável, sem Pending fictício nem retry.14 mutações compilaram e falharam por asserção; fontes restauradas e hashes conferidos. Fuzz oficial560503/61s, exit0, pico555MiB; total116.34s com rebuild; log histórico5.2 restaurado byte a byte e log novo separado. Full ci/verify.sh --selftest VERIFY_OK/exit0 em1568.40s:252 Python101.41s+25 TCB1.53s, Rust/Clippy/smokes/TCB/manifesto/independência/deny/audit/vetores/autoteste passaram; avisos conhecidos licença/syn. Produtor SAT300/300+300 modelos+300 consistências/sete controles/907 rechecks; corpus LRAT200/200. Crash10k/24 SIGKILLs/9997 ACKs/66.97s sem perda reconhecida; rebuild100k/cinco tabelas exatas;1M/20000 consultas p99=36617ns, cold274590ms fora da latência. TCB13573+747130=760703 (+72 próprios), kernel1427, build-only64508; sem pacote/decoder novo de entrada. Fontes inalterados durante fuzz/fullverify; evidências em docs/plans/etapa-5.3-evidencias.json. Corrigidos durante desenvolvimento bound Sync indevido da fixture e vec desnecessário no Clippy; nenhuma falha completa foi ocultada. Proposta científica/ADR0037, ZIPs e smoke.log preexistentes preservados fora do commit. Critérios locais marcados; CI/ARM/noturno ainda não observados, sem push. Próximo5.4: planejar registry, recuperação privada de Pending e CertificateRejected antes de código.

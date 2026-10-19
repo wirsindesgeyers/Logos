@@ -486,7 +486,7 @@ fn binding_never_removes_existing_paths_and_rejects_writable_parent() {
 }
 
 #[test]
-fn binary_serves_a_real_socket_and_persists_genesis_with_its_executable_digest() {
+fn binary_serves_propose_and_persists_pending_with_its_executable_digest() {
     use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
     struct Process(std::process::Child);
     impl Drop for Process {
@@ -509,7 +509,10 @@ fn binary_serves_a_real_socket_and_persists_genesis_with_its_executable_digest()
     drop(file);
     let executable = env!("CARGO_BIN_EXE_logos-kernel");
     let socket = temp.0.join("socket");
-    let ledger_path = temp.0.join("ledger");
+    let ledger_path = temp.dir("ledger");
+    let cas = logos_ledger::Cas::open(ledger_path.join("cas"), Default::default()).unwrap();
+    let vocabulary = Vocabulary::new(1, vec![], vec![]).unwrap();
+    let hv = cas.put(&to_canon(&vocabulary).unwrap()).unwrap();
     let mut process = Process(
         std::process::Command::new(executable)
             .arg(&socket)
@@ -538,11 +541,43 @@ fn binary_serves_a_real_socket_and_persists_genesis_with_its_executable_digest()
     let reply = response(&mut client);
     assert_eq!(values(&reply)[1], Value::Unsigned(17));
     assert_eq!(values(&values(&reply)[3])[0], Value::Unsigned(0));
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 18,
+                message: Message::Propose(logos_ledger::EventProposal {
+                    text_pt: logos_ledger::TaintedText::new("real binary proposal".into()).unwrap(),
+                    goal: Formula::new(vec![FormulaNode::True], Limits::default()).unwrap(),
+                    cites: vec![],
+                    speculative_on: vec![],
+                    vocabulary: hv,
+                }),
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    let proposed = response(&mut client);
+    assert_eq!(
+        &values(&proposed)[..3],
+        &[Value::Unsigned(1), Value::Unsigned(18), Value::Unsigned(1)]
+    );
+    let [Value::Unsigned(1), Value::Bytes(h), Value::Bytes(bytes)] = values(&values(&proposed)[3])
+    else {
+        panic!("propose-result/v1")
+    };
+    let ho = logos_crypto::hash_raw::<Obligation>(bytes);
+    assert_eq!(h.as_slice(), ho.as_bytes());
+    assert_eq!(cas.get(&ho).unwrap().as_deref(), Some(bytes.as_slice()));
     drop(client);
     drop(process);
     let s = signer();
     let ledger = Ledger::open(&ledger_path, &s).unwrap();
-    let events = ledger.events_from(0, 1).unwrap();
+    let events = ledger.events_from(0, 256).unwrap();
+    assert_eq!(events.len(), 3);
+    assert!(matches!(events[1].body, EventBody::Proposed { .. }));
+    assert!(
+        matches!(events[2].body, EventBody::ObligationCreated { obligation, .. } if obligation == ho)
+    );
     let EventBody::Genesis {
         kernel_binary,
         kernel_key,

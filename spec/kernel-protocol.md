@@ -38,6 +38,29 @@ retorna [] ou [kind,epoch,retracted]. Kind: Fact0, Policy1, Verified2,
 Assumption3, Pending4, Refuted5, Unknown6, Rejected7, Invalidated8, Proposal9.
 Esses dados não criam credenciais.
 
+Etapa5.3/ADR0038 acrescenta o resultado **propose-result/v1**, primeiro formato
+de sucesso do PROPOSE: `value = [1,h_O_bytes32,O_canonical_bytes]`.
+Envelope externo completo: `[1,request_id,1,[1,h_O,O_bytes]]`. O primeiro1
+interno é a versão deste resultado novo. Requisições/envelope/eventos
+históricos não mudam. Vetores independentes em
+`vectors/kernel-protocol/propose-result-v1.json`; o gerador existente os
+confere junto com os vetores de requisição.
+
+PROPOSE MUST resolver V no CAS e montar a snapshot autenticada do ledger
+antes de generate. Especulação não vazia é inválida; scope opaco é vazio
+até5.7. O kernel MUST serializar/limitar O a1MiB e publicar os bytes no CAS
+antes de registrar Proposed+ObligationCreated pelas transições5.1.
+Resposta só após ambos os appends confirmados. Erro entre eles pode deixar
+Proposed não citável e O órfão; nunca sucesso/Pending fictício ou retry
+automático. O limite de bytes de saída não é limite de RSS/wall da geração.
+
+Proposed.author é a chave do kernel lida do Genesis autenticado. UID é
+autenticado somente na conexão; não é persistido no evento. Não atribuir
+essa assinatura ao agente. Query::Status continua recebendo **h(Event)**,
+nunca h(O); o evento Pending pode ser obtido em Subscribe. Nenhum PROPOSE
+emite Verified, Fact, Policy ou autorização. CERTIFY/REFUTE/WITNESS/ASSUME
+continuam explicitamente indisponíveis.
+
 Subscribe envia [0,Event] por evento e termina com [1,next_seq] ao atingir
 max_events (1..256) ou o prazo da assinatura. O cursor é explícito; nenhum
 evento é truncado ou descartado silenciosamente. Novos eventos podem entrar

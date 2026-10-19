@@ -86,8 +86,8 @@ impl<S> Claim<S> {
 // Os handlers5.3/5.4 consumirão esta API interna. Os testes exercitam todas
 // as operações agora; não expor emissão ao agente para evitar dead_code.
 #[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "integração nos handlers5.3/5.4")
+    all(not(test), not(target_os = "linux")),
+    expect(dead_code, reason = "PROPOSE requer transporte Linux")
 )]
 pub(crate) struct Transitions<'writer, 'signer, S: Signer> {
     ledger: &'writer mut Ledger<'signer, S>,

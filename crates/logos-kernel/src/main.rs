@@ -1,4 +1,4 @@
-//! Processo Linux do transporte; handlers de mutação chegam nas próximas etapas.
+//! Processo Linux: PROPOSE, leitura e transporte; certificação chega na5.4.
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -6,7 +6,8 @@
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     use logos_crypto::{ExternalDigest, FileSigner, Signer};
     use logos_kernel::{
-        server::{ConnectionLimits, ReadOnlyHandlers, Server},
+        propose::ProposalHandlers,
+        server::{ConnectionLimits, Server},
         staging::Staging,
     };
     use logos_ledger::{EventBody, Ledger};
@@ -41,7 +42,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let server = Server::bind(Path::new(&args[0]), uid, ConnectionLimits::default())?;
     server.serve(
         &mut ledger,
-        &ReadOnlyHandlers,
+        &ProposalHandlers,
         &staging,
         &AtomicBool::new(false),
     )?;

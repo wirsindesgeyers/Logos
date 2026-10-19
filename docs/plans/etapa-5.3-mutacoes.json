@@ -1,0 +1,187 @@
+{
+  "recipe": "Uma mutação por vez; exigir compilação e falha de asserção (não erro de build). Rodar cargo test -p logos-kernel --test <suite> <test>. Restaurar fontes em finally e conferir SHA-256. Resultados locais em target/propose-mutations/results.json.",
+  "mutations": [
+    {
+      "name": "speculation",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "if !proposal.speculative_on.is_empty() {",
+      "new": "if false && !proposal.speculative_on.is_empty() {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "missing_incompatible_ill_sorted_and_speculative_inputs_never_append"
+      ]
+    },
+    {
+      "name": "scope",
+      "source": "crates/logos-ledger/src/index.rs",
+      "old": "if mismatch {",
+      "new": "if false && mismatch {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "scope_mismatch_in_direct_and_used_ancestor_is_not_silently_ignored"
+      ]
+    },
+    {
+      "name": "kind",
+      "source": "crates/logos-obligation/src/generate.rs",
+      "old": "if !entry.kind.is_citable() {",
+      "new": "if false && !entry.kind.is_citable() {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "p1_fifty_distinct_attacks_are_refused_before_any_append"
+      ]
+    },
+    {
+      "name": "epoch",
+      "source": "crates/logos-obligation/src/generate.rs",
+      "old": "if entry.epoch != current_epoch {",
+      "new": "if false && entry.epoch != current_epoch {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "p1_fifty_distinct_attacks_are_refused_before_any_append"
+      ]
+    },
+    {
+      "name": "withdrawal",
+      "source": "crates/logos-ledger/src/index_project.rs",
+      "old": "EventBody::Retracted { target, .. } | EventBody::Invalidated { claim: target, .. } => {",
+      "new": "EventBody::Retracted { .. } => return Ok(()),\n        EventBody::Invalidated { claim: target, .. } => {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "p1_fifty_distinct_attacks_are_refused_before_any_append"
+      ]
+    },
+    {
+      "name": "size",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "if bytes.len() > DecodeLimits::DEFAULT_MAX_BYTES {",
+      "new": "if false && bytes.len() > DecodeLimits::DEFAULT_MAX_BYTES {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "obligation_limit_is_inclusive_and_checked_before_publication_or_append"
+      ]
+    },
+    {
+      "name": "cas_bytes",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "put::<Obligation>(&bytes)?",
+      "new": "put::<Obligation>(b\"bad obligation\")?",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+      ]
+    },
+    {
+      "name": "response_hash",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "hash.to_value()?",
+      "new": "Value::Bytes(vec![0; 32])",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+      ]
+    },
+    {
+      "name": "response_version",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "Value::Unsigned(1),\n            hash.to_value()?",
+      "new": "Value::Unsigned(0),\n            hash.to_value()?",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "independent_success_vectors_fix_the_new_result_version_hash_and_bytes"
+      ]
+    },
+    {
+      "name": "author",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": ".kernel_key;",
+      "new": ".kernel_key;\n        let author = logos_crypto::KeyId::from_bytes([0; 32]);",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+      ]
+    },
+    {
+      "name": "missing_pending",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "let _pending = transitions.submit(draft, hash, Route::Model, *hash.as_bytes(), None)?;",
+      "new": "let _pending = draft;",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+      ]
+    },
+    {
+      "name": "binary_dispatch",
+      "source": "crates/logos-kernel/src/main.rs",
+      "old": "&ProposalHandlers,",
+      "new": "&logos_kernel::server::ReadOnlyHandlers,",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "transport",
+        "binary_serves_propose_and_persists_pending_with_its_executable_digest"
+      ]
+    },
+    {
+      "name": "discard_cites",
+      "source": "crates/logos-kernel/src/propose.rs",
+      "old": "cites: &references,",
+      "new": "cites: &[],",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "p1_fifty_distinct_attacks_are_refused_before_any_append"
+      ]
+    },
+    {
+      "name": "ignore_extra_fields",
+      "source": "crates/logos-kernel/src/wire.rs",
+      "old": "(0, [Value::Bytes(text), goal, cites, speculative, vocabulary]) => {",
+      "new": "(0, [Value::Bytes(text), goal, cites, speculative, vocabulary, ..]) => {",
+      "args": [
+        "-p",
+        "logos-kernel",
+        "--test",
+        "propose",
+        "p1_fifty_distinct_attacks_are_refused_before_any_append"
+      ]
+    }
+  ]
+}

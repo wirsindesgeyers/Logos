@@ -47,7 +47,7 @@ cargo audit
   uv run python ../tools/gen_vocabulary_vectors.py --check
   uv run python ../tools/gen_obligation_vectors.py --check
   uv run python ../tools/gen_protocol_vectors.py --check
-  uv run python ../tools/gen_kernel_protocol_vectors.py --check
+  uv run python ../tools/gen_kernel_protocol_vectors.py --check # requests v1 + propose-result/v1
   uv run python ../tools/gen_model_vectors.py --check
   uv run python ../tools/gen_event_vectors.py --check
   uv run python ../tools/gen_audit_vectors.py --check

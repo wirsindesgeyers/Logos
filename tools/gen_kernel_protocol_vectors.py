@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from gen_air_vectors import head
 from gen_protocol_vectors import fixtures as proposals
 
 OUT = Path(__file__).resolve().parent.parent / "spec/vectors/kernel-protocol/vectors.json"
+RESULT_OUT = OUT.with_name("propose-result-v1.json")
 
 
 def encode(value: object) -> bytes:
@@ -93,17 +95,44 @@ def fixtures() -> dict[str, Any]:
     return {"format": "kernel-protocol/v1", "vectors": vectors}
 
 
+def result_fixtures() -> dict[str, Any]:
+    """New versioned result; preserve every historical request fixture."""
+    vectors: list[dict[str, object]] = []
+    vocabulary = encode([1, 1, [], []])
+    hv = hashlib.sha256(b"logos/vocab/v1\0" + vocabulary).digest()
+    for name, nodes in [("true", [[0]]), ("false", [[1]]), ("implication", [[7], [0], [1]])]:
+        goal: list[object] = [1, 3, "FOL-ms-eq/v1", nodes]
+        obligation = encode([1, 0, "FOL-ms-eq/v1", 1, hv, [], goal])
+        ho = hashlib.sha256(b"logos/obligation/v1\0" + obligation).digest()
+        request = encode([1, 14, 0, [b"C7: cafe\xcc\x81", encode(goal), [], [], hv]])
+        response = encode([1, 14, 1, [1, ho, obligation]])
+        vectors.append(
+            {
+                "id": name,
+                "vocabulary_hex": vocabulary.hex(),
+                "vocabulary_hash": hv.hex(),
+                "obligation_hex": obligation.hex(),
+                "obligation_hash": ho.hex(),
+                "request_frame_hex": (len(request).to_bytes(4, "big") + request).hex(),
+                "response_hex": response.hex(),
+                "response_frame_hex": (len(response).to_bytes(4, "big") + response).hex(),
+            }
+        )
+    return {"format": "propose-result/v1", "vectors": vectors}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    data = json.dumps(fixtures(), ensure_ascii=False, indent=2) + "\n"
-    if args.check:
-        if OUT.read_text() != data:
-            raise SystemExit("kernel-protocol vectors differ")
-    else:
-        OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(data)
+    for path, fixtures_data in [(OUT, fixtures()), (RESULT_OUT, result_fixtures())]:
+        data = json.dumps(fixtures_data, ensure_ascii=False, indent=2) + "\n"
+        if args.check:
+            if path.read_text() != data:
+                raise SystemExit(f"kernel-protocol vectors differ: {path.name}")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(data)
     print("KERNEL_PROTOCOL_VECTORS_OK")
 
 

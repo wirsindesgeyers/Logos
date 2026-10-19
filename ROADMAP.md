@@ -985,8 +985,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Retorna `h(O)` e os bytes de `O` para o agente levar ao prover.
 
 **Critério de conclusão.**
-- [ ] **Teste de invariante P1**: suíte de 50 tentativas de um agente malicioso (citar o não verificado, mandar obrigação pronta, mandar fato, citar evento de outra época, citar claim retratado) — todas recusadas.
-- [ ] Reproduz o "STATE 14" da §3 como teste de integração.
+- [x] **Teste de invariante P1**: suíte de 50 tentativas de um agente malicioso (citar o não verificado, mandar obrigação pronta, mandar fato, citar evento de outra época, citar claim retratado) — todas recusadas.
+- [x] Reproduz o "STATE 14" da §3 como teste de integração (época9, premissas citáveis de fixture existentes e dois eventos pelo socket; sem ingestão Fact/Policy das Fases6/7, ADR0038).
 
 ---
 

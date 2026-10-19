@@ -1,0 +1,365 @@
+{
+  "stage": "5.3",
+  "date": "2026-10-19",
+  "base": "6374755",
+  "result_format": "propose-result/v1",
+  "p1_attacks": 50,
+  "integration_tests": 8,
+  "binary_integration_test": true,
+  "state14_fixture": "época9; três assumptions de escopo vazio; sem ingestão Fact/Policy",
+  "legacy_request_vectors_unchanged": true,
+  "legacy_request_vectors_sha256": "01c512a7a33d8f17fbfa59c8a7c681909e970687b9929e802af258892bd04e32",
+  "new_result_vectors": 3,
+  "source_sha256": {
+    "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+    "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+    "crates/logos-kernel/src/transitions.rs": "01753c4f03c364b9724ee44d597e3ba553346b3d0212af03d42a5c47ee7660fe",
+    "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+    "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd"
+  },
+  "mutations": {
+    "mutations": [
+      {
+        "name": "speculation",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "missing_incompatible_ill_sorted_and_speculative_inputs_never_append"
+        ],
+        "exit": 101,
+        "seconds": 4.52,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "scope",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "scope_mismatch_in_direct_and_used_ancestor_is_not_silently_ignored"
+        ],
+        "exit": 101,
+        "seconds": 2.88,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "kind",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "p1_fifty_distinct_attacks_are_refused_before_any_append"
+        ],
+        "exit": 101,
+        "seconds": 7.38,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "epoch",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "p1_fifty_distinct_attacks_are_refused_before_any_append"
+        ],
+        "exit": 101,
+        "seconds": 16.1,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "withdrawal",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "p1_fifty_distinct_attacks_are_refused_before_any_append"
+        ],
+        "exit": 101,
+        "seconds": 24.89,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "size",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "obligation_limit_is_inclusive_and_checked_before_publication_or_append"
+        ],
+        "exit": 101,
+        "seconds": 13.32,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "cas_bytes",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+        ],
+        "exit": 101,
+        "seconds": 1.9,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "response_hash",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+        ],
+        "exit": 101,
+        "seconds": 1.94,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "response_version",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "independent_success_vectors_fix_the_new_result_version_hash_and_bytes"
+        ],
+        "exit": 101,
+        "seconds": 1.66,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "author",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+        ],
+        "exit": 101,
+        "seconds": 2.83,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "missing_pending",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "state14_uses_epoch9_real_citations_and_two_durable_transitions"
+        ],
+        "exit": 101,
+        "seconds": 2.06,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "binary_dispatch",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "transport",
+          "binary_serves_propose_and_persists_pending_with_its_executable_digest"
+        ],
+        "exit": 101,
+        "seconds": 1.97,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "discard_cites",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "p1_fifty_distinct_attacks_are_refused_before_any_append"
+        ],
+        "exit": 101,
+        "seconds": 6.88,
+        "compiled_and_killed": true
+      },
+      {
+        "name": "ignore_extra_fields",
+        "command": [
+          "rtk",
+          "proxy",
+          "cargo",
+          "test",
+          "-p",
+          "logos-kernel",
+          "--test",
+          "propose",
+          "p1_fifty_distinct_attacks_are_refused_before_any_append"
+        ],
+        "exit": 101,
+        "seconds": 15.53,
+        "compiled_and_killed": true
+      }
+    ],
+    "sources_restored": true,
+    "original_sha256": {
+      "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+      "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+      "crates/logos-obligation/src/generate.rs": "b5e3fb7abf71e2d7fdb3a5e7e1ec3d8fa71d4ca36f450ddc503d0624d50e3af3",
+      "crates/logos-ledger/src/index_project.rs": "d29a09c17b190d06133d757967d8c62f67d40c8e605c0d6408e2f89a8192ee69",
+      "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+      "crates/logos-ledger/src/index.rs": "48061aa381c613cdea581d7e6799dae66be626a151ce02d50476eaeffb76500b"
+    }
+  },
+  "fuzz": {
+    "command": [
+      "rtk",
+      "proxy",
+      "ci/fuzz.sh",
+      "60",
+      "kernel_message"
+    ],
+    "exit": 0,
+    "seconds": 116.34039896500326,
+    "sha256_before": {
+      "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+      "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+      "crates/logos-kernel/src/transitions.rs": "01753c4f03c364b9724ee44d597e3ba553346b3d0212af03d42a5c47ee7660fe",
+      "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+      "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd"
+    },
+    "sha256_after": {
+      "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+      "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+      "crates/logos-kernel/src/transitions.rs": "01753c4f03c364b9724ee44d597e3ba553346b3d0212af03d42a5c47ee7660fe",
+      "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+      "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd"
+    },
+    "completed": [
+      {
+        "executions": 560503,
+        "seconds": 61
+      }
+    ],
+    "peak_rss_mib": 555,
+    "historical_log_restored": true,
+    "log": "fuzz-logs/kernel_message-5.3.log",
+    "log_sha256": "eb5f6706b2aecfb999325f52ed23265903358728a2071a91ba83b00f57e13d9e"
+  },
+  "full_verify": {
+    "command": [
+      "rtk",
+      "proxy",
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1568.401470798999,
+    "sha256_before": {
+      "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+      "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+      "crates/logos-kernel/src/transitions.rs": "01753c4f03c364b9724ee44d597e3ba553346b3d0212af03d42a5c47ee7660fe",
+      "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+      "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd"
+    },
+    "sha256_after": {
+      "crates/logos-kernel/src/propose.rs": "fd7189c18bd58095800d057a6aeca7b34d04862dcac22dd4de7eda3f195f1c21",
+      "crates/logos-kernel/src/main.rs": "93002f5ca603c56bdad5e708572feb4c46e5b0dc60b562b04afb5c6be03146d8",
+      "crates/logos-kernel/src/transitions.rs": "01753c4f03c364b9724ee44d597e3ba553346b3d0212af03d42a5c47ee7660fe",
+      "crates/logos-kernel/src/wire.rs": "85e9967c1f10ed6546188897dac70ee2790d28d04ed3433a5eee1ff5871884d3",
+      "fuzz/fuzz_targets/kernel_message.rs": "e15bf67d7b0474057e35ec26123234c27558d0de77665401d7b07d162d1bdadd"
+    }
+  },
+  "python_tests": [
+    [
+      "252",
+      "101.41"
+    ],
+    [
+      "25",
+      "1.53"
+    ]
+  ],
+  "tcb_correctness": {
+    "title": "Correção (soundness)",
+    "crates": [
+      "logos-canon",
+      "logos-crypto",
+      "logos-core",
+      "logos-air",
+      "logos-obligation",
+      "logos-model",
+      "logos-ground",
+      "logos-lrat",
+      "logos-ledger",
+      "logos-policy",
+      "logos-token",
+      "logos-kernel",
+      "logos-gateway"
+    ],
+    "loc_own": 13573,
+    "loc_deps": 747130,
+    "loc_build_deps": 64508,
+    "loc_total": 760703,
+    "loc_verified": 0,
+    "verified_ratio": 0.0
+  },
+  "remote_ci_observed": false
+}

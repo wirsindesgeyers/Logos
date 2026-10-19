@@ -306,6 +306,9 @@ estado após append confirmado; não existe emissão pública a partir de
 Etapa5.2 acrescenta o processo Linux, socket Unix autenticado por UID, frames
 canônicos estritos, quotas/prazos, captura de uploads e Query/Subscribe no
 ledger real. Uso e formato em [`spec/kernel-protocol.md`](spec/kernel-protocol.md).
-Handlers de proposta/certificação/fatos ficam nas etapas seguintes e respondem
-com erro explícito enquanto indisponíveis. Estado em
+Etapa5.3 liga PROPOSE ao gerador de obrigações com snapshot autenticado,
+publica O no CAS e registra Proposed+ObligationCreated antes de responder
+com propose-result/v1. Citações inválidas não geram eventos; o claim fica
+Pending, sem credencial. Certificação e outros handlers chegam nas etapas
+seguintes e respondem com erro explícito enquanto indisponíveis. Estado em
 [`STATUS.md`](STATUS.md).

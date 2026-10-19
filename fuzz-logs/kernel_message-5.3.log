@@ -1,0 +1,55 @@
+== kernel_message (60s de 60s; lote 1) ==
+   Compiling logos-obligation v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-obligation)
+   Compiling logos-ledger v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-ledger)
+   Compiling logos-ground v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-ground)
+   Compiling logos-model v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-model)
+   Compiling logos-lrat v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-lrat)
+   Compiling logos-kernel v0.0.0 (/home/kauan/Documentos/LOGOS/crates/logos-kernel)
+   Compiling logos-fuzz v0.0.0 (/home/kauan/Documentos/LOGOS/fuzz)
+    Finished `release` profile [optimized + debuginfo] target(s) in 53.65s
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.10s
+     Running `target/x86_64-unknown-linux-gnu/release/kernel_message -artifact_prefix=/home/kauan/Documentos/LOGOS/fuzz/artifacts/kernel_message/ -max_total_time=60 /home/kauan/Documentos/LOGOS/fuzz/corpus/kernel_message`
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 2732845929
+INFO: Loaded 1 modules   (9362 inline 8-bit counters): 9362 [0x562858a4f890, 0x562858a51d22),
+INFO: Loaded 1 PC tables (9362 PCs): 9362 [0x562858a51d28,0x562858a76648),
+INFO:     6438 files found in /home/kauan/Documentos/LOGOS/fuzz/corpus/kernel_message
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: seed corpus: files: 6438 min: 1b max: 4089b total: 2723765b rss: 39Mb
+#6439	INITED cov: 1853 ft: 7127 corp: 926/106Kb exec/s: 1609 rss: 324Mb
+#8192	pulse  cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 1638 rss: 329Mb
+#16384	pulse  cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 2730 rss: 361Mb
+#26955	REDUCE cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 3850 rss: 403Mb L: 2434/4089 MS: 1 EraseBytes-
+#32768	pulse  cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 4096 rss: 437Mb
+#43540	REDUCE cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 4837 rss: 466Mb L: 836/4089 MS: 4 ShuffleBytes-CopyPart-CopyPart-EraseBytes-
+#52463	REDUCE cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 5246 rss: 480Mb L: 13/4089 MS: 3 ShuffleBytes-EraseBytes-CopyPart-
+#63479	REDUCE cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 5770 rss: 500Mb L: 9/4089 MS: 1 EraseBytes-
+#65536	pulse  cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 5957 rss: 501Mb
+#78492	REDUCE cov: 1853 ft: 7127 corp: 926/106Kb lim: 4096 exec/s: 6037 rss: 516Mb L: 741/4089 MS: 3 CMP-ChangeBit-EraseBytes- DE: "X \273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273;\273\273\273\273;\273"-
+#78605	REDUCE cov: 1853 ft: 7127 corp: 926/105Kb lim: 4096 exec/s: 6046 rss: 516Mb L: 2327/4089 MS: 3 InsertByte-ChangeBit-EraseBytes-
+#119737	REDUCE cov: 1853 ft: 7127 corp: 926/105Kb lim: 4096 exec/s: 7043 rss: 525Mb L: 4028/4028 MS: 2 InsertByte-EraseBytes-
+#131072	pulse  cov: 1853 ft: 7127 corp: 926/105Kb lim: 4096 exec/s: 7281 rss: 525Mb
+#142154	REDUCE cov: 1853 ft: 7127 corp: 926/105Kb lim: 4096 exec/s: 7107 rss: 525Mb L: 414/4028 MS: 2 ChangeASCIIInt-EraseBytes-
+#166515	REDUCE cov: 1853 ft: 7128 corp: 927/106Kb lim: 4096 exec/s: 7239 rss: 525Mb L: 741/4028 MS: 1 CopyPart-
+#208031	REDUCE cov: 1853 ft: 7128 corp: 927/106Kb lim: 4096 exec/s: 7704 rss: 525Mb L: 7/4028 MS: 1 EraseBytes-
+#221974	REDUCE cov: 1853 ft: 7128 corp: 927/106Kb lim: 4096 exec/s: 7927 rss: 525Mb L: 5/4028 MS: 3 ChangeASCIIInt-EraseBytes-ChangeBit-
+#224586	NEW    cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8020 rss: 525Mb L: 741/4028 MS: 2 ChangeByte-CopyPart-
+#258437	REDUCE cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8076 rss: 525Mb L: 516/4028 MS: 1 EraseBytes-
+#262144	pulse  cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8192 rss: 525Mb
+#320602	REDUCE cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8664 rss: 525Mb L: 732/4028 MS: 5 ChangeByte-CrossOver-CopyPart-ChangeASCIIInt-EraseBytes-
+#351513	REDUCE cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8787 rss: 527Mb L: 718/4028 MS: 1 EraseBytes-
+#371879	REDUCE cov: 1853 ft: 7129 corp: 928/107Kb lim: 4096 exec/s: 8854 rss: 527Mb L: 3938/3938 MS: 1 EraseBytes-
+#383440	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 8917 rss: 529Mb L: 679/3938 MS: 1 EraseBytes-
+#415946	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9042 rss: 536Mb L: 676/3938 MS: 1 EraseBytes-
+#429407	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 8945 rss: 536Mb L: 2282/3938 MS: 1 EraseBytes-
+#440938	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 8998 rss: 540Mb L: 10/3938 MS: 1 EraseBytes-
+#452741	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9054 rss: 545Mb L: 1603/3938 MS: 3 CrossOver-CopyPart-EraseBytes-
+#457732	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9154 rss: 545Mb L: 673/3938 MS: 1 EraseBytes-
+#496368	REDUCE cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9192 rss: 549Mb L: 38/3938 MS: 1 EraseBytes-
+#524288	pulse  cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9198 rss: 551Mb
+#560503	DONE   cov: 1853 ft: 7129 corp: 928/106Kb lim: 4096 exec/s: 9188 rss: 555Mb
+###### Recommended dictionary. ######
+"X \273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273\273;\273\273\273\273;\273" # Uses: 36427
+###### End of recommended dictionary. ######
+Done 560503 runs in 61 second(s)
+== kernel_message concluído: 60s em 1 lote(s) ==
