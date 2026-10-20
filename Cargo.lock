@@ -307,10 +307,14 @@ name = "logos-kernel"
 version = "0.0.0"
 dependencies = [
  "logos-air",
+ "logos-audit",
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-ground",
  "logos-ledger",
+ "logos-lrat",
+ "logos-model",
  "logos-obligation",
  "logos-protocol",
  "rustix",

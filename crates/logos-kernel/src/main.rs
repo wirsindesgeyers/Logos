@@ -1,4 +1,4 @@
-//! Processo Linux: PROPOSE, leitura e transporte; certificação chega na5.4.
+//! Processo Linux: PROPOSE, CERTIFY, REFUTE e leitura autenticada.
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -6,15 +6,19 @@
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     use logos_crypto::{ExternalDigest, FileSigner, Signer};
     use logos_kernel::{
-        propose::ProposalHandlers,
+        certify::CertificationHandlers,
+        registry::CheckerRegistry,
         server::{ConnectionLimits, Server},
         staging::Staging,
     };
     use logos_ledger::{EventBody, Ledger};
     use std::{io::Read, path::Path, sync::atomic::AtomicBool};
     let args: Vec<_> = std::env::args_os().skip(1).collect();
-    if args.len() != 6 {
-        return Err("usage: logos-kernel SOCKET LEDGER KEYFILE STAGING PRIVATE AGENT_UID".into());
+    if !(6..=7).contains(&args.len()) {
+        return Err(
+            "usage: logos-kernel SOCKET LEDGER KEYFILE STAGING PRIVATE AGENT_UID [CAKE_BINARY]"
+                .into(),
+        );
     }
     let uid: u32 = args[5].to_str().ok_or("UID is not UTF-8")?.parse()?;
     let signer = FileSigner::load(Path::new(&args[2]))?;
@@ -33,6 +37,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             kernel_key: signer.key_id()?,
         })?;
     }
+    let registry = CheckerRegistry::new(signer.public_key().clone(), args.get(6).map(Path::new))?;
+    registry.install(&mut ledger, &signer)?;
+    let handlers = CertificationHandlers::new(
+        registry,
+        logos_core::Budget::new(20_000_000, 128 * 1024 * 1024, 64 * 1024 * 1024, 5000),
+    );
     let staging = Staging::open(
         Path::new(&args[3]),
         Path::new(&args[4]),
@@ -40,12 +50,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         64 * 1024 * 1024,
     )?;
     let server = Server::bind(Path::new(&args[0]), uid, ConnectionLimits::default())?;
-    server.serve(
-        &mut ledger,
-        &ProposalHandlers,
-        &staging,
-        &AtomicBool::new(false),
-    )?;
+    server.serve(&mut ledger, &handlers, &staging, &AtomicBool::new(false))?;
     Ok(())
 }
 

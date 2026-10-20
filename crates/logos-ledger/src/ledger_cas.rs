@@ -129,7 +129,9 @@ impl EventBody {
                 check_refs(check, &mut result);
                 result.insert(CasReference::Model(*model));
             }
-            Self::UnknownRecorded { check, .. } => check_refs(check, &mut result),
+            Self::UnknownRecorded { check, .. } | Self::CertificateRejected { check } => {
+                check_refs(check, &mut result)
+            }
             Self::EpochAdvanced {
                 vocab: Some(vocab), ..
             } => {

@@ -1,4 +1,4 @@
-# event/v1 — catálogo, assinaturas e extensão epoch-body/v2
+# event/v1 — catálogo, assinaturas e corpos v2
 
 Normativo para ROADMAP 3.1/3.4/4.3; ADRs 0020/0023/0028. MUST/MUST NOT conforme RFC 2119.
 Consome canon/v1, air/v1, core/v1 e domínios existentes. A extensão de corpo
@@ -71,6 +71,7 @@ Demais conjuntos de refs MUST estar estritamente ordenados e sem duplicatas;
 | 10 | EpochAdvanced (corpo v1 sem opcionais) | new_epoch_u64, reason_Text |
 | 11 | CheckerRegistered | hChecker, format_Text, authority |
 | 12 | CheckerRevoked | hChecker, reason_Text, authority |
+| 13 | CertificateRejected | check (corpo v2) |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -103,7 +104,10 @@ API Rust acrescenta `policy_root: Option<[u8;32]>` e
 
 Genesis ledger_version MUST ser 1. Verified/Refuted check.outcome MUST ser
 Accepted; UnknownRecorded check.outcome MUST ser Unknown, nunca Rejected.
-Rejected não vira Refuted; evento CertificateRejected só entra na 5.4.
+Rejected não vira Refuted. CertificateRejected usa exclusivamente
+`[2,13,CheckRecord]` (certificate-rejected-body/v2) e MUST ter outcome Rejected.
+Accepted/Unknown, versão1 e campos extras MUST ser recusados. Mantém a claim
+Pending e referencia O/certificado/checker no CAS. Nenhum byte histórico muda.
 Verified used MUST ser subconjunto de cited (não inferir dependências a partir
 texto). Conjuntos são evidência registrada, não checagem do certificado.
 Consistency Witness MUST ter check Accepted e mesmo hO do check principal.

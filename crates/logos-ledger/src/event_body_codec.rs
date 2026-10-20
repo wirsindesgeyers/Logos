@@ -342,6 +342,11 @@ impl Canon for EventBody {
                 check.to_value()?,
                 model.to_value()?,
             ]),
+            Self::CertificateRejected { check } => array(vec![
+                Value::Unsigned(2),
+                Value::Unsigned(13),
+                check.to_value()?,
+            ]),
             Self::UnknownRecorded { check, machine } => array(vec![
                 Value::Unsigned(1),
                 Value::Unsigned(6),
@@ -443,6 +448,13 @@ impl CanonDecode for EventBody {
             return Err(CanonError::WrongType);
         }
         if fields[0] == Value::Unsigned(2) {
+            if let [_, Value::Unsigned(13), check] = fields {
+                let body = Self::CertificateRejected {
+                    check: CheckRecord::from_value(check)?,
+                };
+                body.validate().map_err(|_| CanonError::WrongType)?;
+                return Ok(body);
+            }
             if let [_, Value::Unsigned(3), o, route, artifact, record] = fields {
                 let [h, version] = items(record)? else {
                     return Err(CanonError::WrongType);

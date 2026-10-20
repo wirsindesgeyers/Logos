@@ -1,6 +1,6 @@
 //! Catálogo de eventos, tipos associados e regras de validação estrutural.
 //!
-//! Implementa os 13 corpos de eventos normativos de `spec/events.md` e ADR 0020.
+//! Implementa os 14 corpos de eventos normativos de `spec/events.md` e ADR 0020.
 //! A validação de corpos assegura invariantes de tipos, limites de tamanho e
 //! consistência de evidências registradas sem inferir DAG histórica ou autoridade externa.
 
@@ -162,7 +162,7 @@ pub enum Consistency {
     },
 }
 
-/// Catálogo normativo dos 13 corpos de eventos assinados (`spec/events.md` §3).
+/// Catálogo normativo dos 14 corpos de eventos assinados (`spec/events.md` §3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EventBody {
     /// Evento inicial de ancoragem do ledger.
@@ -225,6 +225,11 @@ pub enum EventBody {
         check: CheckRecord,
         /// Identificador canônico da máquina/ambiente de execução.
         machine: Text,
+    },
+    /// Certificado rejeitado; não é refutação e preserva Pending.
+    CertificateRejected {
+        /// Checagem com resultado Rejected.
+        check: CheckRecord,
     },
     /// Declaração de pressuposto ou axioma contextual.
     AssumptionDeclared {
@@ -363,6 +368,7 @@ impl EventBody {
             Self::Verified { .. } => 4,
             Self::Refuted { .. } => 5,
             Self::UnknownRecorded { .. } => 6,
+            Self::CertificateRejected { .. } => 13,
             Self::AssumptionDeclared { .. } => 7,
             Self::Retracted { .. } => 8,
             Self::Invalidated { .. } => 9,
@@ -454,6 +460,12 @@ impl EventBody {
                     return Err(EventError::Invalid(
                         "Refuted check outcome must be Accepted",
                     ));
+                }
+            }
+            Self::CertificateRejected { check } => {
+                check.validate()?;
+                if !matches!(check.outcome, CheckOutcome::Rejected(_)) {
+                    return Err(EventError::Invalid("CertificateRejected requires Rejected"));
                 }
             }
             Self::UnknownRecorded { check, machine } => {

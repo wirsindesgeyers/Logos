@@ -33,6 +33,49 @@ fn default_budget() -> Budget {
     }
 }
 
+#[test]
+fn certificate_rejection_has_only_v2_tag13_and_cannot_hold_accepted_or_unknown() {
+    let check = sample_check_record(CheckOutcome::Rejected(Reason::new(
+        Text::new("bad certificate").unwrap(),
+    )));
+    let body = EventBody::CertificateRejected {
+        check: check.clone(),
+    };
+    let value = body.to_value().unwrap();
+    assert_eq!(EventBody::from_value(&value).unwrap(), body);
+    assert_eq!(body.cas_references().len(), 3);
+    for outcome in [
+        CheckOutcome::Accepted,
+        CheckOutcome::Unknown(Exhausted::Steps),
+    ] {
+        let mut c = check.clone();
+        c.outcome = outcome;
+        assert!(
+            EventBody::CertificateRejected { check: c.clone() }
+                .validate()
+                .is_err()
+        );
+        let forged = Value::Array(
+            Array::new(vec![
+                Value::Unsigned(2),
+                Value::Unsigned(13),
+                c.to_value().unwrap(),
+            ])
+            .unwrap(),
+        );
+        assert!(EventBody::from_value(&forged).is_err());
+    }
+    let Value::Array(fields) = value else {
+        unreachable!()
+    };
+    let mut fields = fields.items().to_vec();
+    fields[0] = Value::Unsigned(1);
+    assert!(EventBody::from_value(&Value::Array(Array::new(fields.clone()).unwrap())).is_err());
+    fields[0] = Value::Unsigned(2);
+    fields.push(Value::Unsigned(0));
+    assert!(EventBody::from_value(&Value::Array(Array::new(fields).unwrap())).is_err());
+}
+
 fn sample_check_record(outcome: CheckOutcome) -> CheckRecord {
     CheckRecord {
         obligation: Hash::<Obligation>::from_bytes([0xb1; 32]),
@@ -148,7 +191,7 @@ fn test_all_canonical_vectors_decode_encode_verify() {
         .iter()
         .map(|v| v["body_tag"].as_u64().unwrap())
         .collect();
-    assert_eq!(tags, (0..13).collect());
+    assert_eq!(tags, (0..14).collect());
 }
 
 // -----------------------------------------------------------------------------

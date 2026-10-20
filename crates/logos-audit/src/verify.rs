@@ -71,6 +71,21 @@ pub fn verify_with_cake(
     key: &PublicKey,
     cake: Option<&CakeRegistry>,
 ) -> std::result::Result<Report, AuditError> {
+    verify_with_checkers(path, cas, key, cake, &[])
+}
+
+/// Recheca também identidades Rust explicitamente permitidas pelo operador.
+/// O hash do ledger nunca amplia a lista; nenhum objeto CAS é executado.
+/// Provas LRAT continuam exigindo os dois checkers independentes.
+/// # Errors
+/// Mesmas recusas de `verify_with_cake`, incluindo identidade fora da lista.
+pub fn verify_with_checkers(
+    path: &Path,
+    cas: &Path,
+    key: &PublicKey,
+    cake: Option<&CakeRegistry>,
+    rust_checkers: &[[u8; 32]],
+) -> std::result::Result<Report, AuditError> {
     let mut refutations = 0;
     let mut consistencies = 0;
     let mut cnf_derivations = 0;
@@ -131,7 +146,7 @@ pub fn verify_with_cake(
         if let Some(c) = &p.proof_check {
             if let Some(&hash) = cnfs.get(&c.obligation) {
                 let cake = cake.ok_or_else(|| fail("LRAT recheck requires configured cake_lpr"))?;
-                if c.checker != *cake.identity().as_bytes() {
+                if c.checker != *cake.identity().as_bytes() && !rust_checkers.contains(&c.checker) {
                     return Err(fail("LRAT checker identity not allowed"));
                 }
                 let cnf = source::cas(cas, hash)?;

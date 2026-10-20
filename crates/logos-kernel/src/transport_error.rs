@@ -55,6 +55,11 @@ impl From<logos_ledger::LedgerError> for TransportError {
         Self::Ledger(e)
     }
 }
+impl From<logos_ledger::EventError> for TransportError {
+    fn from(e: logos_ledger::EventError) -> Self {
+        Self::Ledger(e.into())
+    }
+}
 
 impl TransportError {
     pub(crate) fn code(&self) -> u64 {

@@ -1017,12 +1017,14 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
   - `Rejected` → claim volta a `Pending`, evento `CertificateRejected` (não é refutação);
   - `Unknown(_)` → evento `UnknownRecorded` com limites; claim fica `Pending` ou vai a `Unknown` após política de tentativas.
 - `Refute` → checker da camada 0 → `Refuted`.
+- ADR0041: CertificateRejected usa corpo v2/tag13; recuperar Pending somente por replay autenticado e rederivação contextual. PROPOSE do handler5.4 publica metadados CNF existentes quando elegível.
+- STATE15–16 nesta etapa usa LRAT e ConsistencyUnknown explícito; Alethe permanece na14 e WITNESS na5.5, como nos limites da etapa.
 - Recusar uso autorizador de fontes de enumeração ainda não resolvidas/autenticadas (ADR0026); DomainSource opaco não vira confiança ou premissa por cast.
 
 **Critério de conclusão.**
-- [ ] **Invariantes P3 e P4**: não existe caminho de código que leve a `Verified` sem `CheckOutcome::Accepted` de um checker ativo (teste de propriedade + revisão; formalizado na Fase 12).
-- [ ] Reproduz o "STATE 15–16" e a variante de refutação da §3 como testes de integração.
-- [ ] Teste integrado preservado da4.5 (ADR0030): registrar checker conhecido, substituir o binário por outro de mesmo nome e enviar CERTIFY; o kernel recusa o check e não emite Verified. Conferir também checker desconhecido/inativo, preservando P3/P4.
+- [x] **Invariantes P3 e P4**: não existe caminho de código que leve a `Verified` sem `CheckOutcome::Accepted` de um checker ativo (teste de propriedade + revisão; formalizado na Fase 12).
+- [x] Reproduz o "STATE 15–16" e a variante de refutação da §3 como testes de integração.
+- [x] Teste integrado preservado da4.5 (ADR0030): registrar checker conhecido, substituir o binário por outro de mesmo nome e enviar CERTIFY; o kernel recusa o check e não emite Verified. Conferir também checker desconhecido/inativo, preservando P3/P4.
 
 ---
 

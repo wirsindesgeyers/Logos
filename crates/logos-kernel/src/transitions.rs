@@ -106,6 +106,92 @@ impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
         }
     }
 
+    #[cfg(target_os = "linux")]
+    pub(crate) fn ledger(&self) -> &Ledger<'signer, S> {
+        self.ledger
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(crate) fn recover_pending(
+        &self,
+        obligation: Hash<Obligation>,
+    ) -> Result<(Claim<Pending>, EventProposal), crate::TransportError> {
+        use crate::{TransportError as Error, replay::replay};
+        let mut proposed: Option<Event> = None;
+        let mut pending: Option<(Event, Event)> = None;
+        replay(self.ledger, |event| {
+            match &event.body {
+                EventBody::Proposed { .. } => proposed = Some(event.clone()),
+                EventBody::ObligationCreated { obligation: h, .. } if *h == obligation => {
+                    let draft = proposed
+                        .take()
+                        .ok_or(Error::Invalid("Pending without proposal"))?;
+                    if event.seq != draft.seq + 1
+                        || event.prev != Some(hash(&draft)?)
+                        || event.epoch != draft.epoch
+                    {
+                        return Err(Error::Invalid("Pending/proposal adjacency"));
+                    }
+                    pending = Some((draft, event.clone()));
+                }
+                EventBody::Verified { check, .. } | EventBody::Refuted { check, .. }
+                    if check.obligation == obligation =>
+                {
+                    pending = None
+                }
+                _ => {}
+            }
+            Ok(())
+        })?;
+        let (draft, event) =
+            pending.ok_or(Error::Invalid("no unfinished Pending for obligation"))?;
+        let head = self
+            .ledger
+            .head()?
+            .ok_or(Error::Invalid("Pending without head"))?;
+        let digest = hash(&event)?;
+        let index = self.ledger.live_index()?;
+        let proposal_hash = hash(&draft)?;
+        let draft_status = index
+            .status(proposal_hash)?
+            .ok_or(Error::Invalid("missing proposal status"))?;
+        if draft_status.retracted || draft_status.kind != logos_obligation::EntryKind::Proposal {
+            return Err(Error::Invalid("proposal no longer eligible"));
+        }
+        let status = index
+            .status(digest)?
+            .ok_or(Error::Invalid("Pending missing from index"))?;
+        if event.epoch != head.epoch
+            || status.retracted
+            || status.kind != logos_obligation::EntryKind::Pending
+        {
+            return Err(Error::Invalid("Pending not eligible in current epoch"));
+        }
+        let EventBody::Proposed { proposal, .. } = draft.body else {
+            return Err(Error::Invalid("Pending proposal body"));
+        };
+        let mut cited = proposal.cites.clone();
+        cited.sort_unstable();
+        cited.dedup();
+        Ok((
+            Claim {
+                origin: Origin {
+                    session: Arc::clone(&self.session),
+                    proposal: proposal_hash,
+                    epoch: event.epoch,
+                    obligation: Some(obligation),
+                    cited,
+                },
+                receipt: SignedEvent {
+                    event,
+                    hash: digest,
+                    state: PhantomData,
+                },
+            },
+            proposal,
+        ))
+    }
+
     fn append<T>(&mut self, body: EventBody) -> Result<SignedEvent<T>, LedgerError> {
         let event = self.ledger.append(body)?;
         let hash = hash(&event)?;
@@ -242,6 +328,23 @@ impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
             return Err(LedgerError::Invalid("Unknown requires exhausted check"));
         }
         let receipt = self.append(EventBody::UnknownRecorded { check, machine })?;
+        Ok(Claim {
+            origin: claim.origin,
+            receipt,
+        })
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(crate) fn reject(
+        &mut self,
+        claim: Claim<Pending>,
+        check: CheckRecord,
+    ) -> Result<Claim<Pending>, LedgerError> {
+        self.validate_check(&claim, &check)?;
+        if !matches!(check.outcome, CheckOutcome::Rejected(_)) {
+            return Err(LedgerError::Invalid("rejection requires Rejected"));
+        }
+        let receipt = self.append(EventBody::CertificateRejected { check })?;
         Ok(Claim {
             origin: claim.origin,
             receipt,

@@ -14,6 +14,7 @@ from gen_protocol_vectors import fixtures as proposals
 
 OUT = Path(__file__).resolve().parent.parent / "spec/vectors/kernel-protocol/vectors.json"
 RESULT_OUT = OUT.with_name("propose-result-v1.json")
+CHECK_OUT = OUT.with_name("check-result-v1.json")
 
 
 def encode(value: object) -> bytes:
@@ -100,7 +101,11 @@ def result_fixtures() -> dict[str, Any]:
     vectors: list[dict[str, object]] = []
     vocabulary = encode([1, 1, [], []])
     hv = hashlib.sha256(b"logos/vocab/v1\0" + vocabulary).digest()
-    for name, nodes in [("true", [[0]]), ("false", [[1]]), ("implication", [[7], [0], [1]])]:
+    for name, nodes in [
+        ("true", [[0]]),
+        ("false", [[1]]),
+        ("implication", [[7], [0], [1]]),
+    ]:
         goal: list[object] = [1, 3, "FOL-ms-eq/v1", nodes]
         obligation = encode([1, 0, "FOL-ms-eq/v1", 1, hv, [], goal])
         ho = hashlib.sha256(b"logos/obligation/v1\0" + obligation).digest()
@@ -125,7 +130,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    for path, fixtures_data in [(OUT, fixtures()), (RESULT_OUT, result_fixtures())]:
+    check_vectors = []
+    event = bytes(range(32))
+    for tag, name in enumerate(["verified", "refuted", "rejected_pending", "unknown"]):
+        check_vectors.append(
+            dict(
+                id=name,
+                tag=tag,
+                event_hash_hex=event.hex(),
+                value_hex=encode([1, tag, event]).hex(),
+            )
+        )
+    for path, fixtures_data in [
+        (OUT, fixtures()),
+        (RESULT_OUT, result_fixtures()),
+        (CHECK_OUT, dict(format="check-result/v1", vectors=check_vectors)),
+    ]:
         data = json.dumps(fixtures_data, ensure_ascii=False, indent=2) + "\n"
         if args.check:
             if path.read_text() != data:

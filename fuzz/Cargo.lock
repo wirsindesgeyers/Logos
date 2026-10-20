@@ -282,7 +282,10 @@ dependencies = [
  "logos-canon",
  "logos-core",
  "logos-crypto",
+ "logos-ground",
  "logos-ledger",
+ "logos-lrat",
+ "logos-model",
  "logos-obligation",
  "rustix",
 ]

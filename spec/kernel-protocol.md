@@ -58,8 +58,8 @@ Proposed.author é a chave do kernel lida do Genesis autenticado. UID é
 autenticado somente na conexão; não é persistido no evento. Não atribuir
 essa assinatura ao agente. Query::Status continua recebendo **h(Event)**,
 nunca h(O); o evento Pending pode ser obtido em Subscribe. Nenhum PROPOSE
-emite Verified, Fact, Policy ou autorização. CERTIFY/REFUTE/WITNESS/ASSUME
-continuam explicitamente indisponíveis.
+emite Verified, Fact, Policy ou autorização. WITNESS/ASSUME continuam
+explicitamente indisponíveis até5.5/5.7.
 
 Subscribe envia [0,Event] por evento e termina com [1,next_seq] ao atingir
 max_events (1..256) ou o prazo da assinatura. O cursor é explícito; nenhum
@@ -109,14 +109,67 @@ nunca limpeza declarada como concluída. Outros tipos são removidos somente pel
 nome capturado privado. Devolução de diretório não consome quota de bytes.
 Erros não produzem claim; captura pode consumir o arquivo, sem retry automático.
 
-Handlers PROPOSE/CERTIFY/REFUTE/WITNESS/ASSUME retornam Unavailable até suas
-etapas donas. Nenhum deles simula sucesso, certificado aceito ou fato atestado.
+Handlers WITNESS/ASSUME retornam Unavailable até suas etapas donas.
+PROPOSE/CERTIFY/REFUTE têm implementação real (5.3/5.4).
 
 ## Processo
 
-`cargo run -p logos-kernel -- SOCKET LEDGER KEYFILE STAGING PRIVATE AGENT_UID`
+`cargo run -p logos-kernel -- SOCKET LEDGER KEYFILE STAGING PRIVATE AGENT_UID [CAKE_BINARY]`
 abre a chave0600 existente, o ledger e os diretórios provisionados pelo operador.
 Ledger vazio recebe Genesis com o hash do executável real; ledger existente é
-reaberto por replay. Query/Subscribe funcionam sem habilitar handlers de mutação.
+reaberto por replay. Antes de servir, o operador provisiona CheckerRegistered
+para os checkers Rust do executável atual (lrat-rup/v1, model/v1) e, se passado,
+o cake-lpr/v1 conhecido. Autoridade local é a chave do kernel. Reinstalar
+nunca reativa um hash revogado. Query/Subscribe continuam somente de leitura.
 O socket existente precisa ser removido pelo operador após encerrar o processo;
 o servidor nunca o substitui automaticamente.
+
+## CERTIFY e REFUTE (5.4/ADR0041)
+
+O registry MUST combinar implementação local conhecida, hash exato e registro
+administrativo ativo autenticado pela chave local. Registro no ledger nunca
+carrega código do CAS. Format desconhecido, checker não registrado/revogado,
+assinatura administrativa inválida ou falha operacional MUST recusar sem Verified.
+Revogação é terminal para o hash nesta etapa; mudança de build Rust requer novo
+registro. A identidade Rust é h(bytes do executável em execução); cake conserva
+hash fixado e revalidação de snapshot por execução. Nenhum caminho vem do cliente.
+
+CertificationHandlers.PROPOSE registra rota Lrat e obrigação-body/v2 com CNF
+rederivada no CAS quando o fragmento permite; General/enumeração opaca mantém
+rota Model. O handler mínimo ProposalHandlers5.3 conserva a rota Model histórica.
+Os appends continuam Proposed+ObligationCreated adjacentes. CERTIFY MUST
+rederivar grounding/CNF dos bytes de O, nunca usar CNF indicada pelo agente.
+
+Recuperação privada de Pending MUST conferir replay autenticado até a cabeça,
+continuidade entre páginas, par adjacente Proposed/ObligationCreated, h(O),
+época atual, proposta/Pending não invalidados e ausência de conclusão posterior.
+Regerar O com snapshot atual e exigir bytes idênticos; citações que perderam
+elegibilidade recusam a operação. UnknownRecorded/CertificateRejected permitem
+nova tentativa; não há política automática de esgotamento. Replay tem teto de
+1 milhão de eventos e erro explícito ao exceder, sem resultado parcial.
+
+CERTIFY admite lrat-rup/v1 (Rust e extração autenticada de used) e cake-lpr/v1
+(Rust ativo para used mais cake ativo). Ambos os resultados exigidos MUST ser
+Accepted antes de Verified. Used vem do fecho/mapa da4.7 e MUST ser subconjunto
+das citações; não copiar todas as citações. DomainSource Fact/Policy ainda opaco
+MUST ser recusado, inclusive na recuperação para REFUTE; nenhum cast o autentica.
+Verified carrega ConsistencyUnknown explícito, sem tentativa; WITNESS fica5.5.
+
+REFUTE usa ModelChecker ativo sobre O/M exatos do CAS. M é publicado também
+como Certificate, preservando separação de domínio e igualdade dos bytes.
+Accepted emite Refuted, nunca Verified. Rejected em qualquer rota emite
+CertificateRejected e preserva Pending. Unknown emite UnknownRecorded com
+Budget/limite, sem autorização. Falha de I/O/identidade/isolamento não recebe
+um outcome lógico inventado. Pré-processamento tem limites próprios de AIR,
+grounding/CNF/CAS; Budget do checker e Budget de used são alocações separadas,
+sem teto de RSS/wall rígido no código interno.
+
+Novo sucesso check-result/v1: `[1,status,h_event]`, status0 Verified,1 Refuted,
+2 CertificateRejected/Pending,3 UnknownRecorded. Retornar só após append
+confirmado. Esses valores não são credenciais nem autorização. Vetores em
+`vectors/kernel-protocol/check-result-v1.json`, conferidos pelo gerador existente.
+
+O auditor independente rederiva a CNF e recheca com Rust/cake. A API
+verify_with_checkers permite identidades Rust explicitamente configuradas pelo
+operador, nunca derivadas automaticamente do ledger/CAS. Nenhum binário CAS
+é executado; a API existente verify_with_cake conserva sua lista restrita.

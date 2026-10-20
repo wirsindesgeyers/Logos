@@ -70,6 +70,9 @@ e MUST NOT ser sintetizados. Índices `claims_checker`, `deps_premise`.
 Uma linha por evento lógico, identificada por **h(Event)**, não h(O), texto ou
 ID da proposta. Proposed→Proposal; ObligationCreated→Pending; Verified→Verified;
 Refuted→Refuted; UnknownRecorded→Unknown; AssumptionDeclared→Assumption.
+CertificateRejected→Pending, não citável; uma rejeição não é refutação.
+UnknownRecorded descreve a tentativa inconclusiva; o handler5.4 permite retry
+privado de Pending enquanto não houver conclusão Verified/Refuted nem invalidação.
 Um evento Verified não transforma o ID do Pending anterior em Verified.
 Fórmula/V embutidos só em Proposed/Assumption; demais armazenam h(O).
 

@@ -721,7 +721,7 @@ fn binding_never_removes_existing_paths_and_rejects_writable_parent() {
 }
 
 #[test]
-fn binary_serves_propose_and_persists_pending_with_its_executable_digest() {
+fn binary_serves_propose_certify_refute_and_persists_its_checker_identity() {
     use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
     struct Process(std::process::Child);
     impl Drop for Process {
@@ -765,7 +765,7 @@ fn binary_serves_propose_and_persists_pending_with_its_executable_digest() {
             break stream;
         }
         assert!(process.0.try_wait().unwrap().is_none());
-        assert!(start.elapsed() < Duration::from_secs(5));
+        assert!(start.elapsed() < Duration::from_secs(15));
         std::thread::sleep(Duration::from_millis(10));
     };
     assert_eq!(
@@ -775,7 +775,7 @@ fn binary_serves_propose_and_persists_pending_with_its_executable_digest() {
     client.write_all(&head_request(17)).unwrap();
     let reply = response(&mut client);
     assert_eq!(values(&reply)[1], Value::Unsigned(17));
-    assert_eq!(values(&values(&reply)[3])[0], Value::Unsigned(0));
+    assert_eq!(values(&values(&reply)[3])[0], Value::Unsigned(2));
     client
         .write_all(
             &encode_frame(&Request {
@@ -803,15 +803,126 @@ fn binary_serves_propose_and_persists_pending_with_its_executable_digest() {
     let ho = logos_crypto::hash_raw::<Obligation>(bytes);
     assert_eq!(h.as_slice(), ho.as_bytes());
     assert_eq!(cas.get(&ho).unwrap().as_deref(), Some(bytes.as_slice()));
+    let ground = logos_ground::ground_for_check(
+        bytes,
+        ho,
+        &vocabulary,
+        Default::default(),
+        Default::default(),
+    )
+    .unwrap();
+    let (cnf, _) = logos_ground::clausify(&ground).unwrap();
+    let (a, b) = cnf
+        .clauses()
+        .iter()
+        .enumerate()
+        .find_map(|(i, c)| {
+            if c.len() != 1 {
+                return None;
+            }
+            cnf.clauses()
+                .iter()
+                .position(|d| d == &[-c[0]])
+                .map(|j| (i + 1, j + 1))
+        })
+        .unwrap();
+    let proof = format!("{} 0 {a} {b} 0\n", cnf.clauses().len() + 1);
+    let certificate = logos_crypto::hash_raw::<Certificate>(proof.as_bytes());
+    let name = "ab".repeat(32);
+    std::fs::write(source.join(&name), proof).unwrap();
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 19,
+                message: Message::Certify {
+                    obligation: ho,
+                    format: Text::new(logos_kernel::registry::LRAT).unwrap(),
+                    certificate: ObjectRef::Staged {
+                        name: Text::new(name).unwrap(),
+                        hash: certificate,
+                    },
+                },
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    let certified = response(&mut client);
+    assert_eq!(values(&certified)[2], Value::Unsigned(1));
+    assert_eq!(values(&values(&certified)[3])[1], Value::Unsigned(0));
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 20,
+                message: Message::Propose(logos_ledger::EventProposal {
+                    text_pt: logos_ledger::TaintedText::new("refutation".into()).unwrap(),
+                    goal: Formula::new(vec![FormulaNode::False], Limits::default()).unwrap(),
+                    cites: vec![],
+                    speculative_on: vec![],
+                    vocabulary: hv,
+                }),
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    let second = response(&mut client);
+    let false_o = Hash::<Obligation>::from_value(&values(&values(&second)[3])[1]).unwrap();
+    let model = logos_model::FiniteModel::new(
+        logos_model::ModelData {
+            vocab: hv,
+            domains: vec![],
+            consts: vec![],
+            funcs: vec![],
+            preds: vec![],
+        },
+        &vocabulary,
+        Default::default(),
+    )
+    .unwrap();
+    let model_bytes = to_canon(&model).unwrap();
+    let model = logos_crypto::hash_raw::<ModelObject>(&model_bytes);
+    let name = "cd".repeat(32);
+    std::fs::write(source.join(&name), model_bytes).unwrap();
+    client
+        .write_all(
+            &encode_frame(&Request {
+                id: 21,
+                message: Message::Refute {
+                    obligation: false_o,
+                    model: ObjectRef::Staged {
+                        name: Text::new(name).unwrap(),
+                        hash: model,
+                    },
+                },
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    let refuted = response(&mut client);
+    assert_eq!(values(&refuted)[2], Value::Unsigned(1));
+    assert_eq!(values(&values(&refuted)[3])[1], Value::Unsigned(1));
     drop(client);
     drop(process);
     let s = signer();
     let ledger = Ledger::open(&ledger_path, &s).unwrap();
     let events = ledger.events_from(0, 256).unwrap();
-    assert_eq!(events.len(), 3);
-    assert!(matches!(events[1].body, EventBody::Proposed { .. }));
+    assert_eq!(events.len(), 9);
+    assert!(matches!(
+        events[1].body,
+        EventBody::CheckerRegistered { .. }
+    ));
+    assert!(matches!(
+        events[2].body,
+        EventBody::CheckerRegistered { .. }
+    ));
+    assert!(matches!(events[3].body, EventBody::Proposed { .. }));
     assert!(
-        matches!(events[2].body, EventBody::ObligationCreated { obligation, .. } if obligation == ho)
+        matches!(events[4].body, EventBody::ObligationCreated { obligation, .. } if obligation == ho)
+    );
+    assert!(
+        matches!(&events[5].body,EventBody::Verified{check,..} if check.obligation==ho && check.certificate==certificate && check.checker==logos_crypto::hash_raw::<logos_ledger::Checker>(&std::fs::read(executable).unwrap()))
+    );
+    assert!(
+        matches!(&events[8].body,EventBody::Refuted{check,model:m} if check.obligation==false_o && *m==model)
     );
     let EventBody::Genesis {
         kernel_binary,

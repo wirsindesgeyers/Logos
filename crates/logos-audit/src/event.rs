@@ -309,6 +309,12 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             let c = check(record, &mut p)?;
             model(c, m, false, &mut p)?;
         }
+        [Value::Unsigned(2), Value::Unsigned(13), record] => {
+            let c = check(record, &mut p)?;
+            if !matches!(c.outcome, CheckOutcome::Rejected(_)) {
+                return Err(fail("CertificateRejected requires Rejected"));
+            }
+        }
         [Value::Unsigned(1), Value::Unsigned(6), record, machine] => {
             let c = check(record, &mut p)?;
             if !matches!(c.outcome, CheckOutcome::Unknown(_)) {
@@ -412,12 +418,12 @@ mod tests {
     }
 
     #[test]
-    fn independently_decodes_all_23_vectors_byte_for_byte() {
+    fn independently_decodes_all_event_vectors_byte_for_byte() {
         let fixture: serde_json::Value =
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 23);
+        assert_eq!(vectors.len(), 24);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

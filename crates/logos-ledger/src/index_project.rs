@@ -72,6 +72,10 @@ pub(crate) fn apply(
             checker = Some(check.checker.as_bytes().as_slice());
             REFUTED
         }
+        EventBody::CertificateRejected { check } => {
+            obligation = Some(check.obligation.as_bytes().as_slice());
+            PENDING
+        }
         EventBody::UnknownRecorded { check, .. } => {
             obligation = Some(check.obligation.as_bytes().as_slice());
             checker = Some(check.checker.as_bytes().as_slice());

@@ -1,0 +1,138 @@
+{
+  "base": "d8f8fcc",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1468.7,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 455,
+    "verify_ok": true,
+    "log_sha256": "0848c50e02862c422073a70e34abcaeae2e0ff65e18583e9ad52d4294cf31000",
+    "input_manifest_sha256": "86c33514ba5afbec069348cc05ce1ea6bea5a9f0af4a931f60bb87bf9d217b97"
+  },
+  "statistics": {
+    "rust_passed": 533,
+    "rust_ignored": 0,
+    "rust_summaries": 101,
+    "python_summaries": [
+      "252 passed in 99.26s (0:01:39)",
+      "25 passed in 1.77s"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=65.89s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=18934 (private SQLite snapshot; cold rebuild_ms=261842)"
+    ],
+    "tar_warnings": [
+      "tar: .: file changed as we read it"
+    ]
+  },
+  "failed_verifications": [
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 246.22,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 455,
+      "verify_ok": false,
+      "log_sha256": "221e24a8ada4ba85d665093cb194bd92a181d2c609507ca156537c4fa9df1d19",
+      "input_manifest_sha256": "220529c947812090ebcaec8b613e8fcc6a8af183005b0224aaa8c98f86e43919"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 286.21,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 455,
+      "verify_ok": false,
+      "log_sha256": "d56611db2bd1294ce20436d5756dc64f9ad1706cad5432c6c841629cec05e809",
+      "input_manifest_sha256": "627034818ec5240eef417d426ff9ea8745b057db7b5c3490d1f1f40422e0ec79"
+    }
+  ],
+  "failed_verification_causes": [
+    "InvalidDomains na fixture de enumeração vazia; corrigida para enumeração unitária válida",
+    "Última sequência do catálogo fixada em22; atualizada para23 com24 vetores"
+  ],
+  "historical_event_vectors_preserved": 23,
+  "new_event_vectors": 1,
+  "new_result_vectors": 4,
+  "fuzz": {
+    "command": [
+      "rtk",
+      "proxy",
+      "env",
+      "FUZZ_TOOLCHAIN=nightly-2026-09-28",
+      "CARGO_NET_OFFLINE=true",
+      "ci/fuzz.sh",
+      "60",
+      "event_decode",
+      "kernel_message"
+    ],
+    "exit": 0,
+    "seconds": 152.79,
+    "targets": {
+      "event_decode": {
+        "completed": true,
+        "runs": [
+          [
+            "148179",
+            "61"
+          ]
+        ],
+        "log_sha256": "2dff17e2081f00f326d046ccfecdec278f954679cdbebc0675a23c76fb144f49"
+      },
+      "kernel_message": {
+        "completed": true,
+        "runs": [
+          [
+            "639796",
+            "61"
+          ]
+        ],
+        "log_sha256": "5368d721a6a7ddbe61611c58d957a66fc636c6244aadaa2cc3d3a15c50e3e4bd"
+      }
+    }
+  },
+  "mutations": {
+    "compiled_and_killed": 10,
+    "positive_controls_passed": 10,
+    "sources_restored": true,
+    "report": "etapa-5.4-mutacoes.json",
+    "runner": "etapa-5.4-mutacoes.py"
+  },
+  "tcb": {
+    "own_rust": 14788,
+    "runtime_dependencies": 747130,
+    "total_correctness": 761918,
+    "build_only": 64508,
+    "kernel": 2238,
+    "ledger": 3819,
+    "new_external_packages": 0
+  },
+  "limitations": [
+    "CI/ARM/noturno ainda não observados para esta etapa",
+    "Fuzz smoke local não demonstra duração noturna",
+    "WITNESS/não-vacuidade permanece na5.5; Verified usa ConsistencyUnknown explícito",
+    "Autorização de ações permanece na8.2",
+    "Recuperação faz replay síncrono limitado a1 milhão de eventos",
+    "Auditor aceita identidades Rust via lista explícita do operador em verify_with_checkers"
+  ]
+}

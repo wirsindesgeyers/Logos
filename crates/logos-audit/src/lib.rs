@@ -13,7 +13,7 @@ use std::path::Path;
 
 use logos_crypto::PublicKey;
 
-pub use verify::{export, verify, verify_with_cake};
+pub use verify::{export, verify, verify_with_cake, verify_with_checkers};
 
 /// Falha de leitura, autenticação, formato ou recheck, nunca veredicto lógico.
 #[derive(Debug)]

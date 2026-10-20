@@ -51,7 +51,13 @@ def build_vectors() -> list[dict[str, Any]]:
     budget = [1, 1000, 1048576, 65536, 500]
     accepted = [obligation, certificate, checker, budget, [1, 0]]
     unknown = [obligation, certificate, checker, budget, [1, 2, [1, 0]]]
-    rejected = [obligation, certificate, checker, budget, [1, 1, [1, "candidato inválido"]]]
+    rejected = [
+        obligation,
+        certificate,
+        checker,
+        budget,
+        [1, 1, [1, "candidato inválido"]],
+    ]
     true = [1, 3, "FOL-ms-eq/v1", [[0]]]
     false = [1, 3, "FOL-ms-eq/v1", [[1]]]
     vectors: list[dict[str, Any]] = []
@@ -129,12 +135,17 @@ def build_vectors() -> list[dict[str, Any]]:
     add("EpochAdvanced-root", [2, 10, 2, "raiz opaca", [b"\x71" * 32], []], 2)
     add("EpochAdvanced-vocab", [2, 10, 3, "vocabulário", [], [vocabulary]], 3)
     add("EpochAdvanced-both", [2, 10, 4, "ambos", [b"\x72" * 32], [vocabulary]], 4)
-    add("EpochAdvanced-max", [2, 10, 2**64 - 1, "limite", [bytes(32)], [bytes(32)]], 2**64 - 1)
+    add(
+        "EpochAdvanced-max",
+        [2, 10, 2**64 - 1, "limite", [bytes(32)], [bytes(32)]],
+        2**64 - 1,
+    )
     add(
         "ObligationCreatedCnf",
         [2, 3, obligation, 1, b"\x8b" * 32, [b"\x8c" * 32, 1]],
         epoch=(1 << 64) - 1,
     )
+    add("CertificateRejected", [2, 13, rejected], epoch=(1 << 64) - 1)
     return vectors
 
 
@@ -145,7 +156,12 @@ def main() -> None:
     vectors = build_vectors()
     rendered = (
         json.dumps(
-            {"format": "event/v1+epoch-body/v2", "vectors": vectors}, ensure_ascii=False, indent=2
+            {
+                "format": "event/v1+epoch-body/v2+certificate-rejected-body/v2",
+                "vectors": vectors,
+            },
+            ensure_ascii=False,
+            indent=2,
         )
         + "\n"
     )

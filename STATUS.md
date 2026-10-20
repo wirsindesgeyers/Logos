@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-19 · Três P2 corrigidos localmente sobrec647418 (ADR0040): prazos, staging e projeção viva autenticada. Treze regressões novas/17 mutações detectadas; full verify/selftest VERIFY_OK/exit0 em2006,93s;430 entradas com hashes inalterados. Próximo:5.4; CI/ARM pendentes. Commit de todos os arquivos e push autorizados pelo mantenedor; nova verificação completa passou em1384,84s.
+> Última atualização: 2026-10-19 · Etapa5.4 concluída localmente (ADR0041): CERTIFY/REFUTE, registry ativo/revogado e recuperação privada de Pending. Onze integrações novas, dez mutações com controles positivos, fuzz oficial e full verify/selftest VERIFY_OK/exit0 em1468.7s. CI/ARM/noturno pendentes; próximo5.5.
 
 ## Resumo
 
@@ -16,8 +16,8 @@ reais). PROPOSE5.3 gera O com snapshot autenticado, publica no CAS e persiste
 Pending; verificação completa anterior passou. A revisão de19/out confirmou
 três P2 no transporte/staging e na abertura de índices por requisição. As
 correções passaram no full verify/selftest (2006,93s, exit0/VERIFY_OK), com
-treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. Certificação, demais handlers e gateway seguem
-pendentes.
+treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. CERTIFY/REFUTE e registry5.4 implementados e verificados localmente; WITNESS,
+demais handlers e gateway seguem pendentes.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -40,9 +40,9 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 14116+747130=761246 LOC de correção, build-only64508;
-logos-core344, logos-ledger3791, logos-obligation572, logos-kernel1594.
-Medição da correção inclui testes em src/; dependências externas inalteradas.
+TCB atual Rust: 14788+747130=761918 LOC de correção, build-only64508;
+logos-core344, logos-ledger3819, logos-obligation572, logos-kernel2238.
+Medição da5.4 inclui testes em src/; dependências externas inalteradas.
 SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -245,9 +245,13 @@ fontes opacas não demonstram autenticação.
 | 5.1 Typestate de claims | ✅ concluída localmente | Claim<S>/SignedEvent<S> selados; seis operações com evento único após append confirmado. Oito testes/1024 transições,12 compile-fail+controle positivo, nove mutações compiladas; full verify/selftest VERIFY_OK/exit0. [Plano](docs/plans/etapa-5.1.md), ADR0034 e spec/state-machine.md. CI desta etapa ainda não observada. |
 | 5.2 Servidor do protocolo | ⚠ concluída localmente após correções; CI/ARM/noturno pendentes | Correções19/out (ADR0040): prazo por evento/escrita/cursor, diretórios devolvidos sem sobrescrever upload novo e Status com projeção viva.13 regressões/17 mutações; novo full verify/selftest VERIFY_OK/exit0 em2006,93s,520 Rust/252 Python/25 TCB; [reproduções](docs/reviews/2026-10-19-kernel.md). Evidências anteriores preservadas: codec/socket/staging/Query/Subscribe reais;14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial:14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Full verify/selftest anterior VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
 | 5.3 PROPOSE e regra de citação | ⚠ concluída localmente após correção do índice; CI/ARM pendentes | Correção19/out (ADR0040): PROPOSE usa projeção viva e sufixos autenticados. Quatro propostas sucessivas passam com cache de disco indisponível; com5mil eventos, propostas após abertura custaram3,32/3,31ms. Novo full verify/selftest VERIFY_OK/exit0 em2006,93s. Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
-| 5.4 CERTIFY e registry de checkers | ⏳ não iniciada | Dependências5.3/2.3/4.4/4.5/4.7/3.2 presentes. Planejar registry ativo/revogado, retomada privada de Pending pelo replay, CertificateRejected e roteamento dos checkers. Sem Alethe/camada2 nem avaliação direta. |
+| 5.4 CERTIFY e registry de checkers | ⚠ concluída localmente; CI pendente | ADR0041; CERTIFY/REFUTE reais, registry por formato/hash e retomada privada de Pending. Onze integrações novas, dez mutações com controles positivos e full verify/selftest VERIFY_OK. |
+| 5.5 Não-vacuidade/WITNESS | ⏳ não iniciada | Dependências5.4/2.3 prontas. Planejar testemunha antes/depois de CERTIFY e persistência imutável; decidir contrato da recusa como premissa de ação antes da8.2. |
 
 ## Pendências de verificação (execução remota)
+
+Etapa5.4: verificação completa local passou; execução remota deste novo
+commit, ARM e duração noturna dos alvos ainda não observadas.
 
 1. **Actions**: ✅ verde na run `39085765358` (`3f902d8`) — todos os jobs passaram,
    incluindo os dois `rust` e o `python`. Os BOs dos primeiros envios ficaram
@@ -481,52 +485,41 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa5.4 — `CERTIFY` e registry de checkers
+## Próximo passo: Etapa5.5 — Não-vacuidade e WITNESS
 
-As correções da revisão19/out estão concluídas localmente:13 regressões,
-17 mutações detectadas e full verify/selftest VERIFY_OK/exit0 em2006,93s.
-ADR0040 fixa projeção viva por writer, sufixos autenticados, prazo de Subscribe
-e devolução segura de diretórios. Nas consultas frequentes, usar
-`Ledger::live_index`; `Ledger::index`/`LedgerIndex::open` são rebuilds explícitos.
-CI/ARM e pendências remotas anteriores continuam abertas; nenhum push.
+5.4 está concluída localmente: CERTIFY/REFUTE, registry por formato/hash,
+CheckerRegistered/CheckerRevoked autenticados, recuperação privada de Pending,
+rederivação de O/CNF e used ligado ao certificado. CertificateRejected/v2
+preserva Pending; Unknown não autoriza. Verified usa ConsistencyUnknown
+explícito. Plano/ADR0041 e recibos versionados em docs/plans/etapa-5.4-*.
 
+Preparar plano da5.5 antes de implementar: depende da5.4 e do
+ModelChecker::check_consistency2.3, ambos presentes. Decidir como aceitar
+WITNESS antes/depois de CERTIFY até um prazo e registrar a testemunha sem
+reescrever eventos assinados. Vincular bytes/h(O)/h(M), proposta, época e
+checker ativo; erro/rejeição/limite nunca inventam testemunha.
 
-A5.3 está concluída localmente sobre6374755: PROPOSE usa o snapshot autenticado,
-generate e CAS, registra Proposed+ObligationCreated e retorna propose-result/v1.
-Oito testes novos/50 recusas P1/STATE14, executável real,14 mutações e fuzz
-passaram; full verify/selftest VERIFY_OK/exit0 em1568.40s. Logs/evidências no
-plano5.3 e no resumo versionado. CI/ARM e pendências anteriores seguem sem
-observação remota; nenhum push nesta sessão.
+Decisão em plano/ADR: evento/representação de atualização de consistência e
+seu tratamento no índice/auditor; formato novo exige bump/vetores/fuzz.
+Preservar recuperação selada de Claim e explicitar ausência de tentativa.
+Teste principal: Γ={P,¬P} admite prova mas nenhum modelo; permanece
+ConsistencyUnknown. O critério de recusa como premissa de ação precisa ser
+delimitado: gateway/autorização8.2 ainda não existem; não fingir essa
+integração nem antecipar Fase8 sem decisão de contrato no roadmap/ADR.
+FOL aberta continua fora do escopo (14.6).
 
-5.4 recebe prontos:5.3 (O/Pending/CAS reais),2.3 (ModelChecker),4.4/4.5 (Rust
-LRAT+cake_lpr e registry local por hash),4.7 (used ligado ao certificado),
-3.2 (appender) e transporte/staging5.2. Fora do escopo: camada2/Alethe e
-avaliação direta7.3. Preparar plano M antes de implementar.
-
-Entregáveis: CheckerRegistry por formato/hash, ativo/revogado; CERTIFY busca
-os bytes exatos de O/certificado, roteia e usa CheckOutcome de checkers ativos.
-Accepted habilita o caminho de Verified; Rejected registra CertificateRejected
-e preserva Pending, sem virar Refuted; Unknown registra limites sem autorizar.
-REFUTE usa o ModelChecker. Recusar fontes opacas de enumeração ainda sem
-autenticação (ADR0026); nunca promover DomainSource por cast.
-
-Decisões/riscos a resolver no plano/ADR: CertificateRejected não existe no
-catálogo atual e exige formato/spec/vetores; não reutilizar UnknownRecorded.
-Pending tipado vive na sessão interna de PROPOSE: CERTIFY precisa recuperá-lo
-privadamente de replay autenticado, preservando vínculo à proposta/época/h(O)
-e sem abrir construção pública de Claim. Definir ConsistencyUnknown explícito
-sem antecipar WITNESS5.5. Preservar o teste integrado de substituição do
-binário checker da4.5 (ADR0030), incluindo desconhecido/inativo, e P3/P4 +
-fluxo STATE15–16/refutação. Derivar used com as APIs existentes; nenhum aceite
-bruto do agente constitui autorização. Query::Status continua usando h(Event).
+Limites conhecidos5.4: recuperação faz replay síncrono, teto de1 milhão de
+eventos; não é consulta de índice constante. Auditor independente exige lista
+explícita de hashes Rust em verify_with_checkers; nunca executa CAS.
+CI/ARM/noturno e pendências remotas anteriores continuam abertas.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 14116 LOC Rust próprios + 747130
-  de dependências Rust = 761246 (+64508 só de compilação), após as correções;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3791, logos-kernel1594.
-  Acréscimo de543 LOC próprios sobre5.3, incluindo testes em src/; pacotes externos inalterados.
-  Relatório atual target/tcb-kernel-review.json/.md.
+- **Tamanho da TCB de correção (execução):** 14788 LOC Rust próprios + 747130
+  de dependências Rust = 761918 (+64508 só de compilação), após a5.4;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3819, logos-kernel2238.
+  Acréscimo de672 LOC próprios sobre73dc4bb, incluindo testes em src/; pacotes externos inalterados.
+  Resumo atual em docs/plans/etapa-5.4-evidencias.json (TCB).
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -559,9 +552,9 @@ bruto do agente constitui autorização. Query::Status continua usando h(Event).
   oficial (esconderia use-after-free).
 - Typestate5.1: Transitions empresta exclusivamente o writer e não permite
   reutilizar claims em outra sessão. API interna até handlers5.3/5.4;
-  CheckOutcome/Event público não é autorização. O catálogo3.1 não contém
-  CertificateRejected: resolver o contrato do evento ao planejar5.4, sem
-  reinterpretar UnknownRecorded ou promover rejeição a refutação.
+  CheckOutcome/Event público não é autorização. CertificateRejected/v2 foi
+  incorporado na5.4 (ADR0041); nunca reinterpretar UnknownRecorded nem
+  promover rejeição a refutação.
 - No sandbox do Codex, o bwrap falha ao criar socket NETLINK_ROUTE
   (`Operation not permitted`). A verificação completa precisa rodar com
   autorização externa ao sandbox; não remover o isolamento do checker.
@@ -1724,3 +1717,36 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   8b6bd09baa2d033f7d19ae1713449c458c8646a8a05b51f8e11596a1f01a64a3.
   ZIPs íntegros. Push de todos os commits locais para origin/main expressamente
   autorizado; CI remota/ARM continuam pendentes de observação.
+
+- 2026-10-19 — Iniciada5.4 a pedido do mantenedor, sobre d8f8fcc já enviado.
+  Dependências presentes; plano docs/plans/etapa-5.4.md e ADR0041 preparados.
+  Implementação inicial compila; regressões, vetores, fuzz, mutações e full
+  verify da5.4 ainda pendentes. Nenhum critério de conclusão marcado.
+
+- 2026-10-19 — Progresso5.4:11 integrações, processo real PROPOSE/CERTIFY/REFUTE
+  e10 mutações com controles positivos passaram. Fuzz oficial event_decode e
+  kernel_message passou. Primeira verificação completa exit101 em246,22s por
+  fixture InvalidDomains; corrigida e nova execução iniciada, sem fechar critérios.
+
+- 2026-10-19 — Etapa5.4 concluída localmente sobre d8f8fcc (ADR0041).
+  CERTIFY/REFUTE reais e registry por formato/hash; só checker ativo aceita.
+  Pending recuperado por replay autenticado, par adjacente/proposta/época e
+  regeneração contextual; used deriva do fecho ligado a O/CNF/certificado.
+  CertificateRejected/v2/tag13 mantém Pending, UnknownRecorded não autoriza;
+  Verified usa ConsistencyUnknown, sem antecipar WITNESS5.5. PROPOSE do handler
+  completo registra CNF existente; auditor independente recheca com Rust/cake
+  e lista local explícita de hashes Rust. Onze integrações, processo real,
+  vetor novo de evento/quatro resultados, dez mutações compiladas com controles
+  positivos e fontes restaurados. Fuzz oficial148179+639796 execuções/61s por
+  alvo, exit0, logs históricos preservados. Full verify/selftest final:
+  VERIFY_OK/exit0 em1468.7s;455 entradas inalteradas;
+  533 Rust aprovados, 0 ignorados.
+  Duas execuções anteriores falharam por fixtures (domínio vazio e contagem
+  antiga); corrigidas e arquivadas, sem contar como sucesso. Primeira rodada
+  de mutação tinha um caso inválido; refeita com controle positivo por caso.
+  TCB14788+747130=761918, kernel2238/ledger3819, build-only64508, sem pacote
+  externo novo. Recibos em docs/plans/etapa-5.4-*.json; revisão e reprodução
+  no plano. CI/ARM/noturno ainda pendentes; commit após verificação, envio
+  autorizado nesta sessão. Próximo: plano5.5 e decisão de persistência WITNESS.
+  Aviso tar na cópia temporária do selftest registrado no plano/evidências;
+  controles completos passaram e hashes das455 entradas permaneceram constantes.
