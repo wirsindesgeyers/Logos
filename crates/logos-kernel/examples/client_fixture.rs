@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use logos_air::{Formula, FormulaNode, Limits, Vocabulary};
-use logos_canon::to_canon;
+use logos_canon::{from_canon, to_canon};
 use logos_crypto::FileSigner;
 use logos_ground::{clausify, ground_for_check};
 use logos_ledger::Ledger;
@@ -12,8 +12,10 @@ use std::{fs, io::Write, os::unix::fs::OpenOptionsExt, path::Path};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args_os().skip(1).collect();
-    let [root] = args.as_slice() else {
-        return Err("usage: client_fixture DIRECTORY".into());
+    let (root, public_vocabulary) = match args.as_slice() {
+        [root] => (root, None),
+        [root, vocabulary] => (root, Some(vocabulary)),
+        _ => return Err("usage: client_fixture DIRECTORY [PUBLIC_VOCABULARY]".into()),
     };
     let root = Path::new(root);
     // Semente pública de teste fica somente em Rust; Python recebe caminhos/objetos públicos.
@@ -26,9 +28,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     key.write_all("76".repeat(32).as_bytes())?;
     key.sync_all()?;
     let ledger = Ledger::open(&root.join("ledger"), &signer)?;
-    let vocabulary = Vocabulary::new(1, vec![], vec![])?;
+    let vocabulary = match public_vocabulary {
+        Some(path) => from_canon::<Vocabulary>(&fs::read(path)?)?,
+        None => Vocabulary::new(1, vec![], vec![])?,
+    };
     let vbytes = to_canon(&vocabulary)?;
     let hv = ledger.cas().put::<Vocabulary>(&vbytes)?;
+    if public_vocabulary.is_some() {
+        let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
+        println!(
+            "{}",
+            serde_json::json!({"vocabulary": hv.to_hex(), "vocabulary_bytes": hex(&vbytes)})
+        );
+        return Ok(());
+    }
     let goal = Formula::new(vec![FormulaNode::True], Limits::default())?;
     let index = ledger.live_index()?;
     let view = index.snapshot(ledger.cas(), &[], "")?;

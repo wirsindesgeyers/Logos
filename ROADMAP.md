@@ -1807,13 +1807,13 @@ o mesmo componente e os critérios integrais desta etapa para a versão completa
 **Fora do escopo.** camada 2 (adicionada na 14.2).
 
 **Entregáveis.**
-- Serviço que recebe `O` (bytes + hash) e corre em paralelo: camada 0 (Z3 modelos, model finder), camada 1 (grounder **não confiável** espelhado + CaDiCaL → LRAT); depois camada 2 (Fase 14).
+- Serviço que recebe `O` (bytes + hash) e `V` público conferido por `h(V)` (ADR0044), e corre em paralelo: camada 0 (Z3 modelos, model finder), camada 1 (encoder de apoio sem autoridade, compartilhando grounder/CNF via bridge do ADR0032, + CaDiCaL → LRAT); depois camada 2 (Fase 14).
 - Política de portfólio: primeiro a terminar ganha; refutação e prova correm juntas; testemunha de consistência sempre pedida.
 - Cache por `h(O)`.
-- Isolado: sem acesso ao ledger nem a credenciais; só lê `O` e escreve no staging do CAS.
+- Isolado: sem acesso ao ledger nem a credenciais; só recebe `O`/`V` públicos e escreve no staging do CAS (ADR0044).
 
 **Critério de conclusão.**
-- [ ] Em 500 obrigações mistas, p50 de tempo até veredicto reportado; nenhuma resposta do farm é aceita sem checker (verificável no ledger).
+- [x] Em 500 obrigações mistas, p50 de tempo até veredicto reportado; nenhuma resposta do farm é aceita sem checker (verificável no ledger).
 
 ---
 

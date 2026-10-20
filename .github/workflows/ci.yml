@@ -218,6 +218,14 @@ jobs:
         run: ../ci/enable-userns.sh
       - name: Produtor SAT real e três checkers (300 políticas e300 contramodelos)
         run: ../ci/check-sat.sh
+      - name: Farm isolada e500 obrigações no kernel real
+        run: ../ci/check-farm.sh
+      - name: Arquivar evidência da farm
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farm-report
+          path: target/farm-report.json
       - name: Arquivar evidência do produtor SAT
         if: always()
         uses: actions/upload-artifact@v4

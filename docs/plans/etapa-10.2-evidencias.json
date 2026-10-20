@@ -1,0 +1,70 @@
+{
+  "base": "3f3fc79",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 2803.23,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 472,
+    "verify_ok": true,
+    "log_sha256": "99169d500c30a9a347c5f56eb5400e659f0d6bd0b5c46f746dc155d37c6ec267",
+    "input_manifest_sha256": "34842ca0883fc297672f991caed75239345035e3762b373eb389d338f2f83d0a"
+  },
+  "statistics": {
+    "rust_passed": 543,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "283 passed in 145.74s (0:02:25)",
+      "25 passed in 1.55s"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=10000 elapsed=61.08s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=24231 (private SQLite snapshot; cold rebuild_ms=252874)"
+    ],
+    "tar_warnings": []
+  },
+  "targeted_tests": 9,
+  "runtime_only": "FARM_RUNTIME_ONLY_OK (--isolated --no-dev)",
+  "benchmark": {
+    "count": 500,
+    "distinct_obligations": 500,
+    "p50_seconds_to_verdict": 1.2745745069987606,
+    "verified": 250,
+    "refuted": 250,
+    "checker_events_bound": 500,
+    "cache_recheck": true,
+    "corrupted_cache_rejected_then_fallback": true,
+    "witness_searches_requested": 500,
+    "kernel_sha256": "8629523dff274ce02a9e5087b8fd04ed60cf5c4d5c36475984832ebb099a5e93"
+  },
+  "benchmark_report_sha256": "fe8ecce557d4574ead3c02ad34ff1f92a6dcfcbbb6b725234da750d6f11d70f7",
+  "scope": "Farm10.2 de pesquisa completa; MCP5R.1 permanece pendente",
+  "rust_runtime_sources_unchanged": true,
+  "wire_versions_unchanged": true,
+  "rust_runtime_and_tcb_files_compared": 141,
+  "tcb": {
+    "own_rust": 15131,
+    "runtime_dependencies": 747130,
+    "total_correctness": 762261,
+    "build_only": 64508
+  },
+  "fuzz": "Sem novo runtime/parser/formato TCB; nenhum novo fuzz ou mutação TCB necessário/executado.",
+  "limitations": [
+    "CI remota/ARM/noturno não observados",
+    "Corpus proposicional sem premissas: não representa quantificadores/modelos grandes",
+    "p50 local de kernel release; exclui build/startup/PROPOSE",
+    "Farm/cliente fora da TCB; resultados não autenticam assinaturas/credenciais",
+    "Timeout em RPC pode seguir append; sem retry automático",
+    "WITNESS após REFUTE pode ser recusado; diagnóstico explícito",
+    "Limites por processo, sem teto agregado de RSS/disco"
+  ]
+}
