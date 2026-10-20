@@ -32,6 +32,7 @@ Referência conceitual: `LOGOS — Proof-Carrying Agents` (Oct 1, 2026), em [`do
 - [Fase 3 — Ledger assinado](#fase-3--ledger-assinado)
 - [Fase 4 — Camada 1: grounding, CNF e LRAT](#fase-4--camada-1-grounding-cnf-e-lrat)
 - [Fase 5 — Kernel: máquina de estados e protocolo](#fase-5--kernel-máquina-de-estados-e-protocolo)
+- [Fase 5R ∥ — Bancada científica](#fase-5r)
 - [Fase 6 — Atestadores e fatos](#fase-6--atestadores-e-fatos)
 - [Fase 7 — Políticas](#fase-7--políticas)
 - [Fase 8 — Ações: contratos, tokens e gateway](#fase-8--ações-contratos-tokens-e-gateway)
@@ -219,6 +220,7 @@ Vale para **toda** etapa, além do critério específico dela:
 | 3 | Ledger assinado | ambos | ★ Ledger auditável por terceiros | M |
 | 4 | Camada 1: LRAT | operacional | ★ `VERIFIED` com checker verificado | G |
 | 5 | Kernel | ambos | ★ Kernel mínimo (fim da ordem de construção §12.1) | G |
+| 5R ∥ | Bancada científica | pesquisa | Chat de pesquisa com claims e auditoria, sem ações | G |
 | 6 | Atestadores | operacional | Fatos assinados | M |
 | 7 | Políticas | operacional | Políticas com Merkle e trajetórias | G |
 | 8 | Ações e gateway | operacional | ★ Primeiro efeito mediado por prova | G |
@@ -239,6 +241,12 @@ Vale para **toda** etapa, além do critério específico dela:
 | 23 | Produto | — | Binário único, release | G |
 
 Caminho crítico até o primeiro paper: **0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11**, com a 12 em paralelo a partir da 5 e a 13 parcialmente antes da 11 (o mínimo para a avaliação ser crível).
+
+**Trilha científica (ADR0037, aceita em20/out/2026).** Próximo principal5.5;
+depois iniciar5R, antecipando os componentes compartilhados de10.1/10.2,
+9.1 antes de5R.2 e5.7/5.9 antes de5R.3. A trilha não exige concluir a Fase10
+nem o gateway;5.6–5.12 restantes continuam previstas. Isso não altera o
+caminho crítico do paper de segurança acima nem os critérios dessas etapas.
 
 **Horizonte do primeiro ciclo.** As Fases 19–22 ficam fora do horizonte até o fim da Fase 16 (decisão antecipada do último risco do Apêndice E). Não gerar planos de etapa para elas antes disso; os planos de fase podem existir só como esboço.
 
@@ -1062,6 +1070,9 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 
 ### Etapa 5.7 — Assumptions com escopo · `P` · ⚠ TCB
 
+**Trilha5R (ADR0037).** Antecipada antes da5R.3, após5.9 para demonstrar a retratação; manter todos os critérios e limites desta etapa.
+
+
 **Depende de (recebe pronto).** 5.3; 3.1.
 
 **Fora do escopo.** assumptions assinadas pelo usuário (entram depois da 6.5; aqui o autor usuário vem de CLI local); uso em ações (bloqueado na 8.2).
@@ -1095,6 +1106,9 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 ---
 
 ### Etapa 5.9 — Retratação e invalidação em cascata (ATMS) · `M` · ⚠ TCB
+
+**Trilha5R (ADR0037).** Antecipada antes da5.7/5R.3 na trilha científica; manter todos os critérios de cascata e rotas independentes.
+
 
 **Depende de (recebe pronto).** 5.4; 4.7 — `used`; 3.3 — `dependents`.
 
@@ -1156,6 +1170,151 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 **Critério de conclusão.**
 - [ ] Script de demo: vocabulário → fatos de teste (inseridos por um atestador de teste) → 3 propostas → uma `Verified` via LRAT, uma `Refuted` via modelo, uma `Unknown` por timeout → retratação de um fato → cascata → `logos-audit` verifica e recheca tudo.
 - [ ] Toda a demo reproduzível com um comando (`make demo-kernel`).
+
+---
+
+<a id="fase-5r"></a>
+
+## Fase 5R ∥ — Bancada científica (trilha vertical)
+
+Objetivo da fase: um agente de pesquisa conversacional, com lógica formal por baixo e
+saída em linguagem natural, utilizável por alunos e pesquisadores antes da Fase 10
+completa. A fase não substitui o kernel nem as ações: é uma camada não confiável sobre o
+protocolo (5.2), as claims (5.3–5.5) e o ledger (3.x). Pode começar depois da5.5, respeitando as dependências de cada etapa abaixo.
+5.7 e5.9 são antecipadas antes da5R.3; as demais5.6–5.12 continuam no plano.
+A camada5R fica fora da TCB; dependências como9.1/5.7/5.9 mantêm seus contratos
+e suas TCBs. Nenhum critério da Fase10 é encerrado apenas por entregar um subconjunto.
+Histórico de chat não encerra a trilhaMEM; resumos/retrieval não viram premissas.
+
+**Ordem da trilha:** 5.5 → cliente10.1/farm10.2 (perfil de pesquisa) →5R.1;
+9.1 antes de5R.2;5.9 →5.7 antes de5R.3; depois5R.4 →5R.5 →5R.6.
+A ordem5.9 →5.7 permite demonstrar também o critério de retratação da5.7.
+As versões de pesquisa de10.6/10.7 são entregues em5R.4/5R.5 e não dependem
+do loop com ações10.5 nem da autorização9.2. As versões completas conservam
+essas dependências na Fase10. O trabalho é sequenciável com uma pessoa.
+
+### Etapa 5R.1 — Ferramentas MCP de pesquisa · `M`
+
+**Depende de (recebe pronto).** 5.3,5.4,5.5; cliente10.1 e farm10.2 no perfil de pesquisa
+(PROPOSE/CERTIFY/REFUTE/WITNESS/Query/Subscribe; produtores2.4/2.5/4.6).
+Preparar esses componentes antes do MCP; compartilhar o código com a Fase10,
+sem marcar etapas completas antes de demonstrar todos os seus critérios.
+
+**Fora do escopo.** ações, políticas, multiusuário, MCP completo da 10.3.
+
+**Entregáveis.**
+- Servidor MCP de pesquisa com ferramentas: propor claim, checar, buscar contramodelo,
+  consultar ledger, auditar e exportar relatório.
+- Frames canônicos do protocolo; nenhuma ferramenta escreve fato, obrigação ou política.
+- Testes de integração contra o kernel real; auditoria de uma sessão completa.
+
+**Critério de conclusão.**
+- [ ] 10 tarefas de pesquisa executadas só via MCP, com claims e certificados reais.
+- [ ] Nenhuma ferramenta expõe caminho para `Verified` sem checker ativo ou para escrita
+  de fato/política.
+
+### Etapa 5R.2 — Formalizador NL → AIR com confirmação · `M`
+
+**Depende de (recebe pronto).** 5R.1;1.2,1.4;9.1 — renderizador/parser da língua controlada.
+Antecipar9.1 com seu contrato integral, inclusive TCB de fidelidade e revisões,
+antes de exigir confirmação por paráfrase em5R.2.
+
+**Fora do escopo.** aprovação automática de símbolos novos (sempre humana).
+
+**Entregáveis.**
+- Texto em português → proposta AIR no vocabulário vigente; erros de sort-check e
+  contramodelos voltam ao formalizador.
+- Paráfrase determinística (9.1) para confirmação humana; símbolos novos viram pedido de
+  extensão, com status explícito.
+- O formalizador é não confiável: o fluxo de interface exige confirmação antes
+  de submeter a proposta. Esse registro de interação não é assinatura9.2 nem
+  atestado F3/9.3; não apresentar o status lógico como fidelidade confirmada.
+
+**Critério de conclusão.**
+- [ ] Em 100 frases de um domínio piloto, ≥ 80% viram propostas bem tipadas sem
+  intervenção (métrica de progresso).
+- [ ] Nenhum símbolo novo é aprovado sem confirmação humana registrada.
+
+### Etapa 5R.3 — Caderno de claims, hipóteses e evidências · `M`
+
+**Depende de (recebe pronto).** 5R.1;3.3;5.7 (assumptions);5.9 (retratação e cascata).
+São dependências obrigatórias para concluir o caderno e demonstrar a retirada
+de premissas; antecipar5.7/5.9 com seus critérios integrais antes desta etapa.
+
+**Fora do escopo.** `Fact`/atestadores reais (Fase 6); estatística e desenho experimental.
+
+**Entregáveis.**
+- Grafo por projeto: hipóteses, previsões, evidências, assumptions e conclusões, com status
+  e dependências.
+- Evidência externa como nota de proveniência marcada não verificada, ou como
+  assumption explícita pelo mecanismo5.7. `Says(fonte, φ)` é descrição da
+  proveniência, sem semântica nova na TCB; atestações/Fact só entram pelos
+  mecanismos das Fases6/7 quando existirem, nunca por conversão automática.
+- Exportação de relatório e auditoria; retratação atualiza a citabilidade.
+
+**Critério de conclusão.**
+- [ ] 20 hipóteses de um domínio piloto com proveniência completa e nenhuma evidência
+  apresentada como teorema.
+- [ ] Retirar uma premissa invalida exatamente os claims que perderam todas
+  as rotas de sustentação, preservando rotas independentes; a auditoria mostra
+  o corte segundo5.9 e as dependências normativas used, não todas as citações.
+
+### Etapa 5R.4 — Resposta natural com cartões de status · `M`
+
+**Depende de (recebe pronto).** 5R.2,5R.3;9.1. Implementar aqui o perfil de pesquisa
+da10.6, compartilhado com a versão completa; não depender de10.5 nem da
+própria10.6 para começar. Seu critério completo continua na Fase10.
+
+**Fora do escopo.** selo completo (15.1/15.8).
+
+**Entregáveis.**
+- Resposta em blocos `ledger_ref(h)` (renderizados do ledger, com status simples) e
+  `free_text` (LLM, marcado como não verificado).
+- Cartões de claim com status, premissas, contramodelo e lacunas; expansão para auditoria.
+- Nenhuma afirmação não verificada sem marcação.
+
+**Critério de conclusão.**
+- [ ] 50 respostas de teste sem conteúdo não verificado sem marcação.
+- [ ] Cartão fica desatualizado se mudar h(V), fórmula ou versão da paráfrase;
+  exigir nova renderização/consulta. Cartão não é Seal nem atestado F3,
+  e este teste não encerra15.7.
+
+### Etapa 5R.5 — Chat/TUI de pesquisa · `M`
+
+**Depende de (recebe pronto).** 5R.4;3.3. Implementar aqui o perfil de pesquisa da10.7,
+compartilhando componentes; sem depender da10.7 completa,10.5 ou9.2.
+
+**Fora do escopo.** assinatura dentro da TUI; ações.
+
+**Entregáveis.**
+- Chat com histórico, DAG de claims, visualizador de contramodelo, fila de confirmações e
+  auditoria ao vivo.
+- Primeira integração via MCP com OpenCode e afins; TUI mínima em Rust
+  (Ratatui/crossterm), compartilhada com10.7, depois.
+- Nenhuma reformatação de texto que o usuário venha a assinar.
+
+**Critério de conclusão.**
+- [ ] Demo gravada: pergunta científica → claims → veredicto → auditoria, sem editar AIR.
+- [ ] Um roteiro de usuário scriptado completa a tarefa sem editar AIR.
+- [ ] Se houver avaliação com alunos/participantes, protocolo11.8 aprovado
+  antes da coleta; não chamar uma simulação de validação com usuários.
+
+### Etapa 5R.6 — Piloto UEA e avaliação · `G`
+
+**Depende de (recebe pronto).** 5R.1–5R.5; 11.8 apenas se houver participantes humanos.
+
+**Fora do escopo.** paper (Fase 11); estudo com usuários em escala.
+
+**Entregáveis.**
+- 20–30 tarefas de pesquisa de um domínio formalizável, com baseline (agente sem harness).
+- Métricas técnicas: taxa de formalização, erros detectados, tempo até veredicto,
+  tempo de auditoria e reprodutibilidade. Percepção de utilidade somente em
+  estudo com participantes aprovado conforme11.8.
+- Relatório e artefato reproduzível; aprovação de ética se houver humanos.
+
+**Critério de conclusão.**
+- [ ] Resultados com e sem harness, análise estatística e nenhuma conclusão sem marcação.
+- [ ] Um terceiro reproduz o piloto a partir do README.
 
 ---
 
@@ -1558,6 +1717,9 @@ Objetivo da fase: o regime operacional completo da §6. Item 2 da ordem de const
 
 ### Etapa 9.1 — Renderizador determinístico AIR → português · `M` · ⚠ TCB (fidelidade)
 
+**Trilha5R (ADR0037).** Dependência obrigatória da5R.2: antecipar esta etapa com todos os seus critérios e TCB de fidelidade.
+
+
 **Depende de (recebe pronto).** 1.1, 1.2; 1.4 — parser (usado como base do parser da língua controlada).
 
 **Fora do escopo.** outras línguas; elegância de redação.
@@ -1613,9 +1775,13 @@ Objetivo da fase: o regime operacional completo da §6. Item 2 da ordem de const
 
 ## Fase 10 — Harness do agente (LLM, MCP, prover farm)
 
-Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o código desta fase é não confiável: bugs aqui afetam progresso (liveness), nunca correção.
+Objetivo da fase: o harness completo, incluindo ações, com um agente LLM real operando **só** através do kernel. A Fase5R antecipa o perfil de pesquisa sem ações e compartilha seus componentes com esta fase. Todo o código desta fase é não confiável: bugs aqui afetam progresso (liveness), nunca correção.
 
 ### Etapa 10.1 — Cliente do protocolo (`logos_client`) · `P`
+
+**Compartilhamento com5R.** Antecipar o perfil de pesquisa sem ações; manter
+o mesmo componente e os critérios integrais desta etapa para a versão completa.
+
 
 **Depende de (recebe pronto).** 0.3 — canon Python; 5.2 — protocolo; 1.6.
 
@@ -1630,6 +1796,10 @@ Objetivo da fase: um agente LLM real operando **só** através do kernel. Todo o
 ---
 
 ### Etapa 10.2 — Prover farm · `M`
+
+**Compartilhamento com5R.** Antecipar o perfil de pesquisa sem ações; manter
+o mesmo componente e os critérios integrais desta etapa para a versão completa.
+
 
 **Depende de (recebe pronto).** 10.1; 2.4, 2.5, 4.6 — produtores.
 
@@ -1671,6 +1841,10 @@ vira premissa citável sem 6.6/fluxo existente; sem dependência reversa em MEM.
 
 ### Etapa 10.4 — Formalizador (LLM → AIR) · `M`
 
+**Compartilhamento com5R.** Antecipar o perfil de pesquisa sem ações; manter
+o mesmo componente e os critérios integrais desta etapa para a versão completa.
+
+
 **Depende de (recebe pronto).** 10.1; 1.2, 1.4.
 
 **Fora do escopo.** aprovação automática de símbolos novos (sempre humana).
@@ -1708,6 +1882,12 @@ vira premissa citável sem 6.6/fluxo existente; sem dependência reversa em MEM.
 
 ### Etapa 10.6 — Resposta renderizada do ledger (taint) · `M`
 
+**Compartilhamento com5R.** Antecipar o perfil de pesquisa sem ações; manter
+o mesmo componente e os critérios integrais desta etapa para a versão completa.
+O perfil de pesquisa nasce na5R.4, sem dependência de10.5; a versão completa
+continua dependendo de10.5. Não criar dependência circular5R.4↔10.6.
+
+
 **Depende de (recebe pronto).** 10.5; 3.3.
 
 **Fora do escopo.** selo completo (15.8).
@@ -1726,6 +1906,12 @@ vira premissa citável sem 6.6/fluxo existente; sem dependência reversa em MEM.
 ---
 
 ### Etapa 10.7 — TUI · `M`
+
+**Compartilhamento com5R.** Antecipar o perfil de pesquisa sem ações; manter
+o mesmo componente e os critérios integrais desta etapa para a versão completa.
+O perfil de pesquisa nasce na5R.5, sem depender de10.5/9.2; a versão completa
+conserva loop e autorizações. Não criar dependência circular5R.5↔10.7.
+
 
 **Depende de (recebe pronto).** 10.5, 10.6; 9.2 — fila de autorizações; 3.3 — consultas.
 

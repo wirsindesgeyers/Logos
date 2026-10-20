@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-20",
+  "base": "cd41b17",
+  "scope": "Integração documental ADR0037/5R; nenhuma implementação de etapa nova",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1496.5,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 455,
+    "verify_ok": true,
+    "log_sha256": "614c346538ea8b44e7abafd7369779d1710069eb296445d6d6ffb30c1573d2d9",
+    "input_manifest_sha256": "86c33514ba5afbec069348cc05ce1ea6bea5a9f0af4a931f60bb87bf9d217b97"
+  },
+  "documentary_checks": {
+    "original_criteria_preserved": 277,
+    "new_5r_open_criteria": 13,
+    "stages": 6,
+    "diary_append_only": true
+  },
+  "remote_ci": "não consultada; pendente",
+  "warnings": []
+}

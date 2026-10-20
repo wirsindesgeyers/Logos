@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-19 · Etapa5.4 concluída localmente (ADR0041): CERTIFY/REFUTE, registry ativo/revogado e recuperação privada de Pending. Onze integrações novas, dez mutações com controles positivos, fuzz oficial e full verify/selftest VERIFY_OK/exit0 em1468.7s. CI/ARM/noturno pendentes; próximo5.5.
+> Última atualização: 2026-10-20 · ADR0037 aceito e trilha5R incorporada documentalmente ao roadmap; etapas ainda não iniciadas. Próxima implementação:5.5; depois seguir5R com dependências compartilhadas explícitas. Verificação completa documental: VERIFY_OK/exit0 em1496.5s; CI/ARM/noturno pendentes.
 
 ## Resumo
 
@@ -248,7 +248,24 @@ fontes opacas não demonstram autenticação.
 | 5.4 CERTIFY e registry de checkers | ⚠ concluída localmente; CI pendente | ADR0041; CERTIFY/REFUTE reais, registry por formato/hash e retomada privada de Pending. Onze integrações novas, dez mutações com controles positivos e full verify/selftest VERIFY_OK. |
 | 5.5 Não-vacuidade/WITNESS | ⏳ não iniciada | Dependências5.4/2.3 prontas. Planejar testemunha antes/depois de CERTIFY e persistência imutável; decidir contrato da recusa como premissa de ação antes da8.2. |
 
+## Etapas da Fase5R — bancada científica
+
+ADR0037 aceito em20/out. Incorporação documental não é implementação.
+
+| Etapa | Estado | Dependências / próximo trabalho |
+| --- | --- | --- |
+| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5; cliente10.1/farm10.2 no perfil de pesquisa, antes do MCP. |
+| 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
+| 5R.3 Caderno de hipóteses | ⏳ não iniciada | 5R.1;5.9 e5.7 completas, incluindo retirada de premissas. |
+| 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
+| 5R.5 Chat/TUI de pesquisa | ⏳ não iniciada | 5R.4; perfil de pesquisa10.7 entregue aqui, sem ações. |
+| 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
+
 ## Pendências de verificação (execução remota)
+
+Integração documental5R (2026-10-20): verificação completa local passou;
+CI remota do commit documental ainda não consultada. Evidências em
+`docs/plans/integracao-5r-evidencias.json`.
 
 Etapa5.4: verificação completa local passou; execução remota deste novo
 commit, ARM e duração noturna dos alvos ainda não observadas.
@@ -486,6 +503,13 @@ posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
 ## Próximo passo: Etapa5.5 — Não-vacuidade e WITNESS
+
+ADR0037 está aceito e a Fase5R está no ROADMAP. A ordem após5.5 é
+cliente/farm de pesquisa →5R.1;9.1 →5R.2;5.9 →5.7 →5R.3;
+5R.4 →5R.5 →5R.6. As dependências são reais: ainda não estão implementadas.
+Retomar/intercalar as demais5.6–5.12; perfis10.6/10.7 de pesquisa não
+dependem do loop com ações10.5. Critérios completos das etapas originais
+seguem intactos. Ver docs/plans/integracao-5r.md.
 
 5.4 está concluída localmente: CERTIFY/REFUTE, registry por formato/hash,
 CheckerRegistered/CheckerRevoked autenticados, recuperação privada de Pending,
@@ -1750,3 +1774,17 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   autorizado nesta sessão. Próximo: plano5.5 e decisão de persistência WITNESS.
   Aviso tar na cópia temporária do selftest registrado no plano/evidências;
   controles completos passaram e hashes das455 entradas permaneceram constantes.
+
+- 2026-10-20 — A pedido do mantenedor, ADR0037 aceito e Fase5R.1–5R.6
+  incorporada ao ROADMAP; visão científica alinhada. Próximo5.5 preservado.
+  Explicitadas dependências cliente/farm,9.1 antes da5R.2 e5.9/5.7 antes
+  da5R.3; perfis de pesquisa10.6/10.7 sem ciclo com loop de ações. Camada
+  do agente fora da TCB; dependências antecipadas mantêm critérios integrais.
+  Sem runtime/formatos novos nem critérios de implementação marcados.
+  Full verify/selftest documental em curso antes do commit.
+
+- 2026-10-20 — Fechamento documental5R: ci/verify.sh --selftest terminou
+  com VERIFY_OK/exit0 em1496.5s;455 entradas de código/spec sem alteração.
+  Conferência final:277 critérios anteriores preservados e13 novos abertos;
+  seis etapas não iniciadas, Diário apenas acrescido. Recibo no plano.
+  CI remota/ARM/noturno continuam pendentes; próxima implementação5.5.

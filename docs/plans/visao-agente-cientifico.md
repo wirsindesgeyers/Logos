@@ -1,6 +1,6 @@
 # Visão — LOGOS como agente de pesquisa
 
-- Estado: proposta (não normativa até o ADR0037)
+- Estado: visão adotada pelo ADR0037 em2026-10-20; execução e critérios no ROADMAP
 - Data: 2026-10-18
 - Base: 451e1ff
 - Relacionadas: ADR0035, ADR0036, Fases 9, 10 e 15 do `ROADMAP.md`
@@ -148,5 +148,8 @@ Fora do MVP: ações e gateway (Fase 8), políticas (Fase 7), multiusuário, sel
 A proposta é antecipar uma **trilha vertical de pesquisa** depois da 5.5, sem esperar a
 Fase 10 inteira: cliente/MCP, formalizador, caderno de claims, resposta natural e TUI
 mínima. As etapas 5.6–5.12 e as Fases 6–9 continuam necessárias para o kernel completo e
-para ações; a trilha de pesquisa não as substitui. O ADR0037 registra a decisão e o diff
-proposto no `ROADMAP.md`.
+para ações; a trilha de pesquisa não as substitui. O ADR0037 registra a decisão aceita e a Fase5R está incorporada ao
+`ROADMAP.md`. A ordem completa inclui9.1 antes de5R.2 e5.7/5.9 antes
+de5R.3; os perfis de pesquisa10.6/10.7 não dependem do loop com ações10.5.
+As etapas5R ainda não foram implementadas. Notas de evidência/Says não criam
+fatos na TCB; avaliação com participantes depende de11.8.
