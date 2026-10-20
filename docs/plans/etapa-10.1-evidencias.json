@@ -1,0 +1,72 @@
+{
+  "base": "2c22e1e",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1838.8,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 464,
+    "verify_ok": true,
+    "log_sha256": "31ffd73916e47b0c5fb68740190b2a57eb799d9b00c87d2b304b4308d24f2640",
+    "input_manifest_sha256": "2498afa6ac2bd084296fcc3cd7ab9030a1a5b4d48b824c620baa643f6260303f"
+  },
+  "statistics": {
+    "rust_passed": 543,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "274 passed in 150.89s (0:02:30)",
+      "25 passed in 1.39s"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=62.74s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=21906 (private SQLite snapshot; cold rebuild_ms=262263)"
+    ],
+    "tar_warnings": []
+  },
+  "scope": "Cliente10.1 completo para as sete mensagens atuais; ASSUME retorna Unavailable; nenhum novo handler/farm/MCP",
+  "targeted_tests": {
+    "client_vectors_transport_staging": 21,
+    "real_kernel_scenarios": 1,
+    "all_message_tags_covered": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "kernel_startup_fixture_seconds_limit": 120,
+    "initial_failure": "Fixture de startup20s expirou antes de socket pronto; alterado apenas timeout da fixture, reexecução passou em62.90s"
+  },
+  "runtime_only": "CLIENT_RUNTIME_ONLY_OK em uv --isolated --no-dev",
+  "new_python_dependency": "pydantic==2.14.1; uv.lock fixa dependências transitivas",
+  "wire_versions_unchanged": true,
+  "rust_runtime_sources_unchanged": true,
+  "rust_runtime_and_tcb_files_compared": 120,
+  "tcb": {
+    "own_rust": 15131,
+    "runtime_dependencies": 747130,
+    "total_correctness": 762261,
+    "build_only": 64508,
+    "new_external_rust_packages": 0
+  },
+  "fuzz": "Não há fonte/parser/formato novo na TCB; nenhum fuzz novo. Decoders Python não confiáveis cobertos por vetores/adversários.",
+  "limitations": [
+    "CI remota/ARM/noturno deste commit não consultados",
+    "Cliente e observações fora da TCB; não autentica eventos nem cria credenciais",
+    "Uma conexão por operação; sem retry automático/idempotência",
+    "Upload síncrono e limitado; falha após publicação pode deixar órfão",
+    "ASSUME atual retorna Unavailable; sucesso futuro precisa de contrato",
+    "Farm10.2/MCP5R.1 continuam não implementados"
+  ]
+}

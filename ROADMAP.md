@@ -1792,7 +1792,7 @@ o mesmo componente e os critérios integrais desta etapa para a versão completa
 - Cliente Python async do socket do kernel, com encoder canônico (Etapa 0.3), tipos `pydantic` para mensagens, upload ao staging do CAS.
 
 **Critério de conclusão.**
-- [ ] Testes de integração contra o kernel real cobrindo todas as mensagens.
+- [x] Testes de integração contra o kernel real cobrindo todas as sete mensagens v1 (ASSUME retorna Unavailable nesta versão; ADR0043).
 
 ---
 

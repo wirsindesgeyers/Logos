@@ -58,8 +58,8 @@ Proposed.author é a chave do kernel lida do Genesis autenticado. UID é
 autenticado somente na conexão; não é persistido no evento. Não atribuir
 essa assinatura ao agente. Query::Status continua recebendo **h(Event)**,
 nunca h(O); o evento Pending pode ser obtido em Subscribe. Nenhum PROPOSE
-emite Verified, Fact, Policy ou autorização. WITNESS/ASSUME continuam
-explicitamente indisponíveis até5.5/5.7.
+emite Verified, Fact, Policy ou autorização. WITNESS está disponível na5.5;
+ASSUME continua explicitamente indisponível até5.7.
 
 Subscribe envia [0,Event] por evento e termina com [1,next_seq] ao atingir
 max_events (1..256) ou o prazo da assinatura. O cursor é explícito; nenhum
@@ -109,8 +109,8 @@ nunca limpeza declarada como concluída. Outros tipos são removidos somente pel
 nome capturado privado. Devolução de diretório não consome quota de bytes.
 Erros não produzem claim; captura pode consumir o arquivo, sem retry automático.
 
-Handlers WITNESS/ASSUME retornam Unavailable até suas etapas donas.
-PROPOSE/CERTIFY/REFUTE têm implementação real (5.3/5.4).
+ASSUME retorna Unavailable até5.7.
+PROPOSE/CERTIFY/REFUTE/WITNESS têm implementação real (5.3–5.5).
 
 ## Processo
 
@@ -153,7 +153,8 @@ CERTIFY admite lrat-rup/v1 (Rust e extração autenticada de used) e cake-lpr/v1
 Accepted antes de Verified. Used vem do fecho/mapa da4.7 e MUST ser subconjunto
 das citações; não copiar todas as citações. DomainSource Fact/Policy ainda opaco
 MUST ser recusado, inclusive na recuperação para REFUTE; nenhum cast o autentica.
-Verified carrega ConsistencyUnknown explícito, sem tentativa; WITNESS fica5.5.
+Na5.4 Verified usa ConsistencyUnknown sem tentativa; a5.5 incorpora testemunha
+ou tentativa de consistência conforme a seção WITNESS abaixo.
 
 REFUTE usa ModelChecker ativo sobre O/M exatos do CAS. M é publicado também
 como Certificate, preservando separação de domínio e igualdade dos bytes.
@@ -185,3 +186,5 @@ Prazo lógico inclusivo1024 eventos desde Pending; ver events.md/ADR0042.
 
 WITNESS seleciona a instância mais recente de h(O). Consultar a referência
 Verified anterior continua possível e não herda anexos da nova proposta.
+
+Cliente Python10.1: [contrato e exemplos](python-client.md), fora da TCB.

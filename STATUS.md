@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização:2026-10-20 · Etapa5.5 concluída localmente (ADR0042): WITNESS antes/depois do CERTIFY, consistência anexa e consulta de uso. Full verify/selftest VERIFY_OK/exit0 em1845.75s;10 mutações e fuzz oficial passaram. CI/ARM/noturno pendentes. Próximo:10.1 no perfil de pesquisa da5R.
+> Última atualização:2026-10-20 · Etapa10.1 concluída localmente (ADR0043): cliente async, modelos Pydantic, staging e sete mensagens no kernel real. Full verify/selftest VERIFY_OK/exit0 em1838.8s. TCB Rust inalterada; CI/ARM/noturno pendentes. Próximo:10.2 (prover farm de pesquisa).
 
 ## Resumo
 
@@ -18,6 +18,9 @@ três P2 no transporte/staging e na abertura de índices por requisição. As
 correções passaram no full verify/selftest (2006,93s, exit0/VERIFY_OK), com
 treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. CERTIFY/REFUTE e registry5.4 implementados e verificados localmente; WITNESS5.5 também implementado e verificado localmente;
 demais handlers e gateway seguem pendentes.
+Cliente10.1 async do protocolo, modelos Pydantic e staging implementados fora
+da TCB; sete mensagens v1 testadas no executável real (ASSUME Unavailable).
+Full verify/selftest passou; farm10.2 e MCP5R.1 continuam pendentes.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -248,13 +251,20 @@ fontes opacas não demonstram autenticação.
 | 5.4 CERTIFY e registry de checkers | ⚠ concluída localmente; CI pendente | ADR0041; CERTIFY/REFUTE reais, registry por formato/hash e retomada privada de Pending. Onze integrações novas, dez mutações com controles positivos e full verify/selftest VERIFY_OK. |
 | 5.5 Não-vacuidade/WITNESS | ⚠ concluída localmente; CI pendente | ADR0042; WITNESS real, antes/depois, prazo lógico, replay e consulta de uso. Γ inconsistente prova False mas não autoriza ação;10 mutações, fuzz e full verify/selftest passaram. |
 
+## Etapas compartilhadas com a Fase10
+
+| Etapa | Estado | Evidência / próximo trabalho |
+| --- | --- | --- |
+| 10.1 Cliente do protocolo | ⚠ concluída localmente; CI pendente | ADR0043; sete mensagens v1 no kernel real,21 testes adversários/vetores/staging, ambiente sem dev e full verify/selftest passaram. Cliente fora da TCB; ASSUME Unavailable. |
+| 10.2 Prover farm de pesquisa | ⏳ não iniciada | Cliente10.1 e produtores2.4/2.5/4.6 prontos; preparar plano/cache/isolamento/portfólio e entrada pública de V. |
+
 ## Etapas da Fase5R — bancada científica
 
 ADR0037 aceito em20/out. Incorporação documental não é implementação.
 
 | Etapa | Estado | Dependências / próximo trabalho |
 | --- | --- | --- |
-| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5 pronta; cliente10.1/farm10.2 no perfil de pesquisa, antes do MCP. |
+| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5 e cliente10.1 prontos; farm10.2 de pesquisa antes do MCP. |
 | 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
 | 5R.3 Caderno de hipóteses | ⏳ não iniciada | 5R.1;5.9 e5.7 completas, incluindo retirada de premissas. |
 | 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
@@ -262,6 +272,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
 
 ## Pendências de verificação (execução remota)
+
+Etapa10.1: verificação completa local passou; CI remota do commit ainda não
+consultada. Evidências em docs/plans/etapa-10.1-evidencias.json.
 
 Etapa5.5: full verify/selftest local passou; CI remota/ARM/noturno deste
 novo commit ainda não consultados. Evidências em docs/plans/etapa-5.5-evidencias.json.
@@ -505,30 +518,36 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa10.1 — cliente do protocolo, perfil de pesquisa5R
+## Próximo passo: Etapa10.2 — prover farm de pesquisa
 
-5.5 está concluída localmente. Seguir a trilha aprovada no ADR0037:
-cliente10.1 → farm10.2 no perfil de pesquisa → MCP5R.1. Demais5.6–5.12
-continuam planejadas, intercaláveis; não marcar5R.1 pronta sem cliente/farm.
+10.1 está concluída localmente: cliente async não confiável com modelos
+estritos, staging e sete mensagens v1 testadas no executável real. ASSUME
+permanece Unavailable no kernel; o cliente não implementa5.7. Contrato/API em
+spec/python-client.md; ADR0043 e recibos no plano10.1.
 
-Preparar plano do perfil10.1, usando canon Python0.3, protocolo5.2 e proposta1.6,
-todos presentes. Cliente async não confiável para socket Unix, tipos de mensagem
-e upload ao staging. Exercitar PROPOSE/CERTIFY/REFUTE/WITNESS/Query/Subscribe
-contra o kernel real; distinguir resultados propose/check/witness e erros.
-ASSUME e handlers futuros continuam indisponíveis; cliente não os implementa
-no kernel. Não fechar a10.1 completa apenas por um subconjunto sem demonstrar
-seu critério integral. Pydantic é entregável planejado; decidir versão no plano.
+Preparar docs/plans/etapa-10.2.md (M) antes de código. Dependências presentes:
+cliente10.1, produtores Z3/finder2.4/2.5 e SAT4.6. Planejar portfólio por O/h(O),
+primeiro resultado utilizável com candidatos rechecados pelo kernel, testemunha
+de consistência sempre pedida, cache por h(O) e500 obrigações mistas/p50.
+Não tratar Unknown/erro/ausência limitada de modelo como prova ou refutação.
+Cache guarda candidatos, nunca credenciais nem aceitação que dispense checker.
 
-Contratos5.5 disponíveis: ConsistencyRecorded/v3/tag14, witness-result/v1,
-consulta efetiva por referência Verified e PremiseUse::Action. Sem testemunha
-não há elegibilidade de ação; consulta não é token/gateway. Prazo lógico1024
-eventos por instância, não relógio; reabertura preserva. Reproposta não apaga
-consistência da referência anterior nem transfere evidência à nova.
+Decisões em aberto (ADR se adotadas): entrada pública de V conferida por h(V)
+(O contém h(V), mas produtores existentes também recebem V); como fornecer esse
+material sem acesso da farm ao ledger/CAS privado/chaves; isolamento dos
+subprocessos, deadline global, cancelamento e chaves/validade do cache.
+Não inventar handler para resolver V nem nova autoridade. Se o contrato exigir
+componente ausente, registrar bloqueio antes de implementar esse componente.
 
-Riscos conhecidos: replay síncrono limitado a1 milhão de eventos; queries de
-consistência rechecadas não são O(1). Cliente/Python nunca guarda chaves ou
-credenciais. Farm/produtores continuam fora da TCB e só retornam candidatos.
-CI/ARM/noturno e pendências remotas anteriores continuam abertas.
+Farm fica fora da TCB e só recebe dados públicos e escreve no staging. Usar
+os produtores existentes; não implementar MCP ou camada2. Após a10.2, seguir
+MCP5R.1. Demais5.6–5.12 permanecem planejadas, intercaláveis.
+
+Riscos conhecidos: replay do kernel síncrono, limitado a1 milhão de eventos;
+benchmark deve separar produção/check e não otimizar TCB fora do escopo.
+Cliente10.1 não autentica assinaturas, não cria tokens e não repete pedidos
+após timeout/EOF; reconciliar ledger antes de repetir mutações. CI remota,
+ARM/noturno e pendências anteriores continuam abertas.
 
 ## Decisões em aberto para o mantenedor
 
@@ -1802,3 +1821,30 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   preservadas; ajustes de prova/timeout da fixture e filtro vazio registrados
   no plano, sem contar como sucesso. CI/ARM/noturno pendentes; próximo10.1
   no perfil de pesquisa5R. Commit/push autorizados nesta sessão após verificação.
+
+- 2026-10-20 — Iniciada10.1 sobre2c22e1e a pedido do mantenedor. Dependências
+  presentes; plano/ADR0043 fixam cliente estrito sem credenciais/retry, todos
+  os requests existentes e ASSUME Unavailable. Pydantic2.14.1 fora da TCB.
+  Nenhum critério encerrado; farm/MCP/handlers futuros fora do escopo.
+
+- 2026-10-20 — Progresso10.1: cliente/modelos/staging implementados,21 testes
+  direcionados e cenário real das sete mensagens passaram; Ruff/mypy/Clippy
+  e CLIENT_RUNTIME_ONLY_OK sem dev também. Full verify/selftest em curso,
+  logs/recibo em target/verify-10.1.*; não contar como concluído antes de
+  VERIFY_OK/exit0. TCB medida inalterada15131+747130=762261. Sem commit/push.
+
+- 2026-10-20 — Etapa10.1 concluída localmente sobre2c22e1e (ADR0043).
+  Cliente async Unix por operação, framing canônico/ID/deadline, modelos
+  Pydantic2.14.1 e upload limitado por diretório ancorado sem sobrescrever.
+  Subscribe preserva cursor só de eventos completos, terminal explícito e
+  cancelamento sem retry. Eventos/resultados não são credenciais/assinaturas
+  autenticadas. Sete mensagens exercitadas no executável real: incluindo
+  CERTIFY/WITNESS/REFUTE aceitos pelos checkers e ASSUME Unavailable.
+  Vinte e dois testes novos, CLIENT_RUNTIME_ONLY_OK sem dev; primeira fixture
+  de startup20s expirou, corrigida para120s sem alterar kernel e reexecução
+  passou. Full ci/verify.sh --selftest VERIFY_OK/exit0 em1838.8s;
+  543 Rust/0 ignorados;464 entradas inalteradas. Python: 274 passed in 150.89s (0:02:30), 25 passed in 1.39s.
+  TCB Rust byte a byte inalterada,15131+747130=762261, build-only64508;
+  sem novo fuzz/parser/formato/pacote de TCB. Apenas fixture Rust em examples.
+  Pydantic fora da TCB/uv.lock fixado; recibos no plano. CI remota/ARM/noturno
+  pendentes. Próximo: plano10.2 (farm de pesquisa) antes de MCP5R.1.
