@@ -122,3 +122,13 @@ apenas derivações efetivamente reemitidas; authenticate/export mantêm zero.
 O auditor depende de logos-ground, sem ledger/kernel inclusive em dev.
 Conferir tradução não valida prova LRAT, autoridade ou used; proofs_unchecked
 continua explícito até4.5. Contrato em [cnf.md](cnf.md)/ADR0028.
+
+
+## Anexos de consistência (5.5)
+
+O decoder independente aceita ConsistencyRecorded/v3/tag14 e exige target
+anterior do tipo ObligationCreated ou Verified, mesma época e h(O). Accepted
+recheca os bytes O/M/certificado pelo ModelChecker; Rejected/Unknown não
+contam como testemunha nem como Refuted. O relatório conta verificações de
+consistência aceitas (eventos, não modelos únicos), inclusive anexos tardios.
+O auditor não depende de logos-kernel/logos-ledger nem executa código do CAS.

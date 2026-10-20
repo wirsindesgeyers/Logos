@@ -126,7 +126,7 @@ name = "logos-kernel"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/certify.rs", "src/registry.rs", "src/replay.rs", "src/lib.rs", "src/main.rs", "src/propose.rs", "src/server.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs"]
+files = ["src/certify.rs", "src/registry.rs", "src/replay.rs", "src/lib.rs", "src/main.rs", "src/propose.rs", "src/server.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs", "src/witness.rs"]
 
 [[crate]]
 name = "logos-gateway"

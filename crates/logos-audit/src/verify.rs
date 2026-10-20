@@ -26,6 +26,7 @@ pub(crate) fn walk(
 ) -> Result<Report> {
     let mut report = Report::default();
     let mut epoch = 0;
+    let mut claims = BTreeMap::new();
     source::visit(path, |sql_seq, wire| {
         let p =
             event::parse(wire, key).map_err(|e| fail(format!("event {}: {e}", report.events)))?;
@@ -42,6 +43,14 @@ pub(crate) fn walk(
             }
         } else if p.epoch != epoch {
             return Err(fail("epoch changed without EpochAdvanced"));
+        }
+        if let Some((target, obligation)) = p.consistency_target
+            && claims.get(&target) != Some(&(obligation, p.epoch))
+        {
+            return Err(fail("consistency target obligation/epoch mismatch"));
+        }
+        if let Some(obligation) = p.claim_obligation {
+            claims.insert(p.digest, (obligation, p.epoch));
         }
         visit(&p, wire).map_err(|e| fail(format!("event {}: {e}", p.seq)))?;
         epoch = p.epoch;

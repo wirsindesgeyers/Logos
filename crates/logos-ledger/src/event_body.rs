@@ -162,7 +162,7 @@ pub enum Consistency {
     },
 }
 
-/// Catálogo normativo dos 14 corpos de eventos assinados (`spec/events.md` §3).
+/// Catálogo normativo dos 15 corpos de eventos assinados (`spec/events.md` §3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EventBody {
     /// Evento inicial de ancoragem do ledger.
@@ -230,6 +230,15 @@ pub enum EventBody {
     CertificateRejected {
         /// Checagem com resultado Rejected.
         check: CheckRecord,
+    },
+    /// Tentativa de consistência anexada sem alterar um evento anterior.
+    ConsistencyRecorded {
+        /// Pending ou Verified da instância checada.
+        target: Hash<Event>,
+        /// Resultado de check_consistency; nunca refutação.
+        check: CheckRecord,
+        /// Candidato checado, inclusive quando rejeitado.
+        model: Hash<ModelObject>,
     },
     /// Declaração de pressuposto ou axioma contextual.
     AssumptionDeclared {
@@ -369,6 +378,7 @@ impl EventBody {
             Self::Refuted { .. } => 5,
             Self::UnknownRecorded { .. } => 6,
             Self::CertificateRejected { .. } => 13,
+            Self::ConsistencyRecorded { .. } => 14,
             Self::AssumptionDeclared { .. } => 7,
             Self::Retracted { .. } => 8,
             Self::Invalidated { .. } => 9,
@@ -462,6 +472,7 @@ impl EventBody {
                     ));
                 }
             }
+            Self::ConsistencyRecorded { check, .. } => check.validate()?,
             Self::CertificateRejected { check } => {
                 check.validate()?;
                 if !matches!(check.outcome, CheckOutcome::Rejected(_)) {

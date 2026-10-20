@@ -191,7 +191,7 @@ fn test_all_canonical_vectors_decode_encode_verify() {
         .iter()
         .map(|v| v["body_tag"].as_u64().unwrap())
         .collect();
-    assert_eq!(tags, (0..14).collect());
+    assert_eq!(tags, (0..15).collect());
 }
 
 // -----------------------------------------------------------------------------
@@ -1069,4 +1069,42 @@ fn authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature()
         event.verify(kernel.public_key()).unwrap();
         assert!(event.body.verify_authority(admin.public_key()).is_err());
     }
+}
+
+#[test]
+fn consistency_body_v3_rejects_wrong_version_arity_and_hash_sizes() {
+    let body = EventBody::ConsistencyRecorded {
+        target: Hash::from_bytes([0x33; 32]),
+        check: sample_check_record(CheckOutcome::Accepted),
+        model: Hash::from_bytes([0x44; 32]),
+    };
+    assert_eq!(body.tag(), 14);
+    assert_eq!(body.cas_references().len(), 4);
+    let value = body.to_value().unwrap();
+    assert_eq!(EventBody::from_value(&value).unwrap(), body);
+    let Value::Array(a) = value else {
+        panic!("array")
+    };
+    let fields = a.items();
+    for version in [0, 1, 2, 4, u64::MAX] {
+        let mut bad = fields.to_vec();
+        bad[0] = Value::Unsigned(version);
+        assert!(EventBody::from_value(&Value::Array(Array::new(bad).unwrap())).is_err());
+    }
+    for slot in [2, 4] {
+        for size in [0, 31, 33] {
+            let mut bad = fields.to_vec();
+            bad[slot] = Value::Bytes(vec![0; size]);
+            assert!(EventBody::from_value(&Value::Array(Array::new(bad).unwrap())).is_err());
+        }
+    }
+    for len in 0..fields.len() {
+        assert!(
+            EventBody::from_value(&Value::Array(Array::new(fields[..len].to_vec()).unwrap()))
+                .is_err()
+        );
+    }
+    let mut bad = fields.to_vec();
+    bad.push(Value::Null);
+    assert!(EventBody::from_value(&Value::Array(Array::new(bad).unwrap())).is_err());
 }

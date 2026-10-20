@@ -139,3 +139,12 @@ anti-rollback externo, rechecagem de certificados, janelas de fatos, UI,
 índices de ações ou autorização administrativa. A integração com o kernel usa
 a API viva (Etapas5.2/5.3, ADR0040). Assinatura do registro
 não demonstra que a prova foi checada; auditor independente é a 3.6.
+
+
+## ConsistencyRecorded (5.5)
+
+O corpo v3/tag14 é anexo de evidência, não claim. A projeção mantém as cinco
+tabelas e o schema1: não cria linha claims, citable ou deps para este evento.
+Verified histórico mantém sua consistência original. O kernel consulta replay
+mais recheck para a consistência efetiva e a elegibilidade `PremiseUse::Action`;
+`is_citable` isolado é apenas lógico e não autoriza ação.

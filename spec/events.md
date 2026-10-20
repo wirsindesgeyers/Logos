@@ -1,4 +1,4 @@
-# event/v1 — catálogo, assinaturas e corpos v2
+# event/v1 — catálogo, assinaturas e corpos v2/v3
 
 Normativo para ROADMAP 3.1/3.4/4.3; ADRs 0020/0023/0028. MUST/MUST NOT conforme RFC 2119.
 Consome canon/v1, air/v1, core/v1 e domínios existentes. A extensão de corpo
@@ -187,3 +187,29 @@ prova derivação; o auditor reemite e confere todos os eventos Lrat, recusando
 v1 sem versão em verify. Authenticate/export conservam a distinção entre
 cadeia autenticada e tradução/prova checada. Recheck LRAT continua na4.5.
 Vinte e três vetores:22 anteriores preservados byte a byte e um corpo novo.
+
+## 9. Consistência anexa — consistency-body/v3 (Etapa5.5, ADR0042)
+
+`[3,14,target,CheckRecord,model]` é ConsistencyRecorded. target/model são
+bytes32, com domínios Event/ModelObject. Aridade exata; versões1/2 recusam tag14.
+Todos os resultados são tentativas: só Accepted é testemunha; Rejected não é
+Refuted, Unknown não é ausência de tentativa. CAS exige O/certificado/checker/M;
+certificado tem bytes idênticos ao modelo, domínios distintos.
+
+O kernel liga target ao Pending/Verified da proposta corrente, mesma época/O,
+regenera O e usa check_consistency com checker model/v1 ativo. A tentativa deve
+ser anexada até seq(Pending)+1024 inclusive. Prazo lógico, sem promessa temporal
+em ledger parado; reboot não renova. Testemunha já aceita não expira nessa janela.
+Antes de CERTIFY a consistência é incorporada no Verified; depois a consulta
+efetiva usa o anexo, sem alterar bytes/assinatura do Verified histórico.
+Falha posterior não apaga Witness anterior. Sem tentativa é Unknown{None}.
+
+O índice lógico ignora este corpo: nenhum novo claim/citable/deps. Elegibilidade
+por uso no kernel exige Verified citável e Witness contextual rechecada para
+Action; uso Logical conserva citabilidade comum. A Fase8 deve consumir essa
+consulta, além de seus demais controles. Não há gateway/token nesta etapa.
+Auditor independente confere target anterior/O/época e recheca Accepted.
+
+A consulta de consistência por referência Verified preserva a instância exata,
+mesmo após uma repróposta de mesmo h(O); isso não transfere evidência para a
+nova instância. Requests WITNESS por h(O) dirigem-se à instância mais recente.

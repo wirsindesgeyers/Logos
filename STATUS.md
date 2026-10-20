@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-20 · ADR0037 aceito e trilha5R incorporada documentalmente ao roadmap; etapas ainda não iniciadas. Próxima implementação:5.5; depois seguir5R com dependências compartilhadas explícitas. Verificação completa documental: VERIFY_OK/exit0 em1496.5s; CI/ARM/noturno pendentes.
+> Última atualização:2026-10-20 · Etapa5.5 concluída localmente (ADR0042): WITNESS antes/depois do CERTIFY, consistência anexa e consulta de uso. Full verify/selftest VERIFY_OK/exit0 em1845.75s;10 mutações e fuzz oficial passaram. CI/ARM/noturno pendentes. Próximo:10.1 no perfil de pesquisa da5R.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ reais). PROPOSE5.3 gera O com snapshot autenticado, publica no CAS e persiste
 Pending; verificação completa anterior passou. A revisão de19/out confirmou
 três P2 no transporte/staging e na abertura de índices por requisição. As
 correções passaram no full verify/selftest (2006,93s, exit0/VERIFY_OK), com
-treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. CERTIFY/REFUTE e registry5.4 implementados e verificados localmente; WITNESS,
+treze regressões e17 mutações detectadas; a5.2 voltou a concluída localmente. CERTIFY/REFUTE e registry5.4 implementados e verificados localmente; WITNESS5.5 também implementado e verificado localmente;
 demais handlers e gateway seguem pendentes.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
@@ -40,9 +40,9 @@ Defined é derivado internamente sem revelar dependências; omissão após
 100 entradas é explícita. 20/20 refutações aceitas pelo checker real;
 10 regressões e smoke runtime-only passaram. Full verify/selftest:
 VERIFY_OK, 227 Python + 25 TCB. CI remota ainda não observada.
-TCB atual Rust: 14788+747130=761918 LOC de correção, build-only64508;
-logos-core344, logos-ledger3819, logos-obligation572, logos-kernel2238.
-Medição da5.4 inclui testes em src/; dependências externas inalteradas.
+TCB atual Rust: 15131+747130=762261 LOC de correção, build-only64508;
+logos-core344, logos-ledger3853, logos-obligation572, logos-kernel2547.
+Medição da5.5 inclui testes em src/; dependências externas inalteradas.
 SQLite 3.53.2 bundled acrescenta 176466 LOC C medidos
 separadamente; o contador Rust não inclui esse C (ADR 0021).
 2.6 não alterou formatos/dependências Rust; nenhum kernel/gateway/farm implementado.
@@ -246,7 +246,7 @@ fontes opacas não demonstram autenticação.
 | 5.2 Servidor do protocolo | ⚠ concluída localmente após correções; CI/ARM/noturno pendentes | Correções19/out (ADR0040): prazo por evento/escrita/cursor, diretórios devolvidos sem sobrescrever upload novo e Status com projeção viva.13 regressões/17 mutações; novo full verify/selftest VERIFY_OK/exit0 em2006,93s,520 Rust/252 Python/25 TCB; [reproduções](docs/reviews/2026-10-19-kernel.md). Evidências anteriores preservadas: codec/socket/staging/Query/Subscribe reais;14 vetores positivos/20 negativos e13 mutantes compilados detectados. ADR0035/0036. Seis lotes completos anteriores mais dois de retomada oficial com exit0, excluindo o parcial:14400s pedidos/15457s reportados,96634872 execuções sem crash, pico1331MiB; hashes inalterados. [Resumo versionado](docs/plans/etapa-5.2-fuzz.json). Full verify/selftest anterior VERIFY_OK/exit0 em1760.07s,252 Python+25 TCB; [plano](docs/plans/etapa-5.2.md) §7. |
 | 5.3 PROPOSE e regra de citação | ⚠ concluída localmente após correção do índice; CI/ARM pendentes | Correção19/out (ADR0040): PROPOSE usa projeção viva e sufixos autenticados. Quatro propostas sucessivas passam com cache de disco indisponível; com5mil eventos, propostas após abertura custaram3,32/3,31ms. Novo full verify/selftest VERIFY_OK/exit0 em2006,93s. Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
 | 5.4 CERTIFY e registry de checkers | ⚠ concluída localmente; CI pendente | ADR0041; CERTIFY/REFUTE reais, registry por formato/hash e retomada privada de Pending. Onze integrações novas, dez mutações com controles positivos e full verify/selftest VERIFY_OK. |
-| 5.5 Não-vacuidade/WITNESS | ⏳ não iniciada | Dependências5.4/2.3 prontas. Planejar testemunha antes/depois de CERTIFY e persistência imutável; decidir contrato da recusa como premissa de ação antes da8.2. |
+| 5.5 Não-vacuidade/WITNESS | ⚠ concluída localmente; CI pendente | ADR0042; WITNESS real, antes/depois, prazo lógico, replay e consulta de uso. Γ inconsistente prova False mas não autoriza ação;10 mutações, fuzz e full verify/selftest passaram. |
 
 ## Etapas da Fase5R — bancada científica
 
@@ -254,7 +254,7 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 
 | Etapa | Estado | Dependências / próximo trabalho |
 | --- | --- | --- |
-| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5; cliente10.1/farm10.2 no perfil de pesquisa, antes do MCP. |
+| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5 pronta; cliente10.1/farm10.2 no perfil de pesquisa, antes do MCP. |
 | 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
 | 5R.3 Caderno de hipóteses | ⏳ não iniciada | 5R.1;5.9 e5.7 completas, incluindo retirada de premissas. |
 | 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
@@ -262,6 +262,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
 
 ## Pendências de verificação (execução remota)
+
+Etapa5.5: full verify/selftest local passou; CI remota/ARM/noturno deste
+novo commit ainda não consultados. Evidências em docs/plans/etapa-5.5-evidencias.json.
 
 Integração documental5R (2026-10-20): verificação completa local passou;
 CI remota do commit documental ainda não consultada. Evidências em
@@ -502,48 +505,38 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa5.5 — Não-vacuidade e WITNESS
+## Próximo passo: Etapa10.1 — cliente do protocolo, perfil de pesquisa5R
 
-ADR0037 está aceito e a Fase5R está no ROADMAP. A ordem após5.5 é
-cliente/farm de pesquisa →5R.1;9.1 →5R.2;5.9 →5.7 →5R.3;
-5R.4 →5R.5 →5R.6. As dependências são reais: ainda não estão implementadas.
-Retomar/intercalar as demais5.6–5.12; perfis10.6/10.7 de pesquisa não
-dependem do loop com ações10.5. Critérios completos das etapas originais
-seguem intactos. Ver docs/plans/integracao-5r.md.
+5.5 está concluída localmente. Seguir a trilha aprovada no ADR0037:
+cliente10.1 → farm10.2 no perfil de pesquisa → MCP5R.1. Demais5.6–5.12
+continuam planejadas, intercaláveis; não marcar5R.1 pronta sem cliente/farm.
 
-5.4 está concluída localmente: CERTIFY/REFUTE, registry por formato/hash,
-CheckerRegistered/CheckerRevoked autenticados, recuperação privada de Pending,
-rederivação de O/CNF e used ligado ao certificado. CertificateRejected/v2
-preserva Pending; Unknown não autoriza. Verified usa ConsistencyUnknown
-explícito. Plano/ADR0041 e recibos versionados em docs/plans/etapa-5.4-*.
+Preparar plano do perfil10.1, usando canon Python0.3, protocolo5.2 e proposta1.6,
+todos presentes. Cliente async não confiável para socket Unix, tipos de mensagem
+e upload ao staging. Exercitar PROPOSE/CERTIFY/REFUTE/WITNESS/Query/Subscribe
+contra o kernel real; distinguir resultados propose/check/witness e erros.
+ASSUME e handlers futuros continuam indisponíveis; cliente não os implementa
+no kernel. Não fechar a10.1 completa apenas por um subconjunto sem demonstrar
+seu critério integral. Pydantic é entregável planejado; decidir versão no plano.
 
-Preparar plano da5.5 antes de implementar: depende da5.4 e do
-ModelChecker::check_consistency2.3, ambos presentes. Decidir como aceitar
-WITNESS antes/depois de CERTIFY até um prazo e registrar a testemunha sem
-reescrever eventos assinados. Vincular bytes/h(O)/h(M), proposta, época e
-checker ativo; erro/rejeição/limite nunca inventam testemunha.
+Contratos5.5 disponíveis: ConsistencyRecorded/v3/tag14, witness-result/v1,
+consulta efetiva por referência Verified e PremiseUse::Action. Sem testemunha
+não há elegibilidade de ação; consulta não é token/gateway. Prazo lógico1024
+eventos por instância, não relógio; reabertura preserva. Reproposta não apaga
+consistência da referência anterior nem transfere evidência à nova.
 
-Decisão em plano/ADR: evento/representação de atualização de consistência e
-seu tratamento no índice/auditor; formato novo exige bump/vetores/fuzz.
-Preservar recuperação selada de Claim e explicitar ausência de tentativa.
-Teste principal: Γ={P,¬P} admite prova mas nenhum modelo; permanece
-ConsistencyUnknown. O critério de recusa como premissa de ação precisa ser
-delimitado: gateway/autorização8.2 ainda não existem; não fingir essa
-integração nem antecipar Fase8 sem decisão de contrato no roadmap/ADR.
-FOL aberta continua fora do escopo (14.6).
-
-Limites conhecidos5.4: recuperação faz replay síncrono, teto de1 milhão de
-eventos; não é consulta de índice constante. Auditor independente exige lista
-explícita de hashes Rust em verify_with_checkers; nunca executa CAS.
+Riscos conhecidos: replay síncrono limitado a1 milhão de eventos; queries de
+consistência rechecadas não são O(1). Cliente/Python nunca guarda chaves ou
+credenciais. Farm/produtores continuam fora da TCB e só retornam candidatos.
 CI/ARM/noturno e pendências remotas anteriores continuam abertas.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 14788 LOC Rust próprios + 747130
-  de dependências Rust = 761918 (+64508 só de compilação), após a5.4;
-  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3819, logos-kernel2238.
-  Acréscimo de672 LOC próprios sobre73dc4bb, incluindo testes em src/; pacotes externos inalterados.
-  Resumo atual em docs/plans/etapa-5.4-evidencias.json (TCB).
+- **Tamanho da TCB de correção (execução):** 15131 LOC Rust próprios + 747130
+  de dependências Rust = 762261 (+64508 só de compilação), após a5.5;
+  logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3853, logos-kernel2547.
+  Acréscimo de343 LOC próprios sobre12826f4, incluindo testes em src/; pacotes externos inalterados.
+  Resumo atual em docs/plans/etapa-5.5-evidencias.json (TCB).
   SQLite bundled 3.53.2 soma 176466 LOC C em sqlite3.c, medidos separadamente
   por tokei: o relatório Rust sozinho não representa toda a TCB transitiva.
   Rustix49394 + linux-raw-sys478851 + libc113368 + errno318 acrescentam641931
@@ -1788,3 +1781,24 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   Conferência final:277 critérios anteriores preservados e13 novos abertos;
   seis etapas não iniciadas, Diário apenas acrescido. Recibo no plano.
   CI remota/ARM/noturno continuam pendentes; próxima implementação5.5.
+
+- 2026-10-20 — Iniciada5.5 sobre12826f4: dependências presentes; plano/ADR0042
+  registram evento imutável e prazo lógico1024 eventos. Consulta de uso de
+  premissa demonstrará recusa por não-vacuidade; gateway8.2 continua futuro.
+  Implementação/testes/verificação pendentes, nenhum critério encerrado.
+
+- 2026-10-20 — Etapa5.5 concluída localmente sobre12826f4, ADR0042.
+  WITNESS confere Γ pelo ModelChecker ativo, persiste tentativa v3/tag14 e
+  incorpora antes de CERTIFY ou consulta anexo posterior sem reescrever evento.
+  Janela lógica1024 eventos inclusiva, preservada após reinício; consultas por
+  referência exata mantêm evidência anterior após repróposta. Γ={P,¬P} prova
+  False no LRAT real; ambos modelos rejeitados, ConsistencyUnknown explícito e
+  consulta de ação negativa. Gateway8.2 permanece futuro.
+  Full ci/verify.sh --selftest VERIFY_OK/exit0 em1845.75s,
+  543 Rust/0 ignorados;457 entradas sem alteração. Dez mutações
+  compiladas detectadas com controles; fuzz oficial97591/513712 em61s/alvo,exit0.
+  TCB15131+747130=762261, kernel2547/ledger3853, build-only64508; sem pacote novo.
+  Falha de fixture de contagem e duas interrupções de revisão/formatação
+  preservadas; ajustes de prova/timeout da fixture e filtro vazio registrados
+  no plano, sem contar como sucesso. CI/ARM/noturno pendentes; próximo10.1
+  no perfil de pesquisa5R. Commit/push autorizados nesta sessão após verificação.

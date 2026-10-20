@@ -1,0 +1,37 @@
+{
+  "command": [
+    "rtk",
+    "proxy",
+    "env",
+    "FUZZ_TOOLCHAIN=nightly-2026-09-28",
+    "CARGO_NET_OFFLINE=true",
+    "ci/fuzz.sh",
+    "60",
+    "event_decode",
+    "kernel_message"
+  ],
+  "exit": 0,
+  "seconds": 167.2,
+  "targets": {
+    "event_decode": {
+      "completed": true,
+      "runs": [
+        [
+          "97591",
+          "61"
+        ]
+      ],
+      "log_sha256": "36b19e815eaa0ec9d99be1a21dd5511272f9221eadefcd569eb1f81f493eed60"
+    },
+    "kernel_message": {
+      "completed": true,
+      "runs": [
+        [
+          "513712",
+          "61"
+        ]
+      ],
+      "log_sha256": "d19861726fb0ce25b2501ca9404332f0c7f3dcf43f95b40cdf4d661be2703bd8"
+    }
+  }
+}

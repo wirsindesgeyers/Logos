@@ -342,6 +342,17 @@ impl Canon for EventBody {
                 check.to_value()?,
                 model.to_value()?,
             ]),
+            Self::ConsistencyRecorded {
+                target,
+                check,
+                model,
+            } => array(vec![
+                Value::Unsigned(3),
+                Value::Unsigned(14),
+                target.to_value()?,
+                check.to_value()?,
+                model.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -446,6 +457,22 @@ impl CanonDecode for EventBody {
         let fields = items(value)?;
         if fields.len() < 2 {
             return Err(CanonError::WrongType);
+        }
+        if let [
+            Value::Unsigned(3),
+            Value::Unsigned(14),
+            target,
+            check,
+            model,
+        ] = fields
+        {
+            let body = Self::ConsistencyRecorded {
+                target: digest::<Event>(target)?,
+                check: CheckRecord::from_value(check)?,
+                model: digest::<ModelObject>(model)?,
+            };
+            body.validate().map_err(|_| CanonError::WrongType)?;
+            return Ok(body);
         }
         if fields[0] == Value::Unsigned(2) {
             if let [_, Value::Unsigned(13), check] = fields {

@@ -22,6 +22,8 @@ pub mod state;
 mod transitions;
 mod transport_error;
 pub mod wire;
+#[cfg(target_os = "linux")]
+pub mod witness;
 
 pub use transitions::{Claim, SignedEvent};
 pub use transport_error::TransportError;

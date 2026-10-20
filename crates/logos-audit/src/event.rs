@@ -58,6 +58,8 @@ pub(crate) struct Parsed {
     pub refs: Vec<(&'static str, [u8; 32])>,
     pub rechecks: Vec<Recheck>,
     pub derivation: Option<Derivation>,
+    pub consistency_target: Option<([u8; 32], Hash<Obligation>)>,
+    pub claim_obligation: Option<Hash<Obligation>>,
 }
 
 pub(crate) fn arr(v: &Value) -> Result<&[Value]> {
@@ -191,9 +193,35 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         refs: Vec::new(),
         rechecks: Vec::new(),
         derivation: None,
+        consistency_target: None,
+        claim_obligation: None,
     };
     let b = arr(body)?;
+    if let [
+        Value::Unsigned(1) | Value::Unsigned(2),
+        Value::Unsigned(3),
+        o,
+        ..,
+    ] = b
+    {
+        p.claim_obligation = Some(Hash::from_bytes(digest(o)?));
+    }
+    if let [Value::Unsigned(1), Value::Unsigned(4), c, ..] = b {
+        let [o, ..] = arr(c)? else {
+            return Err(fail("Verified check"));
+        };
+        p.claim_obligation = Some(Hash::from_bytes(digest(o)?));
+    }
     match b {
+        [Value::Unsigned(3), Value::Unsigned(14), target, c, m] => {
+            let c = check(c, &mut p)?;
+            p.consistency_target = Some((digest(target)?, c.obligation));
+            p.refs.push(("model", digest(m)?));
+            if c.outcome == CheckOutcome::Accepted {
+                model(c, m, true, &mut p)?;
+            }
+        }
+
         [
             Value::Unsigned(1),
             Value::Unsigned(0),
@@ -423,7 +451,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 24);
+        assert_eq!(vectors.len(), 27);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

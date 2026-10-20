@@ -125,7 +125,7 @@ impl EventBody {
                     }
                 }
             }
-            Self::Refuted { check, model } => {
+            Self::Refuted { check, model } | Self::ConsistencyRecorded { check, model, .. } => {
                 check_refs(check, &mut result);
                 result.insert(CasReference::Model(*model));
             }

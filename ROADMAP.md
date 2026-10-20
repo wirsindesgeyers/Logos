@@ -1045,10 +1045,11 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 **Entregáveis.**
 - Todo `Verified` carrega `consistency: Witness(h(M0)) | ConsistencyUnknown`.
 - O kernel aceita `Witness{h_O, model}` antes ou depois do `CERTIFY` (até um prazo); sem testemunha → `ConsistencyUnknown` explícito.
-- Flag por uso: claims `ConsistencyUnknown` **não podem** ser premissa de autorização de ação (regra aplicada na Fase 8).
+- Flag por uso: consulta de elegibilidade no kernel recusa claims `ConsistencyUnknown` como premissa de ação. Integração obrigatória do gateway fica na Fase8; não emite token nesta etapa.
+- ADR0042: ConsistencyRecorded/v3/tag14 anexa tentativa ao Pending/Verified; janela lógica inclusiva de1024 eventos desde Pending, preservada no reinício. Testemunha aceita antes de CERTIFY é incorporada; depois, consulta efetiva sem reescrever assinatura.
 
 **Critério de conclusão.**
-- [ ] Teste: `Γ = {P, ¬P}` prova qualquer coisa; o `Verified` resultante fica `ConsistencyUnknown` (nenhum modelo existe) e é recusado como premissa de ação.
+- [x] Teste: `Γ = {P, ¬P}` prova qualquer coisa; o `Verified` resultante fica `ConsistencyUnknown` (nenhum modelo existe) e é recusado como premissa de ação pela consulta de uso do kernel; integração com gateway será demonstrada na8.2.
 
 ---
 
@@ -1583,7 +1584,7 @@ Objetivo da fase: o regime operacional completo da §6. Item 2 da ordem de const
 **Entregáveis.**
 - Mensagem `ActionIntent { tool, args_bytes, cites: [ref], justification_hint? }` — **sem** campo de descrição que entre na lógica.
 - Kernel: `a := alpha(tool, args)` (P6); busca `Pol_v` vigente; pede aos atestadores os fatos de pré-condição **agora** (ou aceita fatos citados recentes dentro da janela); monta `O := canon(Pol_v ∪ Obs ∪ Auth ∪ cites ⊢ Allowed(a))`.
-- Regras extras de citação para ações: nenhuma premissa `Pending`, especulativa, `ConsistencyUnknown`, `Suspended` ou assumption do agente (P5).
+- Regras extras de citação para ações: nenhuma premissa `Pending`, especulativa, `ConsistencyUnknown`, `Suspended` ou assumption do agente (P5). Consumir a consulta de elegibilidade por uso da5.5 e demonstrar aqui a recusa integrada de Γ inconsistente (ADR0042).
 
 **Critério de conclusão.**
 - [ ] **Invariante P6**: teste em que o agente descreve "limpar registros antigos" mas os args são `db.drop{orders}` → a obrigação é sobre `Drop(Db(orders))`.
@@ -2955,6 +2956,7 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | `Verified` | 3.1 | `h(O)`, `h(cert)`, `h(checker)`, `cited`, `used`, consistência, budget | kernel |
 | `Refuted` | 3.1 | `h(O)`, `h(M)` | kernel |
 | `CertificateRejected` | 5.4 | `h(O)`, `h(cert)`, motivo | kernel |
+| `ConsistencyRecorded` | 5.5 | target Pending/Verified, CheckRecord, h(M), corpo v3/tag14 | kernel |
 | `UnknownRecorded` | 3.1 | `h(O)`, limites, máquina | kernel |
 | `AssumptionDeclared` | 3.1 | fórmula, escopo, autor | agente / usuário |
 | `Retracted` | 3.1 | ref, motivo, assinatura da autoridade | emissor / admin |

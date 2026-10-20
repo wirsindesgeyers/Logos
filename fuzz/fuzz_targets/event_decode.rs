@@ -1,4 +1,4 @@
-//! event/v1 + corpos v2: preservar bytes canônicos e invariantes.
+//! event/v1 + corpos v2/v3: preservar bytes canônicos e invariantes.
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
@@ -35,6 +35,12 @@ fuzz_target!(|data: &[u8]| {
         // Seeds de envelope também exercitam o decoder isolado do corpo v2.
         roundtrip::<EventBody>(&to_canon(&event.body).expect("body encodes"));
         let refs = event.body.cas_references();
+        if let EventBody::ConsistencyRecorded { check, model, .. } = &event.body {
+            assert_eq!(event.body.tag(), 14);
+            assert!(refs.contains(&logos_ledger::CasReference::Model(*model)));
+            assert!(refs.contains(&logos_ledger::CasReference::Obligation(check.obligation)));
+            assert!(refs.contains(&logos_ledger::CasReference::Certificate(check.certificate)));
+        }
         if let EventBody::CertificateRejected { check } = &event.body {
             assert!(matches!(check.outcome, logos_core::CheckOutcome::Rejected(_)));
             assert_eq!(refs.len(), 3);

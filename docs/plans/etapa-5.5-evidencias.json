@@ -1,0 +1,151 @@
+{
+  "base": "12826f4",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 1845.75,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 457,
+    "verify_ok": true,
+    "log_sha256": "61943bbf2daa63d973b87513c258db882fcfa67e9c07da737918e2527cc387d3",
+    "input_manifest_sha256": "cf6c7985756f92bf673c60147fafe8c6daf60b4bd144045cb3673b7f9ff96db3"
+  },
+  "statistics": {
+    "rust_passed": 543,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "252 passed in 92.75s (0:01:32)",
+      "25 passed in 1.37s"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=10000 elapsed=63.18s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=15849 (private SQLite snapshot; cold rebuild_ms=262540)"
+    ],
+    "tar_warnings": []
+  },
+  "earlier_verifications": [
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 41.23,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 457,
+      "verify_ok": false,
+      "log_sha256": "3dade0ab74ed2fc895f02db679485ebbccffb934237e1bb5a198fabb0e3da6b1",
+      "input_manifest_sha256": "f3b69b5713626388d3ea458e6326d3771cd329644b8b7e8f2875bdb13da20814"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": -15,
+      "seconds": 245.18,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 457,
+      "verify_ok": false,
+      "log_sha256": "bce37a69dd1f68b7023d682ad8dcb45fcd2251e88979751d3f5b1ea8d178ec47",
+      "input_manifest_sha256": "e48c1d4969f27a4be5be5522ef2fdf08f2fa0d1f74a74f1fc9b97659e4bf944b"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": -15,
+      "seconds": 36.29,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 457,
+      "verify_ok": false,
+      "log_sha256": "254e58c20cea9e4835cc67899ec87923bfa1999bdb58d0f17f6d9a181b1a8b2a",
+      "input_manifest_sha256": "eeda69887cbb747df17ed13d8adc7d84cf1097f676df1cb957c97e944ffe8c9a"
+    }
+  ],
+  "earlier_results": [
+    "Falha por contagem antiga de vetores na fixture do auditor; corrigida e também atualizada a sequência final na fixture do ledger.",
+    "Interrompida para corrigir a seleção de instância por referência exata; regressão e mutação específica demonstradas.",
+    "Interrompida cedo para aplicar Ruff format no gerador de vetores Python."
+  ],
+  "historical_event_vectors_preserved": 24,
+  "new_event_vectors": 3,
+  "new_witness_result_vectors": 3,
+  "mutations": {
+    "compiled_and_killed": 10,
+    "positive_controls_passed": 10,
+    "sources_restored": true,
+    "report": "etapa-5.5-mutacoes.json",
+    "runner": "etapa-5.5-mutacoes.py"
+  },
+  "fuzz": {
+    "command": [
+      "rtk",
+      "proxy",
+      "env",
+      "FUZZ_TOOLCHAIN=nightly-2026-09-28",
+      "CARGO_NET_OFFLINE=true",
+      "ci/fuzz.sh",
+      "60",
+      "event_decode",
+      "kernel_message"
+    ],
+    "exit": 0,
+    "seconds": 167.2,
+    "targets": {
+      "event_decode": {
+        "completed": true,
+        "runs": [
+          [
+            "97591",
+            "61"
+          ]
+        ],
+        "log_sha256": "36b19e815eaa0ec9d99be1a21dd5511272f9221eadefcd569eb1f81f493eed60"
+      },
+      "kernel_message": {
+        "completed": true,
+        "runs": [
+          [
+            "513712",
+            "61"
+          ]
+        ],
+        "log_sha256": "d19861726fb0ce25b2501ca9404332f0c7f3dcf43f95b40cdf4d661be2703bd8"
+      }
+    }
+  },
+  "tcb": {
+    "own_rust": 15131,
+    "runtime_dependencies": 747130,
+    "total_correctness": 762261,
+    "build_only": 64508,
+    "kernel": 2547,
+    "ledger": 3853,
+    "new_external_packages": 0
+  },
+  "limitations": [
+    "CI/ARM/noturno não observados para este commit",
+    "Fuzz smoke local não demonstra duração noturna",
+    "Prazo lógico de1024 eventos não é relógio de parede; reinício não renova",
+    "Replay síncrono limitado a1 milhão de eventos; consulta não é O(1)",
+    "Gateway8.2 ainda não implementado; consulta de uso não é token/autorização",
+    "FOL aberta permanece fora do escopo"
+  ]
+}

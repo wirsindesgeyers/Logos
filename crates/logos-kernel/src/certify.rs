@@ -5,7 +5,7 @@ use logos_canon::{Array, Canon, Text, Value, to_canon};
 use logos_core::{Budget, CheckOutcome};
 use logos_crypto::{Hash, Signer, hash_raw};
 use logos_ground::{GroundError, GroundLimits, clausify, ground_for_check};
-use logos_ledger::{Certificate, CheckRecord, Consistency, EventProposal, Ledger, ModelObject};
+use logos_ledger::{Certificate, CheckRecord, EventProposal, Ledger, ModelObject};
 use logos_lrat::{LratChecker, UsedError, used_premises};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, PremiseRef, Proposal, generate};
@@ -19,8 +19,8 @@ use crate::{
 
 /// Configuração confiada ao operador, nunca campos do protocolo.
 pub struct CertificationHandlers {
-    registry: CheckerRegistry,
-    budget: Budget,
+    pub(crate) registry: CheckerRegistry,
+    pub(crate) budget: Budget,
 }
 
 impl CertificationHandlers {
@@ -46,16 +46,12 @@ impl CertificationHandlers {
                     let mut cited = proposal.cites;
                     cited.sort_unstable();
                     cited.dedup();
+                    let consistency =
+                        self.pending_consistency(transitions.ledger(), check.obligation)?;
                     (
                         0,
                         transitions
-                            .accept(
-                                claim,
-                                check,
-                                cited,
-                                used,
-                                Consistency::Unknown { check: None },
-                            )?
+                            .accept(claim, check, cited, used, consistency)?
                             .receipt()
                             .hash(),
                     )
@@ -74,7 +70,7 @@ impl CertificationHandlers {
     }
 }
 
-fn check_result(tag: u64, event: Hash<logos_ledger::Event>) -> Result<Value, Error> {
+pub(crate) fn check_result(tag: u64, event: Hash<logos_ledger::Event>) -> Result<Value, Error> {
     Ok(Value::Array(Array::new(vec![
         Value::Unsigned(1),
         Value::Unsigned(tag),
@@ -82,7 +78,7 @@ fn check_result(tag: u64, event: Hash<logos_ledger::Event>) -> Result<Value, Err
     ])?))
 }
 
-fn context<S: Signer>(
+pub(crate) fn context<S: Signer>(
     ledger: &Ledger<'_, S>,
     obligation: Hash<Obligation>,
     proposal: &EventProposal,
@@ -228,6 +224,16 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
             }
         }
         self.finish(&mut transitions, claim, check, proposal, used, None)
+    }
+
+    fn witness(
+        &self,
+        ledger: &mut Ledger<'_, S>,
+        _peer: &Peer,
+        obligation: Hash<Obligation>,
+        model: Hash<ModelObject>,
+    ) -> Result<Value, Error> {
+        self.record_witness(ledger, obligation, model)
     }
 
     fn refute(

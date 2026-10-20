@@ -15,6 +15,7 @@ from gen_protocol_vectors import fixtures as proposals
 OUT = Path(__file__).resolve().parent.parent / "spec/vectors/kernel-protocol/vectors.json"
 RESULT_OUT = OUT.with_name("propose-result-v1.json")
 CHECK_OUT = OUT.with_name("check-result-v1.json")
+WITNESS_OUT = OUT.with_name("witness-result-v1.json")
 
 
 def encode(value: object) -> bytes:
@@ -145,6 +146,21 @@ def main() -> None:
         (OUT, fixtures()),
         (RESULT_OUT, result_fixtures()),
         (CHECK_OUT, dict(format="check-result/v1", vectors=check_vectors)),
+        (
+            WITNESS_OUT,
+            dict(
+                format="witness-result/v1",
+                vectors=[
+                    dict(
+                        id=name,
+                        tag=tag,
+                        event_hash_hex=event.hex(),
+                        value_hex=encode([1, tag, event]).hex(),
+                    )
+                    for tag, name in enumerate(["accepted", "rejected", "unknown"])
+                ],
+            ),
+        ),
     ]:
         data = json.dumps(fixtures_data, ensure_ascii=False, indent=2) + "\n"
         if args.check:

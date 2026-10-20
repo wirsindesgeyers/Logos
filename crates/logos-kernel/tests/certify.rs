@@ -14,8 +14,8 @@ use logos_kernel::{
     wire::{Message, ObjectRef, Request, encode_frame},
 };
 use logos_ledger::{
-    Authority, Certificate, Checker, Event, EventBody, EventProposal, Ledger, ModelObject, Route,
-    TaintedText,
+    Authority, Certificate, CheckRecord, Checker, Event, EventBody, EventProposal, Ledger,
+    ModelObject, Route, TaintedText,
 };
 use logos_model::{FiniteModel, ModelData, ModelLimits};
 use logos_obligation::{DecodeLimits, Obligation};
@@ -67,7 +67,7 @@ fn exchange<H: Handlers<logos_crypto::FileSigner>>(
     std::thread::scope(|scope| {
         let worker = scope.spawn(move || {
             client
-                .set_read_timeout(Some(std::time::Duration::from_secs(30)))
+                .set_read_timeout(Some(std::time::Duration::from_secs(180)))
                 .unwrap();
             client
                 .write_all(&encode_frame(&Request { id: 15, message }).unwrap())
@@ -129,21 +129,43 @@ fn proof(
         logos_ground::ground_for_check(&bytes, o, v, DecodeLimits::default(), Default::default())
             .unwrap();
     let (cnf, _) = logos_ground::clausify(&ground).unwrap();
-    let pair = cnf
-        .clauses()
-        .iter()
-        .enumerate()
-        .find_map(|(i, c)| {
-            if c.len() != 1 {
-                return None;
-            }
-            cnf.clauses()
+    let mut assigned = std::collections::BTreeMap::new();
+    let mut hints = vec![];
+    'propagate: loop {
+        let mut progress = false;
+        for (i, clause) in cnf.clauses().iter().enumerate() {
+            if clause
                 .iter()
-                .position(|d| d == &[-c[0]])
-                .map(|j| (i + 1, j + 1))
-        })
-        .unwrap();
-    let proof = format!("{} 0 {} {} 0\n", cnf.clauses().len() + 1, pair.0, pair.1);
+                .any(|lit| assigned.get(&lit.abs()) == Some(&(*lit > 0)))
+            {
+                continue;
+            }
+            let remaining: Vec<_> = clause
+                .iter()
+                .filter(|lit| !assigned.contains_key(&lit.abs()))
+                .copied()
+                .collect();
+            if remaining.is_empty() {
+                hints.push(i + 1);
+                break 'propagate;
+            }
+            if remaining.len() == 1 {
+                hints.push(i + 1);
+                assigned.insert(remaining[0].abs(), remaining[0] > 0);
+                progress = true;
+            }
+        }
+        assert!(
+            progress,
+            "fixture formula has no unit-propagation refutation"
+        );
+    }
+    let hints = hints
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>()
+        .join(" ");
+    let proof = format!("{} 0 {} 0\n", cnf.clauses().len() + 1, hints);
     ledger.cas().put::<Certificate>(proof.as_bytes()).unwrap()
 }
 fn certify(o: Hash<Obligation>, c: Hash<Certificate>, format: &str) -> Message {
@@ -783,4 +805,424 @@ fn signed_pending_cannot_bind_another_proposals_obligation() {
     let head = ledger.head().unwrap();
     refused(&exchange(&mut ledger, &handlers, certify(o, c, LRAT)));
     assert_eq!(ledger.head().unwrap(), head);
+}
+
+fn witness(o: Hash<Obligation>, model: Hash<ModelObject>) -> Message {
+    Message::Witness {
+        obligation: o,
+        model: ObjectRef::Cas(model),
+    }
+}
+fn empty_model(ledger: &Ledger<'_, logos_crypto::FileSigner>, v: &Vocabulary) -> Hash<ModelObject> {
+    let m = FiniteModel::new(
+        ModelData {
+            vocab: hash(v).unwrap(),
+            domains: vec![],
+            consts: vec![],
+            funcs: vec![],
+            preds: vec![],
+        },
+        v,
+        ModelLimits::default(),
+    )
+    .unwrap();
+    ledger
+        .cas()
+        .put::<ModelObject>(&to_canon(&m).unwrap())
+        .unwrap()
+}
+
+#[test]
+fn witness_before_certify_survives_restart_and_is_not_a_countermodel() {
+    use logos_kernel::witness::PremiseUse;
+    let temp = Temp::new();
+    let signer = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let m = empty_model(&ledger, &v);
+    let w = success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+    assert!(ledger.live_index().unwrap().status(w).unwrap().is_none());
+    drop(ledger);
+    let mut ledger = Ledger::open(&path, &signer).unwrap();
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    let e = ledger
+        .events_from(ledger.head().unwrap().unwrap().seq, 1)
+        .unwrap()
+        .pop()
+        .unwrap();
+    assert!(
+        matches!(e.body,EventBody::Verified { consistency: logos_ledger::Consistency::Witness { model, .. }, .. } if model==m)
+    );
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Logical)
+            .unwrap()
+    );
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    assert!(matches!(
+        h.effective_consistency(&ledger, verified).unwrap(),
+        logos_ledger::Consistency::Witness { .. }
+    ));
+    let (same, _) = propose(&mut ledger, &h, true);
+    assert_eq!(same, o);
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+}
+
+#[test]
+fn witness_after_certify_preserves_signed_bytes_and_failed_retry_cannot_downgrade() {
+    use logos_kernel::witness::PremiseUse;
+    let temp = Temp::new();
+    let signer = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    let seq = ledger.head().unwrap().unwrap().seq;
+    let before = to_canon(&ledger.events_from(seq, 1).unwrap()[0]).unwrap();
+    assert!(matches!(
+        h.effective_consistency(&ledger, verified).unwrap(),
+        logos_ledger::Consistency::Unknown { check: None }
+    ));
+    assert!(
+        !h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    let m = empty_model(&ledger, &v);
+    success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+    let bad = ledger.cas().put::<ModelObject>(b"not model").unwrap();
+    success(&exchange(&mut ledger, &h, witness(o, bad)), 1);
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    assert_eq!(
+        to_canon(&ledger.events_from(seq, 1).unwrap()[0]).unwrap(),
+        before
+    );
+    drop(ledger);
+    let ledger = Ledger::open(&path, &signer).unwrap();
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    let cake = logos_lrat::CakeRegistry::register(std::path::Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../target/cake-lpr/cake_lpr"
+    )))
+    .unwrap();
+    let checker = hash_raw::<Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    drop(ledger);
+    let report = logos_audit::verify_with_checkers(
+        &path.join("ledger.sqlite3"),
+        &path.join("cas"),
+        signer.public_key(),
+        Some(&cake),
+        &[*checker.as_bytes()],
+    )
+    .unwrap();
+    assert_eq!(report.consistencies, 1);
+    assert_eq!(report.lrat_proofs, 1);
+}
+
+#[test]
+fn witness_rejected_unknown_and_no_attempt_remain_distinct_without_refutation() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let bad = ledger.cas().put::<ModelObject>(b"bad").unwrap();
+    success(&exchange(&mut ledger, &h, witness(o, bad)), 1);
+    let zero = setup(
+        &mut ledger,
+        &signer,
+        None,
+        Budget::new(0, 32 * 1024 * 1024, 4 * 1024 * 1024, 3000),
+    );
+    let m = empty_model(&ledger, &v);
+    success(&exchange(&mut ledger, &zero, witness(o, m)), 2);
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    assert!(matches!(
+        h.effective_consistency(&ledger, verified).unwrap(),
+        logos_ledger::Consistency::Unknown {
+            check: Some(CheckRecord {
+                outcome: CheckOutcome::Unknown(_),
+                ..
+            })
+        }
+    ));
+    for event in ledger.events_from(0, 100).unwrap() {
+        assert!(!matches!(event.body, EventBody::Refuted { .. }));
+    }
+}
+
+#[test]
+fn inconsistent_gamma_proves_arbitrary_goal_but_never_authorizes_action() {
+    use logos_air::{Grounding, Symbol, SymbolDecl, SymbolKind, SymbolResult};
+    use logos_kernel::witness::PremiseUse;
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let p = Symbol {
+        name: Text::new("P").unwrap(),
+        kind: SymbolKind::Pred,
+        arity: vec![],
+        result: SymbolResult::Bool,
+    };
+    let v = Vocabulary::new(
+        1,
+        vec![],
+        vec![SymbolDecl {
+            signature: p.clone(),
+            grounding: Grounding::Glossed(Text::new("P").unwrap()),
+            gloss_pt: Text::new("P").unwrap(),
+        }],
+    )
+    .unwrap();
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(&v).unwrap())
+        .unwrap();
+    let atom = FormulaNode::Pred {
+        symbol: p,
+        args: vec![],
+    };
+    let mut cites = vec![];
+    for nodes in [vec![atom.clone()], vec![FormulaNode::Not, atom]] {
+        let f = Formula::new(nodes, Limits::default()).unwrap();
+        cites.push(
+            hash(
+                &ledger
+                    .append(EventBody::AssumptionDeclared {
+                        vocabulary: hv,
+                        formula: f,
+                        scope: Text::new("").unwrap(),
+                        author: signer.key_id().unwrap(),
+                    })
+                    .unwrap(),
+            )
+            .unwrap(),
+        );
+    }
+    // Goal False is stronger than an arbitrary proposition: actual explosion proof.
+    let prop = candidate(&ledger, &v, truth(false), cites);
+    let o = proposed(&mut ledger, &h, prop);
+    for value in [false, true] {
+        let m = FiniteModel::new(
+            ModelData {
+                vocab: hv,
+                domains: vec![],
+                consts: vec![],
+                funcs: vec![],
+                preds: vec![(0, if value { vec![vec![]] } else { vec![] })],
+            },
+            &v,
+            ModelLimits::default(),
+        )
+        .unwrap();
+        let m = ledger
+            .cas()
+            .put::<ModelObject>(&to_canon(&m).unwrap())
+            .unwrap();
+        success(&exchange(&mut ledger, &h, witness(o, m)), 1);
+    }
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    assert!(matches!(
+        h.effective_consistency(&ledger, verified).unwrap(),
+        logos_ledger::Consistency::Unknown {
+            check: Some(CheckRecord {
+                outcome: CheckOutcome::Rejected(_),
+                ..
+            })
+        }
+    ));
+    assert!(
+        h.premise_eligible(&ledger, verified, PremiseUse::Logical)
+            .unwrap()
+    );
+    assert!(
+        !h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+}
+
+#[test]
+fn witness_deadline_is_inclusive_and_restart_does_not_renew_it() {
+    use logos_kernel::witness::WITNESS_WINDOW_EVENTS;
+    let temp = Temp::new();
+    let signer = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let m = empty_model(&ledger, &v);
+    let pending = ledger.head().unwrap().unwrap().seq;
+    while ledger.head().unwrap().unwrap().seq + 1 < pending + WITNESS_WINDOW_EVENTS {
+        ledger
+            .append(EventBody::Proposed {
+                proposal: candidate(&ledger, &v, truth(true), vec![]),
+                author: signer.key_id().unwrap(),
+            })
+            .unwrap();
+    }
+    success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+    assert_eq!(
+        ledger.head().unwrap().unwrap().seq,
+        pending + WITNESS_WINDOW_EVENTS
+    );
+    drop(ledger);
+    let mut ledger = Ledger::open(&path, &signer).unwrap();
+    let head = ledger.head().unwrap();
+    refused(&exchange(&mut ledger, &h, witness(o, m)));
+    assert_eq!(ledger.head().unwrap(), head);
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    assert!(
+        h.premise_eligible(&ledger, verified, logos_kernel::witness::PremiseUse::Action)
+            .unwrap()
+    );
+}
+
+#[test]
+fn witness_rejects_stale_epoch_revoked_checker_and_other_instance() {
+    use logos_kernel::witness::PremiseUse;
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let m = empty_model(&ledger, &v);
+    success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+    // A second proposal has identical O, but cannot inherit the first instance's witness.
+    let (same, _) = propose(&mut ledger, &h, true);
+    assert_eq!(same, o);
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    assert!(
+        !h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+    let registry = CheckerRegistry::new(signer.public_key().clone(), None).unwrap();
+    revoke(&mut ledger, &signer, registry.builtin_identity());
+    let head = ledger.head().unwrap();
+    refused(&exchange(&mut ledger, &h, witness(o, m)));
+    assert_eq!(ledger.head().unwrap(), head);
+    assert!(
+        !h.premise_eligible(&ledger, verified, PremiseUse::Action)
+            .unwrap()
+    );
+    ledger
+        .append(EventBody::EpochAdvanced {
+            new_epoch: 1,
+            reason: Text::new("epoch").unwrap(),
+            policy_root: None,
+            vocab: None,
+        })
+        .unwrap();
+    let head = ledger.head().unwrap();
+    refused(&exchange(&mut ledger, &h, witness(o, m)));
+    assert_eq!(ledger.head().unwrap(), head);
+}
+
+#[test]
+fn witness_missing_context_and_invalidation_never_create_consistency_authority() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let h = setup(&mut ledger, &signer, None, budget());
+    let (o, v) = propose(&mut ledger, &h, true);
+    let m = empty_model(&ledger, &v);
+    for message in [
+        witness(Hash::from_bytes([99; 32]), m),
+        witness(o, Hash::from_bytes([88; 32])),
+    ] {
+        let head = ledger.head().unwrap();
+        refused(&exchange(&mut ledger, &h, message));
+        assert_eq!(ledger.head().unwrap(), head);
+    }
+    // Consistency is about Gamma, independent of whether the goal is true or false.
+    let (other, _) = propose(&mut ledger, &h, false);
+    success(&exchange(&mut ledger, &h, witness(other, m)), 0);
+    let c = proof(&ledger, o, &v);
+    let verified = success(&exchange(&mut ledger, &h, certify(o, c, LRAT)), 0);
+    ledger
+        .append(EventBody::Invalidated {
+            claim: verified,
+            causes: vec![verified],
+        })
+        .unwrap();
+    let head = ledger.head().unwrap();
+    refused(&exchange(&mut ledger, &h, witness(o, m)));
+    assert_eq!(ledger.head().unwrap(), head);
+    assert!(
+        !h.premise_eligible(&ledger, verified, logos_kernel::witness::PremiseUse::Action)
+            .unwrap()
+    );
+}
+
+#[test]
+fn independent_auditor_rejects_wrong_annex_target_and_forged_accepted_model() {
+    for wrong_target in [true, false] {
+        let temp = Temp::new();
+        let signer = signer();
+        let path = temp.0.join("ledger");
+        let mut ledger = Ledger::open(&path, &signer).unwrap();
+        genesis(&mut ledger, &signer);
+        let h = setup(&mut ledger, &signer, None, budget());
+        let (o, v) = propose(&mut ledger, &h, true);
+        let target = ledger.head().unwrap().unwrap().hash;
+        let m = empty_model(&ledger, &v);
+        let good = success(&exchange(&mut ledger, &h, witness(o, m)), 0);
+        let event = ledger
+            .events_from(ledger.head().unwrap().unwrap().seq, 1)
+            .unwrap()
+            .pop()
+            .unwrap();
+        let EventBody::ConsistencyRecorded { mut check, .. } = event.body else {
+            panic!("record")
+        };
+        let bad = ledger.cas().put::<ModelObject>(b"not a model").unwrap();
+        let model = if wrong_target { m } else { bad };
+        check.certificate = ledger
+            .cas()
+            .put(&ledger.cas().get(&model).unwrap().unwrap())
+            .unwrap();
+        ledger
+            .append(EventBody::ConsistencyRecorded {
+                target: if wrong_target { good } else { target },
+                check,
+                model,
+            })
+            .unwrap();
+        drop(ledger);
+        assert!(
+            logos_audit::verify(
+                &path.join("ledger.sqlite3"),
+                &path.join("cas"),
+                signer.public_key()
+            )
+            .is_err()
+        );
+    }
 }

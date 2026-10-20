@@ -1,0 +1,121 @@
+{
+  "base": "12826f4",
+  "original_sha256": {
+    "crates/logos-kernel/src/witness.rs": "946c281e6ed6ba26e1a15fa535beadf8e310054476bf9523d87be62497e09227",
+    "crates/logos-audit/src/verify.rs": "c264f1e1680fe685208209b947d2646d60e466ca1e2dcfcd030e0f46ab56b771",
+    "crates/logos-ledger/src/event_body_codec.rs": "f5da665fd978f75616846141176e804ebd2570607b84cb879c7be94cc8051995"
+  },
+  "cases": [
+    {
+      "name": "accept_inconsistent_model",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "inconsistent_gamma_proves_arbitrary_goal_but_never_authorizes_action",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 15.58,
+      "log_sha256": "4c526a053c5923b70853dc8393d22741dc325c517597b97d75a80be273a42745",
+      "positive_control_sha256": "4bb4adf8a34b677e1eea11d17ea878192e1fd004efbc340a6fa77659b4ef5feb"
+    },
+    {
+      "name": "confuse_consistency_with_refutation",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_before_certify_survives_restart_and_is_not_a_countermodel",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 17.57,
+      "log_sha256": "3c0dfc12deaf6758c5e2280bb806a64bebc7a7087f33e99fb25805431c27de6f",
+      "positive_control_sha256": "b470163ee9c8b5ddbc989d83abc1c8993f9710c6bf46e432aff3a01499e1e2c2"
+    },
+    {
+      "name": "unknown_can_authorize",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_after_certify_preserves_signed_bytes_and_failed_retry_cannot_downgrade",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 20.86,
+      "log_sha256": "6f196d29b60a5168252690ae9becfd40a03ee324c7a5d31f3840c0b0a7e71f51",
+      "positive_control_sha256": "46c5002dde92544705eb0ca13f98c3a4594ab4904f2b996aa2174575e8cac364"
+    },
+    {
+      "name": "ignore_late_annex",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_after_certify_preserves_signed_bytes_and_failed_retry_cannot_downgrade",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 23.95,
+      "log_sha256": "df33e0bb38dbdbfa0c5a6bea882c87b1d7111ee9739f9c77b365eb752b1986f2",
+      "positive_control_sha256": "9472304dddb48e05ffe1f1a1cc81c719006d0a08b9d6f583c8ab7c9261839d00"
+    },
+    {
+      "name": "erase_witness_on_failed_retry",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_after_certify_preserves_signed_bytes_and_failed_retry_cannot_downgrade",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 23.85,
+      "log_sha256": "f5cc70d710e7caad8e24c4227519fdd1d107f855c9ed013c91c9aeb065d5be1b",
+      "positive_control_sha256": "7644e0baa821b81365af96ca3886fbebd4f1cb168d21e067b611c32ad62d9413"
+    },
+    {
+      "name": "inherit_prior_instance_witness",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_rejects_stale_epoch_revoked_checker_and_other_instance",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 20.85,
+      "log_sha256": "fd2b62a1319ca5339456179f53cad54539ecf2605034c76077f17f09b0a48586",
+      "positive_control_sha256": "7480583d0759bceebe18aa450d73c7d96b41f58b3f05426e2a2a774bdf9a8d73"
+    },
+    {
+      "name": "ignore_invalidated_target",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_missing_context_and_invalidation_never_create_consistency_authority",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 18.82,
+      "log_sha256": "dc2df944569368d745f78986c0f2a6a0eaf173c8d667eb5abef6a6473289e249",
+      "positive_control_sha256": "6538c17a0a17cbab31e5bc90d904766aea9f42d09ec31205b1e62cb7dc0f4b62"
+    },
+    {
+      "name": "auditor_ignores_target",
+      "file": "crates/logos-audit/src/verify.rs",
+      "test": "independent_auditor_rejects_wrong_annex_target_and_forged_accepted_model",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 26.83,
+      "log_sha256": "01047f73702ced8e18d57b3f365cd3f36d030f4a7cc922b5f7f78bba95a3fba9",
+      "positive_control_sha256": "7905756256db46234d558491992e868114cb5ee07db21c6431d616ea40e9cd40"
+    },
+    {
+      "name": "wrong_body_version",
+      "file": "crates/logos-ledger/src/event_body_codec.rs",
+      "test": "consistency_body_v3_rejects_wrong_version_arity_and_hash_sizes",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 2.69,
+      "log_sha256": "be79d3759d85391d469335bee6efff211c82a6d007f5d2aa489cd471f5d196dd",
+      "positive_control_sha256": "21f4d446c8fc001ff35e7114fcfb3cbeb8e6bb041d8aed2c24ac13c5f0f1f9c8"
+    },
+    {
+      "name": "forget_selected_instance",
+      "file": "crates/logos-kernel/src/witness.rs",
+      "test": "witness_before_certify_survives_restart_and_is_not_a_countermodel",
+      "exit": 101,
+      "positive_control_exit": 0,
+      "compiled_and_killed": true,
+      "seconds": 20.57,
+      "log_sha256": "c705ef64a16b47ec30aa91194ff8e16fc85a088fe3ad42244d7d1a9c985b90a9",
+      "positive_control_sha256": "2b25f7b16fa35af5b043388ab67a99ff62b176175b401a9dc14275a2fef17d0d"
+    }
+  ],
+  "restored": true
+}

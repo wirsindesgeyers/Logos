@@ -173,3 +173,15 @@ O auditor independente rederiva a CNF e recheca com Rust/cake. A API
 verify_with_checkers permite identidades Rust explicitamente configuradas pelo
 operador, nunca derivadas automaticamente do ledger/CAS. Nenhum binário CAS
 é executado; a API existente verify_with_cake conserva sua lista restrita.
+
+
+## WITNESS — Etapa5.5
+
+Request existente tag3 continua kernel-protocol/v1. Resultado witness-result/v1:
+`[1,outcome,event]`, outcome0=Accepted,1=Rejected,2=Unknown. O evento é sempre
+ConsistencyRecorded, nunca Verified/Refuted. Erro operacional, instância
+inelegível, registro inativo ou prazo expirado usa resposta de erro existente.
+Prazo lógico inclusivo1024 eventos desde Pending; ver events.md/ADR0042.
+
+WITNESS seleciona a instância mais recente de h(O). Consultar a referência
+Verified anterior continua possível e não herda anexos da nova proposta.
