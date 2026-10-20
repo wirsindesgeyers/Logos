@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-19 · Três P2 corrigidos localmente sobrec647418 (ADR0040): prazos, staging e projeção viva autenticada. Treze regressões novas/17 mutações detectadas; full verify/selftest VERIFY_OK/exit0 em2006,93s;430 entradas com hashes inalterados. Próximo:5.4; CI/ARM pendentes, sem push.
+> Última atualização: 2026-10-19 · Três P2 corrigidos localmente sobrec647418 (ADR0040): prazos, staging e projeção viva autenticada. Treze regressões novas/17 mutações detectadas; full verify/selftest VERIFY_OK/exit0 em2006,93s;430 entradas com hashes inalterados. Próximo:5.4; CI/ARM pendentes. Commit de todos os arquivos e push autorizados pelo mantenedor; nova verificação completa passou em1384,84s.
 
 ## Resumo
 
@@ -1714,3 +1714,13 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
   correcao-kernel-2026-10-19-*.json. Commit local de correção; sem push/CI remota.
   Arquivos científicos, ZIPs e smoke.log preexistentes preservados fora do commit.
   Próximo: plano5.4 para registry/CERTIFY e retomada privada de Pending.
+
+- 2026-10-19 — A pedido do mantenedor, inclusão de todos os arquivos remanescentes:
+  ADR0037 e visão científica ainda como propostas, arquivos logos-code.zip/logos-docs.zip
+  preexistentes e log de fuzz smoke (somente limpeza de espaços finais). Nenhuma
+  mudança de escopo foi aceita; próximo passo permanece o plano da5.4. Nova execução
+  de ci/verify.sh --selftest: VERIFY_OK/exit0 em1384,84s;430 entradas de runtime/spec/CI/TCB
+  inalteradas. Recibo em target/verify-commit-all.json; log SHA-256
+  8b6bd09baa2d033f7d19ae1713449c458c8646a8a05b51f8e11596a1f01a64a3.
+  ZIPs íntegros. Push de todos os commits locais para origin/main expressamente
+  autorizado; CI remota/ARM continuam pendentes de observação.
