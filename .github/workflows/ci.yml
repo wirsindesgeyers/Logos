@@ -220,6 +220,14 @@ jobs:
         run: ../ci/check-sat.sh
       - name: Farm isolada e500 obrigações no kernel real
         run: ../ci/check-farm.sh
+      - name: Pesquisa MCP por stdio e auditoria de dez tarefas
+        run: ../ci/check-mcp-research.sh
+      - name: Arquivar evidência MCP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-research-report
+          path: target/mcp-research-report.json
       - name: Arquivar evidência da farm
         if: always()
         uses: actions/upload-artifact@v4

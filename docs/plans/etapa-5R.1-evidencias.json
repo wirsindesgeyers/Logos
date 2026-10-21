@@ -1,0 +1,241 @@
+{
+  "base": "a0358f6",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 4681.05,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 481,
+    "verify_ok": true,
+    "log_sha256": "830c5c1778ff2ea79410d65af26e4c0d29b306f762e48377a4e890ed1d2a6075",
+    "input_manifest_sha256": "0c277759c205091a562acd14f4f4d01c66333341fbdadcde794301e3e4143547"
+  },
+  "statistics": {
+    "rust_passed": 545,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "307 passed in 167.35s (0:02:47)",
+      "25 passed in 1.79s"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=85.99s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=45645 (private SQLite snapshot; cold rebuild_ms=305252)"
+    ],
+    "tar_warnings": []
+  },
+  "mcp_scenario": {
+    "tasks": 10,
+    "verified": 5,
+    "refuted": 5,
+    "rows": [
+      {
+        "obligation": "ac2bd8b23c861b1c83054ff5262b48e242cdfe81ca8d9b760e47e113ac2b2d80",
+        "state": "verified",
+        "event": "4ea18f2959cd714b9eab61232c11fc14a89fb92f55cf6135f5bfc50f85f3534d",
+        "tool": "check_claim"
+      },
+      {
+        "obligation": "f5acf6977e2efb8bee22d10eb1f48fe0333cfbf00383b036b4996ee376f8e66b",
+        "state": "refuted",
+        "event": "e5a5ed44bc3fe124018b079384474af2f42c2c5477b1440fe5add54b843d105c",
+        "tool": "find_countermodel"
+      },
+      {
+        "obligation": "5ce8e1525305a140605d750c6e1fdf198965665189dc9c739c30cb84ed06bef8",
+        "state": "verified",
+        "event": "b3b890ac09e81668bfcdd2d97c8264fba612f3d1bf86d9300b4ca83a2c7e809b",
+        "tool": "check_claim"
+      },
+      {
+        "obligation": "8c0388cb177164f87639a28556c3afef138ee20b5dee2c3d36fd0405f4d8b138",
+        "state": "refuted",
+        "event": "eb9d1f7c666422667dce0fe74355d9920ae11e3d5cd0796c81c18220a48b7064",
+        "tool": "find_countermodel"
+      },
+      {
+        "obligation": "48284ea97a433b8eee56010650c167bea0a8ab7f5d7b5074810514551ec5faf8",
+        "state": "verified",
+        "event": "06aaacf9c4de1a2002a696f7fa78095d08634b0286e962bae33b20e558ee1186",
+        "tool": "check_claim"
+      },
+      {
+        "obligation": "f4b89137400b07c37d5a007c726283ffd66bf832a3e6a5bb43639ffc674c4e02",
+        "state": "refuted",
+        "event": "102ec594217dcb954e2ecb0fd3fa5ba2067b2e832193f767b6bde7219857da4d",
+        "tool": "find_countermodel"
+      },
+      {
+        "obligation": "6b4262d92597029fc6cec2cf801745321a15a0a32ebd9809a66f2af7e17c58a7",
+        "state": "verified",
+        "event": "314fc0ad1e662c9ea1c22c5cc1328f5ee2d40044bcfbac52a775e2272a8264d8",
+        "tool": "check_claim"
+      },
+      {
+        "obligation": "75156bbe87c18642c7052a03e11aa4fafcca40640964691d50613da7a5397ae7",
+        "state": "refuted",
+        "event": "9b5a3a8fde29c8492f739ef126104ac6741139213070be8378ee7fc552889df0",
+        "tool": "find_countermodel"
+      },
+      {
+        "obligation": "af8d5bcf814399a57563b8dbaaec096fbf5127640f3466edb62063c81f667149",
+        "state": "verified",
+        "event": "7f2bd6b0a383b2b2522e0b5ec646efa8d40d83600ff86d7ceec3801fd1d36a0e",
+        "tool": "check_claim"
+      },
+      {
+        "obligation": "785a618e7fc9567e9064044694d1dea26c96bfc06f9db5d0ca58b3aee9d61f8a",
+        "state": "refuted",
+        "event": "a10c84f34a3ae7c0cdc2ee03d0e9bce79f99afc70ae756fa09e324e68d4b25a4",
+        "tool": "find_countermodel"
+      }
+    ],
+    "audit": {
+      "events": 44,
+      "refutations_rechecked": 5,
+      "consistencies_rechecked": 13,
+      "proofs_unchecked": 0,
+      "head": "a10c84f34a3ae7c0cdc2ee03d0e9bce79f99afc70ae756fa09e324e68d4b25a4",
+      "cnf_rederived": 10,
+      "lrat_rust_rechecked": 5,
+      "lrat_cake_rechecked": 5
+    },
+    "export_sha256": "dc6822297555ed62ae9c2c71ba3fa8ba596551054b56e6db2e419a92d743ef70",
+    "catalog": [
+      "propose_claim",
+      "check_claim",
+      "find_countermodel",
+      "query_ledger",
+      "audit_session",
+      "export_report"
+    ],
+    "invalid_calls_rejected": 11,
+    "corrupt_certificate_rejected": true,
+    "tainted_text_preserved": true,
+    "wrong_root_and_checker_refused": [
+      1,
+      1
+    ],
+    "rust_checker": "12175780157249fd50daad67b8eb5ba2cd94a5616d1269399da523a25b5002d4",
+    "protocol_version": "2026-07-28"
+  },
+  "mcp_report_sha256": "d1ef3472637d6003271018af2596432dffc506453d6242a5758b5e7803049573",
+  "targeted_tests": {
+    "python": 24,
+    "rust_cli": 2
+  },
+  "runtime_only": "MCP_RUNTIME_ONLY_OK (--isolated --no-dev)",
+  "farm_regression": {
+    "count": 500,
+    "distinct_obligations": 500,
+    "p50_seconds_to_verdict": 3.082700348997605,
+    "verified": 250,
+    "refuted": 250,
+    "checker_events_bound": 500,
+    "cache_recheck": true,
+    "corrupted_cache_rejected_then_fallback": true,
+    "witness_searches_requested": 500,
+    "kernel_sha256": "8629523dff274ce02a9e5087b8fd04ed60cf5c4d5c36475984832ebb099a5e93"
+  },
+  "tcb_runtime_sources_unchanged": true,
+  "rust_runtime_files_compared_except_non_tcb_audit_cli": 140,
+  "non_tcb_cli_change": "logos-audit --rust-checker encaminha API verify_with_checkers já existente",
+  "wire_versions_unchanged": true,
+  "tcb": {
+    "own_rust": 15131,
+    "runtime_dependencies": 747130,
+    "total_correctness": 762261,
+    "build_only": 64508
+  },
+  "fuzz": "Nenhum novo runtime/parser/formato da TCB; sem novo fuzz ou mutação TCB nesta etapa.",
+  "limitations": [
+    "CI remota/ARM/noturno não observados",
+    "MCP/cliente são não confiáveis, sem novas credenciais",
+    "Auditoria verifica prefixo capturado; não é âncora de transparência13.2",
+    "Export exige CAS externo",
+    "JSON stdio é decodificado antes dos limites de campo",
+    "Sem formalizador/hipóteses/MEM/TUI/ações/políticas/multiusuário/MCP completo10.3"
+  ],
+  "previous_full_verifications": [
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 124,
+      "seconds": 3383.93,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 481,
+      "verify_ok": false,
+      "log_sha256": "5a16129f6951060a12221ae3836e9d4aaa96650b9654015032f20e3b808bc3a5",
+      "input_manifest_sha256": "15b1b446eb0e33967acf7709f31baba8f593c09aa011000667d3abb6c150bf87"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 1526.0,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 481,
+      "verify_ok": false,
+      "log_sha256": "5e11eb99e249a6ae0adac79a233437eaf0b61c47c46c4e16b65b5bd63ccc4b10",
+      "input_manifest_sha256": "15b1b446eb0e33967acf7709f31baba8f593c09aa011000667d3abb6c150bf87"
+    },
+    {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 1744.94,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 481,
+      "verify_ok": false,
+      "log_sha256": "1c3f0dcc8911e4d01ecab16f358a077178390493650252b151b8090283d71228",
+      "input_manifest_sha256": "4b01cbee2f64299b6d39eb33dfebfa111ad35929941d07112f253e81538f889c"
+    }
+  ],
+  "fixture_timeouts": {
+    "certify_test_client_seconds": 600,
+    "crash_aggregate_seconds": 600,
+    "crash_individual_limits_unchanged": [
+      10,
+      60
+    ],
+    "witness_logical_window_unchanged": 1024
+  },
+  "corpus_targeted_reproduction": {
+    "exit": 101,
+    "seconds": 618.58,
+    "outcome": "Unknown(Time) on same Urquhart corruption",
+    "previous_budget_seconds": 60,
+    "final_test_budget_seconds": 180,
+    "production_budgets_unchanged": true
+  },
+  "crash_targeted_reproduction": {
+    "command": "ci/check-ledger-crash.sh",
+    "exit": 0,
+    "events": 10000,
+    "sigkill": 24,
+    "acknowledged": 10000,
+    "seconds": 107.56,
+    "script_and_limits_unchanged": true,
+    "first_timeout_cause": "not confirmed"
+  }
+}

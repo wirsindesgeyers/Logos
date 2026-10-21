@@ -3,7 +3,7 @@
 
 use logos_air::{Formula, FormulaNode, Limits, Vocabulary};
 use logos_canon::{from_canon, to_canon};
-use logos_crypto::FileSigner;
+use logos_crypto::{FileSigner, Signer};
 use logos_ground::{clausify, ground_for_check};
 use logos_ledger::Ledger;
 use logos_model::{FiniteModel, ModelData, ModelLimits};
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
         println!(
             "{}",
-            serde_json::json!({"vocabulary": hv.to_hex(), "vocabulary_bytes": hex(&vbytes)})
+            serde_json::json!({"vocabulary": hv.to_hex(), "vocabulary_bytes": hex(&vbytes), "public_key": hex(signer.public_key().as_bytes())})
         );
         return Ok(());
     }
@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
     println!(
         "{}",
-        serde_json::json!({"vocabulary": hv.to_hex(), "vocabulary_bytes": hex(&vbytes), "model": hex(&to_canon(&model)?), "proof": hex(proof.as_bytes())})
+        serde_json::json!({"vocabulary": hv.to_hex(), "vocabulary_bytes": hex(&vbytes), "public_key": hex(signer.public_key().as_bytes()), "model": hex(&to_canon(&model)?), "proof": hex(proof.as_bytes())})
     );
     Ok(())
 }

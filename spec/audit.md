@@ -7,7 +7,7 @@ checkers e rusqlite fixados no workspace. Não usa cache/index.sqlite3.
 ## Comandos e confiança
 
 ```sh
-logos-audit verify LEDGER --cas CAS_ROOT --public-key ED25519_HEX
+logos-audit verify LEDGER --cas CAS_ROOT --public-key ED25519_HEX [--cake-lpr BIN] [--rust-checker HASH_HEX]
 logos-audit export LEDGER --public-key ED25519_HEX > events.logos
 logos-audit verify events.logos --cas CAS_ROOT --public-key ED25519_HEX
 ci/check-audit.sh
@@ -132,3 +132,18 @@ recheca os bytes O/M/certificado pelo ModelChecker; Rejected/Unknown não
 contam como testemunha nem como Refuted. O relatório conta verificações de
 consistência aceitas (eventos, não modelos únicos), inclusive anexos tardios.
 O auditor não depende de logos-kernel/logos-ledger nem executa código do CAS.
+
+
+## Integração MCP5R.1 (ADR0045)
+
+CLI `--rust-checker HASH_HEX` pode repetir; encaminha lista explícita para
+verify_with_checkers já existente. A lista vem do operador, nunca dos hashes
+no ledger. Cada hash são32 bytes/64 dígitos hexadecimais. Export recusa essa
+opção, pois autenticação de stream não é recheck lógico. LRAT rederivado
+continua exigindo Rust e cake_lpr. Sem novo formato, autoridade ou dependência.
+
+O lock exclusivo de SQLite continua obrigatório; kernel ativo mantém seu
+writer.lock. O MCP captura um prefixo via QueryHead/Subscribe, codifica o
+audit-stream/v1 existente e fornece esse arquivo ao auditor, sem abrir o
+SQLite em Python. O relatório precisa corresponder ao head e número de
+eventos capturados; export é rechecado com o CAS antes da entrega.

@@ -1206,12 +1206,12 @@ sem marcar etapas completas antes de demonstrar todos os seus critérios.
 **Entregáveis.**
 - Servidor MCP de pesquisa com ferramentas: propor claim, checar, buscar contramodelo,
   consultar ledger, auditar e exportar relatório.
-- Frames canônicos do protocolo; nenhuma ferramenta escreve fato, obrigação ou política.
+- Frames canônicos do protocolo; nenhuma ferramenta escreve diretamente fato, obrigação ou política (O só pelo PROPOSE do kernel; ADR0045).
 - Testes de integração contra o kernel real; auditoria de uma sessão completa.
 
 **Critério de conclusão.**
-- [ ] 10 tarefas de pesquisa executadas só via MCP, com claims e certificados reais.
-- [ ] Nenhuma ferramenta expõe caminho para `Verified` sem checker ativo ou para escrita
+- [x] 10 tarefas de pesquisa executadas só via MCP, com claims e certificados reais.
+- [x] Nenhuma ferramenta expõe caminho para `Verified` sem checker ativo ou para escrita
   de fato/política.
 
 ### Etapa 5R.2 — Formalizador NL → AIR com confirmação · `M`

@@ -27,6 +27,7 @@ ci/check-cnf.sh
 ci/check-audit.sh
 ci/check-sat.sh
 ci/check-farm.sh
+ci/check-mcp-research.sh
 ci/check-ledger-crash.sh
 ci/check-ledger-index.sh
 ci/check-tcb-lints.sh

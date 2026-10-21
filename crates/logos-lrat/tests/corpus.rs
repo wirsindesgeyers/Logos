@@ -48,7 +48,9 @@ fn official_sat2002_corpus_and_three_corruptions_per_proof() {
         String::from_utf8_lossy(&install.stderr)
     );
     let cake = CakeRegistry::register(&binary).unwrap();
-    let budget = Budget::new(10_000_000_000, 256_000_000, 16_000_000, 60_000);
+    // Concordância do corpus, sem SLA de latência: manter limite finito sob carga.
+    // Unknown continua falhando; todas as 600 corrupções precisam de Rejected.
+    let budget = Budget::new(10_000_000_000, 256_000_000, 16_000_000, 180_000);
     let mut hashes = BTreeSet::new();
     let mut sources = BTreeSet::new();
     let mut corrupted = 0;

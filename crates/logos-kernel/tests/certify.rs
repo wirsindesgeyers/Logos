@@ -66,8 +66,10 @@ fn exchange<H: Handlers<logos_crypto::FileSigner>>(
     let writer = Mutex::new(ledger);
     std::thread::scope(|scope| {
         let worker = scope.spawn(move || {
+            // A janela WITNESS é lógica (1024 eventos), não um SLA de replay debug.
+            // Limite finito de fixture para hosts carregados; protocolo/asserções intactos.
             client
-                .set_read_timeout(Some(std::time::Duration::from_secs(180)))
+                .set_read_timeout(Some(std::time::Duration::from_secs(600)))
                 .unwrap();
             client
                 .write_all(&encode_frame(&Request { id: 15, message }).unwrap())

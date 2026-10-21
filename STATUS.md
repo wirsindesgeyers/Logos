@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização:2026-10-20 · Etapa10.2 concluída localmente (ADR0044): farm isolada/cache,500 obrigações mistas/checkers reais; p50=1.274575s. Full verify/selftest VERIFY_OK/exit0 em2803.23s. CI remota pendente. Próximo:5R.1 MCP de pesquisa.
+> Última atualização:2026-10-21 · Etapa5R.1 concluída localmente (ADR0045): seis ferramentas MCP stdio, dez tarefas reais e auditoria/export completos. Full verify/selftest VERIFY_OK/exit0 em4681.05s. CI remota pendente. Próximo:9.1, pré-requisito da5R.2.
 
 ## Resumo
 
@@ -21,7 +21,8 @@ demais handlers e gateway seguem pendentes.
 Cliente10.1 async do protocolo, modelos Pydantic e staging implementados fora
 da TCB; sete mensagens v1 testadas no executável real (ASSUME Unavailable).
 Farm10.2 isolada/cache concluída localmente:500 obrigações distintas e veredictos
-rechecados no kernel; full verify/selftest passou. MCP5R.1 continua pendente.
+rechecados no kernel; full verify/selftest passou. MCP5R.1 de pesquisa concluído
+localmente: dez tarefas stdio e auditoria/export por snapshots públicos passaram.
 2.1–2.3: FiniteModel/model-v1, avaliador contextual e ModelChecker reais na TCB.
 Defined com parâmetros De Bruijn isolados, valores totais/únicos e enumeração
 conferida pela expansão. P2 confere bytes/h(O); CAS verifica bytes/h(M).
@@ -265,7 +266,7 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 
 | Etapa | Estado | Dependências / próximo trabalho |
 | --- | --- | --- |
-| 5R.1 MCP de pesquisa | ⏳ não iniciada | 5.5, cliente10.1 e farm10.2 prontos localmente; preparar plano/ADR e contratos MCP de pesquisa. |
+| 5R.1 MCP de pesquisa | ⚠ concluída localmente; CI pendente | ADR0045; seis ferramentas stdio,10 tarefas (5 provas/5 refutações), auditoria Rust+cake_lpr e export rechecado;24 testes Python+2 CLI/full verify passaram. |
 | 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
 | 5R.3 Caderno de hipóteses | ⏳ não iniciada | 5R.1;5.9 e5.7 completas, incluindo retirada de premissas. |
 | 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
@@ -273,6 +274,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
 
 ## Pendências de verificação (execução remota)
+
+Etapa5R.1: full verify/selftest local passou; CI remota do novo commit ainda
+não consultada. Evidências em docs/plans/etapa-5R.1-*.json.
 
 Etapa10.2: full verify/selftest local passou; CI remota do novo commit ainda não
 consultada. Corpus e recibos em docs/plans/etapa-10.2-*.json.
@@ -522,26 +526,28 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa5R.1 — MCP de pesquisa
+## Próximo passo: Etapa9.1 — língua controlada em português (base da5R.2)
 
-5.3–5.5, cliente10.1 e farm10.2 estão prontos localmente. Preparar
-`docs/plans/etapa-5R.1.md` antes de código; ler o contrato específico5R.1,
-o ADR0037 e as APIs spec/python-client.md/spec/prover-farm.md. Nenhum
-ActionIntent/gateway/ASSUME novo necessário ao perfil de pesquisa.
+5R.1 está concluída localmente: seis ferramentas MCP stdio, cliente/farm,
+dez tarefas reais e auditoria completa; spec/mcp-research.md/ADR0045.
+A5R.2 exige9.1 integral: antecipar o renderizador/parser determinísticos antes
+de implementar confirmação de formalizações (ADR0037).
 
-Implementar ferramentas MCP para propor claim, checar, buscar contramodelo,
-consultar ledger, auditar e exportar relatório; validação estrita, candidatos
-sempre rechecados e respostas/erros explícitos. Demonstrar dez tarefas só via
-MCP com kernel real e auditoria da sessão, sem escrita direta no ledger/CAS.
-Escolher transporte/SDK e dependências em ADR, respeitando a separação entre
-texto tainted e artefatos canônicos. A farm recebe V público por hash; não
-resolver isso abrindo o ledger/CAS privado ou entregando credenciais ao Python.
-Não implementar formalizador, caderno, memória ou TUI nesta etapa.
+Preparar docs/plans/etapa-9.1.md e ADR para gramática, templates, escopo de
+variáveis e hash versionado da paráfrase. Dependências1.1/1.2/1.4 presentes.
+render_pt/parse_pt ficam na TCB de fidelidade; aplicar manifesto, lints,
+limites, vetores, fuzz e testes de mutação/controle necessários. Nenhum LLM
+no renderizador ou parser e nenhuma autorização9.2 nesta etapa.
 
-Riscos conhecidos: respostas do cliente não autenticam assinaturas; timeout
-pode seguir append persistido, portanto sem retry cego; WITNESS depois de
-Refuted pode ser recusado. CI remota/ARM/noturno permanecem pendentes.
-Depois5R.1,9.1 precede5R.2 e5.9→5.7 precede5R.3; demais fases preservadas.
+Critérios integrais: round-trip100k fórmulas até profundidade6 e todas as
+fórmulas dos vetores; gramática documentada/fuzz≥1h; revisão humana registrada
+de50 paráfrases de políticas reais sem leitura errada. Não substituir revisão
+humana por script ou declarar concluído sem ela. Decidir gramática/templates
+em ADR antes de código. Se houver dependência ausente, registrar bloqueio.
+
+CI remota/ARM/noturno permanecem pendentes. MCP retorna observações não
+confiáveis; auditoria identifica snapshot, e export exige CAS externo.
+Após9.1 completa,5R.2;5.9→5.7 continuam antes da5R.3. Demais fases preservadas.
 
 ## Decisões em aberto para o mantenedor
 
@@ -1848,3 +1854,19 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-20 — Progresso10.2: nove testes específicos passaram; sandbox real bloqueia host/ambiente/rede/escrita no runtime, prova/modelo reais passaram. Integração de desenvolvimento2 casos com cache/rejeição passou; não conta como corpus500. FARM_RUNTIME_ONLY_OK sem dev e Clippy passaram. Full ci/verify.sh --selftest ativo em target/verify-10.2.*; nenhum critério encerrado, sem commit/push até VERIFY_OK/exit0.
 
 - 2026-10-20 — Etapa10.2 concluída localmente sobre3f3fc79 (ADR0044). Farm async fora da TCB: Z3/finder/SAT em paralelo e witness independente, bwrap sem rede/host/chaves, V público por hash e cache LRU candidato sempre rechecado. Nove testes específicos, runtime sem dev e corpus500/500 distintos (250 Verified/250 Refuted) passaram; p50=1.274575s até o checker no kernel release. Todos500 eventos Accepted ligados a h(O), cache rechecado e adulteração rejeitada antes do fallback. Full ci/verify.sh --selftest VERIFY_OK/exit0 em2803.23s;543 Rust/0 ignorados; Python ['283 passed in 145.74s (0:02:25)', '25 passed in 1.55s'];472 entradas inalteradas. Runtime/formatos/dependências Rust da TCB idênticos à base; somente fixture examples alterada. Falhas de desenvolvimento (ObjectRef/Unknown das fixtures, FSIZE do sandbox e nível de CheckRecord no benchmark) corrigidas antes do full verify, sem fallback de isolamento. CI remota/ARM/noturno pendentes. Evidências/corpus/inputs em docs/plans/etapa-10.2-*.json. Próximo5R.1 MCP de pesquisa; commit/push autorizados nesta sessão após verificação.
+
+- 2026-10-20 — Iniciada5R.1 sobrea0358f6: dependências presentes; plano/ADR0045 preparam MCP stdio e seis ferramentas estritas. CLI do auditor será integrada à API verify_with_checkers já existente; nenhum novo checker/TCB. Critérios e verificação pendentes.
+
+- 2026-10-20 — Progresso5R.1: dez tarefas via MCP stdio passaram com5 provas LRAT/5 refutações, auditoria Rust+cake_lpr e export rechecado.24 testes específicos Python+2 CLI passaram; root/checker errados e certificado adulterado recusados. SQLite vivo exige writer.lock: snapshot via QueryHead/Subscribe no formato audit-stream/v1 já existente, sem novo reader SQL/TCB. MCP_RUNTIME_ONLY_OK sem dev e Clippy passaram. Full verify/selftest ainda pendente; sem commit/push até VERIFY_OK/exit0.
+
+- 2026-10-20 — Primeiro full verify5R.1 terminou exit124 em3383.93s: timeout180s de ci/check-ledger-crash.sh, após24 SIGKILLs, sem VERIFY_OK. Farm500 e MCP10/auditoria passaram;481 entradas monitoradas inalteradas. Logs/recibo preservados em target/verify-5R.1-attempt1.*. Diagnóstico/reprodução isolada do crash em curso, sem commit/push e critérios continuam abertos.
+
+- 2026-10-20 — Reprodução isolada do mesmo ci/check-ledger-crash.sh passou sem alteração: LEDGER_CRASH_OK events=10000 sigkill=24 acknowledged=10000 elapsed=107.56s, exit0. Primeiro timeout não teve causa confirmada; carga observada9–14, memória disponível9GiB, sem prova causal. Iniciada nova verificação completa; nenhuma checagem pulada/relaxada e sem commit antes de VERIFY_OK.
+
+- 2026-10-20 — Segundo full5R.1 falhou exit101/1526.00s na fixture witness_deadline: read_timeout180s do cliente→EAGAIN/servidor BrokenPipe;18/19 certify passaram,481 entradas inalteradas. Logs attempt2 preservados. ADR0045 registra teto600s para cliente da fixture e runner agregado de crash, preservando24/10k, limites individuais10/60s, protocolo e janela lógica1024. Terceiro full obrigatório; sem commit/push.
+
+- 2026-10-20 — Terceiro full5R.1 falhou exit101/1744.94s: corpus LRAT retornou Unknown(Time) no cake_lpr para Urquhart-s3-b7.shuffled.cnf, após150 provas/450 corrupções. Log/recibo attempt3 preservados; reprodução isolada do corpus com o mesmo Budget60s iniciada. Nenhum aceite inferido de Unknown, nenhum critério encerrado; sem commit/push.
+
+- 2026-10-20 — Reprodução isolada do corpus confirmou mesma corrupção Unknown(Time), exit101/618.58s. ADR0045 registra Budget do teste60→180s, sem mudar produção nem considerar Unknown como Rejected; concordância200/600 continua obrigatória. Quarto full verify/selftest iniciado, sem commit/push antes de VERIFY_OK.
+
+- 2026-10-21 — Etapa5R.1 concluída localmente sobrea0358f6 (ADR0045). Seis ferramentas MCP stdio por SDK oficial2.3.0 fixado, strict/extra=forbid, sem rotas Fact/Policy/ASSUME/raw RPC; O somente PROPOSE e aceites somente checkers ativos. Dez tarefas via MCP:5 provas LRAT e5 refutações, vínculos h(O)/eventos Accepted, texto tainted preservado, certificado adulterado recusado; auditoria Rust+cake_lpr e export rechecado. Snapshot via QueryHead/Subscribe evita abrir SQLite com writer.lock ativo, sem relaxar locks ou criar formato. CLI não TCB expõe allowlist existente; raiz pública errada e checker desconhecido recusados sobre export.24 testes Python+2 CLI, MCP_RUNTIME_ONLY_OK sem dev e full ci/verify.sh --selftest VERIFY_OK/exit0 em4681.05s;545 Rust/0 ignorados; Python ['307 passed in 167.35s (0:02:47)', '25 passed in 1.79s'];481 entradas inalteradas. TCB Rust15131+747130=762261, build-only64508 preservada; sem novo fuzz/parser/runtime TCB. Falhas de desenvolvimento de stub/query, EOF parcial e anotações mypy corrigidas antes do fechamento. CI remota/ARM/noturno pendentes. Evidências/inputs/corpus em docs/plans/etapa-5R.1-*.json. Próximo9.1 integral antes de5R.2, inclusive revisão humana de50 paráfrases. Commit/push autorizados nesta sessão após verificação.
