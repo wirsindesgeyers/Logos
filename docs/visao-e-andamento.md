@@ -159,18 +159,24 @@ O roadmap tem 23 fases numeradas, mais a trilha 5R e a trilha de memória. Resum
 ### 5.1 O produto que se quer (trilha WS, proposta)
 
 Um LOGOS só: **um chat universal e um harness**, com verificadores nativos em qualquer conversa,
-sessões separadas e reabríveis, TUI/CLI e uma interface web local opcional, **projetos opcionais**
-persistentes, artefatos com proveniência (hipóteses, evidências, referências a claims, datasets,
-gráficos, relatórios), visualizações interativas, exportação LaTeX/PDF e um **workspace científico**
-que organiza painéis sem trocar de agente. Não há "LOGOS Reason" e "LOGOS Research" separados: a
-trilha 5R é o perfil de pesquisa do mesmo agente.
+sessões separadas e reabríveis, TUI/CLI, modo **CLI one-shot** e **sidecar MCP**, uma interface web
+local opcional, **projetos opcionais** persistentes, artefatos com proveniência (hipóteses,
+evidências, referências a claims, datasets, gráficos, relatórios), visualizações interativas com
+executor isolado de receitas, exportação LaTeX/PDF e um **workspace científico** que organiza
+painéis sem trocar de agente. Toda sessão começa como **chat simples sem fricção** e adapta-se
+progressivamente à finalidade da sessão ou da requisição (`WS§2.2`): conversa direta, verificação
+inline, *Domain Packs* multi-purpose (código/specs, dados/configs em `model/v1`, documentos/normas,
+ciência), operações científicas sobre os checkers existentes (experimento crucial, MUS checado e
+teste contra tabelas `model/v1`, `WS§11.1`) ou projeto completo. Não há "LOGOS Reason" e "LOGOS
+Research" separados: a trilha 5R é o perfil de pesquisa do mesmo agente.
 
 Regras que não mudam: a interface só mostra e pede; status vem do kernel; salvar não torna nada
 verdadeiro; a assinatura acontece na interface do lado do kernel (9.2), nunca na web; a memória é a
 da trilha MEM, sem segunda memória. Tudo fica fora da TCB. Projetos dependem de MEM.0/MEM.1, e o
 contexto compartilhado automático, de MEM.5/MEM.6, que vêm depois da Fase 8/9.2. Especificação em
 [`docs/spec/LOGOS-workspace-and-web-ui.md`](spec/LOGOS-workspace-and-web-ui.md); ADRs 0047–0049
-propostos aguardam decisão do mantenedor (WS.0).
+aceitos em 22/out por delegação do mantenedor (WS.0); stack e motivos em
+[`docs/plans/fase-ws.md`](plans/fase-ws.md).
 
 Ordem e dependências: cada etapa lista "Depende de" e "Fora do escopo" no `ROADMAP.md`. O que está
 fora do escopo de uma etapa **não entra nela**.

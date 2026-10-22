@@ -89,6 +89,12 @@ nada implementado. Limites que a interface não remove:
   implicam φ.
 - Um gráfico fiel aos dados não prova que os dados representam o fenômeno. Hash e
   assinatura garantem identidade dos bytes, não qualidade do estudo.
+- Operações formais de auxílio à ciência (`WS§11.1`: busca de cenário discriminante /
+  experimento crucial, núcleo de conflito mínimo via MUS checado e teste/poda de leis
+  contra tabelas convertidas em `model/v1`), bem como *Domain Packs* e o atestador
+  `sandbox-run`, certificam consistência, refutação, minimalidade ou execução
+  determinística sobre os modelos e bytes fornecidos; não provam que os predicados
+  observáveis esgotam os fatores reais do fenômeno nem substituem controle empírico (L1).
 - Salvar, pinar, resumir, indexar ou relacionar em projeto não cria autoridade; um
   status salvo é histórico, não atual (W1/W4).
 - Memória e contexto de projeto melhoram continuidade, não tornam o agente

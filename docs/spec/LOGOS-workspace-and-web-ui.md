@@ -1,11 +1,12 @@
 # LOGOS Spec Extension — Workspace, interface web e artefatos
 
-2026-10-21 · proposta · citada como `WS§N`
+2026-10-21 · proposta (decisões aceitas em 2026-10-22) · citada como `WS§N`
 
-> **Estado.** Proposta especificada, **nada implementado**. Decisões em
+> **Estado.** Especificada, **nada implementado**. Decisões em
 > [ADR 0047](../adr/0047-produto-unico-com-clientes-e-workspaces.md),
 > [ADR 0048](../adr/0048-servidor-web-local-nao-confiavel.md) e
-> [ADR 0049](../adr/0049-artefatos-visualizacoes-e-documentos.md), todas **propostas**.
+> [ADR 0049](../adr/0049-artefatos-visualizacoes-e-documentos.md), **aceitas** em 2026-10-22
+> por delegação do mantenedor (WS.0).
 > Etapas, dependências e critérios estão no
 > [Apêndice G do ROADMAP](../../ROADMAP.md#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta).
 > Esta extensão não altera a [spec principal](LOGOS-proof-carrying-agents.md) (`§N`),
@@ -42,6 +43,8 @@ laboratório autônomo e qualquer pretensão de verdade empírica certificada.
 | Projetos | Opcionais. Chat comum funciona sem projeto e não herda contexto de projeto não selecionado. |
 | Workspace científico | Organização visual e funcional (painéis) sobre os mesmos objetos; tudo que ele faz também é alcançável pelo chat. |
 | Memória | Reutiliza Episodic + Knowledge + Memory Router (`E§`, trilha MEM) e o Proof Ledger. Nenhuma memória de terceiros (Hermes, resumos próprios do cliente) a substitui. |
+| Adaptação à finalidade | Toda conversa começa como **chat simples sem fricção** (zero exigência de projeto, vocabulário prévio ou confirmação formal). Conforme a finalidade da sessão ou da requisição evolui, o mesmo harness revela progressivamente cartões `ledger_ref`, gráficos inline, *Domain Packs* multi-purpose ou painéis de projeto/pesquisa (*progressive disclosure*). |
+| Superfícies de automação | Além de TUI/Web interativas, o mesmo harness opera em modo **CLI one-shot** (`stdin/stdout` JSON/Markdown) e como **sidecar MCP** (`5R.1`/`10.3`) para uso em scripts, pipelines de CI e editores externos, sem segundo loop. |
 
 ### 2.1 MVP proposto
 
@@ -54,6 +57,21 @@ camadas — fixtures → status real → chat com harness → projetos duráveis
 compartilhado → pesquisa avançada; (3) nenhuma ferramenta científica separada;
 (4) nenhuma segunda memória; (5) dados de projeto não são ledger; (6) decisões de
 stack reversíveis, registradas em ADR, sem acoplar a lógica formal a biblioteca de UI.
+
+### 2.2 Adaptação fluida à finalidade da sessão ou requisição (*Progressive Disclosure*)
+
+A simplicidade do chat comum é preservada como ponto de entrada universal. O usuário
+não escolhe antes se está num "modo conversa", "modo código", "modo dados" ou "modo
+ciência"; a experiência se molda à finalidade de cada requisição ou sessão sobre o
+mesmo `logos_agent` e o mesmo kernel:
+
+| Nível de profundidade | Quando entra em ação | O que o usuário vê / recebe | O que **não** é exigido |
+| --- | --- | --- | --- |
+| **0. Chat simples** | Pergunta aberta, brainstorm, explicação, rascunho rápido | Conversa limpa em linguagem natural (`free_text` com marcação discreta e honesta) | Criar projeto, escolher vocabulário, editar AIR ou confirmar paráfrase |
+| **1. Verificação e visualização inline** | Requisição pede para checar argumento/regra, comparar especificações (`⊢ A ↔ B`), achar contraexemplo ou plotar dados | Cartões de claim (`ledger_ref`), contramodelo explicado em português (`2.6`), tabela/gráfico declarativo inline (`WS.1`) dentro do próprio chat | Sair da conversa, abrir painel dedicado ou persistir projeto |
+| **2. Harness multi-purpose (*Domain Packs*)** | Tarefa técnica sobre código/AST, tabelas/configs (`model/v1`), normas/contratos/editais ou domínio específico | Ativação sob demanda de um *Domain Pack* declarativo (`vocabulary/v2` + templates `render_pt` + extratores fora da TCB que propõem modelos/assumptions) | Trocar de agente, duplicar o kernel ou abrir mão das garantias formais |
+| **3. Projeto e Workspace Científico** | Investigação contínua com múltiplas hipóteses, datasets, literatura e sessões | Promoção fluida de itens do chat a artefatos (`WS.4`) e abertura opcional dos painéis científicos (`WS.8`) ao lado do chat | Perder o histórico do chat inicial ou recomeçar em outra ferramenta |
+| **4. CLI one-shot e Sidecar MCP** | Automação em terminal, scripts Unix, hooks/CI ou agente externo (OpenCode, IDEs) | Execução headless (`stdin → JSON/Markdown` com blocos `ledger_ref`/`free_text` e bundle de auditoria) ou tools MCP (`logos_compare`, `logos_prove`, `logos_refute`) | Subir interface gráfica/TUI para tarefas de lote |
 
 ## 3. Fronteiras de autoridade
 
@@ -154,6 +172,60 @@ dados, outra discute hipóteses. Os artefatos salvos são consultáveis pelas tr
 dentro de snapshots versionados. Não se compartilham prompts, instruções do sistema,
 credenciais, autorizações ou permissões entre sessões.
 
+**J5 — Do chat simples ao multi-purpose e à pesquisa na mesma sessão.** O usuário abre
+uma conversa simples sem projeto ("me ajude a revisar esta regra de agendamento"). No
+turno seguinte cola uma tabela/configuração e pede "existe algum caso em que dois
+recursos conflitam?"; o harness carrega um *Domain Pack* leve, converte a tabela em
+`model/v1` (`2.1`) ou obrigação AIR e devolve inline o contramodelo em português
+(`2.6`). Se a conversa evoluir para uma investigação maior, o usuário promove a
+hipótese e o gráfico para um projeto (`WS.3`/`WS.4`) e abre o painel lateral sem
+trocar de sessão nem perder o fio do chat.
+
+**J6 — Harness multi-purpose via CLI one-shot ou Sidecar MCP.** Em um script ou editor
+externo, o usuário invoca o mesmo harness em modo headless ou via MCP (`5R.1`/`10.3`)
+para checar equivalência semântica entre duas versões de uma especificação/política
+(`⊢ Antiga ↔ Nova`) ou validar um documento/configuração contra invariantes, recebendo
+o diagnóstico estruturado (`ledger_ref` + contramodelo) sem precisar abrir TUI ou web.
+
+### 5.4 Identidade visual híbrida e gramática semântica de superfície
+
+A identidade visual do LOGOS combina **Swiss Lab** (espaço limpo, linhas finas, zero
+caixas pesadas na conversa comum) e **Editorial Científico** (tipografia de artigo/livro
+para leitura, teoremas e argumentos), misturados tanto no chat quanto nos documentos
+(WS.7) e painéis (WS.8):
+
+1. **Símbolo e monograma (`⟦ Λ ⊢ ⟧` / `⬡⊢`):** une $\Lambda$ (linguagem/agente) e o
+   turnstile $\vdash$ ($\Gamma \vdash \varphi$, derivação formal) dentro de um hexágono/
+   octógono de traço contínuo (fronteira da TCB/monitor). Na TUI/CLI aparece como
+   `⟦ Λ ⊢ ⟧`; na Web e em PDFs (WS.7), como selo geométrico vetorial de linha única.
+2. **Três vozes tipográficas simultâneas (no chat e nos artigos):**
+   - **Voz Editorial (prosa, seções `§` e enunciados de leitura):** serifada acadêmica/
+     humanista confortável na Web/PDF (texto limpo sem moldura na TUI), dando sensação
+     de caderno/paper vivo já dentro da conversa.
+   - **Voz Matemática (`KaTeX` / `Typst`):** fórmulas, quantificadores e conectivos para
+     leitura rápida.
+   - **Voz de Fidelidade / TCB (monoespaçada estrita):** código AIR, identificadores de
+     eventos/checkers, hashes (`h(O)`, `h(V)`, `h(M)`) e toda string assinável produzida
+     por `render_pt` (9.1) — nunca reformatada (W3).
+3. **Tokens epistêmicos redundantes (Glifo + Borda + Cor — P7, W1, acessibilidade):**
+   nenhum estado depende só de cor (funciona em terminal monocromático, daltonismo e
+   impressão P&B):
+
+| Estado / Bloco | Glifo | Borda / Moldura (TUI e Web) | Semântica de cor | Regra dura |
+| --- | --- | --- | --- | --- |
+| `Verified` (topo em tudo) | `◆` | Barra dupla/forte (`┃` / `═`) | Verde-esmeralda (`--success`) | Verde **só** com validade, `Witness` e fidelidade no topo (P7) |
+| `Condicional` (`Assume`, `F1`/`F2`, `ConsistencyUnknown`) | `◇` | Borda contínua simples (`│`) | Âmbar / Cobalto (`--c2`) | Destaca premissas abertas (`open`) ou ressalva de consistência |
+| `Refuted` (contramodelo `2.3`/`2.6`) | `✕` | Barra contínua + bloco `M` (`│`) | Carmim (`--error`) | Exibe valores do contramodelo que falsificam o objetivo |
+| `Unknown` / `Pending` | `?` | Borda tracejada (`┆`) | Ocre / Neutro (`--warning`) | Nunca confundido com `Refuted` nem com `Verified` |
+| `Stale` / `Histórico` | `⟳` | Borda pontilhada (`┊`) | Esmaecido (`--muted`) | Exige nova consulta/renderização antes de uso como atual (W1/W7) |
+| `free_text` (prosa do LLM) | `◌` | Sem caixa; filete sutil (`▏`) só ao lado de `ledger_ref` | Texto padrão / nota `--muted` | Zero badge; leitura limpa sem poluir o chat simples |
+
+4. **Contraste deliberado da superfície de assinatura (`9.2` — anti-spoofing `TW13`):**
+   enquanto o chat (TUI/Web) usa a estética híbrida fluida, a janela/página de
+   assinatura do lado do kernel (9.2/9.3) usa visual estrito de **Recibo Criptográfico**
+   (100% monoespaçado, moldura dupla `╔══╗`, alto contraste, sem prosa livre nem
+   gráficos), impedindo que um bloco do chat imite um pedido de assinatura.
+
 ## 6. Fluxos operacionais
 
 Cada fluxo tem estados de erro explícitos. "Erro explícito" significa mensagem e
@@ -250,8 +322,19 @@ pin/GC, referências cruzadas entre stores (hash igual **não** é permissão,
 | `BibliographyCollection`/`DocumentCollection` | referências e versões; extrações rotuladas como extrações | — | WS.8 com MEM.6 |
 
 O caderno da 5R.3 (hipóteses, previsões, evidências, assumptions, conclusões) é a
-primeira instância concreta desses tipos; WS.4 o importa sem perda (IDs, status
-consultáveis, proveniência) em vez de criar um segundo modelo.
+primeira instância concreta desses tipos. Para não bloquear a persistência local da
+5R.3 enquanto MEM.0/MEM.1 não existem, a 5R.3 serializa o caderno num bundle canônico
+local (`notebook/v1`, fora da TCB) já alinhado aos campos de `ProjectArtifact`; WS.4
+importa esses bundles sem perda (IDs, status consultáveis, proveniência) para o store
+de projetos em vez de criar um segundo modelo.
+
+Para `Visualization` (WS.5) e `Analysis`/`Experiment` (WS.8), transformações/receitas
+declaradas sobre `Dataset` rodam num **executor isolado em sandbox** (`bwrap`/`prlimit`
+sem rede, padrão 4.5/10.2), que consome os bytes originais por hash e registra
+`(h(dataset), h(receita), h(ambiente)) → h(saída)` fora da TCB. Quando a Fase 6
+existir, esse executor pode emitir fatos assinados pelo atestador de computação local
+(6.3), fechando a cadeia criptográfica entre dado bruto, script e gráfico/tabela sem
+alegar verdade empírica (L1).
 
 ### 7.4 Operações distintas
 
@@ -369,6 +452,13 @@ nova revisão), **stale** (entradas mudaram, não recalculada) e **irrecuperáve
 (originais ausentes). Não recalcula silenciosamente nem exibe um gráfico novo como
 se fosse o antigo (W7). Mesma regra dos cartões da 5R.4.
 
+Para evitar que a criação exploratória de símbolos novos (5R.2) invalide toda a
+sessão, distingue-se **extensão monotônica de vocabulário** (apenas adição de novos
+símbolos sem alterar sorts, `DomainSpec`, `Defined` ou `render_pt` de símbolos já
+existentes) de **mudança incompatível**: cartões e projeções cujos símbolos efetivamente
+usados (`used_symbols(φ)`) permanecem com definição e template idênticos preservam sua
+validade sob extensão monotônica (coerente com 15.7).
+
 ## 10. Documentos, LaTeX e PDF
 
 - Relatórios técnicos, análise filosófica, demonstrações e documentos científicos
@@ -406,6 +496,34 @@ pelo chat padrão (inventário verificado em WS.8).
 Estatística/desenho experimental continuam **fora do escopo** do repositório
 (5R.3). Não há "LOGOS Science RFC" no repositório; qualquer capacidade científica
 avançada exige especificação e etapa próprias, não esta extensão.
+
+### 11.1 Operações formais de auxílio à ciência (sobre os checkers existentes)
+
+Sem prometer descoberta automática nem verdade empírica (L1), o perfil científico
+(5R.3 e WS.8) combina os produtores e checkers já existentes (Camadas 0 e 1) em três
+operações de alto valor para pesquisa:
+
+1. **Desambiguação ativa de hipóteses ("Experimento Crucial" via 2.4/2.5 + 2.3/2.6):**
+   dadas duas hipóteses concorrentes $H_1$ e $H_2$ consistentes com o conjunto atual de
+   premissas/evidências $\Gamma$, o harness solicita modelos finitos de
+   $\Gamma \cup \{H_1, \neg H_2\}$ e de $\Gamma \cup \{\neg H_1, H_2\}$ projetados nos
+   predicados observáveis. O `ModelChecker` (2.3) valida o modelo e `explain_model`
+   (2.6) descreve em português **qual observação ou condição experimental futura separa
+   $H_1$ de $H_2$** (onde uma prevê $Y$ e a outra prevê $\neg Y$).
+2. **Diagnóstico de conflito mínimo na literatura/hipóteses (MUS checado, antecipando
+   a mecânica de 17.5 para uso local em 5R.3/WS.8):** quando um conjunto de premissas,
+   assumptions (5.7) e atribuições `Says` fica mutuamente inconsistente ($\Gamma \vdash \bot$,
+   detectado quando `Witness` falha em 5.5 e o CaDiCaL/LRAT prova insatisfatibilidade),
+   um extrator fora da TCB identifica um *Minimal Unsatisfiable Subset* $S \subseteq \Gamma$
+   cujo certificado completo é verificado pela TCB (insatisfatibilidade de $S$ via LRAT
+   4.4 e consistência de cada $S \setminus \{p\}$ via modelo finito 2.3), apontando ao
+   pesquisador exatamente quais premissas/artigos estão em choque direto.
+3. **Poda e teste de leis candidatas contra tabelas empíricas (`Dataset` → `model/v1`):**
+   tabelas finitas de observações são convertidas em estruturas `model/v1` (2.1).
+   Quando o pesquisador ou o LLM propõe leis gerais candidatas ($\forall x.\, \dots$),
+   o `ModelChecker` (2.3) descarta imediatamente qualquer candidata refutada por uma
+   linha observada (exibindo a linha exata como contramodelo) e o solver SAT/LRAT (4.6)
+   identifica leis redundantes entre as sobreviventes.
 
 Distinções que a UI e o harness preservam:
 
@@ -526,15 +644,20 @@ contexto de projeto × chat sem recuperação; taxa de correções humanas e fal
 explícitas; acessibilidade, desempenho e legibilidade dos estados. Estudos com
 pessoas seguem 11.8.
 
-## 16. Decisões em aberto
+## 16. Decisões
 
-1. Aceitação dos ADRs 0047–0049 (todos propostos).
-2. Linguagem e processo do servidor web; framework/ausência de framework do
-   frontend; bibliotecas de gráfico, grafo, matemática e formato de documento (ADR
-   0048/0049, WS.0).
-3. Persistência do registry no store da memória × store próprio, condicionada à
-   adoção do ADR 0008 (MEM.0).
-4. Formato do contrato de sessão entre harness e clientes (canon/v1 no socket local;
-   projeção JSON para o navegador?) — WS.1.
-5. Política de compartilhamento/exportação com redaction (WS.9); colaboração remota
-   fica fora até etapa própria.
+Tomadas na WS.0 (2026-10-22, por delegação do mantenedor; motivos e critérios de
+reversão nos ADRs):
+
+1. ADRs 0047–0049 aceitos.
+2. Servidor em Rust fora da TCB (`axum`), SSE + POST com anti-CSRF, segredo de sessão
+   de uso único; frontend TypeScript + Preact com assets embutidos; Vega-Lite
+   (subconjunto fechado, modo CSP), Cytoscape.js, KaTeX; Typst para PDF em sandbox,
+   com exportação da fonte LaTeX (ADR 0048/0049).
+3. Registry no store da memória; direção do ADR 0008 adotada, formatos na MEM.0.
+4. Contrato de sessão: canon/v1 no socket local entre harness e clientes; o servidor
+   web projeta em JSON documentado por schema para o navegador (WS.1).
+
+Ainda em aberto, por pertencerem às etapas: versões e hashes exatos das
+dependências (planos de WS.2/WS.5/WS.7) e política de redaction na exportação
+(WS.9). Colaboração remota fica fora até etapa própria.
