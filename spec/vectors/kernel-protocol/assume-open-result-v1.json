@@ -1,0 +1,38 @@
+{
+  "format": "assume-result/v1+open-result/v1",
+  "vectors": [
+    {
+      "id": "assume",
+      "kind": "assume",
+      "value_hex": "82015820000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "events": [
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      ]
+    },
+    {
+      "id": "open-missing",
+      "kind": "open",
+      "value_hex": "80",
+      "events": null
+    },
+    {
+      "id": "open-unconditional",
+      "kind": "open",
+      "value_hex": "820180",
+      "events": []
+    },
+    {
+      "id": "open-two",
+      "kind": "open",
+      "value_hex": "820182825820000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f6e73657373696f6e3a65737475646f825820202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f67756e74696c3a33",
+      "events": [
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+      ],
+      "scopes": [
+        "session:estudo",
+        "until:3"
+      ]
+    }
+  ]
+}

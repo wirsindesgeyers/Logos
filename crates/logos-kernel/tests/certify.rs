@@ -1370,3 +1370,221 @@ fn s4_timeout_on_a_second_attempt_cannot_turn_refutation_into_unknown() {
         .unwrap();
     assert_eq!(status.kind, logos_obligation::EntryKind::Refuted);
 }
+
+/// 5.7: vocabulário com predicado nulário P, para assumption/goal não triviais.
+fn p_vocabulary() -> (Vocabulary, Formula) {
+    use logos_air::{Grounding, Symbol, SymbolDecl, SymbolKind, SymbolResult};
+    let symbol = Symbol {
+        name: Text::new("P").unwrap(),
+        kind: SymbolKind::Pred,
+        arity: vec![],
+        result: SymbolResult::Bool,
+    };
+    let v = Vocabulary::new(
+        1,
+        vec![],
+        vec![SymbolDecl {
+            signature: symbol.clone(),
+            grounding: Grounding::Glossed(Text::new("P").unwrap()),
+            gloss_pt: Text::new("P").unwrap(),
+        }],
+    )
+    .unwrap();
+    let p = Formula::new(
+        vec![FormulaNode::Pred {
+            symbol,
+            args: vec![],
+        }],
+        Limits::default(),
+    )
+    .unwrap();
+    (v, p)
+}
+
+fn assume_message(
+    ledger: &Ledger<'_, logos_crypto::FileSigner>,
+    v: &Vocabulary,
+    formula: Formula,
+    scope: &str,
+) -> Message {
+    Message::Assume {
+        vocabulary: ledger
+            .cas()
+            .put::<Vocabulary>(&to_canon(v).unwrap())
+            .unwrap(),
+        formula,
+        scope: Text::new(scope).unwrap(),
+    }
+}
+
+fn assumed(response: &Value) -> Hash<Event> {
+    assert_eq!(items(response)[2], Value::Unsigned(1), "{response:?}");
+    let fields = items(&items(response)[3]);
+    assert_eq!(fields[0], Value::Unsigned(1));
+    logos_canon::CanonDecode::from_value(&fields[1]).unwrap()
+}
+
+fn open_of(
+    ledger: &mut Ledger<'_, logos_crypto::FileSigner>,
+    h: &CertificationHandlers,
+    claim: Hash<Event>,
+) -> Vec<Value> {
+    let reply = exchange(
+        ledger,
+        h,
+        Message::Query(logos_kernel::wire::Query::Open(claim)),
+    );
+    let value = items(&reply)[3].clone();
+    let fields = items(&value);
+    assert_eq!(fields[0], Value::Unsigned(1));
+    items(&fields[1]).to_vec()
+}
+
+#[test]
+fn assumption_derived_claim_is_conditional_in_query_and_falls_when_retracted() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let handlers = setup(&mut ledger, &signer, None, budget());
+    let (v, p) = p_vocabulary();
+    let message = assume_message(&ledger, &v, p.clone(), "session:estudo");
+    let assumption = assumed(&exchange(&mut ledger, &handlers, message));
+    let candidate_p = candidate(&ledger, &v, p.clone(), vec![assumption]);
+    let o = proposed(&mut ledger, &handlers, candidate_p);
+    let certificate = proof(&ledger, o, &v);
+    let verified = success(
+        &exchange(&mut ledger, &handlers, certify(o, certificate, LRAT)),
+        0,
+    );
+    let open = open_of(&mut ledger, &handlers, verified);
+    assert_eq!(
+        open,
+        vec![Value::Array(
+            logos_canon::Array::new(vec![
+                logos_canon::Canon::to_value(&assumption).unwrap(),
+                Value::Text(Text::new("session:estudo").unwrap()),
+            ])
+            .unwrap()
+        )],
+        "claim derivado aparece como condicional"
+    );
+    // Claim sem assumptions é incondicional.
+    let truth_candidate = candidate(&ledger, &v, truth(true), vec![]);
+    let plain = proposed(&mut ledger, &handlers, truth_candidate);
+    let plain_proof = proof(&ledger, plain, &v);
+    let plain_verified = success(
+        &exchange(&mut ledger, &handlers, certify(plain, plain_proof, LRAT)),
+        0,
+    );
+    assert!(open_of(&mut ledger, &handlers, plain_verified).is_empty());
+    // Assumption do agente: autor é a chave do kernel; retratar derruba o dependente.
+    logos_kernel::retract::Retractions::new(signer.public_key().clone())
+        .retract(
+            &mut ledger,
+            &signer,
+            assumption,
+            Text::new("hipótese descartada").unwrap(),
+        )
+        .unwrap();
+    let index = ledger.live_index().unwrap();
+    assert_eq!(
+        index.status(verified).unwrap().unwrap().kind,
+        logos_obligation::EntryKind::Invalidated
+    );
+    assert_eq!(
+        index.status(plain_verified).unwrap().unwrap().kind,
+        logos_obligation::EntryKind::Verified
+    );
+}
+
+#[test]
+fn assume_scopes_are_normative_and_proposals_derive_a_single_scope() {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let handlers = setup(&mut ledger, &signer, None, budget());
+    let (v, p) = p_vocabulary();
+    for bad in ["", "local", "session:", "until:01", "claim:00"] {
+        let message = assume_message(&ledger, &v, p.clone(), bad);
+        refused(&exchange(&mut ledger, &handlers, message));
+    }
+    let open = Formula::new(
+        vec![FormulaNode::Eq(
+            logos_air::Term::new(
+                vec![logos_air::TermNode::Var {
+                    index: 0,
+                    sort: logos_air::Sort {
+                        name: Text::new("S").unwrap(),
+                    },
+                }],
+                Limits::default(),
+            )
+            .unwrap(),
+            logos_air::Term::new(
+                vec![logos_air::TermNode::Var {
+                    index: 0,
+                    sort: logos_air::Sort {
+                        name: Text::new("S").unwrap(),
+                    },
+                }],
+                Limits::default(),
+            )
+            .unwrap(),
+        )],
+        Limits::default(),
+    )
+    .unwrap();
+    let message = assume_message(&ledger, &v, open, "session:x");
+    refused(&exchange(&mut ledger, &handlers, message));
+
+    let one = assume_message(&ledger, &v, p.clone(), "session:um");
+    let a = assumed(&exchange(&mut ledger, &handlers, one));
+    let two = assume_message(&ledger, &v, p.clone(), "session:dois");
+    let b = assumed(&exchange(&mut ledger, &handlers, two));
+    let mixed = candidate(&ledger, &v, p.clone(), vec![a, b]);
+    refused(&exchange(&mut ledger, &handlers, Message::Propose(mixed)));
+
+    // claim:<h> só é citável junto com o claim h.
+    let base_candidate = candidate(&ledger, &v, truth(true), vec![]);
+    let base = proposed(&mut ledger, &handlers, base_candidate);
+    let base_proof = proof(&ledger, base, &v);
+    let anchor = success(
+        &exchange(&mut ledger, &handlers, certify(base, base_proof, LRAT)),
+        0,
+    );
+    let hex: String = anchor
+        .as_bytes()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    let local = assume_message(&ledger, &v, p.clone(), &format!("claim:{hex}"));
+    let bound = assumed(&exchange(&mut ledger, &handlers, local));
+    let alone = candidate(&ledger, &v, p.clone(), vec![bound]);
+    refused(&exchange(&mut ledger, &handlers, Message::Propose(alone)));
+    let together = candidate(&ledger, &v, p.clone(), vec![bound, anchor]);
+    let o = proposed(&mut ledger, &handlers, together);
+    // A regeneração do CERTIFY deriva o mesmo escopo e aceita a prova.
+    let certificate = proof(&ledger, o, &v);
+    success(
+        &exchange(&mut ledger, &handlers, certify(o, certificate, LRAT)),
+        0,
+    );
+
+    // until:<e> já vencido é recusado na declaração.
+    let head = ledger.head().unwrap().unwrap();
+    assert_eq!(head.epoch, 0);
+    ledger
+        .append(EventBody::EpochAdvanced {
+            new_epoch: 3,
+            reason: Text::new("fixture").unwrap(),
+            policy_root: None,
+            vocab: None,
+        })
+        .unwrap();
+    let late = assume_message(&ledger, &v, p.clone(), "until:2");
+    refused(&exchange(&mut ledger, &handlers, late));
+    let fresh = assume_message(&ledger, &v, p, "until:3");
+    assumed(&exchange(&mut ledger, &handlers, fresh));
+}

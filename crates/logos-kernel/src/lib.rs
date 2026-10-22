@@ -7,6 +7,8 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 #[cfg(target_os = "linux")]
+mod assume;
+#[cfg(target_os = "linux")]
 pub mod certify;
 #[cfg(target_os = "linux")]
 pub mod propose;
@@ -16,6 +18,8 @@ pub mod registry;
 mod replay;
 #[cfg(target_os = "linux")]
 pub mod retract;
+#[cfg(target_os = "linux")]
+mod scope;
 #[cfg(target_os = "linux")]
 pub mod server;
 #[cfg(target_os = "linux")]

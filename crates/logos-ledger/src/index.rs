@@ -16,6 +16,9 @@ use crate::{
     ledger_store,
 };
 
+/// Assumptions abertas de um claim (5.7): `(h(AssumptionDeclared), scope)`.
+pub type OpenAssumptions = Vec<(Hash<Event>, String)>;
+
 /// Estado efetivo da referência de evento, sem inferir validade da prova.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ClaimStatus {
@@ -184,6 +187,37 @@ impl<'a> LedgerIndex<'a> {
                 .map_err(|_| LedgerError::Invalid("refuted digest"))
         })
         .transpose()
+    }
+
+    /// Assumptions no fecho de dependências used da referência, inclusive ela
+    /// mesma, com seus scopes; ordenadas por h(Event). `None` se a referência
+    /// não é linha do índice; lista vazia = claim incondicional (Etapa 5.7).
+    ///
+    /// # Errors
+    /// Falha SQL ou digest/scope privado inválido.
+    pub fn open_assumptions(
+        &self,
+        reference: Hash<Event>,
+    ) -> Result<Option<OpenAssumptions>, LedgerError> {
+        if self.status(reference)?.is_none() {
+            return Ok(None);
+        }
+        let mut statement = self.connection.prepare(
+            "WITH RECURSIVE ancestors(id) AS (VALUES(?1) UNION SELECT deps.premise FROM deps JOIN ancestors ON deps.claim=ancestors.id) \
+             SELECT claims.id, claims.scope FROM claims JOIN ancestors ON claims.id=ancestors.id \
+             WHERE claims.scope IS NOT NULL ORDER BY claims.id",
+        )?;
+        let mut rows = statement.query([reference.as_bytes().as_slice()])?;
+        let mut result = Vec::new();
+        while let Some(row) = rows.next()? {
+            let bytes: Vec<u8> = row.get(0)?;
+            let digest = bytes
+                .as_slice()
+                .try_into()
+                .map_err(|_| LedgerError::Invalid("assumption digest"))?;
+            result.push((Hash::from_bytes(digest), row.get::<_, String>(1)?));
+        }
+        Ok(Some(result))
     }
 
     /// Citabilidade de estado na época corrente; scope é conferido no snapshot.

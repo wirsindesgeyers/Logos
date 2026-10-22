@@ -27,7 +27,7 @@ pub use event_body::{
     Authority, Certificate, CheckRecord, Checker, CnfObject, CnfRecord, Consistency, EventBody,
     EventProposal, ModelObject, Route, TaintedText,
 };
-pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot};
+pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot, OpenAssumptions};
 pub use index_store::{IndexComparison, RebuildReport};
 pub use ledger::{Ledger, LedgerHead};
 pub use ledger_cas::{CasReference, LedgerReferences, ledger_references};

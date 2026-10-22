@@ -194,6 +194,20 @@ pub trait Handlers<S: Signer>: Sync {
                     }
                 }
             }
+            // open-result/v1 (5.7): [] se o evento não existe; senão
+            // [1, [[h(Assumption), scope]...]], vazio = incondicional.
+            Query::Open(reference) => match ledger.live_index()?.open_assumptions(reference)? {
+                None => array(vec![]),
+                Some(open) => {
+                    let entries = open
+                        .into_iter()
+                        .map(|(h, scope)| {
+                            array(vec![h.to_value()?, Value::Text(Text::new(scope)?)])
+                        })
+                        .collect::<Result<Vec<_>, Error>>()?;
+                    array(vec![Value::Unsigned(1), array(entries)?])
+                }
+            },
         }
     }
     /// Página autenticada de eventos; o servidor libera o lock antes de transmitir.

@@ -13,15 +13,18 @@ from logos_client import canon
 from logos_client.protocol import (
     MAX_RESPONSE,
     Assume,
+    AssumeResult,
     Certify,
     CheckResult,
     EventRecord,
     Head,
     Message,
+    OpenResult,
     Propose,
     ProposeResult,
     ProtocolError,
     QueryHead,
+    QueryOpen,
     QueryStatus,
     Refute,
     Request,
@@ -150,16 +153,18 @@ class KernelClient:
     async def witness(self, message: Witness) -> WitnessResult:
         return cast(WitnessResult, await self.request(message))
 
-    async def assume(self, message: Assume) -> None:
-        # The deployed kernel returns Unavailable; no success format exists yet.
-        await self.request(message)
-        raise ProtocolError("ASSUME success has no v1 contract")
+    async def assume(self, message: Assume) -> AssumeResult:
+        return cast(AssumeResult, await self.request(message))
 
     async def head(self) -> Head | None:
         return cast(Head | None, await self.request(QueryHead()))
 
     async def status(self, reference: bytes) -> Status | None:
         return cast(Status | None, await self.request(QueryStatus(reference=reference)))
+
+    async def open_assumptions(self, reference: bytes) -> OpenResult | None:
+        """Assumptions abertas do claim (5.7); None se o evento não existe."""
+        return cast(OpenResult | None, await self.request(QueryOpen(reference=reference)))
 
     async def subscribe(
         self,

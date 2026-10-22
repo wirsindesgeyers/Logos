@@ -592,8 +592,15 @@ fn scope_mismatch_in_direct_and_used_ancestor_is_not_silently_ignored() {
     genesis(&mut ledger, &signer);
     let v = vocabulary(&[]);
     let hv = publish(&ledger, &v);
+    // 5.7/ADR0054: o escopo do PROPOSE é derivado das assumptions citadas; um escopo
+    // único é aceito, mas escopos diferentes (diretos ou de ancestral used) não.
     let scoped = assume(&mut ledger, hv, truth(), "private", &signer);
-    rejected(&mut ledger, &frame(candidate(hv, truth(), vec![scoped])), 4);
+    let other = assume(&mut ledger, hv, truth(), "other", &signer);
+    rejected(
+        &mut ledger,
+        &frame(candidate(hv, truth(), vec![scoped, other])),
+        0,
+    );
     let ho = stored_obligation(&ledger, &v, &truth(), &[]);
     let verified = hash(
         &ledger
@@ -608,8 +615,8 @@ fn scope_mismatch_in_direct_and_used_ancestor_is_not_silently_ignored() {
     .unwrap();
     rejected(
         &mut ledger,
-        &frame(candidate(hv, truth(), vec![verified])),
-        4,
+        &frame(candidate(hv, truth(), vec![verified, other])),
+        0,
     );
 }
 

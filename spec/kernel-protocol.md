@@ -65,7 +65,7 @@ autenticado somente na conexão; não é persistido no evento. Não atribuir
 essa assinatura ao agente. Query::Status continua recebendo **h(Event)**,
 nunca h(O); o evento Pending pode ser obtido em Subscribe. Nenhum PROPOSE
 emite Verified, Fact, Policy ou autorização. WITNESS está disponível na5.5;
-ASSUME continua explicitamente indisponível até5.7.
+ASSUME na5.7 (seção abaixo).
 
 Subscribe envia [0,Event] por evento e termina com [1,next_seq] ao atingir
 max_events (1..256) ou o prazo da assinatura. O cursor é explícito; nenhum
@@ -115,8 +115,7 @@ nunca limpeza declarada como concluída. Outros tipos são removidos somente pel
 nome capturado privado. Devolução de diretório não consome quota de bytes.
 Erros não produzem claim; captura pode consumir o arquivo, sem retry automático.
 
-ASSUME retorna Unavailable até5.7.
-PROPOSE/CERTIFY/REFUTE/WITNESS têm implementação real (5.3–5.5).
+PROPOSE/CERTIFY/REFUTE/WITNESS têm implementação real (5.3–5.5); ASSUME na5.7.
 
 ## Processo
 
@@ -194,3 +193,30 @@ WITNESS seleciona a instância mais recente de h(O). Consultar a referência
 Verified anterior continua possível e não herda anexos da nova proposta.
 
 Cliente Python10.1: [contrato e exemplos](python-client.md), fora da TCB.
+
+## ASSUME, escopos e assumptions abertas (Etapa5.7, ADR0054)
+
+ASSUME `[vocab_hash, formula_air_bytes, scope_Text]` registra AssumptionDeclared
+com autor = chave do kernel (**assumption do agente**; nunca satisfaz requisito de
+confiança de política para ações, aplicado na8.2). Assumptions de usuário vêm de
+caminho local de operador, não deste socket. A fórmula MUST ser fechada e passar
+o sort-check contra V do CAS. O scope MUST ter uma das formas normativas:
+
+| Forma | Significado |
+| --- | --- |
+| `session:<rótulo>` | rótulo 1–64 em `[a-z0-9._-]`; sem restrição adicional |
+| `until:<época>` | decimal canônico u64; recusado se já menor que a época corrente; citável enquanto época ≤ limite |
+| `claim:<64 hex minúsculos>` | h(Event) de claim citável; a assumption só é citável por propostas que citem também esse claim |
+
+Sucesso: **assume-result/v1** `[1, h(AssumptionDeclared)]`.
+
+PROPOSE não escolhe escopo: é o escopo único das assumptions no fecho used das
+citações (vazio sem assumptions); escopos diferentes são recusados; `until`
+vencido e `claim:` sem o claim citado também. CERTIFY/WITNESS regeneram O com a
+mesma derivação. Scopes históricos fora das formas continuam rótulos exatos.
+
+Query `[2, h_Event]` → **open-result/v1**: `[]` se o evento não existe; senão
+`[1, [[h(Assumption), scope]...]]` ordenado por h, com as assumptions no fecho
+used (inclusive o próprio evento se for assumption). Lista vazia = incondicional;
+não vazia = o claim vale como `⋀assumptions → φ`. Retratar uma assumption (5.9)
+invalida os dependentes. Vetores em `vectors/kernel-protocol/assume-open-result-v1.json`.

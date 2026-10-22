@@ -110,7 +110,12 @@ pub(crate) fn context<S: Signer>(
         .map(|h| PremiseRef::from_event_hash(*h.as_bytes()))
         .collect();
     let index = ledger.live_index()?;
-    let view = index.snapshot(ledger.cas(), &references, "")?;
+    let epoch = ledger
+        .head()?
+        .ok_or(Error::Invalid("Pending without head"))?
+        .epoch;
+    let scope = crate::scope::for_proposal(&index, &proposal.cites, epoch)?;
+    let view = index.snapshot(ledger.cas(), &references, &scope)?;
     let regenerated = generate(
         Proposal {
             vocabulary: &vocabulary,
@@ -234,6 +239,17 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
         model: Hash<ModelObject>,
     ) -> Result<Value, Error> {
         self.record_witness(ledger, obligation, model)
+    }
+
+    fn assume(
+        &self,
+        ledger: &mut Ledger<'_, S>,
+        _peer: &Peer,
+        vocabulary: Hash<Vocabulary>,
+        formula: logos_air::Formula,
+        scope: Text,
+    ) -> Result<Value, Error> {
+        crate::assume::declare(ledger, vocabulary, formula, scope)
     }
 
     fn refute(

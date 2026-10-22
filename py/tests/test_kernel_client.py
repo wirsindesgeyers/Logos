@@ -70,6 +70,7 @@ def test_all_independent_request_vectors_and_strict_model_revalidation() -> None
         "assume",
         "head",
         "status",
+        "open",
         "subscribe",
     }
     for value in [True, -1, 2**64, "1"]:
@@ -494,3 +495,44 @@ def test_already_refuted_detail_vector_is_parsed_and_malformed_detail_rejected()
     short = canon.encode([1, 7, 0, [5, b"\0" * 31, b"\0" * 32, b"\0" * 32]])
     with pytest.raises(ProtocolError):
         asyncio.run(parse(short, 7))
+
+
+def test_assume_and_open_result_vectors_parse_strictly() -> None:
+    """5.7: assume-result/v1 e open-result/v1 a partir de vetores independentes."""
+    from logos_client.protocol import (
+        Assume,
+        AssumeResult,
+        OpenResult,
+        ProtocolError,
+        QueryOpen,
+        parse_result,
+    )
+
+    root = Path(__file__).resolve().parents[2]
+    data = json.loads(
+        (root / "spec/vectors/kernel-protocol/assume-open-result-v1.json").read_text()
+    )
+    assume = Assume(
+        vocabulary=b"\0" * 32,
+        formula=bytes.fromhex("8401036c464f4c2d6d732d65712f7631818100"),
+        scope="session:x",
+    )
+    query = QueryOpen(reference=b"\0" * 32)
+    for v in data["vectors"]:
+        value = canon.decode(bytes.fromhex(v["value_hex"]))
+        if v["kind"] == "assume":
+            result = parse_result(assume, value)
+            assert isinstance(result, AssumeResult)
+            assert result.event.hex() == v["events"][0]
+            continue
+        result = parse_result(query, value)
+        if v["events"] is None:
+            assert result is None
+            continue
+        assert isinstance(result, OpenResult)
+        assert [a.event.hex() for a in result.assumptions] == v["events"]
+        if "scopes" in v:
+            assert [a.scope for a in result.assumptions] == v["scopes"]
+    unordered = canon.encode([1, [[b"\x02" * 32, "s"], [b"\x01" * 32, "s"]]])
+    with pytest.raises(ProtocolError):
+        parse_result(query, canon.decode(unordered))

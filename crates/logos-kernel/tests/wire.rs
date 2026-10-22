@@ -37,7 +37,7 @@ fn independent_vectors_cover_every_message_and_preserve_exact_bytes() {
             invalid += 1;
         }
     }
-    assert_eq!(valid, 14);
+    assert_eq!(valid, 15);
     assert!(invalid >= 19);
 }
 

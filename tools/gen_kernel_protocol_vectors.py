@@ -17,6 +17,7 @@ RESULT_OUT = OUT.with_name("propose-result-v1.json")
 CHECK_OUT = OUT.with_name("check-result-v1.json")
 WITNESS_OUT = OUT.with_name("witness-result-v1.json")
 REFUSED_OUT = OUT.with_name("already-refuted-v1.json")
+ASSUME_OPEN_OUT = OUT.with_name("assume-open-result-v1.json")
 
 
 def encode(value: object) -> bytes:
@@ -76,6 +77,8 @@ def fixtures() -> dict[str, Any]:
         ("query_head", 5, [0]),
         ("query_status", 5, [1, h]),
         ("subscribe", 6, [0, 256]),
+        # 5.7: no fim, para preservar os ids dos vetores históricos.
+        ("query_open", 5, [2, h]),
     ]
     for index, (name, tag, fields) in enumerate(commands):
         add(name, [1, index + 10, tag, fields])
@@ -143,8 +146,25 @@ def main() -> None:
                 value_hex=encode([1, tag, event]).hex(),
             )
         )
+    a, b = bytes(range(32)), bytes(range(32, 64))
+    assume_open = dict(
+        format="assume-result/v1+open-result/v1",
+        vectors=[
+            dict(id="assume", kind="assume", value_hex=encode([1, a]).hex(), events=[a.hex()]),
+            dict(id="open-missing", kind="open", value_hex=encode([]).hex(), events=None),
+            dict(id="open-unconditional", kind="open", value_hex=encode([1, []]).hex(), events=[]),
+            dict(
+                id="open-two",
+                kind="open",
+                value_hex=encode([1, [[a, "session:estudo"], [b, "until:3"]]]).hex(),
+                events=[a.hex(), b.hex()],
+                scopes=["session:estudo", "until:3"],
+            ),
+        ],
+    )
     for path, fixtures_data in [
         (OUT, fixtures()),
+        (ASSUME_OPEN_OUT, assume_open),
         (RESULT_OUT, result_fixtures()),
         (CHECK_OUT, dict(format="check-result/v1", vectors=check_vectors)),
         (

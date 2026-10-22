@@ -107,6 +107,16 @@ impl LedgerLiveIndex<'_> {
         self.index.refuted(obligation)
     }
 
+    /// Assumptions abertas no fecho used (5.7); `None` se a referência não existe.
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn open_assumptions(
+        &self,
+        reference: Hash<Event>,
+    ) -> Result<Option<crate::index::OpenAssumptions>, LedgerError> {
+        self.index.open_assumptions(reference)
+    }
+
     /// Citabilidade de estado na época atual, sem promover épocas anteriores.
     /// # Errors
     /// SQL ou projeção inválida.

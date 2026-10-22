@@ -35,6 +35,8 @@ pub enum Query {
     Head,
     /// Categoria/época/retratação de um evento.
     Status(Hash<Event>),
+    /// Assumptions abertas no fecho used do evento (5.7): claim condicional.
+    Open(Hash<Event>),
 }
 
 /// Mensagens candidatas v1. Nenhuma constrói Claim ou obrigação.
@@ -233,6 +235,7 @@ impl Request {
             (5, [Value::Unsigned(1), reference]) => {
                 Message::Query(Query::Status(digest(reference)?))
             }
+            (5, [Value::Unsigned(2), reference]) => Message::Query(Query::Open(digest(reference)?)),
             (6, [from, count]) => {
                 let max_events = uint(count)?;
                 if !(1..=256).contains(&max_events) {
@@ -295,6 +298,7 @@ impl Request {
             ),
             Message::Query(Query::Head) => (5, vec![Value::Unsigned(0)]),
             Message::Query(Query::Status(h)) => (5, vec![Value::Unsigned(1), h.to_value()?]),
+            Message::Query(Query::Open(h)) => (5, vec![Value::Unsigned(2), h.to_value()?]),
             Message::Subscribe {
                 from_seq,
                 max_events,

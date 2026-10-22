@@ -115,6 +115,13 @@ class QueryStatus(Model):
     reference: Digest
 
 
+class QueryOpen(Model):
+    """Assumptions abertas no fecho used de um claim (5.7)."""
+
+    kind: Literal["open"] = "open"
+    reference: Digest
+
+
 class Subscribe(Model):
     kind: Literal["subscribe"] = "subscribe"
     from_seq: U64
@@ -122,7 +129,7 @@ class Subscribe(Model):
 
 
 type Message = Annotated[
-    Propose | Certify | Refute | Witness | Assume | QueryHead | QueryStatus | Subscribe,
+    Propose | Certify | Refute | Witness | Assume | QueryHead | QueryStatus | QueryOpen | Subscribe,
     Field(discriminator="kind"),
 ]
 
@@ -177,6 +184,8 @@ def encode_request(request: Request) -> bytes:
         tag, fields = 5, [0]
     elif isinstance(m, QueryStatus):
         tag, fields = 5, [1, m.reference]
+    elif isinstance(m, QueryOpen):
+        tag, fields = 5, [2, m.reference]
     else:
         tag, fields = 6, [m.from_seq, m.max_events]
     payload = canon.encode([1, request.id, tag, fields])
@@ -221,6 +230,8 @@ def decode_request(payload: bytes) -> Request:
         message = QueryHead()
     elif tag == 5 and len(f) == 2 and uint(f[0]) == 1:
         message = QueryStatus(reference=digest(f[1]))
+    elif tag == 5 and len(f) == 2 and uint(f[0]) == 2:
+        message = QueryOpen(reference=digest(f[1]))
     elif tag == 6 and len(f) == 2:
         message = Subscribe(from_seq=uint(f[0]), max_events=uint(f[1], 256))
     else:
@@ -251,6 +262,23 @@ class CheckResult(Model):
 class WitnessResult(Model):
     outcome: Literal["accepted", "rejected", "unknown"]
     event: Digest
+
+
+class AssumeResult(Model):
+    """assume-result/v1: evento AssumptionDeclared (autor = kernel, origem agente)."""
+
+    event: Digest
+
+
+class OpenAssumption(Model):
+    event: Digest
+    scope: str
+
+
+class OpenResult(Model):
+    """open-result/v1: lista vazia = claim incondicional."""
+
+    assumptions: list[OpenAssumption]
 
 
 class Head(Model):
@@ -300,7 +328,9 @@ def parse_event(value: canon.Value) -> EventRecord:
     )
 
 
-type Result = ProposeResult | CheckResult | WitnessResult | Head | Status | None
+type Result = (
+    ProposeResult | CheckResult | WitnessResult | AssumeResult | OpenResult | Head | Status | None
+)
 
 
 def parse_result(message: Message, value: canon.Value) -> Result:
@@ -317,6 +347,26 @@ def parse_result(message: Message, value: canon.Value) -> Result:
         if type(f[2]) is not bool:
             raise ProtocolError("status boolean")
         return Status(kind=uint(f[0], 9), epoch=uint(f[1]), retracted=f[2])
+    if isinstance(message, QueryOpen):
+        if not f:
+            return None
+        f = array(value, 2)
+        if uint(f[0]) != 1:
+            raise ProtocolError("open result version")
+        entries = []
+        for entry in array(f[1]):
+            pair = array(entry, 2)
+            if not isinstance(pair[1], str):
+                raise ProtocolError("open result scope")
+            entries.append(OpenAssumption(event=digest(pair[0]), scope=pair[1]))
+        if [e.event for e in entries] != sorted(e.event for e in entries):
+            raise ProtocolError("open result order")
+        return OpenResult(assumptions=entries)
+    if isinstance(message, Assume):
+        f = array(value, 2)
+        if uint(f[0]) != 1:
+            raise ProtocolError("assume result version")
+        return AssumeResult(event=digest(f[1]))
     f = array(value, 3)
     if uint(f[0]) != 1:
         raise ProtocolError("result version")

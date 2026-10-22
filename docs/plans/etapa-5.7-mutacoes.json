@@ -1,0 +1,212 @@
+[
+  {
+    "name": "mixed_scopes_allowed",
+    "source": "crates/logos-kernel/src/scope.rs",
+    "replace_once": {
+      "from": "    if scopes.next().is_some() {\n",
+      "to": "    if false && scopes.next().is_some() {\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assume_scopes_are_normative_and_proposals_derive_a_single_scope",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 0,
+    "positive_control_exit": 0,
+    "detected": false,
+    "compile_error": false,
+    "restored_sha256": "9b81f2b640b8ff4d383720860c437c8c455fdb407d41fdfed3104a14317b74aa",
+    "mutant_output_tail": [
+      "running 1 test",
+      ".",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 9.77s"
+    ],
+    "expected_equivalent": true,
+    "note": "equivalente: LedgerIndex::snapshot recusa escopos diferentes com o mesmo código Invalid"
+  },
+  {
+    "name": "claim_scope_not_enforced",
+    "source": "crates/logos-kernel/src/scope.rs",
+    "replace_once": {
+      "from": "Some(Scope::Claim(claim)) if !cites.contains(&claim) =>",
+      "to": "Some(Scope::Claim(claim)) if false && !cites.contains(&claim) =>"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assume_scopes_are_normative_and_proposals_derive_a_single_scope",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "9b81f2b640b8ff4d383720860c437c8c455fdb407d41fdfed3104a14317b74aa",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 7.17s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ],
+    "expected_equivalent": false
+  },
+  {
+    "name": "expired_until_declared",
+    "source": "crates/logos-kernel/src/assume.rs",
+    "replace_once": {
+      "from": "Some(Scope::Until(limit)) if limit < head.epoch =>",
+      "to": "Some(Scope::Until(limit)) if false && limit < head.epoch =>"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assume_scopes_are_normative_and_proposals_derive_a_single_scope",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "e8e5e047a77202322769cc4c5a125e66685a2b6cc639bb082b5f488742b14b74",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 10.14s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ],
+    "expected_equivalent": false
+  },
+  {
+    "name": "free_scope_accepted",
+    "source": "crates/logos-kernel/src/assume.rs",
+    "replace_once": {
+      "from": "        None => {\n            return Err(Error::Invalid(\n                \"assumption scope is not session/until/claim\",\n            ));\n",
+      "to": "        None => {\n            let _ = Error::Invalid(\n                \"assumption scope is not session/until/claim\",\n            );\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assume_scopes_are_normative_and_proposals_derive_a_single_scope",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "e8e5e047a77202322769cc4c5a125e66685a2b6cc639bb082b5f488742b14b74",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 5.34s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ],
+    "expected_equivalent": false
+  },
+  {
+    "name": "open_query_empty",
+    "source": "crates/logos-ledger/src/index.rs",
+    "replace_once": {
+      "from": "WHERE claims.scope IS NOT NULL ORDER BY",
+      "to": "WHERE claims.scope IS NULL ORDER BY"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assumption_derived_claim_is_conditional_in_query_and_falls_when_retracted",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "d92d16b43ded4f6323f8ef5fd72c78de1fc0b3ac2dad7a67821947ddda846dcf",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 5.58s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ],
+    "expected_equivalent": false
+  },
+  {
+    "name": "certify_regenerates_without_scope",
+    "source": "crates/logos-kernel/src/certify.rs",
+    "replace_once": {
+      "from": "index.snapshot(ledger.cas(), &references, &scope)?",
+      "to": "index.snapshot(ledger.cas(), &references, \"\")?"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "assume_scopes_are_normative_and_proposals_derive_a_single_scope",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "f4992a42a16de495f35479d68012dafd148dff583272ca0add181577ac386bcf",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ],
+    "expected_equivalent": false
+  }
+]

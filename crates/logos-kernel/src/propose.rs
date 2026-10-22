@@ -52,7 +52,12 @@ pub(crate) fn create<S: Signer>(
         .collect();
     let obligation = {
         let index = ledger.live_index()?;
-        let view = index.snapshot(ledger.cas(), &references, "")?;
+        let epoch = ledger
+            .head()?
+            .ok_or(Error::Invalid("PROPOSE requires Genesis"))?
+            .epoch;
+        let scope = crate::scope::for_proposal(&index, &proposal.cites, epoch)?;
+        let view = index.snapshot(ledger.cas(), &references, &scope)?;
         generate(
             Proposal {
                 vocabulary: &vocabulary,
