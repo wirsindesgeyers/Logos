@@ -149,6 +149,9 @@ def build_vectors() -> list[dict[str, Any]]:
     target = bytes.fromhex(vectors[-2]["event_hash_hex"])
     for name, check in [("accepted", accepted), ("rejected", rejected), ("unknown", unknown)]:
         add("ConsistencyRecorded-" + name, [3, 14, target, check, model], epoch=(1 << 64) - 1)
+    # rechecked-body/v1 (5.10, ADR0056): Rechecked de uma rota com o checker novo.
+    for name, check in [("accepted", accepted), ("rejected", rejected), ("unknown", unknown)]:
+        add("Rechecked-" + name, [1, 15, ref1, check], epoch=(1 << 64) - 1)
     return vectors
 
 
@@ -160,7 +163,8 @@ def main() -> None:
     rendered = (
         json.dumps(
             {
-                "format": "event/v1+epoch-body/v2+certificate-rejected-body/v2+consistency-body/v3",
+                "format": "event/v1+epoch-body/v2+certificate-rejected-body/v2"
+                "+consistency-body/v3+rechecked-body/v1",
                 "vectors": vectors,
             },
             ensure_ascii=False,

@@ -894,6 +894,7 @@ def render_schema() -> str:
                                             "Rejected",
                                             "Invalidated",
                                             "Proposal",
+                                            "Suspended",
                                         ],
                                     },
                                     "epoch": {"type": "integer", "minimum": 0},

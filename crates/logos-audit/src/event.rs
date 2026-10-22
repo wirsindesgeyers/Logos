@@ -60,6 +60,8 @@ pub(crate) struct Parsed {
     pub derivation: Option<Derivation>,
     pub consistency_target: Option<([u8; 32], Hash<Obligation>)>,
     pub claim_obligation: Option<Hash<Obligation>>,
+    /// Rechecked (5.10): rota alvo e o novo registro de checagem.
+    pub rechecked: Option<([u8; 32], Check)>,
 }
 
 pub(crate) fn arr(v: &Value) -> Result<&[Value]> {
@@ -195,6 +197,7 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         derivation: None,
         consistency_target: None,
         claim_obligation: None,
+        rechecked: None,
     };
     let b = arr(body)?;
     if let [
@@ -333,6 +336,10 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             p.proof = true;
             p.proof_check = Some(c);
         }
+        [Value::Unsigned(1), Value::Unsigned(15), route, record] => {
+            let c = check(record, &mut p)?;
+            p.rechecked = Some((digest(route)?, c));
+        }
         [Value::Unsigned(1), Value::Unsigned(5), record, m] => {
             let c = check(record, &mut p)?;
             model(c, m, false, &mut p)?;
@@ -451,7 +458,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 27);
+        assert_eq!(vectors.len(), 30);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

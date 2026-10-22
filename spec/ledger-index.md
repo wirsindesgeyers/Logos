@@ -45,8 +45,9 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=2 (ledger-index/v2, Etapa 5.6: índice
-`claims_h_o`; cache v1 é recusado e reconstruído, nunca migrado). Schema SQL exato e codebook
+application_id=0x4c494458 (LIDX), user_version=3 (ledger-index/v3, Etapa 5.10: status
+Suspended=7; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
+reconstruídos, nunca migrados). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
 conferidos por teste contra arquivo real. Oito objetos SQL, sem triggers/views:
 
@@ -88,15 +89,24 @@ da 3.4 não prolonga essas entradas; janelas de Fact serão integradas na 6.1.
 Retracted/Invalidated MUST ter alvo lógico anterior; Retracted marca retracted
 só no alvo. Cascata ATMS (Etapa 5.9, ADR0052): o **nó** de uma linha Verified é
 seu h(O) (todas as rotas Verified com o mesmo h(O)); qualquer outra linha é nó de
-si mesma. Retracted e Invalidated matam o alvo; CheckerRevoked mata as rotas
-Verified desse checker e registra revogação; Verified posteriores desse checker
-nascem Invalidated. Morta = status Invalidated e fora de citable. Depois de cada
+si mesma. Retracted, Invalidated e Rechecked com Rejected matam o alvo;
+CheckerRevoked **suspende** (5.10, ADR0056) e registra a revogação; Verified
+posteriores desse checker nascem Invalidated. Morta = status Invalidated e fora de citable. Depois de cada
 morte, a projeção MUST propagar até o ponto fixo: um nó h(O) está vivo se alguma
 rota ainda Verified tem todas as premissas used vivas; premissa viva é assumption
 não morta ou rota de nó h(O) vivo. Nó sem rota sustentada cai: todas as suas rotas
 Verified viram Invalidated (terminal) e os dependentes são reavaliados. Rota cujo
 nó segue vivo por outra rota continua Verified/citável, mesmo com premissa morta.
 Com uma rota por nó, coincide com o fechamento transitivo por deps.
+Para a morte, rota Suspended conta como viva.
+
+Atividade (5.10): checker efetivo de uma rota é o do Verified, trocado pelo do
+último Rechecked Accepted. Um nó h(O) vivo é ativo se alguma rota sua de checker
+efetivo não revogado tem todas as premissas used ativas (assumption viva ou nó
+ativo); suas rotas vivas são então Verified e citáveis na época de emissão. Nó vivo
+inativo: rotas vivas Suspended, fora de citable, e a reavaliação segue para os
+dependentes até o ponto fixo. Rota nova Verified de checker ativo reativa o nó.
+Rechecked exige alvo rota viva e mesmo h(O); Accepted de checker revogado é erro.
 CheckerRegistered não restaura hash revogado. A projeção MUST NOT criar eventos
 nem interpretar autorização administrativa; o registro Invalidated da cascata é
 do kernel (state-machine.md §4).

@@ -1,0 +1,57 @@
+{
+  "etapa": "5.10",
+  "data": "2026-10-22",
+  "metodo": "mutação manual; restauração após cada execução; testes logos-ledger/tests/index.rs e logos-kernel/tests/certify.rs (revoke/revocation/criterion/auditor)",
+  "mutantes": [
+    {
+      "descricao": "refresh ignora revogação",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "atividade usa vivacidade",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "Rechecked aceito não troca checker",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "Rechecked rejeitado ignorado",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "suspensa conta como morta",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "revogação mata (semântica antiga)",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "rota nova não reativa nó",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "recheck aceita mesmo checker",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "recheck ignora vivacidade",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "reconcile sem raiz de recheck",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "auditor esquece falhas",
+      "resultado": "KILLED"
+    },
+    {
+      "descricao": "revogar sem autoridade",
+      "resultado": "KILLED"
+    }
+  ],
+  "mortos": 12,
+  "total": 12
+}

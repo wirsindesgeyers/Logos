@@ -388,7 +388,9 @@ fn retracting_unused_citation_preserves_claim_but_used_transitive_retraction_rem
 }
 
 #[test]
-fn explicit_invalidation_and_checker_revocation_cannot_be_undone_by_later_verified() {
+fn checker_revocation_suspends_and_later_verified_by_it_is_born_invalidated() {
+    // 5.10 (ADR0056): revogar suspende a rota (não citável, não morta); uma
+    // Verified posterior do checker revogado nasce Invalidated.
     let fixture = Fixture::new();
     let mut ledger = fixture.ledger();
     let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
@@ -399,11 +401,11 @@ fn explicit_invalidation_and_checker_revocation_cannot_be_undone_by_later_verifi
     {
         let index = ledger.index().unwrap();
         assert!(index.is_citable(a, 0).unwrap());
-        for id in [proof, later] {
-            assert_eq!(
-                index.status(id).unwrap().unwrap().kind,
-                EntryKind::Invalidated
-            );
+        for (id, kind) in [
+            (proof, EntryKind::Suspended),
+            (later, EntryKind::Invalidated),
+        ] {
+            assert_eq!(index.status(id).unwrap().unwrap().kind, kind);
             assert!(!index.is_citable(id, 0).unwrap());
         }
     }
@@ -1091,6 +1093,229 @@ fn retracting_one_route_kills_only_that_route_while_a_sibling_supports_the_node(
         assert!(
             index.is_citable(id, 0).unwrap(),
             "nó h(O) segue vivo pela rota via_b"
+        );
+    }
+}
+
+// --- 5.10 (ADR0056): revogação suspende; Rechecked reativa ou invalida ------
+
+const OTHER: &[u8] = b"other-checker";
+
+fn verified_by(
+    ho: Hash<Obligation>,
+    cited: Vec<Hash<Event>>,
+    used: Vec<Hash<Event>>,
+    checker: &[u8],
+) -> EventBody {
+    let mut body = verified(ho, cited, used);
+    if let EventBody::Verified { check, .. } = &mut body {
+        check.checker = hash_raw::<Checker>(checker);
+    }
+    body
+}
+
+fn rechecked(route: Hash<Event>, ho: Hash<Obligation>, outcome: CheckOutcome) -> EventBody {
+    let mut check = check(ho);
+    check.checker = hash_raw::<Checker>(OTHER);
+    check.outcome = outcome;
+    EventBody::Rechecked { route, check }
+}
+
+struct Chain {
+    fixture: Fixture,
+    a: Hash<Event>,
+    ho: Hash<Obligation>,
+    route: Hash<Event>,
+    dependent: Hash<Event>,
+}
+
+/// a ← route (checker revogável) ← dependent (outro checker).
+fn chain() -> Chain {
+    let fixture = Fixture::new();
+    fixture.cas.put::<Checker>(OTHER).unwrap();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let ho = fixture.obligation(&ledger, &[a], &truth());
+    let route = hash(&ledger.append(verified(ho, vec![a], vec![a])).unwrap()).unwrap();
+    let hd = fixture.obligation(&ledger, &[route], &truth());
+    let dependent = hash(
+        &ledger
+            .append(verified_by(hd, vec![route], vec![route], OTHER))
+            .unwrap(),
+    )
+    .unwrap();
+    drop(ledger);
+    Chain {
+        fixture,
+        a,
+        ho,
+        route,
+        dependent,
+    }
+}
+
+fn kinds(ledger: &Ledger<'_, FileSigner>, ids: &[Hash<Event>]) -> Vec<(EntryKind, bool)> {
+    let index = ledger.index().unwrap();
+    ids.iter()
+        .map(|id| {
+            (
+                index.status(*id).unwrap().unwrap().kind,
+                index.is_citable(*id, 0).unwrap(),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn revocation_suspends_dependents_and_accepted_recheck_restores_them() {
+    let c = chain();
+    let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+    let ids = [c.route, c.dependent];
+    ledger.append(revoke(&c.fixture.signer)).unwrap();
+    assert_eq!(
+        kinds(&ledger, &ids),
+        vec![(EntryKind::Suspended, false); 2],
+        "dependente de outro checker também fica suspenso"
+    );
+    assert!(ledger.index().unwrap().is_citable(c.a, 0).unwrap());
+    ledger
+        .append(rechecked(
+            c.route,
+            c.ho,
+            CheckOutcome::Unknown(Exhausted::Time),
+        ))
+        .unwrap();
+    assert_eq!(kinds(&ledger, &ids), vec![(EntryKind::Suspended, false); 2]);
+    ledger
+        .append(rechecked(c.route, c.ho, CheckOutcome::Accepted))
+        .unwrap();
+    assert_eq!(kinds(&ledger, &ids), vec![(EntryKind::Verified, true); 2]);
+    drop(ledger);
+    let rebuilt = LedgerIndex::open(&c.fixture.temp.0, c.fixture.signer.public_key()).unwrap();
+    for id in ids {
+        assert_eq!(
+            rebuilt.status(id).unwrap().unwrap().kind,
+            EntryKind::Verified
+        );
+        assert!(rebuilt.is_citable(id, 0).unwrap());
+    }
+}
+
+#[test]
+fn rejected_recheck_invalidates_route_and_cascades() {
+    let c = chain();
+    let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+    ledger.append(revoke(&c.fixture.signer)).unwrap();
+    ledger
+        .append(rechecked(
+            c.route,
+            c.ho,
+            CheckOutcome::Rejected(logos_core::Reason::new(Text::new("bad proof").unwrap())),
+        ))
+        .unwrap();
+    assert_eq!(
+        kinds(&ledger, &[c.route, c.dependent]),
+        vec![(EntryKind::Invalidated, false); 2]
+    );
+    // Rota morta não pode ser rechecada de novo: a projeção recusa o sufixo.
+    ledger
+        .append(rechecked(c.route, c.ho, CheckOutcome::Accepted))
+        .unwrap();
+    assert!(matches!(
+        ledger.live_index(),
+        Err(LedgerError::Invalid("recheck target is not a live route"))
+    ));
+}
+
+#[test]
+fn active_independent_route_keeps_node_citable_after_revocation() {
+    let fixture = Fixture::new();
+    fixture.cas.put::<Checker>(OTHER).unwrap();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let ho = fixture.obligation(&ledger, &[a], &truth());
+    let revocable = hash(&ledger.append(verified(ho, vec![a], vec![a])).unwrap()).unwrap();
+    let other = hash(
+        &ledger
+            .append(verified_by(ho, vec![a], vec![a], OTHER))
+            .unwrap(),
+    )
+    .unwrap();
+    let hd = fixture.obligation(&ledger, &[revocable], &truth());
+    let dependent = hash(
+        &ledger
+            .append(verified_by(hd, vec![revocable], vec![revocable], OTHER))
+            .unwrap(),
+    )
+    .unwrap();
+    ledger.append(revoke(&fixture.signer)).unwrap();
+    assert_eq!(
+        kinds(&ledger, &[revocable, other, dependent]),
+        vec![(EntryKind::Verified, true); 3],
+        "nó ativo pela rota do checker não revogado"
+    );
+}
+
+#[test]
+fn new_route_from_active_checker_reactivates_suspended_node() {
+    let c = chain();
+    let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+    ledger.append(revoke(&c.fixture.signer)).unwrap();
+    // Reproposta da mesma h(O) certificada por checker ativo: nova rota.
+    let fresh = hash(
+        &ledger
+            .append(verified_by(c.ho, vec![c.a], vec![c.a], OTHER))
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        kinds(&ledger, &[c.route, c.dependent, fresh]),
+        vec![(EntryKind::Verified, true); 3]
+    );
+}
+
+#[test]
+fn retracting_premise_of_suspended_route_kills_it() {
+    let c = chain();
+    let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+    ledger.append(revoke(&c.fixture.signer)).unwrap();
+    ledger.append(retract(c.a, &c.fixture.signer)).unwrap();
+    assert_eq!(
+        kinds(&ledger, &[c.route, c.dependent]),
+        vec![(EntryKind::Invalidated, false); 2],
+        "suspensão não protege contra morte"
+    );
+}
+
+type BuildBody = fn(&Chain, &mut Ledger<'_, FileSigner>) -> EventBody;
+
+#[test]
+fn recheck_projection_refuses_wrong_targets_and_revoked_checkers() {
+    let cases: [(&str, BuildBody); 3] = [
+        ("recheck target is not a Verified route", |c, _| {
+            rechecked(c.a, c.ho, CheckOutcome::Accepted)
+        }),
+        ("recheck obligation differs from route", |c, ledger| {
+            let other = c.fixture.obligation(ledger, &[], &falsity());
+            rechecked(c.route, other, CheckOutcome::Accepted)
+        }),
+        ("recheck by a revoked checker", |c, ledger| {
+            ledger.append(revoke(&c.fixture.signer)).unwrap();
+            let mut body = rechecked(c.route, c.ho, CheckOutcome::Accepted);
+            if let EventBody::Rechecked { check, .. } = &mut body {
+                check.checker = hash_raw::<Checker>(b"fixture-checker");
+            }
+            body
+        }),
+    ];
+    for (message, build) in cases {
+        let c = chain();
+        let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+        let body = build(&c, &mut ledger);
+        ledger.append(body).unwrap();
+        assert!(
+            matches!(ledger.live_index(), Err(LedgerError::Invalid(m)) if m == message),
+            "{message}"
         );
     }
 }

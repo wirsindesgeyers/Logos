@@ -70,6 +70,8 @@ pub enum EntryKind {
     Invalidated,
     /// Proposta submetida pelo agente. Não citável.
     Proposal,
+    /// Rota sustentada só por checker revogado e ainda não rechecada (5.10). Não citável.
+    Suspended,
 }
 
 impl EntryKind {
@@ -96,6 +98,7 @@ impl fmt::Display for EntryKind {
             Self::Rejected => "Rejected",
             Self::Invalidated => "Invalidated",
             Self::Proposal => "Proposal",
+            Self::Suspended => "Suspended",
         };
         f.write_str(name)
     }

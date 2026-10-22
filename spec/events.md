@@ -75,6 +75,7 @@ qualquer caminho não vazio do catálogo v1.
 | 11 | CheckerRegistered | hChecker, format_Text, authority |
 | 12 | CheckerRevoked | hChecker, reason_Text, authority |
 | 13 | CertificateRejected | check (corpo v2) |
+| 15 | Rechecked (5.10) | route_hEvent, check (qualquer desfecho) |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -216,3 +217,17 @@ Auditor independente confere target anterior/O/época e recheca Accepted.
 A consulta de consistência por referência Verified preserva a instância exata,
 mesmo após uma repróposta de mesmo h(O); isso não transfere evidência para a
 nova instância. Requests WITNESS por h(O) dirigem-se à instância mais recente.
+
+## 10. Recheck — rechecked-body/v1 (Etapa5.10, ADR0056)
+
+`[1,15,route,CheckRecord]` é Rechecked: route é bytes32 (domínio Event), o
+CheckRecord tem qualquer desfecho válido (Accepted, Rejected ou Unknown). CAS
+exige O/certificado/checker como nos demais checks. Aridade exata; outra versão
+recusa a tag15. O kernel grava um Rechecked por rota viva rechecada com outro
+checker ativo, com os mesmos h(O)/h(certificado) da rota: Accepted troca o
+checker efetivo da rota e a reativa, Rejected a invalida (raiz da cascata,
+`causes = [h(Rechecked), premissa morta]` nos dependentes), Unknown mantém a
+suspensão. Sem assinatura de autoridade: é registro do kernel, como Verified.
+A projeção recusa alvo que não é rota viva, h(O) diferente da rota e Accepted
+de checker revogado (ledger-index.md §3).
+

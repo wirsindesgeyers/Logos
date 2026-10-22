@@ -37,6 +37,7 @@ KIND_NAMES = (
     "rejected",
     "invalidated",
     "proposal",
+    "suspended",
 )
 
 

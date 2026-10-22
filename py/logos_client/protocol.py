@@ -288,7 +288,7 @@ class Head(Model):
 
 
 class Status(Model):
-    kind: Annotated[int, Field(ge=0, le=9)]
+    kind: Annotated[int, Field(ge=0, le=10)]  # 10 = Suspended (5.10)
     epoch: U64
     retracted: bool
 

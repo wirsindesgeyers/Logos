@@ -19,9 +19,9 @@ def dead_set(view: LedgerView, killed: set[bytes]) -> set[bytes]:
     premissas `used` vivas; premissa viva = assumption não morta ou rota de nó
     vivo. Maior ponto fixo, recomputado do zero.
     """
-    direct = set(killed) | {
-        event for event, route in view.routes.items() if route.checker in view.revoked
-    }
+    # 5.10: revogação só suspende; morrem rotas retratadas, rejeitadas no
+    # recheck ou emitidas por checker já revogado.
+    direct = set(killed) | view.born_dead
     alive = {route.obligation: True for route in view.routes.values()}
 
     def premise_alive(premise: bytes) -> bool:
@@ -56,7 +56,7 @@ def dead_set(view: LedgerView, killed: set[bytes]) -> set[bytes]:
 
 @dataclass
 class Step:
-    retracted: bytes  # evento Retracted
+    retracted: bytes  # evento Retracted ou Rechecked rejeitado
     target: bytes
     reason: str
     newly_dead: list[bytes]
@@ -79,7 +79,8 @@ def audit(view: LedgerView, kernel_dead: set[bytes]) -> CutAudit:
     result = CutAudit()
     killed: set[bytes] = set()
     previous: set[bytes] = set()
-    targets = sorted(view.retracted.items(), key=lambda item: view.order.index(item[1]))
+    roots = {**view.recheck_rejected, **view.retracted}
+    targets = sorted(roots.items(), key=lambda item: view.order.index(item[1]))
     for target, retraction in targets:
         killed.add(target)
         now = dead_set(view, killed)
@@ -92,7 +93,7 @@ def audit(view: LedgerView, kernel_dead: set[bytes]) -> CutAudit:
             Step(
                 retraction,
                 target,
-                view.retraction_reason.get(target, ""),
+                view.retraction_reason.get(target, "recheck rejeitado (5.10)"),
                 [event for event in view.order if event in now - previous],
                 [event for event in view.order if event in survivors],
             )
@@ -106,14 +107,14 @@ def audit(view: LedgerView, kernel_dead: set[bytes]) -> CutAudit:
         result.problems.append(f"kernel/recomputation disagree: missing={missing} extra={extra}")
 
     def root_of(premise: bytes) -> bytes | None:
-        if premise in view.retracted:
-            return view.retracted[premise]
+        if premise in roots:
+            return roots[premise]
         causes = view.invalidated.get(premise)
         return None if not causes else causes[0]
 
     for event, route in view.routes.items():
         record = view.invalidated.get(event)
-        direct = event in view.retracted or route.checker in view.revoked
+        direct = event in roots or event in view.born_dead
         if event not in result.dead or direct:
             if record is not None and not direct:
                 result.problems.append(f"Invalidated for a live route {event.hex()[:12]}")
@@ -127,7 +128,7 @@ def audit(view: LedgerView, kernel_dead: set[bytes]) -> CutAudit:
         root, premise = record
         if premise not in route.used or premise not in result.dead:
             result.problems.append(f"cause is not a dead used premise for {event.hex()[:12]}")
-        elif view.tags.get(root) != 8 or root_of(premise) != root:
+        elif view.tags.get(root) not in (8, 15) or root_of(premise) != root:
             result.problems.append(f"cause path does not reach its root for {event.hex()[:12]}")
     for claim in view.invalidated:
         if claim not in view.routes:

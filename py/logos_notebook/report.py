@@ -33,6 +33,7 @@ LABEL_PT = {
     "pending": "pendente",
     "unknown": "inconclusiva (Unknown)",
     "rejected": "certificado rejeitado",
+    "suspended": "suspensa: checker revogado, aguardando recheck (não citável)",
 }
 
 

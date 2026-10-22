@@ -108,7 +108,7 @@ fn every_historical_catalog_vector_replays_byte_for_byte_without_cas_migration()
     }
     drop(ledger);
     let ledger = Ledger::open(&temp.0, &signer).unwrap();
-    assert_eq!(ledger.head().unwrap().unwrap().seq, 26);
+    assert_eq!(ledger.head().unwrap().unwrap().seq, 29);
 }
 
 #[test]

@@ -13,6 +13,7 @@ pub(crate) const REFUTED: i64 = 3;
 pub(crate) const UNKNOWN: i64 = 4;
 pub(crate) const ASSUMPTION: i64 = 5;
 pub(crate) const INVALIDATED: i64 = 6;
+pub(crate) const SUSPENDED: i64 = 7;
 
 /// Nó ATMS de uma linha: rotas Verified (h_o e checker presentes) pertencem ao
 /// nó h(O); as demais linhas (assumptions, propostas) são nós de si mesmas.
@@ -35,8 +36,28 @@ fn node_of(connection: &Connection, id: &[u8]) -> Result<Option<Node>, LedgerErr
         }))
 }
 
-/// Premissa viva: assumption não morta, ou nó h(O) com alguma rota Verified.
+/// Premissa viva: assumption não morta, ou nó h(O) com alguma rota Verified ou
+/// Suspended (suspensão por revogação não é morte, 5.10).
 fn premise_alive(connection: &Connection, premise: &[u8]) -> Result<bool, LedgerError> {
+    Ok(match node_of(connection, premise)? {
+        Some(Node::Obligation(h)) => connection
+            .prepare(
+                "SELECT 1 FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status IN (2,7)",
+            )?
+            .query_row([h], |_| Ok(()))
+            .optional()?
+            .is_some(),
+        Some(Node::Single(id)) => connection
+            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5)")?
+            .query_row([id], |_| Ok(()))
+            .optional()?
+            .is_some(),
+        None => false,
+    })
+}
+
+/// Premissa ativa (citável): assumption viva ou nó h(O) com rota Verified ativa.
+fn premise_active(connection: &Connection, premise: &[u8]) -> Result<bool, LedgerError> {
     Ok(match node_of(connection, premise)? {
         Some(Node::Obligation(h)) => connection
             .prepare("SELECT 1 FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status=2")?
@@ -50,6 +71,82 @@ fn premise_alive(connection: &Connection, premise: &[u8]) -> Result<bool, Ledger
             .is_some(),
         None => false,
     })
+}
+
+/// Recalcula atividade dos nós h(O) dados e propaga aos dependentes (5.10).
+///
+/// Um nó vivo está ativo se alguma rota não morta, de checker não revogado, tem
+/// todas as premissas used ativas; senão suas rotas vivas ficam Suspended (não
+/// citáveis, mas não mortas). Ativo: todas as rotas vivas voltam a Verified e
+/// citáveis na época de emissão. Cada evento move atividade num só sentido e o
+/// grafo é acíclico, então a worklist termina no ponto fixo.
+fn refresh(connection: &Connection, seeds: Vec<Vec<u8>>) -> Result<(), LedgerError> {
+    let mut work = seeds;
+    while let Some(h) = work.pop() {
+        let routes = ids(
+            connection,
+            "SELECT id FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status IN (2,7)",
+            &h,
+        )?;
+        let mut active = false;
+        for route in &routes {
+            let revoked = connection
+                .prepare("SELECT 1 FROM claims JOIN revoked ON revoked.checker=claims.checker WHERE claims.id=?1")?
+                .query_row([route], |_| Ok(()))
+                .optional()?
+                .is_some();
+            if revoked {
+                continue;
+            }
+            let mut all = true;
+            for premise in ids(connection, "SELECT premise FROM deps WHERE claim=?1", route)? {
+                if !premise_active(connection, &premise)? {
+                    all = false;
+                    break;
+                }
+            }
+            if all {
+                active = true;
+                break;
+            }
+        }
+        let (from, to) = if active {
+            (SUSPENDED, VERIFIED)
+        } else {
+            (VERIFIED, SUSPENDED)
+        };
+        let mut changed = Vec::new();
+        for route in &routes {
+            let updated = connection
+                .prepare("UPDATE claims SET status=?2 WHERE id=?1 AND status=?3")?
+                .execute(params![route, to, from])?;
+            if updated == 0 {
+                continue;
+            }
+            if active {
+                connection
+                    .prepare("INSERT OR IGNORE INTO citable(ref,epoch) SELECT id,epoch FROM claims WHERE id=?1")?
+                    .execute([route])?;
+            } else {
+                connection
+                    .prepare("DELETE FROM citable WHERE ref=?1")?
+                    .execute([route])?;
+            }
+            changed.push(route.clone());
+        }
+        for route in &changed {
+            for dependent in ids(
+                connection,
+                "SELECT h_o FROM deps JOIN claims ON claims.id=deps.claim WHERE premise=?1 AND status IN (2,7) AND checker IS NOT NULL",
+                route,
+            )? {
+                if !work.contains(&dependent) {
+                    work.push(dependent);
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn ids(connection: &Connection, sql: &str, key: &[u8]) -> Result<Vec<Vec<u8>>, LedgerError> {
@@ -73,7 +170,7 @@ fn kill(connection: &Connection, id: &[u8]) -> Result<(), LedgerError> {
 /// Um nó h(O) cai quando nenhuma rota Verified restante tem todas as premissas
 /// used vivas; então todas as suas rotas viram Invalidated (terminal) e seus
 /// dependentes são reavaliados. Rotas independentes mantêm o nó e os dependentes.
-fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerError> {
+fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<Vec<Vec<u8>>, LedgerError> {
     let mut work = Vec::new();
     for id in killed {
         if let Some(node) = node_of(connection, id)? {
@@ -82,6 +179,7 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerE
         }
     }
     let mut out = std::collections::HashSet::new();
+    let mut touched = Vec::new();
     while let Some(node) = work.pop() {
         if out.contains(&node) {
             continue;
@@ -90,7 +188,7 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerE
             Node::Obligation(h) => {
                 let routes = ids(
                     connection,
-                    "SELECT id FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status=2",
+                    "SELECT id FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status IN (2,7)",
                     h,
                 )?;
                 let mut supported = false;
@@ -110,6 +208,8 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerE
                     }
                 }
                 if supported {
+                    // Sobrevive, mas pode ter perdido a rota ativa: reavaliar.
+                    touched.push(h.clone());
                     continue;
                 }
                 for route in &routes {
@@ -132,7 +232,7 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerE
         for member in &members {
             for dependent in ids(
                 connection,
-                "SELECT claim FROM deps JOIN claims ON claims.id=deps.claim WHERE premise=?1 AND status=2",
+                "SELECT claim FROM deps JOIN claims ON claims.id=deps.claim WHERE premise=?1 AND status IN (2,7)",
                 member,
             )? {
                 if let Some(next) = node_of(connection, &dependent)? {
@@ -141,7 +241,7 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerE
             }
         }
     }
-    Ok(())
+    Ok(touched)
 }
 
 pub(crate) fn apply(
@@ -213,7 +313,8 @@ pub(crate) fn apply(
                     "invalidation target is not an earlier claim",
                 ));
             }
-            invalidate(connection, &[target.as_bytes().to_vec()])?;
+            let touched = invalidate(connection, &[target.as_bytes().to_vec()])?;
+            refresh(connection, touched)?;
             if matches!(event.body, EventBody::Retracted { .. }) {
                 connection
                     .prepare("UPDATE claims SET retracted=1 WHERE id=?1")?
@@ -222,15 +323,62 @@ pub(crate) fn apply(
             return Ok(());
         }
         EventBody::CheckerRevoked { checker, .. } => {
-            let routes = ids(
-                connection,
-                "SELECT id FROM claims WHERE checker=?1 AND status=2",
-                checker.as_bytes(),
-            )?;
-            invalidate(connection, &routes)?;
+            // 5.10: revogar suspende (não mata) as rotas desse checker efetivo.
             connection
                 .prepare("INSERT OR IGNORE INTO revoked(checker) VALUES (?1)")?
                 .execute([checker.as_bytes().as_slice()])?;
+            let nodes = ids(
+                connection,
+                "SELECT DISTINCT h_o FROM claims WHERE checker=?1 AND status IN (2,7)",
+                checker.as_bytes(),
+            )?;
+            refresh(connection, nodes)?;
+            return Ok(());
+        }
+        EventBody::Rechecked { route, check } => {
+            let row = connection
+                .prepare("SELECT h_o, status FROM claims WHERE id=?1 AND checker IS NOT NULL")?
+                .query_row([route.as_bytes().as_slice()], |r| {
+                    Ok((r.get::<_, Vec<u8>>(0)?, r.get::<_, i64>(1)?))
+                })
+                .optional()?;
+            let Some((node, status)) = row else {
+                return Err(LedgerError::Invalid(
+                    "recheck target is not a Verified route",
+                ));
+            };
+            if status != VERIFIED && status != SUSPENDED {
+                return Err(LedgerError::Invalid("recheck target is not a live route"));
+            }
+            if node.as_slice() != check.obligation.as_bytes() {
+                return Err(LedgerError::Invalid(
+                    "recheck obligation differs from route",
+                ));
+            }
+            match check.outcome {
+                logos_core::CheckOutcome::Accepted => {
+                    let revoked = connection
+                        .prepare("SELECT 1 FROM revoked WHERE checker=?1")?
+                        .query_row([check.checker.as_bytes().as_slice()], |_| Ok(()))
+                        .optional()?
+                        .is_some();
+                    if revoked {
+                        return Err(LedgerError::Invalid("recheck by a revoked checker"));
+                    }
+                    connection
+                        .prepare("UPDATE claims SET checker=?2 WHERE id=?1")?
+                        .execute(params![
+                            route.as_bytes().as_slice(),
+                            check.checker.as_bytes().as_slice()
+                        ])?;
+                    refresh(connection, vec![node])?;
+                }
+                logos_core::CheckOutcome::Rejected(_) => {
+                    let touched = invalidate(connection, &[route.as_bytes().to_vec()])?;
+                    refresh(connection, touched)?;
+                }
+                logos_core::CheckOutcome::Unknown(_) => {}
+            }
             return Ok(());
         }
         _ => return Ok(()),
@@ -272,6 +420,12 @@ pub(crate) fn apply(
         connection
             .prepare("INSERT INTO citable(ref,epoch) VALUES (?1,?2)")?
             .execute(params![id, epoch.as_slice()])?;
+    }
+    if status == VERIFIED
+        && let Some(h) = obligation
+    {
+        // Rota nova ativa reativa rotas suspensas do mesmo nó e seus dependentes.
+        refresh(connection, vec![h.to_vec()])?;
     }
     Ok(())
 }

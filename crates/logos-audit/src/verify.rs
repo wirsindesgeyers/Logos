@@ -100,6 +100,11 @@ pub fn verify_with_checkers(
     let mut cnf_derivations = 0;
     let mut cnfs = BTreeMap::new();
     let mut lrat_proofs = 0;
+    // 5.10: rotas LRAT por evento; as que falham só passam se um Rechecked
+    // Rejected posterior as invalidar (incidente reportado, nunca escondido).
+    let mut routes: BTreeMap<[u8; 32], (Hash<Obligation>, Hash<Certificate>)> = BTreeMap::new();
+    let mut failed: BTreeMap<[u8; 32], String> = BTreeMap::new();
+    let mut invalidated_by_recheck = 0;
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -171,14 +176,39 @@ pub fn verify_with_checkers(
                         &c.budget,
                     )
                     .map_err(|e| fail(format!("cake_lpr recheck: {e}")))?;
+                routes.insert(p.digest, (c.obligation, c.certificate));
                 if rust != CheckOutcome::Accepted || external != CheckOutcome::Accepted {
-                    return Err(fail(format!(
-                        "LRAT recheck Rust={rust:?} cake_lpr={external:?}"
-                    )));
+                    failed.insert(
+                        p.digest,
+                        format!("LRAT recheck Rust={rust:?} cake_lpr={external:?}"),
+                    );
+                } else {
+                    lrat_proofs += 1;
                 }
-                lrat_proofs += 1;
             } else if cake.is_some_and(|cake| c.checker == *cake.identity().as_bytes()) {
                 return Err(fail("LRAT obligation metadata missing"));
+            }
+        }
+        if let Some((route, c)) = &p.rechecked {
+            let cake = cake.ok_or_else(|| fail("Rechecked requires configured cake_lpr"))?;
+            if c.checker != *cake.identity().as_bytes() && !rust_checkers.contains(&c.checker) {
+                return Err(fail("Rechecked checker identity not allowed"));
+            }
+            if routes.get(route) != Some(&(c.obligation, c.certificate)) {
+                return Err(fail("Rechecked does not match an earlier LRAT route"));
+            }
+            match (&c.outcome, failed.contains_key(route)) {
+                (CheckOutcome::Rejected(_), true) => {
+                    failed.remove(route);
+                    invalidated_by_recheck += 1;
+                }
+                (CheckOutcome::Rejected(_), false) => {
+                    return Err(fail("Rechecked rejection not reproduced by the auditor"));
+                }
+                (CheckOutcome::Accepted, true) => {
+                    return Err(fail("Rechecked accepted a certificate the auditor rejects"));
+                }
+                _ => {}
             }
         }
         for r in &p.rechecks {
@@ -191,11 +221,19 @@ pub fn verify_with_checkers(
         }
         Ok(())
     })?;
+    if let Some((route, reason)) = failed.iter().next() {
+        return Err(fail(format!(
+            "{reason} for route {} without Rechecked rejection ({} routes)",
+            crate::hex(route),
+            failed.len()
+        )));
+    }
+    report.invalidated_by_recheck = invalidated_by_recheck;
     report.refutations = refutations;
     report.consistencies = consistencies;
     report.cnf_derivations = cnf_derivations;
     report.lrat_proofs = lrat_proofs;
-    report.unchecked_proofs -= lrat_proofs;
+    report.unchecked_proofs -= lrat_proofs + invalidated_by_recheck;
     Ok(report)
 }
 

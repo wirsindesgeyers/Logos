@@ -185,6 +185,7 @@ pub trait Handlers<S: Signer>: Sync {
                             EntryKind::Rejected => 7,
                             EntryKind::Invalidated => 8,
                             EntryKind::Proposal => 9,
+                            EntryKind::Suspended => 10,
                         };
                         array(vec![
                             Value::Unsigned(kind),

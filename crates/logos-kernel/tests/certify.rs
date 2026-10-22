@@ -18,7 +18,7 @@ use logos_ledger::{
     ModelObject, Route, TaintedText,
 };
 use logos_model::{FiniteModel, ModelData, ModelLimits};
-use logos_obligation::{DecodeLimits, Obligation};
+use logos_obligation::{DecodeLimits, EntryKind, Obligation};
 use std::{
     io::{Read, Write},
     net::Shutdown,
@@ -1587,4 +1587,317 @@ fn assume_scopes_are_normative_and_proposals_derive_a_single_scope() {
     refused(&exchange(&mut ledger, &handlers, late));
     let fresh = assume_message(&ledger, &v, p, "until:3");
     assumed(&exchange(&mut ledger, &handlers, fresh));
+}
+
+// --- 5.10 (ADR0056): revogação do checker Rust e recheck com cake_lpr ---------
+
+fn cake_path() -> std::path::PathBuf {
+    std::path::PathBuf::from(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../target/cake-lpr/cake_lpr"
+    ))
+}
+
+fn pq_vocabulary() -> (Vocabulary, Vec<Formula>) {
+    use logos_air::{Grounding, Symbol, SymbolDecl, SymbolKind, SymbolResult};
+    let symbols: Vec<_> = ["P", "Q"]
+        .into_iter()
+        .map(|n| Symbol {
+            name: Text::new(n).unwrap(),
+            kind: SymbolKind::Pred,
+            arity: vec![],
+            result: SymbolResult::Bool,
+        })
+        .collect();
+    let v = Vocabulary::new(
+        1,
+        vec![],
+        symbols
+            .iter()
+            .map(|s| SymbolDecl {
+                signature: s.clone(),
+                grounding: Grounding::Glossed(Text::new("fixture").unwrap()),
+                gloss_pt: Text::new("fixture").unwrap(),
+            })
+            .collect(),
+    )
+    .unwrap();
+    let formulas = symbols
+        .iter()
+        .map(|s| {
+            Formula::new(
+                vec![FormulaNode::Pred {
+                    symbol: s.clone(),
+                    args: vec![],
+                }],
+                Limits::default(),
+            )
+            .unwrap()
+        })
+        .collect();
+    (v, formulas)
+}
+
+struct Revocation {
+    temp: Temp,
+    signer: logos_crypto::FileSigner,
+    handlers: CertificationHandlers,
+    good: Vec<Hash<Event>>,
+    planted: Hash<Event>,
+    on_planted: Hash<Event>,
+    assumption: Hash<Event>,
+}
+
+/// a: P (assumption) ← c1: P ← c2: P (reais, Rust LRAT); planted: Q sobre a, com
+/// certificado inválido "aceito" pelo checker Rust (bug simulado) ← d: Q (real).
+fn revocation_fixture() -> Revocation {
+    let temp = Temp::new();
+    let signer = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let cake = cake_path();
+    let handlers = setup(&mut ledger, &signer, Some(&cake), budget());
+    let (v, formulas) = pq_vocabulary();
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(&v).unwrap())
+        .unwrap();
+    let assumption = hash(
+        &ledger
+            .append(EventBody::AssumptionDeclared {
+                vocabulary: hv,
+                formula: formulas[0].clone(),
+                scope: Text::new("session:5.10").unwrap(),
+                author: signer.key_id().unwrap(),
+            })
+            .unwrap(),
+    )
+    .unwrap();
+    let prove = |ledger: &mut Ledger<'_, logos_crypto::FileSigner>, goal: usize, cite| {
+        let p = candidate(ledger, &v, formulas[goal].clone(), vec![cite]);
+        let o = proposed(ledger, &handlers, p);
+        let c = proof(ledger, o, &v);
+        success(&exchange(ledger, &handlers, certify(o, c, LRAT)), 0)
+    };
+    let c1 = prove(&mut ledger, 0, assumption);
+    let c2 = prove(&mut ledger, 0, c1);
+    // Falso aceite: Q não segue de P, mas um Verified do checker Rust é gravado.
+    let p = candidate(&ledger, &v, formulas[1].clone(), vec![assumption]);
+    let o = proposed(&mut ledger, &handlers, p);
+    let bogus = ledger.cas().put::<Certificate>(b"1 0 0\n").unwrap();
+    let builtin = hash_raw::<Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    let planted = hash(
+        &ledger
+            .append(EventBody::Verified {
+                check: CheckRecord {
+                    obligation: o,
+                    certificate: bogus,
+                    checker: builtin,
+                    budget: budget(),
+                    outcome: CheckOutcome::Accepted,
+                },
+                cited: vec![assumption],
+                used: vec![assumption],
+                consistency: logos_ledger::Consistency::Unknown { check: None },
+            })
+            .unwrap(),
+    )
+    .unwrap();
+    let on_planted = prove(&mut ledger, 1, planted);
+    drop(ledger);
+    Revocation {
+        temp,
+        signer,
+        handlers,
+        good: vec![c1, c2],
+        planted,
+        on_planted,
+        assumption,
+    }
+}
+
+fn kind_of(ledger: &Ledger<'_, logos_crypto::FileSigner>, id: Hash<Event>) -> (EntryKind, bool) {
+    let index = ledger.live_index().unwrap();
+    (
+        index.status(id).unwrap().unwrap().kind,
+        index.is_citable(id, 0).unwrap(),
+    )
+}
+
+#[test]
+fn criterion_revoke_rust_recheck_with_cake_keeps_good_claims_and_invalidates_planted() {
+    use logos_kernel::recheck::Rechecks;
+    let f = revocation_fixture();
+    let mut ledger = Ledger::open(&f.temp.0.join("ledger"), &f.signer).unwrap();
+    let builtin = hash_raw::<Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    let rechecks = Rechecks::new(f.signer.public_key().clone());
+    rechecks
+        .revoke(
+            &mut ledger,
+            &f.signer,
+            builtin,
+            Text::new("bug no checker Rust").unwrap(),
+        )
+        .unwrap();
+    for id in [f.good[0], f.good[1], f.planted, f.on_planted] {
+        assert_eq!(kind_of(&ledger, id), (EntryKind::Suspended, false));
+    }
+    assert_eq!(
+        kind_of(&ledger, f.assumption),
+        (EntryKind::Assumption, true)
+    );
+    // Revogado não certifica mais (nem no modo cake, que depende do Rust para used).
+    let (v, formulas) = pq_vocabulary();
+    let p = candidate(&ledger, &v, formulas[0].clone(), vec![f.assumption]);
+    let o = proposed(&mut ledger, &f.handlers, p);
+    let c = proof(&ledger, o, &v);
+    for format in [LRAT, CAKE] {
+        refused(&exchange(&mut ledger, &f.handlers, certify(o, c, format)));
+    }
+
+    let registry = CheckerRegistry::new(f.signer.public_key().clone(), Some(&cake_path())).unwrap();
+    let report = rechecks
+        .recheck(&mut ledger, &registry, builtin, CAKE, budget())
+        .unwrap();
+    assert_eq!(
+        (report.accepted, report.rejected, report.unknown),
+        (2, 1, 0)
+    );
+    assert_eq!(report.rechecked.len(), 3, "d já caiu antes da sua vez");
+    for id in &f.good {
+        assert_eq!(
+            kind_of(&ledger, *id),
+            (EntryKind::Verified, true),
+            "nenhum claim bom perdido"
+        );
+    }
+    for id in [f.planted, f.on_planted] {
+        assert_eq!(kind_of(&ledger, id), (EntryKind::Invalidated, false));
+    }
+    // Cascata registrada: d cai com causa [Rechecked rejeitado, planted].
+    assert_eq!(report.invalidated.len(), 1);
+    let record = ledger
+        .events_from(ledger.head().unwrap().unwrap().seq, 1)
+        .unwrap()
+        .pop()
+        .unwrap();
+    let EventBody::Invalidated { claim, causes } = record.body else {
+        panic!("Invalidated")
+    };
+    assert_eq!(claim, f.on_planted);
+    assert_eq!(causes[1], f.planted);
+    // Idempotente: nada a rechecar nem a registrar de novo.
+    let again = rechecks
+        .recheck(&mut ledger, &registry, builtin, CAKE, budget())
+        .unwrap();
+    assert!(again.rechecked.is_empty() && again.invalidated.is_empty());
+    // Reabertura do índice do zero reproduz o mesmo estado.
+    drop(ledger);
+    let rebuilt =
+        logos_ledger::LedgerIndex::open(&f.temp.0.join("ledger"), f.signer.public_key()).unwrap();
+    for id in &f.good {
+        assert_eq!(
+            rebuilt.status(*id).unwrap().unwrap().kind,
+            EntryKind::Verified
+        );
+    }
+    assert_eq!(
+        rebuilt.status(f.planted).unwrap().unwrap().kind,
+        EntryKind::Invalidated
+    );
+}
+
+#[test]
+fn revocation_and_recheck_refuse_unauthorized_unknown_and_degenerate_requests() {
+    use logos_kernel::{TransportError, recheck::Rechecks};
+    let f = revocation_fixture();
+    let mut ledger = Ledger::open(&f.temp.0.join("ledger"), &f.signer).unwrap();
+    let builtin = hash_raw::<Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    let rechecks = Rechecks::new(f.signer.public_key().clone());
+    let reason = || Text::new("teste").unwrap();
+    let other = logos_crypto::FileSigner::from_seed(&[0x33; 32]).unwrap();
+    assert!(matches!(
+        rechecks.revoke(&mut ledger, &other, builtin, reason()),
+        Err(TransportError::Unauthorized)
+    ));
+    let unknown = hash_raw::<Checker>(b"never registered");
+    assert!(
+        rechecks
+            .revoke(&mut ledger, &f.signer, unknown, reason())
+            .is_err()
+    );
+    let registry = CheckerRegistry::new(f.signer.public_key().clone(), Some(&cake_path())).unwrap();
+    // Mesmo checker de origem e destino: recusado sem gravar nada.
+    let head = ledger.head().unwrap();
+    assert!(
+        rechecks
+            .recheck(&mut ledger, &registry, builtin, LRAT, budget())
+            .is_err()
+    );
+    assert!(
+        rechecks
+            .recheck(&mut ledger, &registry, builtin, MODEL, budget())
+            .is_err()
+    );
+    assert_eq!(ledger.head().unwrap(), head);
+    rechecks
+        .revoke(&mut ledger, &f.signer, builtin, reason())
+        .unwrap();
+    assert!(
+        rechecks
+            .revoke(&mut ledger, &f.signer, builtin, reason())
+            .is_err()
+    );
+    // Checker de destino revogado não serve para recheck.
+    let cake = registry.cake_identity().unwrap();
+    rechecks
+        .revoke(&mut ledger, &f.signer, cake, reason())
+        .unwrap();
+    let head = ledger.head().unwrap();
+    assert!(
+        rechecks
+            .recheck(&mut ledger, &registry, builtin, CAKE, budget())
+            .is_err()
+    );
+    assert_eq!(ledger.head().unwrap(), head);
+    for id in [f.good[0], f.planted] {
+        assert_eq!(kind_of(&ledger, id), (EntryKind::Suspended, false));
+    }
+}
+
+#[test]
+fn independent_auditor_accepts_planted_route_only_after_rejected_recheck() {
+    use logos_kernel::recheck::Rechecks;
+    let cake = logos_lrat::CakeRegistry::register(&cake_path()).unwrap();
+    let builtin = hash_raw::<Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    let f = revocation_fixture();
+    let path = f.temp.0.join("ledger");
+    let audit = || {
+        logos_audit::verify_with_checkers(
+            &path.join("ledger.sqlite3"),
+            &path.join("cas"),
+            f.signer.public_key(),
+            Some(&cake),
+            &[*builtin.as_bytes()],
+        )
+    };
+    // Antes do recheck o falso aceite é falha de auditoria.
+    assert!(audit().is_err());
+    let mut ledger = Ledger::open(&path, &f.signer).unwrap();
+    let rechecks = Rechecks::new(f.signer.public_key().clone());
+    rechecks
+        .revoke(&mut ledger, &f.signer, builtin, Text::new("bug").unwrap())
+        .unwrap();
+    let registry = CheckerRegistry::new(f.signer.public_key().clone(), Some(&cake_path())).unwrap();
+    rechecks
+        .recheck(&mut ledger, &registry, builtin, CAKE, budget())
+        .unwrap();
+    drop(ledger);
+    let report = audit().unwrap();
+    assert_eq!(report.invalidated_by_recheck, 1);
+    assert_eq!(report.unchecked_proofs, 0);
+    assert_eq!(
+        report.lrat_proofs, 3,
+        "c1, c2 e d rechecados pelos dois checkers"
+    );
 }

@@ -41,7 +41,8 @@ mesmo h(O) e é recusado; nova tentativa não converte Refuted em Unknown. Vetor
 `vectors/kernel-protocol/already-refuted-v1.json`. Não há sucesso
 implícito em EOF/erro. Query head retorna [] ou [seq,epoch,h_Event]; status
 retorna [] ou [kind,epoch,retracted]. Kind: Fact0, Policy1, Verified2,
-Assumption3, Pending4, Refuted5, Unknown6, Rejected7, Invalidated8, Proposal9.
+Assumption3, Pending4, Refuted5, Unknown6, Rejected7, Invalidated8, Proposal9,
+Suspended10 (5.10: checker revogado, aguardando recheck; não citável).
 Esses dados não criam credenciais.
 
 Etapa5.3/ADR0038 acrescenta o resultado **propose-result/v1**, primeiro formato

@@ -146,6 +146,7 @@ impl<'a> LedgerIndex<'a> {
             index_project::UNKNOWN => EntryKind::Unknown,
             index_project::ASSUMPTION => EntryKind::Assumption,
             index_project::INVALIDATED => EntryKind::Invalidated,
+            index_project::SUSPENDED => EntryKind::Suspended,
             _ => return Err(LedgerError::Invalid("index status")),
         };
         let epoch = u64::from_be_bytes(

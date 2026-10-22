@@ -73,4 +73,17 @@ próprio alvo, recuperando o Claim<Verified> da instância registrada. `causes` 
 entre as used cujo nó já está morto, e a raiz é a da premissa (a do alvo é o seu
 Retracted). Raiz já gravada não é recalculada. `reconcile` é idempotente e roda no
 arranque do processo: completa registros após crash entre appends. Rotas que caem
-só por revogação de checker não recebem Invalidated aqui (5.10).
+só por Verified de checker já revogado nascem mortas e não recebem registro; revogação
+suspende e Rechecked rejeitado é raiz como Retracted (§5).
+
+## 5. Revogação e recheck (Etapa 5.10, ADR0056)
+
+Operação de operador (`logos_kernel::recheck::Rechecks`), nunca do agente.
+`revoke` exige a autoridade administrativa, checker registrado e não revogado, e
+grava CheckerRevoked assinado: rotas desse checker efetivo ficam Suspended (não
+citáveis, não mortas), com suspensão transitiva aos dependentes. `recheck` roda o
+certificado original de cada rota viva desse checker num checker ativo diferente
+e grava Rechecked: Accepted reativa, Rejected invalida e o `reconcile` da §4
+registra a cascata com a raiz no Rechecked, Unknown mantém a suspensão. Falha
+operacional do checker é erro sem append. `used` registrado não é recalculado.
+

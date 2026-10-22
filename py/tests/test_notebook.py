@@ -319,3 +319,19 @@ def test_table_parsing_is_strict_and_rows_become_models() -> None:
     assert science.holds(formula("Esgoto() -> Coliformes()"), model, V_BYTES)
     with pytest.raises(ValueError):
         science.row_model(V_BYTES, {"Inexistente"})
+
+
+def test_revocation_only_suspends_and_rejected_recheck_is_a_cut_root() -> None:
+    """5.10: revogação não mata; Rechecked rejeitado mata e é raiz dos registros."""
+    view = view_with(ROUTES, ["E1", "E2", "E3", "H"])
+    view.revoked.add(b"\1" * 32)  # checker de todas as rotas
+    assert atms.dead_set(view, set()) == set()
+    root = h("RC:PB")
+    view.order.append(root)
+    view.tags[root] = ledger_view.RECHECKED
+    view.recheck_rejected[h("PB")] = root
+    dead = {h("PB")}
+    result = atms.audit(view, dead)
+    assert result.ok, result.problems
+    assert [s.target for s in result.steps] == [h("PB")]
+    assert result.steps[0].survivors == []

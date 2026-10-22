@@ -287,6 +287,16 @@ pub enum EventBody {
         /// Assinatura de autorização administrativa.
         authority: Authority,
     },
+    /// Recheck de um certificado Verified com outro checker (5.10, ADR0056).
+    ///
+    /// Accepted reativa a rota suspensa pela revogação do checker original;
+    /// Rejected a invalida e abre a cascata; Unknown mantém a suspensão.
+    Rechecked {
+        /// Evento Verified cujo certificado foi rechecado.
+        route: Hash<Event>,
+        /// Mesmos h(O)/h(certificado) da rota, com o checker novo e o desfecho.
+        check: CheckRecord,
+    },
     /// Revogação formal de um verificador de provas previamente registrado.
     CheckerRevoked {
         /// Identificador do checker revogado.
@@ -385,6 +395,7 @@ impl EventBody {
             Self::EpochAdvanced { .. } => 10,
             Self::CheckerRegistered { .. } => 11,
             Self::CheckerRevoked { .. } => 12,
+            Self::Rechecked { .. } => 15,
         }
     }
 
@@ -472,7 +483,9 @@ impl EventBody {
                     ));
                 }
             }
-            Self::ConsistencyRecorded { check, .. } => check.validate()?,
+            Self::ConsistencyRecorded { check, .. } | Self::Rechecked { check, .. } => {
+                check.validate()?;
+            }
             Self::CertificateRejected { check } => {
                 check.validate()?;
                 if !matches!(check.outcome, CheckOutcome::Rejected(_)) {

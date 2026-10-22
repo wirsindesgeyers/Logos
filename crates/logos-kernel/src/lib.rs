@@ -13,6 +13,8 @@ pub mod certify;
 #[cfg(target_os = "linux")]
 pub mod propose;
 #[cfg(target_os = "linux")]
+pub mod recheck;
+#[cfg(target_os = "linux")]
 pub mod registry;
 #[cfg(target_os = "linux")]
 mod replay;

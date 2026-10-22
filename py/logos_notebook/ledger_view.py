@@ -13,6 +13,7 @@ from logos_client import canon
 
 PROPOSED, OBLIGATION, VERIFIED, REFUTED, UNKNOWN = 2, 3, 4, 5, 6
 ASSUMPTION, RETRACTED, INVALIDATED, REVOKED, REJECTED = 7, 8, 9, 12, 13
+RECHECKED = 15
 
 
 class ViewError(ValueError):
@@ -41,6 +42,10 @@ class LedgerView:
     retraction_reason: dict[bytes, str] = field(default_factory=dict)
     invalidated: dict[bytes, tuple[bytes, ...]] = field(default_factory=dict)  # claim -> causes
     revoked: set[bytes] = field(default_factory=set)
+    # Verified de checker já revogado no momento do append nasce morta.
+    born_dead: set[bytes] = field(default_factory=set)
+    # 5.10: rota -> evento Rechecked rejeitado (mata a rota; raiz da cascata).
+    recheck_rejected: dict[bytes, bytes] = field(default_factory=dict)
 
 
 def _list(value: canon.Value, what: str) -> list[canon.Value]:
@@ -75,6 +80,8 @@ def read(events: list[bytes]) -> LedgerView:
         view.tags[event] = tag
         if tag == VERIFIED:
             check = _list(body[2], "check")
+            if _digest(check[2]) in view.revoked:
+                view.born_dead.add(event)
             view.routes[event] = Route(
                 event,
                 _digest(check[0]),
@@ -98,4 +105,9 @@ def read(events: list[bytes]) -> LedgerView:
             view.invalidated[_digest(body[2])] = _refs(body[3])
         elif tag == REVOKED:
             view.revoked.add(_digest(body[2]))
+        elif tag == RECHECKED:
+            outcome = _list(body[3], "check")[4]
+            # CheckOutcome core/v1: [1, 1, reason] é Rejected.
+            if isinstance(outcome, list) and outcome[:2] == [1, 1]:
+                view.recheck_rejected.setdefault(_digest(body[2]), event)
     return view

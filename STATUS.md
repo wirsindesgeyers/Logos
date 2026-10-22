@@ -255,6 +255,7 @@ fontes opacas não demonstram autenticação.
 | 5.6 Bloqueio de re-proposta refutada (S4) | ⚠ concluída localmente; CI pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
 | 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
+| 5.10 Revogação de checker e recheck | 🚧 implementada localmente; full verify pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
 ## Etapas compartilhadas com a Fase10
 
@@ -300,8 +301,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 
 ## Pendências de verificação (execução remota)
 
-Etapa5R.3: verificação direcionada local (ADR0051) e smoke real passaram;
-full verify/selftest da ponta e CI remota pendentes. Plano em docs/plans/etapa-5R.3.md.
+Pilha 5R.3/correção/5.10 (c50cd93, 28727b4 e o commit da 5.10): o primeiro full
+verify sobre c50cd93 falhou (vetor de transporte SAT desatualizado, corrigido em
+28727b4); full verify da ponta pendente. CI remota pendente.
 
 Pilha 9.1/WS.0/5.9/5.6/5.7 (até 401fe50): full verify/selftest local passou; CI
 remota/ARM/noturno não consultados. Recibo em docs/plans/pilha-2026-10-22-evidencias.json.
@@ -560,29 +562,33 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: revisão humana da 9.1; tecnicamente 5.10 ou 5.8
+## Próximo passo: full verify da pilha; depois 5.8 ou 5.11
 
-5R.3 implementada localmente sobre c882c43 ([plano](docs/plans/etapa-5R.3.md),
-ADR0055): caderno `notebook/v1`, retratação de operador por CLI, premissas
-escondidas no SAT, operações WS§11.1 e auditoria independente do corte. Falta
-o full verify/selftest na ponta antes de marcar os critérios e de qualquer push.
+Pilha local não enviada: c50cd93 (5R.3), 28727b4 (correção do vetor SAT) e 5.10
+([plano](docs/plans/etapa-5.10.md), ADR0056). Rodar `ci/verify.sh --selftest` na
+ponta; se passar, marcar os critérios de 5R.3 e 5.10 no ROADMAP com o recibo.
+Push só quando o mantenedor pedir.
 
-Do mantenedor: (1) revisão humana das 50 paráfrases e decisão sobre a origem do
-corpus ([material](docs/plans/etapa-9.1-revisao/README.md)); fecha a 9.1 e libera
-a 5R.2; (2) revisar as decisões tomadas por delegação (ADRs 0047–0055).
+Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
+50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
+contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0056).
+Nenhuma etapa técnica espera essas revisões além de 5R.2/5R.4.
 
-Trabalho técnico desbloqueado: **5.10** (revogação de checker/recheck sobre o ATMS
-da 5.9; hoje rotas de checker revogado caem sem registro Invalidated) e 5.8
-(especulação). 5R.4 depende de 5R.2 (logo da revisão 9.1). Riscos: custo do
-`snapshot` proporcional aos ancestrais e diferencial ATMS (~11 min) no verify;
-retratação exige parar o kernel (writer.lock), sem canal de operador vivo.
+Trabalho técnico desbloqueado: **5.8** (especulação; depende de 5.3/5.4) e **5.11**
+(isolamento de processos: usuários de SO, sandbox do agente). Depois, 5.12 (kernel
+mínimo ponta a ponta) precisa de 5.1–5.11. Riscos: custo do `snapshot` com muitos
+ancestrais; diferencial ATMS (~11 min) no verify; retratação/recheck exigem parar o
+kernel; recheck com o checker Rust de rotas cake não tem caminho de operador.
 
 ## Decisões em aberto para o mantenedor
 
 - **Decisões tomadas por delegação (22/out), para revisão:** ADRs 0047–0049
   (produto, web local, artefatos; stack Rust/axum, SSE+POST, Preact, Vega-Lite,
   Cytoscape, KaTeX, Typst), direção do ADR0008 (memória) adotada, ADR0050
-  (gramática da paráfrase), 0051 (verificação por pilha) e 0052–0054 (5.9/5.6/5.7).
+  (gramática da paráfrase), 0051 (verificação por pilha), 0052–0054 (5.9/5.6/5.7),
+  0055 (caderno 5R.3: retratação offline por CLI, premissas escondidas, piloto
+  sintético) e 0056 (5.10: revogação **suspende** em vez de matar; tag15; `used` não
+  recalculado no recheck; recheck por CLI só com cake_lpr).
   Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
@@ -1951,3 +1957,6 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Pilha verificada: full verify/selftest VERIFY_OK/exit0 em2964,7s sobre401fe50, 577 Rust, 317+25 Python, crash 10k/24 SIGKILL, índice 1M p99=18994ns, farm500, MCP, planilha 9.1 e diferencial ATMS 10k. Marcados: 9.1 critérios 1–2 (o 3, revisão humana, segue aberto), 5.9, 5.6 e 5.7. Quatro tentativas anteriores não contadas: teste 5.3 de escopo fixo (atualizado à derivação da 5.7), `fmt` de teste, subseções WS§ citadas por edições de outra sessão ainda não commitadas (6ca273c) e teste de integração 10.1 que esperava ASSUME Unavailable (401fe50). A pilha teve quatro commits de etapa sem full verify, um acima do limite do ADR0051. Partes do trabalho da outra sessão entraram por engano em cc14e43/0e32c15/098f00f, registrado em 6ca273c. Worktrees/branches temporárias removidas. Sem push.
 
 - 2026-10-22 — Etapa5R.3 implementada localmente sobre c882c43 (ADR0055). Pacote `py/logos_notebook` fora da TCB: bundle notebook/v1 (spec/notebook.md, 13 vetores com CBOR independente), `Lab` sobre cliente/farm/staging, `science` (experimento crucial, MUS checado, leis × tabela), `atms` (corte recalculado do zero e registros Invalidated conferidos) e relatório com status sempre consultado. `logos ledger retract` (CLI não TCB, kernel parado, mesma autoridade do kernel) com 2 testes. Produtor SAT com premissas escondidas (IDs da CNF de O preservados, prova com ID escondido descartada, SAT nunca vira modelo); bridge expõe `premise_clauses`. Smoke real: 20 hipóteses + 6 evidências com proveniência completa, P1 com duas rotas da mesma h(O) e `used` disjuntos; retratar E3 derruba {E3, C4} e P1B sobrevive; retratar E1 derruba {E1, P1, P1B, C1, C2, C3}; kernel, recomputação e registros coincidem; auditor rechecou 122 eventos (14 LRAT Rust/cake_lpr, 10 refutações). MUS {E5, H12, H13} de seis premissas; previsões discriminantes Algas/Turbidez certificadas; L2/L5 refutadas por linha, L4/L7 redundantes. 36 testes do caderno + 3 SAT + 24 MCP passaram; 7 mutações manuais mortas. Full verify da ponta pendente; sem push.
+
+- 2026-10-22 — Full verify/selftest sobre c50cd93 (5R.3) falhou: exit1 em 3975s, `test_sat.py::test_transport_vectors_preserve_independent_cnf_bytes` (1 de 357 Python; 579 Rust, MCP e caderno passaram). O vetor prover-bridge/v1 fixava a resposta de `encode` sem o novo `premise_clauses`; minha verificação direcionada só rodou os testes novos do SAT. Corrigido em 28727b4 (lista vazia, obrigação sem premissas). Mantenedor delegou as decisões ("tome a decisão que for melhor e deixe documentado"); revisão 9.1 segue com ele, sem bloquear trabalho técnico.
+- 2026-10-22 — Etapa5.10 implementada em worktree sobre 28727b4 (ADR0056). Revogação passa a suspender: status Suspended (ledger-index/v3, kind10 no Query, EntryKind novo), suspensão transitiva por ponto fixo de atividade separado do de morte. Evento `Rechecked` (tag15): Accepted troca o checker efetivo e reativa, Rejected invalida com cascata registrada (`reconcile` aceita Rechecked como raiz), Unknown mantém. `Rechecks::{revoke, recheck}` (operador) e CLI `logos ledger revoke-checker|recheck --with --cake`. Auditor aceita rota com certificado ruim só após Rechecked Rejected e reporta `invalidated_by_recheck`. Critério: provas LRAT reais, revogação do Rust suspende 4 rotas, recheck com cake recupera c1/c2 e invalida a plantada e seu dependente (causa [Rechecked, planted]); auditor independente confirma. 6 testes de índice, 3 de kernel, 1 de CLI, 1 Python; 12/12 mutações mortas; fuzz event_decode 600s sem crash. Vetores: eventos (30), layout de índice v3, schema de obrigação.

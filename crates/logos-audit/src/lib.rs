@@ -66,6 +66,9 @@ pub struct Report {
     pub cnf_derivations: u64,
     /// Provas de camada1 rechecadas por Rust e cake_lpr, ambos com Accepted.
     pub lrat_proofs: u64,
+    /// Rotas cujo certificado falha no recheck do auditor e que um Rechecked
+    /// Rejected do kernel invalidou (5.10); incidente visível, não falha.
+    pub invalidated_by_recheck: u64,
     /// Digest integral do último evento; None no vazio.
     pub head: Option<[u8; 32]>,
 }
@@ -75,14 +78,15 @@ impl fmt::Display for Report {
         let head = self.head.map(hex).unwrap_or_else(|| "none".into());
         write!(
             f,
-            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={}",
+            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={} invalidated_by_recheck={}",
             self.events,
             self.refutations,
             self.consistencies,
             self.unchecked_proofs,
             self.cnf_derivations,
             self.lrat_proofs,
-            self.lrat_proofs
+            self.lrat_proofs,
+            self.invalidated_by_recheck
         )
     }
 }

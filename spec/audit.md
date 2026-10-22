@@ -58,7 +58,12 @@ Autenticação não confere proveniência/citabilidade das premissas, fidelidade
 ou política administrativa do kernel futuro.
 
 Sucesso: exit0, AUDIT_OK com events, refutations_rechecked,
-consistencies_rechecked, proofs_unchecked, failures=0 e head. Falha: exit1,
+consistencies_rechecked, proofs_unchecked, failures=0, head, cnf_rederived,
+lrat_rust_rechecked, lrat_cake_rechecked e invalidated_by_recheck (5.10).
+Rota LRAT cujo certificado falha no recheck só é aceita se um Rechecked Rejected
+posterior a invalidar (incidente contado, não escondido); Rechecked precisa casar
+com h(O)/h(certificado) da rota, usar checker permitido e ter Accepted/Rejected
+reproduzidos pelo auditor. Falha: exit1,
 AUDIT_FAILED failures=1 com posição/diagnóstico; para na primeira falha.
 Não publica contagens de sucesso ou export parcial por erro de autenticação.
 

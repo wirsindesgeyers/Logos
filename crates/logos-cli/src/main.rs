@@ -3,6 +3,8 @@
 
 mod gc;
 #[cfg(target_os = "linux")]
+mod recheck;
+#[cfg(target_os = "linux")]
 mod retract;
 
 use std::ffi::OsString;
@@ -24,7 +26,7 @@ fn hex32(text: &std::ffi::OsStr, what: &str) -> Result<[u8; 32], Box<dyn std::er
 }
 
 fn run(args: Vec<OsString>) -> Result<(), Box<dyn std::error::Error>> {
-    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX\n       logos ledger retract DIRECTORY --key KEYFILE --target EVENT_HEX --reason TEXT";
+    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX\n       logos ledger retract DIRECTORY --key KEYFILE --target EVENT_HEX --reason TEXT\n       logos ledger revoke-checker DIRECTORY --key KEYFILE --checker CHECKER_HEX --reason TEXT\n       logos ledger recheck DIRECTORY --key KEYFILE --checker CHECKER_HEX --with CHECKER_HEX --cake CAKE_BINARY";
     let (directory, public_key, gc) = match args.as_slice() {
         [ledger, command, directory, flag, key]
             if ledger == "ledger" && command == "rebuild-index" && flag == "--public-key" =>
@@ -62,6 +64,59 @@ fn run(args: Vec<OsString>) -> Result<(), Box<dyn std::error::Error>> {
                 Path::new(key),
                 hex32(target, "target")?,
                 reason,
+            );
+        }
+        #[cfg(target_os = "linux")]
+        [
+            ledger,
+            command,
+            directory,
+            key_flag,
+            key,
+            checker_flag,
+            checker,
+            reason_flag,
+            reason,
+        ] if ledger == "ledger"
+            && command == "revoke-checker"
+            && key_flag == "--key"
+            && checker_flag == "--checker"
+            && reason_flag == "--reason" =>
+        {
+            let reason = reason.to_str().ok_or("reason must be UTF-8")?;
+            return recheck::revoke(
+                Path::new(directory),
+                Path::new(key),
+                hex32(checker, "checker")?,
+                reason,
+            );
+        }
+        #[cfg(target_os = "linux")]
+        [
+            ledger,
+            command,
+            directory,
+            key_flag,
+            key,
+            checker_flag,
+            checker,
+            with_flag,
+            with,
+            cake_flag,
+            cake,
+        ] if ledger == "ledger"
+            && command == "recheck"
+            && key_flag == "--key"
+            && checker_flag == "--checker"
+            && with_flag == "--with"
+            && cake_flag == "--cake" =>
+        {
+            return recheck::recheck(
+                Path::new(directory),
+                Path::new(key),
+                hex32(checker, "checker")?,
+                hex32(with, "with")?,
+                Path::new(cake),
             );
         }
         _ => return Err(usage.into()),

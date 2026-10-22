@@ -16,7 +16,8 @@ MAX_STREAM = 2_097_152
 REPORT = re.compile(
     r"AUDIT_OK events=(\d+) refutations_rechecked=(\d+) consistencies_rechecked=(\d+) "
     r"proofs_unchecked=(\d+) failures=0 head=([0-9a-f]{64}|none) "
-    r"cnf_rederived=(\d+) lrat_rust_rechecked=(\d+) lrat_cake_rechecked=(\d+)\n"
+    r"cnf_rederived=(\d+) lrat_rust_rechecked=(\d+) lrat_cake_rechecked=(\d+) "
+    r"invalidated_by_recheck=(\d+)\n"
 )
 
 
@@ -114,6 +115,7 @@ class Auditor:
             "cnf_rederived",
             "lrat_rust_rechecked",
             "lrat_cake_rechecked",
+            "invalidated_by_recheck",
         )
         return {
             name: (None if value == "none" else value) if name == "head" else int(value)

@@ -353,6 +353,12 @@ impl Canon for EventBody {
                 check.to_value()?,
                 model.to_value()?,
             ]),
+            Self::Rechecked { route, check } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(15),
+                route.to_value()?,
+                check.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -668,6 +674,10 @@ impl CanonDecode for EventBody {
                     authority,
                 }
             }
+            (15, [route_val, check_val]) => Self::Rechecked {
+                route: digest::<Event>(route_val)?,
+                check: CheckRecord::from_value(check_val)?,
+            },
             (12, [checker_val, reason_val, auth_val]) => {
                 let checker = digest::<Checker>(checker_val)?;
                 let reason = Text::from_value(reason_val)?;

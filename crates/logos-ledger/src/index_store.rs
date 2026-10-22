@@ -13,7 +13,7 @@ static NEXT: AtomicU64 = AtomicU64::new(0);
 pub(crate) const TABLES: &[(&str, &str)] = &[
     (
         "claims",
-        "CREATE TABLE claims (id BLOB PRIMARY KEY CHECK(length(id)=32), h_o BLOB CHECK(h_o IS NULL OR length(h_o)=32), status INTEGER NOT NULL CHECK(status BETWEEN 0 AND 6), epoch BLOB NOT NULL CHECK(length(epoch)=8), retracted INTEGER NOT NULL CHECK(retracted IN (0,1)), vocab BLOB CHECK(vocab IS NULL OR length(vocab)=32), formula BLOB, scope TEXT, checker BLOB CHECK(checker IS NULL OR length(checker)=32)) STRICT, WITHOUT ROWID",
+        "CREATE TABLE claims (id BLOB PRIMARY KEY CHECK(length(id)=32), h_o BLOB CHECK(h_o IS NULL OR length(h_o)=32), status INTEGER NOT NULL CHECK(status BETWEEN 0 AND 7), epoch BLOB NOT NULL CHECK(length(epoch)=8), retracted INTEGER NOT NULL CHECK(retracted IN (0,1)), vocab BLOB CHECK(vocab IS NULL OR length(vocab)=32), formula BLOB, scope TEXT, checker BLOB CHECK(checker IS NULL OR length(checker)=32)) STRICT, WITHOUT ROWID",
     ),
     (
         "deps",
@@ -81,7 +81,7 @@ pub struct RebuildReport {
 pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
     connection.execute_batch("PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;")?;
     connection.pragma_update(None, "application_id", APPLICATION_ID)?;
-    connection.pragma_update(None, "user_version", 2)?;
+    connection.pragma_update(None, "user_version", 3)?;
     for (_, sql) in TABLES.iter().chain(INDEXES) {
         connection.execute_batch(sql)?;
     }
@@ -91,7 +91,7 @@ pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
 fn valid_schema(connection: &Connection) -> Result<bool, LedgerError> {
     let app: i64 = connection.pragma_query_value(None, "application_id", |r| r.get(0))?;
     let version: i64 = connection.pragma_query_value(None, "user_version", |r| r.get(0))?;
-    if app != APPLICATION_ID || version != 2 {
+    if app != APPLICATION_ID || version != 3 {
         return Ok(false);
     }
     let mut statement =

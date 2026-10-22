@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 use logos_canon::Text;
 use logos_crypto::{Hash, PublicKey, Signer, hash};
-use logos_ledger::{Authority, Checker, Event, EventBody, Ledger};
+use logos_ledger::{Authority, Event, EventBody, Ledger};
 use logos_obligation::{EntryKind, Obligation};
 
 use crate::{TransportError as Error, replay::replay, transitions::Transitions};
@@ -32,7 +32,6 @@ pub struct Retractions {
 struct Route {
     obligation: Hash<Obligation>,
     used: Vec<Hash<Event>>,
-    checker: Hash<Checker>,
 }
 
 impl Retractions {
@@ -75,7 +74,7 @@ impl Retractions {
             .key_id()
             .map_err(|_| Error::Invalid("authority key"))?;
         let allowed = match status.kind {
-            EntryKind::Verified => admin,
+            EntryKind::Verified | EntryKind::Suspended => admin,
             EntryKind::Assumption => admin || author.as_ref() == Some(&key),
             _ => {
                 return Err(Error::Invalid(
@@ -113,10 +112,11 @@ impl Retractions {
         })
     }
 
-    /// Grava Invalidated faltantes para rotas derrubadas por retratação.
+    /// Grava Invalidated faltantes para rotas derrubadas por retratação ou por
+    /// recheck rejeitado (5.10): a raiz é o Retracted ou o Rechecked do alvo.
     ///
-    /// Idempotente: rodar de novo não grava nada. Rotas que caíram só por
-    /// revogação de checker ficam para a 5.10.
+    /// Idempotente: rodar de novo não grava nada. Revogação só suspende (5.10);
+    /// Verified emitida por checker já revogado nasce morta e não tem registro.
     ///
     /// # Errors
     /// Replay, índice ou append.
@@ -129,17 +129,20 @@ impl Retractions {
         let mut roots: HashMap<Hash<Event>, Hash<Event>> = HashMap::new();
         let mut recorded: HashMap<Hash<Event>, Option<Hash<Event>>> = HashMap::new();
         let mut revoked = HashSet::new();
+        let mut born_dead = HashSet::new();
         replay(ledger, |event| {
             let id = hash(event)?;
             match &event.body {
                 EventBody::Verified { check, used, .. } => {
                     order.push(id);
+                    if revoked.contains(&check.checker) {
+                        born_dead.insert(id);
+                    }
                     routes.insert(
                         id,
                         Route {
                             obligation: check.obligation,
                             used: used.clone(),
-                            checker: check.checker,
                         },
                     );
                 }
@@ -152,6 +155,11 @@ impl Retractions {
                 }
                 EventBody::CheckerRevoked { checker, .. } => {
                     revoked.insert(*checker);
+                }
+                EventBody::Rechecked { route, check }
+                    if matches!(check.outcome, logos_core::CheckOutcome::Rejected(_)) =>
+                {
+                    roots.entry(*route).or_insert(id);
                 }
                 _ => {}
             }
@@ -196,7 +204,7 @@ impl Retractions {
                 let Some(route) = routes.get(id) else {
                     continue;
                 };
-                if revoked.contains(&route.checker) {
+                if born_dead.contains(id) {
                     continue;
                 }
                 let cause = route
