@@ -24,7 +24,9 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 2. Implementar com testes. **Critério de conclusão é contrato**: cada item vira um teste, script
    ou artefato reproduzível. Só marque `- [x]` no `ROADMAP.md` o que foi *demonstrado*
    (localmente basta se o item não depende da CI; se depende, marque só depois de ver a CI).
-3. Rodar a **verificação completa** (§4) e corrigir tudo.
+3. Rodar a **verificação completa** (§4) e corrigir tudo. Etapas independentes podem andar em
+   `git worktree` paralelos e ser commitadas localmente com verificação direcionada; a completa
+   roda na ponta da pilha antes de qualquer push (ADR 0051).
 4. Atualizar `STATUS.md` (§6) **no mesmo commit** do trabalho.
 5. Commitar (§5).
 
@@ -52,7 +54,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ```sh
 ci/verify.sh              # instala cake_lpr offline fixado, fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
                           # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr (Budget de teste180s por check), produtor SAT300/300 +contramodelos, farm isolada ×500 obrigações/checkers reais, MCP stdio ×10 tarefas/auditoria completa, vocabulary/v2 ×10 obrigações/checkers reais, cliente async × kernel real nas sete mensagens)
-                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); kernel-protocol/socket/staging/PROPOSE/CERTIFY/REFUTE/WITNESS (P1/P3/P4 e STATE14–16) nos testes Rust; crash ledger (SIGKILL, 10k appends; teto agregado600s, limites individuais10/60s), índices (rebuild 100k, p99 com 1M); vetores (inclui kernel-protocol/v1, propose-result/v1, check-result/v1 e witness-result/v1) --check
+                          # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações)/planilha de revisão 9.1; paráfrase paraphrase-pt/v1 (100k fórmulas distintas, todas as fórmulas de spec/vectors, vetores Python independentes); coerência documental da trilha WS (tools/check_ws_docs.py) e kernel-protocol/socket/staging/PROPOSE/CERTIFY/REFUTE/WITNESS (P1/P3/P4 e STATE14–16) nos testes Rust; crash ledger (SIGKILL, 10k appends; teto agregado600s, limites individuais10/60s), índices (rebuild 100k, p99 com 1M); vetores (inclui kernel-protocol/v1, propose-result/v1, check-result/v1 e witness-result/v1) --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
 
@@ -90,7 +92,11 @@ Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o 
   (decisão do mantenedor). Vale para qualquer agente.
 - Só faça `git push` quando o mantenedor pedir (ou já tiver pedido nesta sessão). Nunca use
   `--force` sem pedido explícito. A branch é `main`; o remoto é `origin` (GitHub).
-- Commit só depois da verificação completa passar. Se um commit local ainda não foi enviado e
+- Commit local exige a verificação direcionada do ADR 0051 (fmt, clippy, testes dos crates
+  tocados, vetores `--check`, Ruff/mypy, mutações, `tcb check`); **push** exige a verificação
+  completa passando na ponta da pilha (no máximo três commits de etapa sem ela), com o recibo
+  listando os commits cobertos. Critérios que dependem dela só são marcados depois.
+  Se um commit local ainda não foi enviado e
   precisa de correção, `--amend` é aceitável; depois de enviado, faça um commit novo.
 
 ## 6. Como manter o `STATUS.md`

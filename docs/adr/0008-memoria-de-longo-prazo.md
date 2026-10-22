@@ -1,6 +1,8 @@
 # ADR 0008 — extensão proposta de memória de longo prazo
 
-- Estado: proposta; especificada, não implementada.
+- Estado: proposta; especificada, não implementada. **Direção adotada** em
+  2026-10-22 por delegação do mantenedor (ADR 0047); contratos normativos,
+  formatos e vetores continuam sendo o entregável da MEM.0.
 - Data: 2026-10-04.
 - Escopo: [extensão Long-Term Memory](../spec/LOGOS-long-term-memory.md).
 - Revisão documental: 2026-10-19, [ADR 0039](0039-memoria-baseada-no-codigo-uniichat.md)
@@ -48,3 +50,13 @@ baseada no código em19/out: etapas **propostas** MEM.0–MEM.7 foram inseridas 
 ROADMAP (Apêndice F), com dependências/exclusões e testes. Adoção/formatos ainda
 são gate MEM.0; nenhum checkmark de código é criado. Dependências futuras reais
 e regras TCB/deny/fuzz/manifesto continuam obrigatórias.
+
+## Adoção da direção (2026-10-22)
+
+Por delegação do mantenedor, a direção deste ADR é adotada: Episodic Memory,
+Knowledge Memory e Memory Router fora da autoridade epistêmica, com originais
+imutáveis, store isolado e Rust guardando/acessando. Motivo: o produto do ADR 0047
+(projetos persistentes e contexto entre sessões) precisa de exatamente essa base, e
+construir outra duplicaria custódia/ACL. Isto **não** encerra a MEM.0: decisões de
+formato, domínios CAS, vetores, permissões e processos continuam sendo o seu
+critério de conclusão. Nenhuma etapa MEM foi implementada.
