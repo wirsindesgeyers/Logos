@@ -193,11 +193,11 @@ async def scenario(root: Path, public: dict[str, str]) -> dict[str, object]:
         }
 
 
-def run(report: Path) -> None:
+def run(report: Path, *, vocabulary_source: str = VOCABULARY) -> None:
     with tempfile.TemporaryDirectory(prefix="logos-mcp-") as directory:
         root = Path(directory)
         vocabulary = root / "public-vocabulary"
-        vocabulary.write_bytes(canon.encode(air.parse_document(VOCABULARY).vocabulary))
+        vocabulary.write_bytes(canon.encode(air.parse_document(vocabulary_source).vocabulary))
         public = json.loads(
             subprocess.run(
                 [

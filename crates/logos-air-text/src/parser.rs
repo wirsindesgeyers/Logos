@@ -184,7 +184,8 @@ fn map_vocab_error(error: VocabularyError, span: Span) -> SurfaceError {
         VocabularyError::SignatureMismatch
         | VocabularyError::InvalidDomainConstant
         | VocabularyError::CircularDefinition
-        | VocabularyError::VersionOverflow => SurfaceError::new(
+        | VocabularyError::VersionOverflow
+        | VocabularyError::InvalidRenderTemplate => SurfaceError::new(
             ErrorKind::InvalidVocabulary,
             span.line,
             span.column,
@@ -1308,11 +1309,35 @@ impl<'a> TokenStream<'a> {
 
         let mut raw_sorts = Vec::new();
         let mut raw_symbols = Vec::new();
+        let mut render_pt = None;
         let mut seen_sorts = BTreeSet::new();
         let mut seen_symbols = BTreeSet::new();
 
         while self.peek_token() != &Token::CloseBrace {
             match self.peek_token() {
+                Token::Ident("render_pt") => {
+                    let span = self.peek_span();
+                    if render_pt.is_some() {
+                        return Err(SurfaceError::new(
+                            ErrorKind::InvalidAst,
+                            span.line,
+                            span.column,
+                            "duplicate render_pt",
+                        ));
+                    }
+                    self.next();
+                    self.expect(&Token::OpenBracket)?;
+                    let mut templates = Vec::new();
+                    if self.peek_token() != &Token::CloseBracket {
+                        templates.push(self.expect_string_literal()?.0);
+                        while self.peek_token() == &Token::Comma {
+                            self.next();
+                            templates.push(self.expect_string_literal()?.0);
+                        }
+                    }
+                    self.expect(&Token::CloseBracket)?;
+                    render_pt = Some(templates);
+                }
                 Token::Sort => {
                     self.next();
                     let (name, name_span) = self.expect_name()?;
@@ -1667,8 +1692,13 @@ impl<'a> TokenStream<'a> {
             });
         }
 
-        let vocabulary = Vocabulary::new(version, sorts, final_symbols)
-            .map_err(|e| map_vocab_error(e, vocab_span))?;
+        let vocabulary = match render_pt {
+            None => Vocabulary::new(version, sorts, final_symbols),
+            Some(templates) => {
+                Vocabulary::new_with_render_pt(version, sorts, final_symbols, templates)
+            }
+        }
+        .map_err(|e| map_vocab_error(e, vocab_span))?;
 
         Ok(Document { vocabulary, claims })
     }

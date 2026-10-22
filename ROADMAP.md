@@ -1716,19 +1716,36 @@ Objetivo da fase: o regime operacional completo da §6. Item 2 da ordem de const
 
 ## Fase 9 — Paráfrase determinística e autorização do usuário
 
+### Etapa 9.1a — Templates versionados no vocabulário · `M` · ⚠ TCB
+
+**Depende de (recebe pronto).** 1.1–1.4; ADR0046 resolve a diferença entre
+`gloss_pt` livre da1.2 e `render_pt` exigido pela9.1.
+
+**Fora do escopo.** renderizador/parser PT, autorização9.2, revisão humana9.1.
+
+**Entregáveis.** vocabulary/v2 com render_pt por símbolo; validação limitada,
+hash/compatibilidade, preservação integral de v1, parsers/impressoras Rust/Python,
+especificações/vetores independentes, fuzz e controles por mutação.
+
+**Critério de conclusão.**
+- [x] Bytes/hashes v1 históricos preservados; templates v2 entram em h(V),
+  mudanças anteriores são incompatíveis e entradas malformadas são recusadas.
+- [x] Round-trip documental e diferencial Rust/Python com v2, vetores independentes,
+  fuzz do novo parser e mutações detectadas; full verify/selftest passa.
+
 ### Etapa 9.1 — Renderizador determinístico AIR → português · `M` · ⚠ TCB (fidelidade)
 
 **Trilha5R (ADR0037).** Dependência obrigatória da5R.2: antecipar esta etapa com todos os seus critérios e TCB de fidelidade.
 
 
-**Depende de (recebe pronto).** 1.1, 1.2; 1.4 — parser (usado como base do parser da língua controlada).
+**Depende de (recebe pronto).** 1.1, 1.2; 1.4 — parser (usado como base do parser da língua controlada);9.1a — templates explícitos versionados (ADR0046).
 
 **Fora do escopo.** outras línguas; elegância de redação.
 
 **Objetivo.** §5: o renderizador está na TCB de fidelidade, mora do lado do kernel, e o usuário assina a string que ele produz.
 
 **Entregáveis.**
-- `render_pt(φ, V) -> String`: templates por símbolo (campo `render_pt` no vocabulário, ex.: `Owns(u,d)` ↦ "{u} é dono de {d}"), conectivos com regras fixas de parênteses/escopo ("para todo … vale que …"), sem ambiguidade de escopo (prefere redundância a elegância).
+- `render_pt(φ, V) -> String`: templates por símbolo (campo `render_pt` de vocabulary/v2,9.1a/ADR0046; ex.: `Owns(u,d)` usa "{0} é dono de {1}", com posições da assinatura0↦u e1↦d), conectivos com regras fixas de parênteses/escopo ("para todo … vale que …"), sem ambiguidade de escopo (prefere redundância a elegância).
 - **Língua controlada com parser.** A saída do renderizador pertence a uma gramática fixa (`spec/paraphrase-pt.md`), e existe `parse_pt(String, V) -> Formula`, do lado do kernel, na mesma TCB de fidelidade. **Injetividade por construção:** se `parse_pt(render_pt(φ)) == φ` para toda `φ`, duas fórmulas diferentes não podem ter a mesma paráfrase. Um teste que só procura colisões não garante isso.
 - Bônus de segurança: o kernel pode reler a string que o usuário assinou e conferir que ela volta exatamente para `a` antes de aceitar a autorização (usado na 9.2).
 - Versão do renderizador e da gramática no hash da paráfrase.

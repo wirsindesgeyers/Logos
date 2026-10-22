@@ -116,6 +116,8 @@ pub enum VocabularyError {
     CircularDefinition,
     /// Não há versão u64 sucessora.
     VersionOverflow,
+    /// Template ausente, malformado ou acima dos limites.
+    InvalidRenderTemplate,
 }
 
 impl From<CanonError> for VocabularyError {
@@ -142,6 +144,7 @@ impl fmt::Display for VocabularyError {
             Self::SignatureMismatch => f.write_str("vocabulary signature mismatch"),
             Self::InvalidDomainConstant => f.write_str("invalid enumerated domain constant"),
             Self::CircularDefinition => f.write_str("circular vocabulary definition"),
+            Self::InvalidRenderTemplate => f.write_str("invalid render_pt templates"),
             Self::VersionOverflow => f.write_str("vocabulary version overflow"),
         }
     }
@@ -164,6 +167,7 @@ pub struct Vocabulary {
     sorts: Vec<SortDecl>,
     symbols: Vec<SymbolDecl>,
     definition_order: Vec<usize>,
+    render_pt: Option<Vec<Text>>,
 }
 
 impl Vocabulary {
@@ -217,7 +221,42 @@ impl Vocabulary {
             sorts,
             symbols,
             definition_order,
+            render_pt: None,
         })
+    }
+
+    /// Cria vocabulary/v2 com templates explícitos por ordem de símbolo.
+    ///
+    /// # Errors
+    /// Erros de vocabulário ou templates inválidos; nunca usa gloss_pt como fallback.
+    pub fn new_with_render_pt(
+        version: u64,
+        sorts: Vec<SortDecl>,
+        symbols: Vec<SymbolDecl>,
+        render_pt: Vec<Text>,
+    ) -> Result<Self, VocabularyError> {
+        let mut vocabulary = Self::new(version, sorts, symbols)?;
+        if render_pt.len() != vocabulary.symbols.len() {
+            return Err(VocabularyError::InvalidRenderTemplate);
+        }
+        let mut total = 0usize;
+        for (template, symbol) in render_pt.iter().zip(&vocabulary.symbols) {
+            crate::render_template::validate(template, symbol.signature.arity.len())?;
+            total = total
+                .checked_add(template.as_str().len())
+                .ok_or(VocabularyError::InvalidRenderTemplate)?;
+            if total > 1_048_576 {
+                return Err(VocabularyError::InvalidRenderTemplate);
+            }
+        }
+        vocabulary.render_pt = Some(render_pt);
+        Ok(vocabulary)
+    }
+
+    /// Templates por ordem de símbolo; None identifica o formato histórico v1.
+    #[must_use]
+    pub fn render_pt(&self) -> Option<&[Text]> {
+        self.render_pt.as_deref()
     }
 
     /// Versão de conteúdo, não versão do formato de transporte.
@@ -248,7 +287,8 @@ impl Vocabulary {
     /// Compara preservação exata das declarações anteriores, independentemente de versão/ordem.
     #[must_use]
     pub fn compatibility_with(&self, previous: &Self) -> Compatibility {
-        if preserves(&self.sorts, &previous.sorts, |decl| &decl.name)
+        if self.preserves_render_pt(previous)
+            && preserves(&self.sorts, &previous.sorts, |decl| &decl.name)
             && preserves(&self.symbols, &previous.symbols, |decl| {
                 &decl.signature.name
             })
@@ -259,16 +299,55 @@ impl Vocabulary {
         }
     }
 
+    fn preserves_render_pt(&self, previous: &Self) -> bool {
+        match (&self.render_pt, &previous.render_pt) {
+            (None, None) => true,
+            (Some(candidate), Some(old)) => {
+                let templates: BTreeMap<_, _> = self
+                    .symbols
+                    .iter()
+                    .zip(candidate)
+                    .map(|(symbol, template)| (&symbol.signature.name, template))
+                    .collect();
+                previous.symbols.iter().zip(old).all(|(symbol, template)| {
+                    templates.get(&symbol.signature.name).copied() == Some(template)
+                })
+            }
+            _ => false,
+        }
+    }
+
+    /// Extensão v2 exige a lista completa, inclusive templates dos novos símbolos.
+    ///
+    /// # Errors
+    /// Patches, versão ou templates inválidos.
+    pub fn extend_with_render_pt(
+        &self,
+        sorts: Vec<SortDecl>,
+        symbols: Vec<SymbolDecl>,
+        render_pt: Vec<Text>,
+    ) -> Result<(Self, Compatibility), VocabularyError> {
+        let base = Self::new(self.version, self.sorts.clone(), self.symbols.clone())?;
+        let (next, _) = base.extend(sorts, symbols)?;
+        let next = Self::new_with_render_pt(next.version, next.sorts, next.symbols, render_pt)?;
+        let compatibility = next.compatibility_with(self);
+        Ok((next, compatibility))
+    }
+
     /// Aplica patches por nome e incrementa a versão, sem modificar o anterior.
     /// Substituições preservam posição; novos nomes são acrescentados em ordem.
     ///
     /// # Errors
-    /// Versão esgotada, patches duplicados ou vocabulário resultante inválido.
+    /// Versão esgotada, patches duplicados, vocabulário inválido ou v2 sem lista explícita.
+    /// Para v2, usar extend_with_render_pt; nunca inferir templates de símbolos novos.
     pub fn extend(
         &self,
         sorts: Vec<SortDecl>,
         symbols: Vec<SymbolDecl>,
     ) -> Result<(Self, Compatibility), VocabularyError> {
+        if self.render_pt.is_some() {
+            return Err(VocabularyError::InvalidRenderTemplate);
+        }
         let version = self
             .version
             .checked_add(1)

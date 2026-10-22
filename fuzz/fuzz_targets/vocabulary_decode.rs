@@ -195,7 +195,10 @@ fn ground_probe(v: &Vocabulary) {
             assert_eq!(cnf.clauses().len(), map.origins().len());
             assert_eq!(map.domain_support(), g.domain_axioms());
             assert_eq!(map.obligation(), hash(&o).expect("hO"));
-            assert_eq!(map.cnf_hash(), logos_crypto::hash_raw::<logos_ground::Cnf>(cnf.dimacs()));
+            assert_eq!(
+                map.cnf_hash(),
+                logos_crypto::hash_raw::<logos_ground::Cnf>(cnf.dimacs())
+            );
             assert_eq!(map.clause_support().len(), map.origins().len());
             for support in map.clause_support() {
                 assert!(support.iter().all(|r| map.domain_support().contains(r)));

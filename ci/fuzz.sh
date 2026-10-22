@@ -85,6 +85,23 @@ for v in json.loads(Path("../spec/vectors/cake-lpr/output.json").read_text())["v
     (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
 SEED
   fi
+  if [ "$t" = render_template ] || [ "$t" = vocabulary_decode ]; then
+    python3 - "$t" <<'SEED'
+import hashlib
+import sys
+from pathlib import Path
+corpus = Path("corpus") / sys.argv[1]
+corpus.mkdir(parents=True, exist_ok=True)
+for line in Path("../spec/vectors/vocabulary-v2/vectors.tsv").read_text().splitlines():
+    if not line.startswith("#"):
+        wire = bytes.fromhex(line.split("\t")[1])
+        (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+if sys.argv[1] == "render_template":
+    for arity, text in [(0,"chove"),(1,"{0} administra"),(2,"{0} é dono de {1}"),(3,"{0} liga {1} com {2}")]:
+        wire = bytes([arity]) + text.encode()
+        (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+SEED
+  fi
   : > "../fuzz-logs/$t.log"
   remaining="$seconds"
   batch=1

@@ -1,0 +1,251 @@
+{
+  "base": "ced0cf3",
+  "status": "verified_locally",
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 3566.59,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 491,
+    "verify_ok": true,
+    "log_sha256": "ed5512b05750104aff2ecc82774b57a966905a2b15565e2a7642515dc50d09f0",
+    "input_manifest_sha256": "29daeba501d786cde500e602d3971b1e1d0ed1b6b5305b76cafcd8048a53ee09"
+  },
+  "statistics": {
+    "rust_passed": 551,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "314 passed in 173.24s (0:02:53)",
+      "25 passed in 1.93s"
+    ],
+    "render_templates": [
+      "RENDER_TEMPLATE_VECTORS_OK cases=14",
+      "RENDER_TEMPLATES_SMOKE_OK tasks=10 vocabulary_format=2 audit=complete"
+    ],
+    "mcp": [
+      "MCP_RESEARCH_SMOKE_OK tasks=10 verified=5 refuted=5 audit=complete",
+      "MCP_RESEARCH_SMOKE_OK tasks=10 verified=5 refuted=5 audit=complete"
+    ],
+    "farm": [
+      "FARM_SMOKE_OK count=500 p50=1.2581221424989053"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=53.53s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=20668 (private SQLite snapshot; cold rebuild_ms=215137)"
+    ]
+  },
+  "earlier_attempts_not_counted": [
+    {
+      "attempt": "attempt1",
+      "receipt": {
+        "status": "finished",
+        "command": [
+          "ci/verify.sh",
+          "--selftest"
+        ],
+        "exit": -15,
+        "seconds": 446.79,
+        "runtime_and_normative_files_unchanged": true,
+        "changed": [],
+        "file_count": 491,
+        "verify_ok": false,
+        "log_sha256": "f81d915777cc7541a7b165aa56c32283eceb68899908abc7090f8776dc355927",
+        "input_manifest_sha256": "9923dee001d28f1dd5093b75917c28564de4a6ede64f5e42d05605e608d18346"
+      }
+    },
+    {
+      "attempt": "attempt2",
+      "receipt": {
+        "status": "finished",
+        "command": [
+          "ci/verify.sh",
+          "--selftest"
+        ],
+        "exit": 1,
+        "seconds": 4628.09,
+        "runtime_and_normative_files_unchanged": true,
+        "changed": [],
+        "file_count": 491,
+        "verify_ok": false,
+        "log_sha256": "5e742f56f127afaad976a3e3822aaf001d1367301d335c634ebeb6bfbebf36a9",
+        "input_manifest_sha256": "e0db114c23f5459604893ab67ce79b98caa88819a73e63c51cc9a0e2c37e4ddf"
+      }
+    },
+    {
+      "attempt": "attempt3",
+      "receipt": {
+        "status": "finished",
+        "command": [
+          "ci/verify.sh",
+          "--selftest"
+        ],
+        "exit": 101,
+        "seconds": 1145.85,
+        "runtime_and_normative_files_unchanged": true,
+        "changed": [],
+        "file_count": 491,
+        "verify_ok": false,
+        "log_sha256": "fa167b023d4a00014d13c8af4f40392912a4b6f1ca68a5c17e0643ba08314b5c",
+        "input_manifest_sha256": "a42a90ac7bc34b9592d11dfd8cc2a264932d3497bc6caef507007896be65ffd2"
+      }
+    },
+    {
+      "attempt": "attempt4-interrupted",
+      "receipt": {
+        "status": "running",
+        "pid": 316353,
+        "started_unix": 1792611730.8453205
+      }
+    }
+  ],
+  "fuzz": {
+    "status": "finished",
+    "results": [
+      {
+        "target": "render_template",
+        "seconds_requested": 3600,
+        "exit": 0
+      },
+      {
+        "target": "vocabulary_decode",
+        "seconds_requested": 60,
+        "exit": 0
+      }
+    ],
+    "wall_seconds": 3773.12,
+    "sources": {
+      "crates/logos-air/src/render_template.rs": "106ccafd301faa6694efa7b1c9272405c35d3ced02c220b8d3de19f39d22cd5a",
+      "crates/logos-air/src/vocabulary.rs": "0caaa313e96a4eada044f2ccbb2e14eb6c3a3dfc45f8a967c2b572b9e67dc8ff",
+      "crates/logos-air/src/vocabulary_codec.rs": "f15943698f02a5e645c5c48635fa4bf6698250fde2446e4080d67a9cddf62d89",
+      "fuzz/fuzz_targets/render_template.rs": "f3174b748f2163be50249a5735c3376a72c25786afdecf70cd9c7de299641a0a",
+      "fuzz/Cargo.toml": "0844eff26cdc273d32f7ee3a3cbe67d9f76e895013b1c990eb4a7ef7d2de8c4f"
+    },
+    "sources_unchanged": true,
+    "log_sha256": "7c305ed669f758f44cff6dffae43b69b2116cac4ece9fcd9565f58df92899ae7"
+  },
+  "mutations": [
+    {
+      "name": "template_not_hashed",
+      "source": "crates/logos-air/src/vocabulary_codec.rs",
+      "test": "hash_includes_templates_and_v1_remains_byte_exact",
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "restored_sha256": "f15943698f02a5e645c5c48635fa4bf6698250fde2446e4080d67a9cddf62d89",
+      "log_sha256": "98e79f9cf7b495d472c715449979a457d0437245af4aafa52c3759c629fda5a7",
+      "replace_once": {
+        "from": "if let Some(templates) = self.render_pt() {",
+        "to": "if let Some(templates) = None::<&[Text]> {"
+      },
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-air",
+        "--test",
+        "render_templates",
+        "hash_includes_templates_and_v1_remains_byte_exact",
+        "--",
+        "--exact"
+      ],
+      "failure_excerpt": "thread 'hash_includes_templates_and_v1_remains_byte_exact' (75752) panicked at crates/logos-air/tests/render_templates.rs:53:5:\nassertion `left != right` failed\n  left: Hash(55e220c3dc367f802e9e98016266227f262e23ae2afb4e2d38a97b9b8aad120d)\n right: Hash(55e220c3dc367f802e9e98016266227f262e23ae2afb4e2d38a97b9b8aad120d)",
+      "full_log_bytes": 1042,
+      "failure_excerpt_truncated": false
+    },
+    {
+      "name": "placeholder_order_ignored",
+      "source": "crates/logos-air/src/render_template.rs",
+      "test": "template_counts_order_literals_and_controls_are_checked",
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "restored_sha256": "106ccafd301faa6694efa7b1c9272405c35d3ced02c220b8d3de19f39d22cd5a",
+      "log_sha256": "a5fd1f19dfbf76b1f3977c14d569fd2f1421da413450051cf83ba58e2ffe2072",
+      "replace_once": {
+        "from": "if next >= arity || digits != next.to_string() {",
+        "to": "if false {"
+      },
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-air",
+        "--test",
+        "render_templates",
+        "template_counts_order_literals_and_controls_are_checked",
+        "--",
+        "--exact"
+      ],
+      "failure_excerpt": "thread 'template_counts_order_literals_and_controls_are_checked' (76308) panicked at crates/logos-air/tests/render_templates.rs:79:9:\nassertion `left == right` failed: \"{1} tem {0}\"\n  left: Ok(Vocabulary { version: 7, sorts: [SortDecl { name: Text(\"S\"), domain: Open }], symbols: [SymbolDecl { signature: Symbol { name: Text(\"P\"), kind: Pred, arity: [Sort { name: Text(\"S\") }, Sort { name: Text(\"S\") }], result: Bool }, grounding: Glossed(Text(\"glosa livre\")), gloss_pt: Text(\"documentação\") }], definition_order: [], render_pt: Some([Text(\"{1} tem {0}\")]) })\n right: Err(InvalidRenderTemplate)",
+      "full_log_bytes": 1771,
+      "failure_excerpt_truncated": false
+    },
+    {
+      "name": "template_compatibility_ignored",
+      "source": "crates/logos-air/src/vocabulary.rs",
+      "test": "extension_requires_explicit_templates_and_compares_by_symbol",
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "restored_sha256": "0caaa313e96a4eada044f2ccbb2e14eb6c3a3dfc45f8a967c2b572b9e67dc8ff",
+      "log_sha256": "cf7f70a89b951f418b5cde0f08f11104b85546a983a22876b3fdcec38defbe55",
+      "replace_once": {
+        "from": "if self.preserves_render_pt(previous)",
+        "to": "if true"
+      },
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-air",
+        "--test",
+        "render_templates",
+        "extension_requires_explicit_templates_and_compares_by_symbol",
+        "--",
+        "--exact"
+      ],
+      "failure_excerpt": "thread 'extension_requires_explicit_templates_and_compares_by_symbol' (76925) panicked at crates/logos-air/tests/render_templates.rs:155:5:\nassertion `left == right` failed\n  left: Compatible\n right: Incompatible",
+      "full_log_bytes": 1384,
+      "failure_excerpt_truncated": false
+    },
+    {
+      "name": "aggregate_limit_ignored",
+      "source": "crates/logos-air/src/vocabulary.rs",
+      "test": "byte_and_aggregate_limits_are_inclusive",
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "restored_sha256": "0caaa313e96a4eada044f2ccbb2e14eb6c3a3dfc45f8a967c2b572b9e67dc8ff",
+      "log_sha256": "a4a3a2dbae2cae607416e2b93594f9d542efdf148b2a5ac3ea06e8ac6318cb18",
+      "replace_once": {
+        "from": "if total > 1_048_576 {",
+        "to": "if total > usize::MAX {"
+      },
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "-p",
+        "logos-air",
+        "--test",
+        "render_templates",
+        "byte_and_aggregate_limits_are_inclusive",
+        "--",
+        "--exact"
+      ],
+      "failure_excerpt": "thread 'byte_and_aggregate_limits_are_inclusive' (77571) panicked at crates/logos-air/tests/render_templates.rs:119:5:\nassertion `left == right` failed\n  left: Ok(Vocabulary { version: 1, sorts: [SortDecl { name: Text(\"S\"), domain: Open }], symbols: [SymbolDecl { signature: Symbol { name: Text(\"P0\"), kind: Pred, arity: [], result: Bool }, grounding: Glossed(Text(\"glosa livre\")), gloss_pt: Text(\"documentação\") }, SymbolDecl { signature: Symbol { name: Text(\"P1\"), kind: Pred, arity: [], result: Bool }, grounding: Glossed(Text(\"glosa livre\")), gloss_pt: Text(\"documentação\") }, SymbolDecl { signature: Symbol { name: Text(\"P2\"), kind: Pred, arity: [], result: Bool }, grounding: Glossed(Text(\"glosa livre\")), gloss_pt: Text(\"documentação\") }, SymbolDecl { signature: Symbol { name: Text(\"P3\"), kind: Pred, arity: [], result: Bool }, grounding: Glossed(Text(\"glosa livre\")), gloss_pt: Text(\"documentação\") }, SymbolDecl { signature: Symbol { name: Text(\"P4\"), kind: Pred, arity: [], result: Bool },\n[trecho abreviado; log integral identificado pelo SHA-256]\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"), Text(\"a\")]) })\n right: Err(InvalidRenderTemplate)",
+      "full_log_bytes": 1095494,
+      "failure_excerpt_truncated": true
+    }
+  ],
+  "python_preflight": {
+    "scope": "Python/tools/tcb block from ci/verify.sh, not full verification",
+    "exit": 0,
+    "seconds": 694.8,
+    "log_sha256": "4bdd8d7e080a67ceaa8db61895aba38ae323100f142c60cc6f130675261b836d"
+  },
+  "tcb_report_sha256": "339d71036436c5f1cf7fc19e0ba9c129987099e02f6c087033b68ac38fa9ea98"
+}

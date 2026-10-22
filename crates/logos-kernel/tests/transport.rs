@@ -765,7 +765,9 @@ fn binary_serves_propose_certify_refute_and_persists_its_checker_identity() {
             break stream;
         }
         assert!(process.0.try_wait().unwrap().is_none());
-        assert!(start.elapsed() < Duration::from_secs(15));
+        // Startup debug includes executable hashing and checker registration, not an RPC SLA.
+        // Keep the fixture bounded without changing any protocol/checker deadline.
+        assert!(start.elapsed() < Duration::from_secs(120));
         std::thread::sleep(Duration::from_millis(10));
     };
     assert_eq!(

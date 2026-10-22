@@ -42,7 +42,10 @@ fuzz_target!(|data: &[u8]| {
             assert!(refs.contains(&logos_ledger::CasReference::Certificate(check.certificate)));
         }
         if let EventBody::CertificateRejected { check } = &event.body {
-            assert!(matches!(check.outcome, logos_core::CheckOutcome::Rejected(_)));
+            assert!(matches!(
+                check.outcome,
+                logos_core::CheckOutcome::Rejected(_)
+            ));
             assert_eq!(refs.len(), 3);
         }
         if let EventBody::ObligationCreated {

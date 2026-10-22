@@ -222,3 +222,11 @@ os seguintes invariantes:
    tamanho (32 bytes), não contra ledgers ativos ou sistemas externos.
 4. **Sem interning**: representações canônicas contêm os objetos completos sem ponteiros ou
    arenas de memória.
+
+## Extensão vocabulary/v2 (ADR0046, pré-requisito9.1a)
+
+O formato histórico deste documento permanece aceito byte a byte. A extensão
+normativa em [render-templates.md](render-templates.md) acrescenta render_pt ao
+envelope v2, com validação/limites e hash sobre o conteúdo integral. Não altera
+gloss_pt nem transforma v1 em v2 implicitamente. Compatibilidade passa também
+a conferir templates quando v2 é usado; formatos diferentes são incompatíveis.

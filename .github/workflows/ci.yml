@@ -222,6 +222,14 @@ jobs:
         run: ../ci/check-farm.sh
       - name: Pesquisa MCP por stdio e auditoria de dez tarefas
         run: ../ci/check-mcp-research.sh
+      - name: Templates vocabulary/v2 no kernel real
+        run: ../ci/check-render-templates.sh
+      - name: Arquivar evidência de templates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-templates-report
+          path: target/render-templates-report.json
       - name: Arquivar evidência MCP
         if: always()
         uses: actions/upload-artifact@v4

@@ -12,6 +12,7 @@
 
 mod codec;
 mod error;
+mod render_template;
 mod shape;
 mod sort_check;
 mod syntax;

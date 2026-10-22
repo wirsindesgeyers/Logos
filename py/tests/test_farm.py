@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import os
+import signal
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -222,41 +223,59 @@ def test_real_workers(sandbox: Sandbox) -> None:
 def test_real_timeout_and_cancellation_leave_no_worker(
     sandbox: Sandbox,
     monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
 ) -> None:
-    pidfile = tmp_path / "worker.pid"
-    # Test helper runs in its own session; capture PID outside the namespace.
-    original = sandbox.command
-
-    def command() -> list[str]:
-        return [
-            "/usr/bin/python3",
-            "-c",
-            "import os,time,pathlib;pathlib.Path("
-            + repr(str(pidfile))
-            + ").write_text(str(os.getpid()));time.sleep(10)",
-        ]
-
-    monkeypatch.setattr(sandbox, "command", command)
+    # Capture the real Process, not a PID file the timeout can interrupt mid-write.
+    monkeypatch.setattr(
+        sandbox, "command", lambda: ["/usr/bin/python3", "-c", "import time;time.sleep(10)"]
+    )
+    original_create = asyncio.create_subprocess_exec
 
     async def run() -> None:
-        with pytest.raises(TimeoutError):
-            await sandbox.produce("refute", CASE.obligation, CASE.vocabulary, 100)
-        pid = int(pidfile.read_text())
-        with pytest.raises(ProcessLookupError):
-            os.kill(pid, 0)
-        task = asyncio.create_task(
-            sandbox.produce("refute", CASE.obligation, CASE.vocabulary, 5000)
-        )
-        await asyncio.sleep(0.1)
-        task.cancel()
-        with pytest.raises(asyncio.CancelledError):
-            await task
-        with pytest.raises(ProcessLookupError):
-            os.kill(int(pidfile.read_text()), 0)
+        processes: list[asyncio.subprocess.Process] = []
+        spawned = asyncio.Event()
+
+        async def capture(*args: str, **kwargs: Any) -> asyncio.subprocess.Process:
+            process = await original_create(*args, **kwargs)
+            processes.append(process)
+            spawned.set()
+            return process
+
+        monkeypatch.setattr(asyncio, "create_subprocess_exec", capture)
+
+        def assert_reaped(process: asyncio.subprocess.Process) -> None:
+            # A naturally finishing helper cannot satisfy the cleanup assertion.
+            assert process.returncode == -signal.SIGKILL
+            with pytest.raises(ProcessLookupError):
+                os.kill(process.pid, 0)
+
+        try:
+            with pytest.raises(TimeoutError):
+                await sandbox.produce("refute", CASE.obligation, CASE.vocabulary, 100)
+            assert len(processes) == 1
+            assert_reaped(processes[0])
+            spawned.clear()
+            task = asyncio.create_task(
+                sandbox.produce("refute", CASE.obligation, CASE.vocabulary, 5000)
+            )
+            try:
+                # Cancel only once the subprocess exists and belongs to produce().
+                await asyncio.wait_for(spawned.wait(), 5)
+                assert len(processes) == 2
+                task.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await task
+                assert_reaped(processes[1])
+            finally:
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+        finally:
+            # Failure cleanup is after the assertions, so it cannot hide a leak.
+            for process in processes:
+                if process.returncode is None:
+                    process.kill()
+                await process.wait()
 
     asyncio.run(run())
-    monkeypatch.setattr(sandbox, "command", original)
 
 
 def test_checker_unknown_is_not_a_verdict_and_cache_can_be_disabled() -> None:

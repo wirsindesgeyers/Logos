@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização:2026-10-21 · Etapa5R.1 concluída localmente (ADR0045): seis ferramentas MCP stdio, dez tarefas reais e auditoria/export completos. Full verify/selftest VERIFY_OK/exit0 em4681.05s. CI remota pendente. Próximo:9.1, pré-requisito da5R.2.
+> Última atualização:2026-10-21 · Pré-requisito9.1a concluído localmente (ADR0046): vocabulary/v2 com render_pt, v1 preservado, fuzz1h/mutações/kernel real e full verify/selftest VERIFY_OK. Próximo:9.1 integral; CI remota pendente.
 
 ## Resumo
 
@@ -273,7 +273,17 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | 5R.5 Chat/TUI de pesquisa | ⏳ não iniciada | 5R.4; perfil de pesquisa10.7 entregue aqui, sem ações. |
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
 
+## Etapa9.1 — pré-checagem
+
+| Etapa | Estado | Evidência / pendência |
+| --- | --- | --- |
+| 9.1a Templates versionados | ⚠ concluída localmente; CI pendente | ADR0046; vocabulary/v2, vetores14, diferencial Rust/Python, quatro mutações, fuzz3600s+60s, cenário v2 no kernel/MCP/auditor e full verify/selftest VERIFY_OK em3566.59s. [Evidências](docs/plans/etapa-9.1a-evidencias.json). |
+| 9.1 Renderizador/parser PT | ⏳ não iniciada | 9.1a pronta; implementar com todos os critérios e revisão humana. |
+
 ## Pendências de verificação (execução remota)
+
+Etapa9.1a: full verify/selftest local passou; CI remota/ARM/noturno do novo
+commit ainda não consultados. Evidências em docs/plans/etapa-9.1a-*.json.
 
 Etapa5R.1: full verify/selftest local passou; CI remota do novo commit ainda
 não consultada. Evidências em docs/plans/etapa-5R.1-*.json.
@@ -526,33 +536,30 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa9.1 — língua controlada em português (base da5R.2)
+## Próximo passo: Etapa9.1 — renderizador/parser PT
 
-5R.1 está concluída localmente: seis ferramentas MCP stdio, cliente/farm,
-dez tarefas reais e auditoria completa; spec/mcp-research.md/ADR0045.
-A5R.2 exige9.1 integral: antecipar o renderizador/parser determinísticos antes
-de implementar confirmação de formalizações (ADR0037).
+Pronto de que depende: AIR1.1, vocabulário1.2 e parser1.4; vocabulary/v2 com
+render_pt explícito por símbolo, validado e vinculado a h(V) (9.1a/ADR0046,
+spec/render-templates.md). Não usar gloss_pt como template.
 
-Preparar docs/plans/etapa-9.1.md e ADR para gramática, templates, escopo de
-variáveis e hash versionado da paráfrase. Dependências1.1/1.2/1.4 presentes.
-render_pt/parse_pt ficam na TCB de fidelidade; aplicar manifesto, lints,
-limites, vetores, fuzz e testes de mutação/controle necessários. Nenhum LLM
-no renderizador ou parser e nenhuma autorização9.2 nesta etapa.
+Implementar render_pt(φ,V) e parse_pt(String,V) na TCB de fidelidade, gramática
+da língua controlada em spec/paraphrase-pt.md, versão do renderizador/gramática
+no hash da paráfrase, round-trip em100k fórmulas até profundidade6 e em todos
+os vetores, fuzz de parse_pt≥1h e revisão humana registrada de50 paráfrases de
+políticas reais. Não substituir a revisão por script. Plano em
+docs/plans/etapa-9.1.md (hoje só pré-checagem) precisa ser completado.
 
-Critérios integrais: round-trip100k fórmulas até profundidade6 e todas as
-fórmulas dos vetores; gramática documentada/fuzz≥1h; revisão humana registrada
-de50 paráfrases de políticas reais sem leitura errada. Não substituir revisão
-humana por script ou declarar concluído sem ela. Decidir gramática/templates
-em ADR antes de código. Se houver dependência ausente, registrar bloqueio.
-
-CI remota/ARM/noturno permanecem pendentes. MCP retorna observações não
-confiáveis; auditoria identifica snapshot, e export exige CAS externo.
-Após9.1 completa,5R.2;5.9→5.7 continuam antes da5R.3. Demais fases preservadas.
+Decisões em aberto: crate/propriedade da TCB de fidelidade que recebe o código
+(manifesto), forma da gramática e tratamento de templates coincidentes de
+símbolos distintos (ADR0046, limite explícito: identidade do símbolo precisa
+ficar na gramática). Riscos: injetividade, ambiguidade de escopo e custo da
+revisão humana.9.2/5R.2 continuam fora. CI remota/ARM/noturno pendentes.
 
 ## Decisões em aberto para o mantenedor
 
-- **Tamanho da TCB de correção (execução):** 15131 LOC Rust próprios + 747130
-  de dependências Rust = 762261 (+64508 só de compilação), após a5.5;
+- **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
+  de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
+  próprios, sem dependência nova). Medição anterior, após a5.5: 15131+747130=762261;
   logos-core344, logos-air1556, logos-obligation572, logos-model1847, logos-ground1534, logos-lrat1123, logos-ledger3853, logos-kernel2547.
   Acréscimo de343 LOC próprios sobre12826f4, incluindo testes em src/; pacotes externos inalterados.
   Resumo atual em docs/plans/etapa-5.5-evidencias.json (TCB).
@@ -1870,3 +1877,25 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-20 — Reprodução isolada do corpus confirmou mesma corrupção Unknown(Time), exit101/618.58s. ADR0045 registra Budget do teste60→180s, sem mudar produção nem considerar Unknown como Rejected; concordância200/600 continua obrigatória. Quarto full verify/selftest iniciado, sem commit/push antes de VERIFY_OK.
 
 - 2026-10-21 — Etapa5R.1 concluída localmente sobrea0358f6 (ADR0045). Seis ferramentas MCP stdio por SDK oficial2.3.0 fixado, strict/extra=forbid, sem rotas Fact/Policy/ASSUME/raw RPC; O somente PROPOSE e aceites somente checkers ativos. Dez tarefas via MCP:5 provas LRAT e5 refutações, vínculos h(O)/eventos Accepted, texto tainted preservado, certificado adulterado recusado; auditoria Rust+cake_lpr e export rechecado. Snapshot via QueryHead/Subscribe evita abrir SQLite com writer.lock ativo, sem relaxar locks ou criar formato. CLI não TCB expõe allowlist existente; raiz pública errada e checker desconhecido recusados sobre export.24 testes Python+2 CLI, MCP_RUNTIME_ONLY_OK sem dev e full ci/verify.sh --selftest VERIFY_OK/exit0 em4681.05s;545 Rust/0 ignorados; Python ['307 passed in 167.35s (0:02:47)', '25 passed in 1.79s'];481 entradas inalteradas. TCB Rust15131+747130=762261, build-only64508 preservada; sem novo fuzz/parser/runtime TCB. Falhas de desenvolvimento de stub/query, EOF parcial e anotações mypy corrigidas antes do fechamento. CI remota/ARM/noturno pendentes. Evidências/inputs/corpus em docs/plans/etapa-5R.1-*.json. Próximo9.1 integral antes de5R.2, inclusive revisão humana de50 paráfrases. Commit/push autorizados nesta sessão após verificação.
+
+- 2026-10-21 — Pré-checagem9.1 sobreced0cf3 a pedido do mantenedor. AIR1.1, vocabulário1.2 e parser1.4 existem, mas SymbolDecl/codec vocabulary/v1 só têm gloss_pt livre (spec/vocabulary.md §3.2), sem render_pt exigido pelo contrato9.1. Aplicada parada do AGENTS.md §1.3: nenhuma implementação, migração de formato ou reutilização silenciosa da glosa. Plano de pré-checagem em docs/plans/etapa-9.1.md e próximo passo reescrito para resolver contrato/templates versionados por ADR antes de código. Nenhum critério marcado; full verify não rodou nesta pré-checagem; sem novo commit/push.
+
+- 2026-10-21 — Mantenedor autorizou prosseguir na resolução do contrato. ADR0046 adotado e pré-requisito9.1a explicitado antes da9.1 no ROADMAP, preservando os critérios integrais posteriores. Templates explícitos em vocabulary/v2, validação limitada, compatibilidade e superfície Rust/Python implementados;5 testes Rust de contrato+1 superfície+7 Python passaram (inclui diferencial102 documentos). Lint inicial detectou doc/string longa; correção em curso. Fuzz/mutações/kernel real/full verify ainda pendentes; sem commit/push e sem marcar conclusão.
+
+- 2026-10-21 — Revisão9.1a detectou busca quadrática na compatibilidade de templates; substituída por índice por nome, preservando contrato. Primeiro full/fuzz interrompidos voluntariamente antes de terminar (exit-15;446.79s/565.68s), não contados como sucesso; recibos attempt1 preservados. Quatro mutações/controles serão repetidos nas fontes finais, seguidos de fuzz/full completos. Cenário v2 via MCP/kernel/auditor completo passou; sem commit/push até fechamento.
+
+- 2026-10-21 — Após índice por nome, quatro mutações repetidas com controles positivos e restauração por hash; fmt/Clippy passaram. Medição final: TCB própria15262 (+131), deps747130, total762392/build-only64508, sem dependência nova. Segunda execução full verify/selftest e nova rodada completa de fuzz3600s+60s ativas em target/verify-9.1a.* e target/fuzz-9.1a.*. Nenhum critério encerrado até os dois recibos finais; sem commit/push.
+
+- 2026-10-21 — Fuzz9.1a encerrado: render_template3600s em dois lotes (5928617+5937627 execuções/1801s cada) e vocabulary_decode60s (4895 execuções/61s), exit0, sem crash;3773.12s de parede e fontes inalteradas. Recibo target/fuzz-9.1a.json. Segundo full verify ainda ativo; farm500 passou p50=2.18480858s. Aguardando MCP/auditoria, crash/índices e verificações finais antes de encerrar critérios/commitar.
+
+- 2026-10-21 — Segundo full9.1a terminou exit1/4628.09s no Ruff do novo gerador: I001(imports) e RUF005(concatenação de listas); não houve VERIFY_OK. Rust, farm500, MCP v1/v2, crash e índices passaram;491 entradas inalteradas. Recibo/log/inputs attempt2 preservados. Gerador corrigido sem mudar vetores/TCB; ampliado preflight para tools/tcb e incluído gerador no mypy estrito. Fuzz1h permanece válido, fontes cobertas inalteradas. Nova verificação completa necessária; sem commit/push.
+
+- 2026-10-21 — Preflight Python:313 passaram/1 falhou na fixture antiga de timeout/cancelamento da farm, que lia worker.pid sob prazo100ms (ausente; reprodução isolada vazio). Fixture passa a capturar Process/PID real, sincronizar criação antes de cancelar e exigir SIGKILL/reap, preservando timeout100ms e produção. Novo preflight necessário; fuzz1h/TCB continuam inalterados. Sem commit/push.
+
+- 2026-10-21 — Preflight Python completo corrigido passou: Ruff/formatação py/tools/tcb, mypy54+28 fontes, vetores/corpus/smokes,314 testes Python em343.19s e25 TCB em2.69s. Fixture de timeout captura Process real e exige SIGKILL/reap; produção/timeout100ms preservados. Terceiro full verify/selftest em andamento, sem novo VERIFY_OK até agora; fuzz1h válido/inalterado.
+
+- 2026-10-21 — Terceiro full9.1a falhou exit101/1145.85s no arranque da fixture binary_serves: processo vivo sem socket após teto15s, antes de RPC;13/14 testes transport passaram. Logs/recibo attempt3 preservados. Reprodução intacta isolada passou (15.22s de teste total). Fixture passa a aguardar até120s finitos para hash/registro do executável debug, sem alterar prazos de protocolo/checkers ou produção. Repetir transport e full; preflight Python/fuzz1h continuam válidos. Sem commit/push.
+
+- 2026-10-21 — Transport inteiro passou após teto de startup120s:14/14 em14.48s, sem mudar limites de RPC/checker. Quarto full verify/selftest iniciado com fontes congeladas; Python preflight314+25 e fuzz1h já demonstrados. Aguardar VERIFY_OK/exit0 antes de fechar9.1a e commitar/push.
+
+- 2026-10-21 — Etapa9.1a concluída localmente sobreced0cf3 (ADR0046). Quarto full interrompido sem veredito às16:30 (farm400/500; processo e wrapper sumiram sem erro no log), preservado como attempt4 e não contado. Quinto full verify/selftest, desacoplado da sessão: VERIFY_OK/exit0 em3566.59s,491 entradas inalteradas,551 Rust/0 ignorados, Python314+25, RENDER_TEMPLATE_VECTORS_OK14, RENDER_TEMPLATES_SMOKE_OK10 tarefas v2 com auditoria, farm500 p50=1.258s. Fuzz3600s+60s e quatro mutações já demonstrados nas fontes finais. TCB15262+747130=762392 (+131), build-only64508, sem dependência nova. Recibos em docs/plans/etapa-9.1a-*.json. Próximo:9.1 integral. CI remota/ARM/noturno pendentes.

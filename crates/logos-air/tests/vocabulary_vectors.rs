@@ -179,6 +179,7 @@ fn vocabulary_error_text(error: &VocabularyError) -> String {
         VocabularyError::SignatureMismatch => "SignatureMismatch".to_owned(),
         VocabularyError::InvalidDomainConstant => "InvalidDomainConstant".to_owned(),
         VocabularyError::CircularDefinition => "CircularDefinition".to_owned(),
+        VocabularyError::InvalidRenderTemplate => "InvalidRenderTemplate".to_owned(),
         VocabularyError::VersionOverflow => "VersionOverflow".to_owned(),
     }
 }

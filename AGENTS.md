@@ -51,7 +51,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 
 ```sh
 ci/verify.sh              # instala cake_lpr offline fixado, fmt, clippy -D warnings, testes Rust, lints/independência da TCB,
-                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr (Budget de teste180s por check), produtor SAT300/300 +contramodelos, farm isolada ×500 obrigações/checkers reais, MCP stdio ×10 tarefas/auditoria completa, cliente async × kernel real nas sete mensagens)
+                          # manifesto, cargo deny/audit, ruff/mypy/pytest (canon/AIR-text/modelo × Z3, produtor 200/10k, finder × enumeração, corpus LRAT SAT-2002 × cake_lpr (Budget de teste180s por check), produtor SAT300/300 +contramodelos, farm isolada ×500 obrigações/checkers reais, MCP stdio ×10 tarefas/auditoria completa, vocabulary/v2 ×10 obrigações/checkers reais, cliente async × kernel real nas sete mensagens)
                           # smokes core/AIR/vocabulário/sort-check/AIR-text/obrigação/protocolo/modelo/avaliador/checker/eventos/fragmento/grounding/CNF (Z3 × 5k)/LRAT-RUP/cake_lpr isolado/auditor independente/produtor Z3/finder-fallback/explicação PT (20 refutações); kernel-protocol/socket/staging/PROPOSE/CERTIFY/REFUTE/WITNESS (P1/P3/P4 e STATE14–16) nos testes Rust; crash ledger (SIGKILL, 10k appends; teto agregado600s, limites individuais10/60s), índices (rebuild 100k, p99 com 1M); vetores (inclui kernel-protocol/v1, propose-result/v1, check-result/v1 e witness-result/v1) --check
 ci/verify.sh --selftest   # idem + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```

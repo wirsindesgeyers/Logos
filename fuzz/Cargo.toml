@@ -149,3 +149,10 @@ path = "fuzz_targets/kernel_message.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "render_template"
+path = "fuzz_targets/render_template.rs"
+test = false
+doc = false
+bench = false

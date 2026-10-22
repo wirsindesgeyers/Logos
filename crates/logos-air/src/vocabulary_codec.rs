@@ -1,4 +1,4 @@
-//! Codificação e decodificação estritas de `vocabulary/v1`.
+//! Codificação e decodificação estritas de `vocabulary/v1` e `vocabulary/v2`.
 //!
 //! Implementa a serialização e desserialização canônica do vocabulário versionado
 //! conforme a especificação normativa em `spec/vocabulary.md`.
@@ -188,12 +188,25 @@ impl Canon for Vocabulary {
             .iter()
             .map(symbol_decl_value)
             .collect::<Result<Vec<_>, _>>()?;
-        array(vec![
-            Value::Unsigned(VOCABULARY_FORMAT_VERSION),
+        let mut fields = vec![
+            Value::Unsigned(if self.render_pt().is_some() {
+                2
+            } else {
+                VOCABULARY_FORMAT_VERSION
+            }),
             Value::Unsigned(self.version()),
             array(sorts_val)?,
             array(symbols_val)?,
-        ])
+        ];
+        if let Some(templates) = self.render_pt() {
+            fields.push(array(
+                templates
+                    .iter()
+                    .map(Canon::to_value)
+                    .collect::<Result<Vec<_>, _>>()?,
+            )?);
+        }
+        array(fields)
     }
 }
 
@@ -204,7 +217,7 @@ impl CanonDecode for Vocabulary {
 }
 
 impl Vocabulary {
-    /// Decodifica um envelope `vocabulary/v1` completo sob os limites estruturais dados.
+    /// Decodifica um envelope `vocabulary/v1` e `vocabulary/v2` completo sob os limites estruturais dados.
     ///
     /// # Errors
     /// Retorna erro canônico (inclusive bytes excedentes), erro de AIR em fórmulas,
@@ -219,19 +232,24 @@ impl Vocabulary {
     /// Reconstrói um vocabulário a partir de um valor canônico CBOR e limites dados.
     ///
     /// # Errors
-    /// Retorna erro canônico caso a estrutura não siga o layout de `vocabulary/v1`,
+    /// Retorna erro canônico caso a estrutura não siga o layout de `vocabulary/v1` e `vocabulary/v2`,
     /// erro de AIR caso alguma fórmula exceda os limites ou viole o formato,
     /// ou erro semântico de validação do vocabulário (`VocabularyError`).
     pub fn from_value_with_limits(value: &Value, limits: Limits) -> Result<Self, VocabularyError> {
-        let [
-            Value::Unsigned(VOCABULARY_FORMAT_VERSION),
-            Value::Unsigned(version),
-            raw_sorts,
-            raw_symbols,
-        ] = items(value).map_err(VocabularyError::Canon)?
-        else {
-            return Err(CanonError::WrongType.into());
-        };
+        let (version, raw_sorts, raw_symbols, raw_templates) =
+            match items(value).map_err(VocabularyError::Canon)? {
+                [Value::Unsigned(1), Value::Unsigned(version), sorts, symbols] => {
+                    (*version, sorts, symbols, None)
+                }
+                [
+                    Value::Unsigned(2),
+                    Value::Unsigned(version),
+                    sorts,
+                    symbols,
+                    templates,
+                ] => (*version, sorts, symbols, Some(templates)),
+                _ => return Err(CanonError::WrongType.into()),
+            };
 
         let sort_items = items(raw_sorts).map_err(VocabularyError::Canon)?;
         let mut sorts = Vec::with_capacity(sort_items.len());
@@ -245,6 +263,15 @@ impl Vocabulary {
             symbols.push(symbol_decl_from_value(symbol_val, limits)?);
         }
 
-        Self::new(*version, sorts, symbols)
+        match raw_templates {
+            None => Self::new(version, sorts, symbols),
+            Some(raw) => {
+                let templates = items(raw)?
+                    .iter()
+                    .map(Text::from_value)
+                    .collect::<Result<Vec<_>, _>>()?;
+                Self::new_with_render_pt(version, sorts, symbols, templates)
+            }
+        }
     }
 }

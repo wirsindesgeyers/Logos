@@ -173,3 +173,10 @@ inclusive fórmulas sintaticamente válidas mas mal tipadas; também round-trip 
 documento com todas as variantes de grounding/domínio. Alfa-renomeação de binder
 não muda bytes. Diferencial obrigatório de 500 fórmulas com bytes Formula e
 Vocabulary idênticos em Python/Rust; Python verifica também texto impresso em Rust.
+
+## Extensão air-text/v2 — templates (ADR0046)
+
+A gramática v1 permanece aceita. A cláusula contextual opcional render_pt no
+corpo de vocab, impressão e seleção de vocabulary/v2 são definidas em
+[render-templates.md](render-templates.md). Sua ausência mantém bytes v1.
+Não há mudança na gramática de fórmulas nem na identidade AIR.

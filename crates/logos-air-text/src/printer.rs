@@ -365,6 +365,16 @@ pub fn print_document(document: &Document) -> String {
         printer.out.push('\n');
     }
 
+    if let Some(templates) = document.vocabulary.render_pt() {
+        printer.out.push_str("  render_pt [");
+        for (index, template) in templates.iter().enumerate() {
+            if index != 0 {
+                printer.out.push_str(", ");
+            }
+            printer.append_json_string(template.as_str());
+        }
+        printer.out.push_str("]\n");
+    }
     printer.out.push_str("}\n");
 
     // Claims

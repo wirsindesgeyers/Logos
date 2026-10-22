@@ -1,7 +1,7 @@
 """Sintaxe de superfície AIR (air-text/v1) e pretty-printer determinístico.
 
 Implementação independente da Etapa 1.4 conforme spec/air-surface.md.
-Fora da TCB. Saídas são compatíveis com air/v1 e vocabulary/v1 em canon/v1.
+Fora da TCB. Saídas são compatíveis com air/v1 e vocabulary/v1-v2 em canon/v1.
 """
 
 from __future__ import annotations
@@ -1553,9 +1553,48 @@ def _validate_formula(formula_env: Any) -> tuple[int, int]:
     return (max_depth, nodes)
 
 
+def _validate_render_template(text: str, arity: int) -> None:
+    _check_canon_text(text)
+
+    def invalid() -> SurfaceError:
+        return SurfaceError("InvalidVocabulary", 1, 1, "invalid render_pt template")
+
+    if not 1 <= len(text.encode("utf-8")) <= 4096:
+        raise invalid()
+    position, next_arg, literal = 0, 0, False
+    while position < len(text):
+        char = text[position]
+        if char == "{":
+            end = text.find("}", position)
+            if end < 0 or next_arg >= arity or text[position + 1 : end] != str(next_arg):
+                raise invalid()
+            next_arg += 1
+            position = end + 1
+        else:
+            code = ord(char)
+            if (
+                char in "}⟦⟧"
+                or code < 32
+                or 127 <= code <= 159
+                or code == 0x061C
+                or 0x200B <= code <= 0x200F
+                or 0x2028 <= code <= 0x202E
+                or 0x2060 <= code <= 0x206F
+                or code == 0xFEFF
+            ):
+                raise invalid()
+            literal |= not char.isspace()
+            position += 1
+    if next_arg != arity or not literal:
+        raise invalid()
+
+
 def _validate_vocabulary(vocab_val: Any) -> None:
     v_list = _as_list(vocab_val)
-    if len(v_list) != 4 or _as_int(v_list[0]) != VOCABULARY_FORMAT_VERSION:
+    if not (
+        (len(v_list) == 4 and _as_int(v_list[0]) == 1)
+        or (len(v_list) == 5 and _as_int(v_list[0]) == 2)
+    ):
         raise SurfaceError("InvalidVocabulary", 1, 1, "invalid Vocabulary envelope")
 
     version = _as_int(v_list[1])
@@ -1564,6 +1603,22 @@ def _validate_vocabulary(vocab_val: Any) -> None:
 
     sorts = _as_list(v_list[2])
     symbols = _as_list(v_list[3])
+    if _as_int(v_list[0]) == 2:
+        templates = _as_list(v_list[4])
+        if len(templates) != len(symbols):
+            raise SurfaceError("InvalidVocabulary", 1, 1, "template count mismatch")
+        total = 0
+        for template, declaration in zip(templates, symbols, strict=True):
+            text = _as_str(template)
+            fields = _as_list(declaration)
+            if len(fields) != 3:
+                raise SurfaceError("InvalidVocabulary", 1, 1, "invalid SymbolDecl")
+            signature = _as_list(fields[0])
+            _validate_symbol(signature)
+            _validate_render_template(text, len(_as_list(signature[4])))
+            total += len(text.encode("utf-8"))
+            if total > 1_048_576:
+                raise SurfaceError("InvalidVocabulary", 1, 1, "template aggregate limit")
 
     sort_names: set[str] = set()
     for s_decl_val in sorts:
@@ -1944,6 +1999,9 @@ def print_document(document: Document) -> str:
         gl_p = _json_str(gloss)
         lines.append(f"  decl {sym_p} {gr_p} gloss {gl_p}\n")
 
+    if _as_int(vocab[0]) == 2:
+        templates = ", ".join(_json_str(_as_str(item)) for item in _as_list(vocab[4]))
+        lines.append(f"  render_pt [{templates}]\n")
     lines.append("}\n")
 
     for claim in document.claims:
@@ -2171,6 +2229,7 @@ class _DocumentParser:
 
         sorts_order: list[_SortDeclIntermediate] = []
         symbols_order: list[_SymbolDeclIntermediate] = []
+        render_pt: list[Value] | None = None
         seen_sort_names: set[str] = set()
         seen_symbol_names: set[str] = set()
 
@@ -2180,6 +2239,23 @@ class _DocumentParser:
             if tok.kind == "EOF":
                 raise SurfaceError("Syntax", tok.line, tok.column, "unclosed vocab block")
 
+            if tok.kind == "IDENT" and tok.value == "render_pt":
+                if render_pt is not None:
+                    raise SurfaceError(
+                        "InvalidVocabulary", tok.line, tok.column, "duplicate render_pt"
+                    )
+                self._advance()
+                self._expect("[")
+                render_pt = []
+                if self._current().kind != "]":
+                    render_pt.append(self._parse_string_val())
+                    while self._current().kind == ",":
+                        self._advance()
+                        render_pt.append(self._parse_string_val())
+                self._expect("]")
+                if self._current().kind == ";":
+                    self._advance()
+                continue
             if tok.kind == "sort":
                 s_tok = self._advance()
                 s_name = self._parse_name()
@@ -2562,6 +2638,9 @@ class _DocumentParser:
             sorts_val,
             symbols_val,
         ]
+        if render_pt is not None:
+            vocab_val[0] = 2
+            vocab_val.append(render_pt)
         _validate_vocabulary(vocab_val)
 
         # 3. Claims
