@@ -155,11 +155,23 @@ def test_all_seven_messages_against_real_kernel(kernel: RunningKernel) -> None:
         assert refuted.state == "refuted"
         status = await client.status(refuted.event)
         assert status is not None and status.kind == 5
-        head = await client.head()
+        before = await client.head()
+        # 5.7: escopo fora das formas normativas é recusado sem evento.
         with pytest.raises(KernelError) as error:
             await client.assume(Assume(vocabulary=vocab, formula=TRUE, scope=""))
-        assert error.value.code == 3
-        assert await client.head() == head
+        assert error.value.code == 0
+        assert await client.head() == before
+        assumed = await client.assume(
+            Assume(vocabulary=vocab, formula=TRUE, scope="session:integracao")
+        )
+        assumption_status = await client.status(assumed.event)
+        assert assumption_status is not None and assumption_status.kind == 3
+        opened = await client.open_assumptions(assumed.event)
+        assert opened is not None
+        assert [(a.event, a.scope) for a in opened.assumptions] == [
+            (assumed.event, "session:integracao")
+        ]
+        head = await client.head()
         concurrent = await asyncio.gather(*(client.head() for _ in range(4)))
         assert concurrent == [head] * 4
         assert head is not None
