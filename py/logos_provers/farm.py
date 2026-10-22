@@ -120,16 +120,24 @@ class Sandbox:
         return args
 
     async def produce(
-        self, mode: str, obligation: bytes, vocabulary: bytes, timeout_ms: int
+        self,
+        mode: str,
+        obligation: bytes,
+        vocabulary: bytes,
+        timeout_ms: int,
+        *,
+        hide: tuple[bytes, ...] = (),
     ) -> Candidate | None:
-        request = json.dumps(
-            {
-                "mode": mode,
-                "obligation": obligation.hex(),
-                "vocabulary": vocabulary.hex(),
-                "timeout_ms": timeout_ms,
-            }
-        ).encode()
+        fields: dict[str, object] = {
+            "mode": mode,
+            "obligation": obligation.hex(),
+            "vocabulary": vocabulary.hex(),
+            "timeout_ms": timeout_ms,
+        }
+        if hide:
+            # Somente o produtor SAT aceita premissas escondidas (5R.3).
+            fields["hide"] = [item.hex() for item in hide]
+        request = json.dumps(fields).encode()
         process = await asyncio.create_subprocess_exec(
             *self.command(),
             stdin=asyncio.subprocess.PIPE,

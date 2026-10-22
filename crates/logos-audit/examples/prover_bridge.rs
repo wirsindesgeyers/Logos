@@ -3,7 +3,7 @@ use logos_air::Vocabulary;
 use logos_canon::{from_canon, to_canon};
 use logos_core::{Budget, CheckOutcome};
 use logos_crypto::hash_raw;
-use logos_ground::{Cnf, GroundLimits, clausify, ground_for_check};
+use logos_ground::{ClauseOrigin, Cnf, GroundLimits, clausify, ground_for_check};
 use logos_lrat::{CakeRegistry, LratChecker};
 use logos_model::{FiniteModel, ModelChecker, ModelLimits};
 use logos_obligation::{DecodeLimits, Obligation};
@@ -41,11 +41,25 @@ fn process(request: &Value, cake: Option<&CakeRegistry>) -> Result<Value> {
         DecodeLimits::default(),
         GroundLimits::default(),
     )?;
-    let (cnf, _) = clausify(&g)?;
+    let (cnf, provenance) = clausify(&g)?;
     let h_cnf = hash_raw::<Cnf>(cnf.dimacs());
     let budget = Budget::new(100_000_000, 268_435_456, 16_777_216, 10_000);
     match request["mode"].as_str().ok_or("mode")? {
-        "encode" => Ok(json!({"ground":hex(&to_canon(&g)?),"cnf":hex(cnf.dimacs())})),
+        "encode" => {
+            // IDs 1-based das assertivas de premissa: o produtor pode escondê-las (5R.3).
+            let premises: Vec<Value> = provenance
+                .origins()
+                .iter()
+                .enumerate()
+                .filter_map(|(i, origin)| match origin {
+                    ClauseOrigin::Premise(r) => Some(json!([i + 1, hex(r.event_hash())])),
+                    _ => None,
+                })
+                .collect();
+            Ok(
+                json!({"ground":hex(&to_canon(&g)?),"cnf":hex(cnf.dimacs()),"premise_clauses":premises}),
+            )
+        }
         "proof" => {
             if bytes(request, "cnf")? != cnf.dimacs() {
                 return Err("CNF differs from obligation".into());

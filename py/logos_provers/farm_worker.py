@@ -13,6 +13,9 @@ def main() -> None:
     data = json.loads(sys.stdin.buffer.read(4_198_400))
     obligation, vocabulary = bytes.fromhex(data["obligation"]), bytes.fromhex(data["vocabulary"])
     mode, milliseconds = data["mode"], data["timeout_ms"]
+    hide = frozenset(bytes.fromhex(item) for item in data.get("hide", []))
+    if hide and mode != "sat":
+        raise ValueError("hidden premises only apply to the SAT producer")
     candidate: bytes | None = None
     kind = "model"
     if mode == "sat":
@@ -22,6 +25,7 @@ def main() -> None:
             encoder=Path("/tools/encoder"),
             solver=Path("/tools/solver"),
             limits=sat.Limits(timeout_ms=milliseconds),
+            hide=hide,
         )
         candidate = result.certificate if result.certificate is not None else result.model
         kind = "proof" if result.certificate is not None else "model"

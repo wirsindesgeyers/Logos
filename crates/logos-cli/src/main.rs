@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 
 mod gc;
+#[cfg(target_os = "linux")]
+mod retract;
 
 use std::ffi::OsString;
 use std::path::Path;
@@ -9,8 +11,20 @@ use std::path::Path;
 use logos_crypto::{PublicKey, SigAlg};
 use logos_ledger::LedgerIndex;
 
+fn hex32(text: &std::ffi::OsStr, what: &str) -> Result<[u8; 32], Box<dyn std::error::Error>> {
+    let text = text.to_str().ok_or(format!("{what} must be ASCII hex"))?;
+    if text.len() != 64 || !text.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err(format!("{what} must contain exactly 64 hex digits").into());
+    }
+    let mut bytes = [0; 32];
+    for (result, pair) in bytes.iter_mut().zip(text.as_bytes().as_chunks::<2>().0) {
+        *result = u8::from_str_radix(std::str::from_utf8(pair)?, 16)?;
+    }
+    Ok(bytes)
+}
+
 fn run(args: Vec<OsString>) -> Result<(), Box<dyn std::error::Error>> {
-    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX";
+    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX\n       logos ledger retract DIRECTORY --key KEYFILE --target EVENT_HEX --reason TEXT";
     let (directory, public_key, gc) = match args.as_slice() {
         [ledger, command, directory, flag, key]
             if ledger == "ledger" && command == "rebuild-index" && flag == "--public-key" =>
@@ -25,19 +39,34 @@ fn run(args: Vec<OsString>) -> Result<(), Box<dyn std::error::Error>> {
         {
             (directory, key, true)
         }
+        #[cfg(target_os = "linux")]
+        [
+            ledger,
+            command,
+            directory,
+            key_flag,
+            key,
+            target_flag,
+            target,
+            reason_flag,
+            reason,
+        ] if ledger == "ledger"
+            && command == "retract"
+            && key_flag == "--key"
+            && target_flag == "--target"
+            && reason_flag == "--reason" =>
+        {
+            let reason = reason.to_str().ok_or("reason must be UTF-8")?;
+            return retract::run(
+                Path::new(directory),
+                Path::new(key),
+                hex32(target, "target")?,
+                reason,
+            );
+        }
         _ => return Err(usage.into()),
     };
-    let public_key = public_key.to_str().ok_or("public key must be ASCII hex")?;
-    if public_key.len() != 64 || !public_key.bytes().all(|b| b.is_ascii_hexdigit()) {
-        return Err("public key must contain exactly 64 hex digits".into());
-    }
-    let mut bytes = [0; 32];
-    for (result, pair) in bytes
-        .iter_mut()
-        .zip(public_key.as_bytes().as_chunks::<2>().0)
-    {
-        *result = u8::from_str_radix(std::str::from_utf8(pair)?, 16)?;
-    }
+    let bytes = hex32(public_key, "public key")?;
     let key = PublicKey::new(SigAlg::Ed25519, &bytes)?;
     if gc {
         return gc::run(Path::new(directory), &key);

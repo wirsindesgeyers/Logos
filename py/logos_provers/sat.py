@@ -295,6 +295,47 @@ def _model(
     return wire
 
 
+def _hidden_ids(response: dict[str, Any], hide: frozenset[bytes]) -> set[int]:
+    """IDs das assertivas unitárias das premissas escondidas (5R.3)."""
+    rows = response["result"].get("premise_clauses")
+    if not isinstance(rows, list):
+        raise ValueError("encoder omitted premise clauses")
+    found: set[bytes] = set()
+    ids: set[int] = set()
+    for row in rows:
+        if (
+            not isinstance(row, list)
+            or len(row) != 2
+            or type(row[0]) is not int
+            or row[0] < 1
+            or not isinstance(row[1], str)
+        ):
+            raise ValueError("premise clause row")
+        reference = bytes.fromhex(row[1])
+        if reference in hide:
+            found.add(reference)
+            ids.add(row[0])
+    if found != hide:
+        raise ValueError("hidden premise is not cited by the obligation")
+    return ids
+
+
+def _hint_ids(proof: bytes) -> set[int]:
+    """IDs citados como dica em linhas de adição LRAT (deleções não usam cláusulas)."""
+    hints: set[int] = set()
+    try:
+        for row in proof.decode("ascii").splitlines():
+            fields = row.split()
+            if len(fields) < 2 or fields[1] == "d":
+                continue
+            values = [int(field) for field in fields]
+            first = values.index(0, 1)
+            hints.update(abs(value) for value in values[first + 1 :] if value != 0)
+    except (UnicodeError, ValueError) as error:
+        raise ProducerError(f"invalid LRAT candidate: {error}") from error
+    return hints
+
+
 def produce(
     obligation: bytes,
     vocabulary: bytes,
@@ -302,10 +343,21 @@ def produce(
     encoder: Path,
     solver: Path,
     limits: Limits = _DEFAULT_LIMITS,
+    hide: frozenset[bytes] = frozenset(),
 ) -> Candidate:
-    """Produz candidato, sem conferir autoridade nem emitir resultado de checker."""
+    """Produz candidato, sem conferir autoridade nem emitir resultado de checker.
+
+    ``hide`` lista premissas (h(Event) citados em O) cujas assertivas unitárias
+    o solver não vê: cada uma vira tautologia na mesma posição, preservando os
+    IDs da CNF de O. A prova resultante não cita esses IDs e o kernel recalcula
+    ``used`` a partir dela. SAT nesse modo não descreve um modelo de O.
+    """
     if not isinstance(limits, Limits):
         raise ProducerError("limits must be Limits")
+    if not isinstance(hide, frozenset) or any(
+        not isinstance(item, bytes) or len(item) != 32 for item in hide
+    ):
+        raise ProducerError("hide must be a frozenset of 32-byte event hashes")
     if not isinstance(obligation, bytes) or not isinstance(vocabulary, bytes):
         raise ProducerError("obligation/vocabulary must be bytes")
     deadline = time.monotonic() + limits.timeout_ms / 1000
@@ -349,6 +401,7 @@ def produce(
                     raise ValueError("encoder transport version")
                 if response.get("ok") is not True:
                     raise ValueError(response.get("error", "encoder failure"))
+                hidden = _hidden_ids(response, hide) if hide else set()
                 ground = bytes.fromhex(response["result"]["ground"])
                 cnf = bytes.fromhex(response["result"]["cnf"])
                 data = canon.decode(ground)
@@ -365,7 +418,19 @@ def produce(
                 raise _Exhausted("encoded size")
             variables, clauses = _dimacs(cnf)
             input_path, proof_path = work / "input.cnf", work / "proof.lrat"
-            input_path.write_bytes(cnf)
+            if hidden:
+                if (
+                    variables < 1
+                    or max(hidden) > len(clauses)
+                    or any(len(clauses[i - 1]) != 1 for i in hidden)
+                ):
+                    raise ProducerError("premise assertion is not a unit clause")
+                rows = cnf.decode("ascii").splitlines(keepends=True)
+                for clause_id in hidden:
+                    rows[clause_id] = "-1 1 0\n"
+                input_path.write_bytes("".join(rows).encode("ascii"))
+            else:
+                input_path.write_bytes(cnf)
             code, out, err = _run(
                 [solver_path, "--lrat", "--no-binary", str(input_path), str(proof_path)],
                 work,
@@ -385,6 +450,8 @@ def produce(
                 if len(proof) > limits.max_bytes:
                     raise _Exhausted("certificate size")
                 prefix = _lrat_prefix(proof)
+                if hidden and _hint_ids(prefix) & hidden:
+                    raise ProducerError("proof uses a hidden premise assertion")
                 result = Candidate(
                     status,
                     h_o,
@@ -393,6 +460,10 @@ def produce(
                     ground,
                     certificate=prefix,
                     raw_certificate_hash=hashlib.sha256(proof).digest(),
+                )
+            elif hidden:
+                return Candidate(
+                    Status.EXHAUSTED, h_o, h_v, cnf, ground, reason="sat_without_hidden_premises"
                 )
             else:
                 if any(not any(valuation[abs(lit)] == (lit > 0) for lit in c) for c in clauses):

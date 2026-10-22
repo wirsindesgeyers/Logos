@@ -84,4 +84,6 @@ erros, ausência/rejeição de modelos, snapshots paginados e cabeça/terminal
 incorretos. Testes Rust da CLI verificam argumentos e export sem alegação de
 recheck. SDK stdio decodifica JSON antes dos limites de campo: não há novo
 limite de memória pré-parse de JSON ou sandbox do supervisor nesta etapa.
-Fidelidade em português9.1, hipóteses5.7/5.9 e UI continuam futuras.
+Fidelidade em português9.1 e UI continuam futuras. O caderno de hipóteses
+(5R.3, [notebook.md](notebook.md)) reutiliza `snapshot`/`frames` deste módulo e
+os mesmos componentes, sem ampliar o catálogo de ferramentas MCP.

@@ -56,3 +56,8 @@ CheckOutcome Accepted e h(O), cache rechecado e cache corrompido rejeitado
 antes do fallback. Evidência em target/farm-report.json. `--count` menor é
 somente desenvolvimento e não encerra o critério500. CI remota é pendência
 separada. Não cobre camada2, MCP, ações ou MEM.
+
+Requisição do worker (5R.3): campo opcional `hide` (lista de h(Event) hex) só no
+modo `sat`; em outro modo o worker falha. `ProverFarm.run` não o usa: o caderno
+(`py/logos_notebook`) chama `Sandbox.produce(..., hide=...)` diretamente para
+rotas independentes e encolhimento de conflitos (ADR0055).

@@ -24,7 +24,7 @@ from logos_client.protocol import (
 from logos_mcp.auditor import AuditConfig, AuditFailure, Auditor
 from logos_mcp.schemas import CheckInput, EmptyInput, ObligationInput, ProposeInput, QueryInput
 from logos_mcp.server import CATALOG, create_server
-from logos_mcp.service import ResearchService
+from logos_mcp.service import ResearchService, frames, snapshot
 from logos_provers.farm import Candidate
 from logos_provers.sat_cases import document_case
 
@@ -244,10 +244,14 @@ def test_snapshot_pages_are_anchored_to_captured_head() -> None:
     async def run() -> None:
         kernel = SnapshotKernel()
         service = ResearchService(kernel, Upload(), Workers(True), CASE.vocabulary, auditor())  # type: ignore[arg-type]
-        wire, head, count = await service._snapshot()
+        wire, head, count = await snapshot(service.client)
         assert count == 300 and head == kernel.digest(299).hex()
         assert kernel.pages == [(0, 256, None), (256, 44, kernel.digest(255))]
         assert wire == b"LOGOS-AUDIT/v1\n" + (b"\x00\x00\x00\x01x" * 300)
+        assert frames(wire) == [b"x"] * 300
+        for truncated in (wire[:-1], wire[:-3], b"LOGOS-AUDIT/v0\n"):
+            with pytest.raises(AuditFailure):
+                frames(truncated)
 
     asyncio.run(run())
 
@@ -263,6 +267,6 @@ def test_snapshot_never_returns_incomplete_or_wrong_head(broken: str) -> None:
             auditor(),
         )
         with pytest.raises(AuditFailure):
-            await service._snapshot()
+            await snapshot(service.client)
 
     asyncio.run(run())

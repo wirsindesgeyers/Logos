@@ -261,8 +261,10 @@ dependencies = [
 name = "logos-cli"
 version = "0.0.0"
 dependencies = [
+ "logos-air",
  "logos-canon",
  "logos-crypto",
+ "logos-kernel",
  "logos-ledger",
 ]
 

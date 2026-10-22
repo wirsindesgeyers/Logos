@@ -1,10 +1,17 @@
-"""Smoke test: os cinco pacotes Python do projeto importam."""
+"""Smoke test: os seis pacotes Python do projeto importam."""
 
 import importlib
 
 import pytest
 
-PACKAGES = ["logos_client", "logos_provers", "logos_mcp", "logos_agent", "logos_eval"]
+PACKAGES = [
+    "logos_client",
+    "logos_provers",
+    "logos_mcp",
+    "logos_notebook",
+    "logos_agent",
+    "logos_eval",
+]
 
 
 @pytest.mark.parametrize("name", PACKAGES)

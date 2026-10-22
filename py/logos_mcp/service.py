@@ -41,6 +41,63 @@ def json_value(value: Any) -> Any:
     return value
 
 
+async def snapshot(client: KernelClient) -> tuple[bytes, str | None, int]:
+    """Prefixo imutável em audit-stream/v1 via QueryHead/Subscribe; nunca abre o SQLite vivo."""
+    head = await client.head()
+    target = 0 if head is None else head.seq + 1
+    wire = bytearray(b"LOGOS-AUDIT/v1\n")
+    cursor, previous = 0, None
+    while cursor < target:
+        end = min(target, cursor + 256)
+        async with aclosing(
+            client.subscribe(
+                cursor,
+                max_events=end - cursor,
+                previous_hash=previous,
+            )
+        ) as stream:
+            terminal = False
+            async for event in stream:
+                if isinstance(event, SubscriptionEnd):
+                    if event.next_seq != end or cursor != end:
+                        raise AuditFailure("snapshot incomplete")
+                    terminal = True
+                    continue
+                if event.seq != cursor or cursor >= target:
+                    raise AuditFailure("snapshot sequence mismatch")
+                wire.extend(len(event.canonical_bytes).to_bytes(4, "big"))
+                wire.extend(event.canonical_bytes)
+                if len(wire) > MAX_STREAM:
+                    raise AuditFailure("snapshot limit")
+                cursor += 1
+                previous = event.hash
+            if not terminal:
+                raise AuditFailure("snapshot has no terminal cursor")
+    expected = None if head is None else head.hash
+    if previous != expected:
+        raise AuditFailure("snapshot head mismatch")
+    return bytes(wire), None if expected is None else expected.hex(), target
+
+
+def frames(wire: bytes) -> list[bytes]:
+    """Separa os eventos de um audit-stream/v1 capturado por `snapshot`."""
+    header = b"LOGOS-AUDIT/v1\n"
+    if not wire.startswith(header):
+        raise AuditFailure("audit stream header")
+    events: list[bytes] = []
+    cursor = len(header)
+    while cursor < len(wire):
+        if cursor + 4 > len(wire):
+            raise AuditFailure("truncated frame length")
+        size = int.from_bytes(wire[cursor : cursor + 4], "big")
+        cursor += 4
+        if cursor + size > len(wire):
+            raise AuditFailure("truncated frame")
+        events.append(wire[cursor : cursor + size])
+        cursor += size
+    return events
+
+
 class ResearchService:
     def __init__(
         self,
@@ -211,46 +268,9 @@ class ResearchService:
                 )
         raise ValueError("subscription has no explicit terminal cursor")
 
-    async def _snapshot(self) -> tuple[bytes, str | None, int]:
-        # Capture an immutable prefix through the public protocol, never open live SQLite.
-        head = await self.client.head()
-        target = 0 if head is None else head.seq + 1
-        wire = bytearray(b"LOGOS-AUDIT/v1\n")
-        cursor, previous = 0, None
-        while cursor < target:
-            end = min(target, cursor + 256)
-            async with aclosing(
-                self.client.subscribe(
-                    cursor,
-                    max_events=end - cursor,
-                    previous_hash=previous,
-                )
-            ) as stream:
-                terminal = False
-                async for event in stream:
-                    if isinstance(event, SubscriptionEnd):
-                        if event.next_seq != end or cursor != end:
-                            raise AuditFailure("snapshot incomplete")
-                        terminal = True
-                        continue
-                    if event.seq != cursor or cursor >= target:
-                        raise AuditFailure("snapshot sequence mismatch")
-                    wire.extend(len(event.canonical_bytes).to_bytes(4, "big"))
-                    wire.extend(event.canonical_bytes)
-                    if len(wire) > MAX_STREAM:
-                        raise AuditFailure("snapshot limit")
-                    cursor += 1
-                    previous = event.hash
-                if not terminal:
-                    raise AuditFailure("snapshot has no terminal cursor")
-        expected = None if head is None else head.hash
-        if previous != expected:
-            raise AuditFailure("snapshot head mismatch")
-        return bytes(wire), None if expected is None else expected.hex(), target
-
     async def _audit_or_export(self, *, export: bool) -> dict[str, object]:
         async with self.lock, asyncio.timeout(self.auditor.timeout):
-            wire, head, count = await self._snapshot()
+            wire, head, count = await snapshot(self.client)
             with tempfile.TemporaryDirectory(prefix="logos-mcp-snapshot-") as directory:
                 source = Path(directory) / "events.logos"
                 source.write_bytes(wire)

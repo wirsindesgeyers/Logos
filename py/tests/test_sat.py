@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from logos_client import canon
-from logos_provers import sat
+from logos_provers import sat, sat_cases
 from logos_provers.sat_cases import document_case, reconstruction_cases
 from logos_provers.sat_smoke import check_requests, request
 
@@ -272,3 +272,64 @@ print('SAT_WITHOUT_Z3_OK')
         timeout=30,
     )
     assert result.stdout.strip() == "SAT_WITHOUT_Z3_OK" and not result.stderr
+
+
+def _hidden_case() -> tuple[bytes, bytes]:
+    from tests.z3_models_cases import document_case as premises_case
+
+    return premises_case(
+        "vocab v1 { pred P(); pred Q(); pred R(); } claim A: P(); claim B: P() -> Q(); "
+        "claim C: R(); claim D: R() -> Q(); claim G: Q();"
+    )
+
+
+def _ref(index: int) -> bytes:
+    return index.to_bytes(32, "big")
+
+
+def test_hidden_premises_give_independent_proofs_accepted_by_both_checkers() -> None:
+    """5R.3: rotas com `used` disjuntos para a mesma O; IDs da CNF de O preservados."""
+    obligation, vocabulary = _hidden_case()
+    case = sat_cases_case(obligation, vocabulary)
+    proofs: list[sat.Candidate] = []
+    for hide in (frozenset({_ref(1), _ref(2)}), frozenset({_ref(3), _ref(4)})):
+        result = sat.produce(obligation, vocabulary, encoder=ENCODER, solver=SOLVER, hide=hide)
+        assert result.status == sat.Status.UNSAT and result.certificate is not None
+        proofs.append(result)
+    plain = sat.produce(obligation, vocabulary, encoder=ENCODER, solver=SOLVER)
+    assert {p.cnf for p in proofs} == {plain.cnf}, "hidden mode must keep O's own CNF"
+    responses = check_requests(
+        ENCODER,
+        CAKE,
+        [
+            request(case, mode="proof", cnf=p.cnf.hex(), proof=p.certificate.hex())
+            for p in proofs
+            if p.certificate is not None
+        ],
+    )
+    assert [r["result"] for r in responses] == [{"rust": "Accepted", "cake": "Accepted"}] * 2
+    assert proofs[0].certificate != proofs[1].certificate
+
+
+def test_hidden_mode_never_turns_sat_into_a_model_or_hides_unknown_refs() -> None:
+    obligation, vocabulary = _hidden_case()
+    every = frozenset({_ref(1), _ref(3)})
+    result = sat.produce(obligation, vocabulary, encoder=ENCODER, solver=SOLVER, hide=every)
+    assert result.status == sat.Status.EXHAUSTED and result.model is None
+    assert result.reason == "sat_without_hidden_premises"
+    with pytest.raises(sat.ProducerError, match="not cited"):
+        sat.produce(
+            obligation, vocabulary, encoder=ENCODER, solver=SOLVER, hide=frozenset({_ref(9)})
+        )
+    with pytest.raises(sat.ProducerError, match="32-byte"):
+        sat.produce(obligation, vocabulary, encoder=ENCODER, solver=SOLVER, hide=frozenset({b"x"}))
+
+
+def test_hint_scan_rejects_proofs_that_cite_hidden_assertions() -> None:
+    assert sat._hint_ids(b"9 -1 0 3 4 0\n9 d 2 0\n10 0 9 7 0\n") == {3, 4, 9, 7}
+    with pytest.raises(sat.ProducerError):
+        sat._hint_ids(b"9 x 0 1 0\n")
+
+
+def sat_cases_case(obligation: bytes, vocabulary: bytes) -> sat_cases.Case:
+    return sat_cases.Case("hidden", "hidden-premises", obligation, vocabulary, sat=False)

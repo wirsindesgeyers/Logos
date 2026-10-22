@@ -271,7 +271,7 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | --- | --- | --- |
 | 5R.1 MCP de pesquisa | ⚠ concluída localmente; CI pendente | ADR0045; seis ferramentas stdio,10 tarefas (5 provas/5 refutações), auditoria Rust+cake_lpr e export rechecado;24 testes Python+2 CLI/full verify passaram. |
 | 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
-| 5R.3 Caderno de hipóteses | ⏳ não iniciada | 5R.1;5.9 e5.7 completas, incluindo retirada de premissas. |
+| 5R.3 Caderno de hipóteses | 🚧 implementada localmente; full verify pendente | ADR0055; `py/logos_notebook` (notebook/v1), `logos ledger retract`, SAT com premissas escondidas; piloto 20 hipóteses, duas retratações com corte auditado, experimento crucial/MUS/leis × tabela (`ci/check-notebook.sh`). |
 | 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
 | 5R.5 Chat/TUI de pesquisa | ⏳ não iniciada | 5R.4; perfil de pesquisa10.7 entregue aqui, sem ações. |
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
@@ -299,6 +299,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | WS.9 Operação/release | ⏳ não iniciada | WS.2–WS.8, MEM.7, 10.8, 23.1 |
 
 ## Pendências de verificação (execução remota)
+
+Etapa5R.3: verificação direcionada local (ADR0051) e smoke real passaram;
+full verify/selftest da ponta e CI remota pendentes. Plano em docs/plans/etapa-5R.3.md.
 
 Pilha 9.1/WS.0/5.9/5.6/5.7 (até 401fe50): full verify/selftest local passou; CI
 remota/ARM/noturno não consultados. Recibo em docs/plans/pilha-2026-10-22-evidencias.json.
@@ -557,21 +560,22 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: revisão humana da 9.1, depois 5R.3
+## Próximo passo: revisão humana da 9.1; tecnicamente 5.10 ou 5.8
 
-Pilha local verificada: `ci/verify.sh --selftest` VERIFY_OK/exit0 em2964,7s
-sobre 401fe50 (9.1, WS.0, 5.9, 5.6, 5.7 e docs), 577 Rust e 317+25 Python;
-[recibo](docs/plans/pilha-2026-10-22-evidencias.json). Nada enviado ao remoto;
-push só quando o mantenedor pedir. CI remota/ARM/noturno pendentes.
+5R.3 implementada localmente sobre c882c43 ([plano](docs/plans/etapa-5R.3.md),
+ADR0055): caderno `notebook/v1`, retratação de operador por CLI, premissas
+escondidas no SAT, operações WS§11.1 e auditoria independente do corte. Falta
+o full verify/selftest na ponta antes de marcar os critérios e de qualquer push.
 
 Do mantenedor: (1) revisão humana das 50 paráfrases e decisão sobre a origem do
 corpus ([material](docs/plans/etapa-9.1-revisao/README.md)); fecha a 9.1 e libera
-a 5R.2; (2) revisar as decisões tomadas por delegação (ADRs 0047–0054).
+a 5R.2; (2) revisar as decisões tomadas por delegação (ADRs 0047–0055).
 
-Trabalho técnico já desbloqueado: **5R.3** (caderno de hipóteses: 5R.1, 3.3, 5.7 e
-5.9 prontas), 5.8 (especulação) e 5.10 (revogação/recheck, sobre o ATMS da 5.9).
-Riscos: custo do `snapshot` proporcional aos ancestrais (Armadilhas) e o
-diferencial ATMS (~11 min) no verify.
+Trabalho técnico desbloqueado: **5.10** (revogação de checker/recheck sobre o ATMS
+da 5.9; hoje rotas de checker revogado caem sem registro Invalidated) e 5.8
+(especulação). 5R.4 depende de 5R.2 (logo da revisão 9.1). Riscos: custo do
+`snapshot` proporcional aos ancestrais e diferencial ATMS (~11 min) no verify;
+retratação exige parar o kernel (writer.lock), sem canal de operador vivo.
 
 ## Decisões em aberto para o mantenedor
 
@@ -609,6 +613,9 @@ diferencial ATMS (~11 min) no verify.
   branches, e `tools/check_ws_docs.py` derrubou o full verify. Ordem atual:
   0051 processo, 0052 5.9, 0053 5.6, 0054 5.7. Worktrees não têm `target/cake-lpr`:
   copiar (não symlink, o registry abre com O_NOFOLLOW) antes dos testes de certify.
+- Retratação (5.9/5R.3) é offline: `logos ledger retract` precisa do writer.lock,
+  então pare o kernel antes. Ao reiniciar, apague o socket antigo: `Server::bind`
+  falha se o arquivo existe (o smoke do caderno faz isso).
 - `LedgerIndex::snapshot` (3.3) confere o scope de **todas** as assumptions
   ancestrais via CTE recursivo: em DAGs profundos o custo por PROPOSE cresce com os
   ancestrais (quadrático no total). Não afeta correção; relevante para a 5R.3.
@@ -1942,3 +1949,5 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Etapa9.1 implementada localmente sobre57c8a03 (ADR0050): `logos-seal` com render_pt/parse_pt paraphrase-pt/v1, releitura obrigatória, recusa de vocabulário ambíguo, h(P) no domínio reservado. 100k fórmulas distintas, 82 de spec/vectors, vetores Python independentes, 11 mutações (+1 equivalente), fuzz 3600s/17,45M sem crash. Corpus e planilha de revisão prontos; revisão humana é do mantenedor. WS.0 concluída por delegação: ADRs 0047–0049 aceitos, stack decidida, verificador `tools/check_ws_docs.py` e plano de fase. ADR0051: verificação completa por pilha. Primeiro full verify da 9.1 falhou exit1/3391s no verificador novo por numeração de ADR (0053 criado antes de 0051/0052 das branches); corrigido renomeando. Em paralelo (worktrees): 5.9 (ATMS/retratação), 5.6 (S4) e 5.7 (escopos) com verificação direcionada. Full verify da pilha pendente; sem push.
 
 - 2026-10-22 — Pilha verificada: full verify/selftest VERIFY_OK/exit0 em2964,7s sobre401fe50, 577 Rust, 317+25 Python, crash 10k/24 SIGKILL, índice 1M p99=18994ns, farm500, MCP, planilha 9.1 e diferencial ATMS 10k. Marcados: 9.1 critérios 1–2 (o 3, revisão humana, segue aberto), 5.9, 5.6 e 5.7. Quatro tentativas anteriores não contadas: teste 5.3 de escopo fixo (atualizado à derivação da 5.7), `fmt` de teste, subseções WS§ citadas por edições de outra sessão ainda não commitadas (6ca273c) e teste de integração 10.1 que esperava ASSUME Unavailable (401fe50). A pilha teve quatro commits de etapa sem full verify, um acima do limite do ADR0051. Partes do trabalho da outra sessão entraram por engano em cc14e43/0e32c15/098f00f, registrado em 6ca273c. Worktrees/branches temporárias removidas. Sem push.
+
+- 2026-10-22 — Etapa5R.3 implementada localmente sobre c882c43 (ADR0055). Pacote `py/logos_notebook` fora da TCB: bundle notebook/v1 (spec/notebook.md, 13 vetores com CBOR independente), `Lab` sobre cliente/farm/staging, `science` (experimento crucial, MUS checado, leis × tabela), `atms` (corte recalculado do zero e registros Invalidated conferidos) e relatório com status sempre consultado. `logos ledger retract` (CLI não TCB, kernel parado, mesma autoridade do kernel) com 2 testes. Produtor SAT com premissas escondidas (IDs da CNF de O preservados, prova com ID escondido descartada, SAT nunca vira modelo); bridge expõe `premise_clauses`. Smoke real: 20 hipóteses + 6 evidências com proveniência completa, P1 com duas rotas da mesma h(O) e `used` disjuntos; retratar E3 derruba {E3, C4} e P1B sobrevive; retratar E1 derruba {E1, P1, P1B, C1, C2, C3}; kernel, recomputação e registros coincidem; auditor rechecou 122 eventos (14 LRAT Rust/cake_lpr, 10 refutações). MUS {E5, H12, H13} de seis premissas; previsões discriminantes Algas/Turbidez certificadas; L2/L5 refutadas por linha, L4/L7 redundantes. 36 testes do caderno + 3 SAT + 24 MCP passaram; 7 mutações manuais mortas. Full verify da ponta pendente; sem push.

@@ -88,3 +88,16 @@ separada dos resultados locais. Limites duplicates/sparse da4.5 permanecem.
 O relatório também emite layer e certificate_bytes por h(O), conforme
 ROADMAP ApêndiceD: bytes LRAT na camada1 ou model/v1 na camada0; cnf_bytes
 é contabilizado separadamente. Medir o certificado final realmente rechecado.
+
+## Premissas escondidas (5R.3, ADR0055)
+
+`produce(..., hide=frozenset[h(Event)])` esconde do solver as assertivas
+unitárias `[premise_root]` das premissas citadas em O. O encoder de apoio expõe
+`premise_clauses = [[clause_id, h(Event) hex], ...]` (origem Premise da
+ProvenanceMap) na resposta `encode`; o produtor troca cada cláusula escondida
+por `-1 1 0` na mesma linha, preservando IDs e o número de cláusulas, e entrega
+ao kernel a CNF original de O. Erros explícitos: referência escondida não citada
+em O, assertiva que não é unitária, hash fora de 32 bytes, prova cuja dica cite
+um ID escondido. SAT nesse modo devolve EXHAUSTED `sat_without_hidden_premises`,
+nunca um modelo de O. O kernel recheca a prova e recalcula `used`; esconder
+premissas não é afirmação de independência sem esse recheck.
