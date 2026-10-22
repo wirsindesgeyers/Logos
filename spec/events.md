@@ -52,7 +52,10 @@ Formula é AIR integral; não aplicar sort-check sem V. speculative_on são IDs
 opacos bytes32, não referências autenticadas; preservam ordem e duplicatas.
 Cites da proposta preservam ordem/duplicatas, tal como proposal/v1.
 Demais conjuntos de refs MUST estar estritamente ordenados e sem duplicatas;
-`causes` é caminho ordenado e não vazio, preservado, não conjunto.
+`causes` é caminho ordenado e não vazio, preservado, não conjunto. Para a
+cascata de retratação da 5.9, o kernel grava exatamente `[h(Retracted raiz),
+premissa morta imediata]` (state-machine.md §4); o decoder continua aceitando
+qualquer caminho não vazio do catálogo v1.
 
 ## 3. Catálogo: body = [1, tag, campos...]
 

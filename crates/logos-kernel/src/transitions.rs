@@ -95,8 +95,8 @@ pub(crate) struct Transitions<'writer, 'signer, S: Signer> {
 }
 
 #[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "integração nos handlers5.3/5.4")
+    all(not(test), not(target_os = "linux")),
+    expect(dead_code, reason = "handlers e retratação requerem Linux")
 )]
 impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
     pub(crate) fn new(ledger: &'writer mut Ledger<'signer, S>) -> Self {
@@ -190,6 +190,58 @@ impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
             },
             proposal,
         ))
+    }
+
+    /// Reconstrói o Claim<Verified> de uma rota já registrada, para registrar sua
+    /// invalidação (5.9). A instância é a última Proposed+ObligationCreated com o
+    /// mesmo h(O) antes da rota; nada aqui decide se a rota deve cair.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn recover_verified(
+        &self,
+        target: Hash<Event>,
+    ) -> Result<Claim<Verified>, crate::TransportError> {
+        use crate::{TransportError as Error, replay::replay};
+        let mut proposed: Option<Hash<Event>> = None;
+        let mut instances: std::collections::HashMap<Hash<Obligation>, Hash<Event>> =
+            std::collections::HashMap::new();
+        let mut found: Option<(Event, Hash<Event>)> = None;
+        replay(self.ledger, |event| {
+            match &event.body {
+                EventBody::Proposed { .. } => proposed = Some(hash(event)?),
+                EventBody::ObligationCreated { obligation, .. } => {
+                    let draft = proposed
+                        .take()
+                        .ok_or(Error::Invalid("Pending without proposal"))?;
+                    instances.insert(*obligation, draft);
+                }
+                EventBody::Verified { check, .. } if found.is_none() && hash(event)? == target => {
+                    let draft = *instances
+                        .get(&check.obligation)
+                        .ok_or(Error::Invalid("Verified without instance"))?;
+                    found = Some((event.clone(), draft));
+                }
+                _ => {}
+            }
+            Ok(())
+        })?;
+        let (event, proposal) = found.ok_or(Error::Invalid("target is not a Verified route"))?;
+        let EventBody::Verified { check, cited, .. } = &event.body else {
+            return Err(Error::Invalid("Verified body"));
+        };
+        Ok(Claim {
+            origin: Origin {
+                session: Arc::clone(&self.session),
+                proposal,
+                epoch: event.epoch,
+                obligation: Some(check.obligation),
+                cited: cited.clone(),
+            },
+            receipt: SignedEvent {
+                hash: target,
+                event,
+                state: PhantomData,
+            },
+        })
     }
 
     fn append<T>(&mut self, body: EventBody) -> Result<SignedEvent<T>, LedgerError> {
@@ -351,7 +403,7 @@ impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
         })
     }
 
-    // A seleção das causas/cascata pertence ao handler5.9.
+    // Causas e cascata selecionadas pelo módulo retract (5.9, ADR0052).
     pub(crate) fn invalidate(
         &mut self,
         claim: Claim<Verified>,

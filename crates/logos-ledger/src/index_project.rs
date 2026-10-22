@@ -14,23 +14,133 @@ pub(crate) const UNKNOWN: i64 = 4;
 pub(crate) const ASSUMPTION: i64 = 5;
 pub(crate) const INVALIDATED: i64 = 6;
 
-const AFFECTED: &str = "WITH RECURSIVE affected(id) AS (SELECT id FROM claims WHERE id=?1 OR (checker=?2 AND status=2) UNION SELECT deps.claim FROM deps JOIN affected ON deps.premise=affected.id)";
+/// Nó ATMS de uma linha: rotas Verified (h_o e checker presentes) pertencem ao
+/// nó h(O); as demais linhas (assumptions, propostas) são nós de si mesmas.
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum Node {
+    Obligation(Vec<u8>),
+    Single(Vec<u8>),
+}
 
-fn invalidate(
-    connection: &Connection,
-    target: Option<&[u8]>,
-    checker: Option<&[u8]>,
-) -> Result<(), LedgerError> {
+fn node_of(connection: &Connection, id: &[u8]) -> Result<Option<Node>, LedgerError> {
+    Ok(connection
+        .prepare("SELECT h_o, checker IS NOT NULL FROM claims WHERE id=?1")?
+        .query_row([id], |row| {
+            Ok((row.get::<_, Option<Vec<u8>>>(0)?, row.get::<_, bool>(1)?))
+        })
+        .optional()?
+        .map(|(obligation, route)| match obligation {
+            Some(h) if route => Node::Obligation(h),
+            _ => Node::Single(id.to_vec()),
+        }))
+}
+
+/// Premissa viva: assumption não morta, ou nó h(O) com alguma rota Verified.
+fn premise_alive(connection: &Connection, premise: &[u8]) -> Result<bool, LedgerError> {
+    Ok(match node_of(connection, premise)? {
+        Some(Node::Obligation(h)) => connection
+            .prepare("SELECT 1 FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status=2")?
+            .query_row([h], |_| Ok(()))
+            .optional()?
+            .is_some(),
+        Some(Node::Single(id)) => connection
+            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5)")?
+            .query_row([id], |_| Ok(()))
+            .optional()?
+            .is_some(),
+        None => false,
+    })
+}
+
+fn ids(connection: &Connection, sql: &str, key: &[u8]) -> Result<Vec<Vec<u8>>, LedgerError> {
+    let mut statement = connection.prepare(sql)?;
+    let rows = statement.query_map([key], |row| row.get::<_, Vec<u8>>(0))?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+fn kill(connection: &Connection, id: &[u8]) -> Result<(), LedgerError> {
     connection
-        .prepare(&format!(
-            "{AFFECTED} DELETE FROM citable WHERE ref IN (SELECT id FROM affected)"
-        ))?
-        .execute(params![target, checker])?;
+        .prepare("UPDATE claims SET status=6 WHERE id=?1")?
+        .execute([id])?;
     connection
-        .prepare(&format!(
-            "{AFFECTED} UPDATE claims SET status=6 WHERE id IN (SELECT id FROM affected)"
-        ))?
-        .execute(params![target, checker])?;
+        .prepare("DELETE FROM citable WHERE ref=?1")?
+        .execute([id])?;
+    Ok(())
+}
+
+/// Mata as linhas dadas e propaga até ponto fixo (ADR0052, spec/ledger-index.md §3).
+///
+/// Um nó h(O) cai quando nenhuma rota Verified restante tem todas as premissas
+/// used vivas; então todas as suas rotas viram Invalidated (terminal) e seus
+/// dependentes são reavaliados. Rotas independentes mantêm o nó e os dependentes.
+fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<(), LedgerError> {
+    let mut work = Vec::new();
+    for id in killed {
+        if let Some(node) = node_of(connection, id)? {
+            kill(connection, id)?;
+            work.push(node);
+        }
+    }
+    let mut out = std::collections::HashSet::new();
+    while let Some(node) = work.pop() {
+        if out.contains(&node) {
+            continue;
+        }
+        let members = match &node {
+            Node::Obligation(h) => {
+                let routes = ids(
+                    connection,
+                    "SELECT id FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status=2",
+                    h,
+                )?;
+                let mut supported = false;
+                for route in &routes {
+                    let premises =
+                        ids(connection, "SELECT premise FROM deps WHERE claim=?1", route)?;
+                    let mut all = true;
+                    for premise in &premises {
+                        if !premise_alive(connection, premise)? {
+                            all = false;
+                            break;
+                        }
+                    }
+                    if all {
+                        supported = true;
+                        break;
+                    }
+                }
+                if supported {
+                    continue;
+                }
+                for route in &routes {
+                    kill(connection, route)?;
+                }
+                ids(
+                    connection,
+                    "SELECT id FROM claims WHERE h_o=?1 AND checker IS NOT NULL",
+                    h,
+                )?
+            }
+            Node::Single(id) => {
+                if premise_alive(connection, id)? {
+                    continue;
+                }
+                vec![id.clone()]
+            }
+        };
+        out.insert(node);
+        for member in &members {
+            for dependent in ids(
+                connection,
+                "SELECT claim FROM deps JOIN claims ON claims.id=deps.claim WHERE premise=?1 AND status=2",
+                member,
+            )? {
+                if let Some(next) = node_of(connection, &dependent)? {
+                    work.push(next);
+                }
+            }
+        }
+    }
     Ok(())
 }
 
@@ -103,7 +213,7 @@ pub(crate) fn apply(
                     "invalidation target is not an earlier claim",
                 ));
             }
-            invalidate(connection, Some(target.as_bytes()), None)?;
+            invalidate(connection, &[target.as_bytes().to_vec()])?;
             if matches!(event.body, EventBody::Retracted { .. }) {
                 connection
                     .prepare("UPDATE claims SET retracted=1 WHERE id=?1")?
@@ -112,7 +222,12 @@ pub(crate) fn apply(
             return Ok(());
         }
         EventBody::CheckerRevoked { checker, .. } => {
-            invalidate(connection, None, Some(checker.as_bytes()))?;
+            let routes = ids(
+                connection,
+                "SELECT id FROM claims WHERE checker=?1 AND status=2",
+                checker.as_bytes(),
+            )?;
+            invalidate(connection, &routes)?;
             connection
                 .prepare("INSERT OR IGNORE INTO revoked(checker) VALUES (?1)")?
                 .execute([checker.as_bytes().as_slice()])?;

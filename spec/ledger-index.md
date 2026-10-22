@@ -84,13 +84,21 @@ Refuted/Pending/Proposal MUST NOT ser promovidos. is_citable só responde sobre
 a época corrente, não oferece citabilidade histórica. EpochRange genérico
 da 3.4 não prolonga essas entradas; janelas de Fact serão integradas na 6.1.
 
-Retracted/Invalidated MUST ter alvo lógico anterior. Invalidar alvo e fechamento
-transitivo por deps, remover citable; Retracted marca retracted só no alvo.
-CheckerRevoked invalida Verified desse checker e dependentes, registra revogação;
-Verified posteriores desse checker são Invalidated. CheckerRegistered não
-restaura um hash revogado. Isso é projeção conservadora de consulta, MUST NOT
-criar eventos ou interpretar autorização administrativa. Registro da cascata
-e políticas do kernel ficam para as etapas correspondentes.
+Retracted/Invalidated MUST ter alvo lógico anterior; Retracted marca retracted
+só no alvo. Cascata ATMS (Etapa 5.9, ADR0052): o **nó** de uma linha Verified é
+seu h(O) (todas as rotas Verified com o mesmo h(O)); qualquer outra linha é nó de
+si mesma. Retracted e Invalidated matam o alvo; CheckerRevoked mata as rotas
+Verified desse checker e registra revogação; Verified posteriores desse checker
+nascem Invalidated. Morta = status Invalidated e fora de citable. Depois de cada
+morte, a projeção MUST propagar até o ponto fixo: um nó h(O) está vivo se alguma
+rota ainda Verified tem todas as premissas used vivas; premissa viva é assumption
+não morta ou rota de nó h(O) vivo. Nó sem rota sustentada cai: todas as suas rotas
+Verified viram Invalidated (terminal) e os dependentes são reavaliados. Rota cujo
+nó segue vivo por outra rota continua Verified/citável, mesmo com premissa morta.
+Com uma rota por nó, coincide com o fechamento transitivo por deps.
+CheckerRegistered não restaura hash revogado. A projeção MUST NOT criar eventos
+nem interpretar autorização administrativa; o registro Invalidated da cascata é
+do kernel (state-machine.md §4).
 
 ## 4. Fórmulas e interface confiável
 

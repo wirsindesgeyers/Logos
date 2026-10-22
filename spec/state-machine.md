@@ -56,6 +56,21 @@ o ledger e as regras de autorização apropriadas.
 Rejected mantém Pending e não é uma transição desta tabela. Registro de
 tentativas, Unknown mantendo Pending e política de novas tentativas são
 da5.4; não se inventa CertificateRejected usando outro evento do catálogo.
-Consistência usa o campo existente, sem implementar WITNESS5.5. Cascata,
-retratação e recheck/revogação pertencem à5.9/5.10; atualizar esta tabela
-explicitamente quando essas etapas acrescentarem transições.
+Consistência usa o campo existente, sem implementar WITNESS5.5. Recheck/
+revogação pertencem à5.10; atualizar esta tabela explicitamente quando essa
+etapa acrescentar transições.
+
+## 4. Retratação e cascata (Etapa 5.9, ADR0052)
+
+Retratação é operação de operador (`logos_kernel::retract::Retractions`), nunca
+mensagem do agente. Alvo MUST estar Verified (somente autoridade administrativa)
+ou Assumption (autoridade ou o KeyId `author` registrado), não retratado. O
+evento Retracted carrega a assinatura de autoridade de events.md §4. A cascata é
+derivada pela projeção do índice (ledger-index.md §3). Em seguida o kernel usa a
+transição `invalidate` desta tabela para cada rota Verified derrubada que não é o
+próprio alvo, recuperando o Claim<Verified> da instância registrada. `causes` =
+`[h(Retracted raiz), premissa morta imediata]`: a premissa é a de menor h(Event)
+entre as used cujo nó já está morto, e a raiz é a da premissa (a do alvo é o seu
+Retracted). Raiz já gravada não é recalculada. `reconcile` é idempotente e roda no
+arranque do processo: completa registros após crash entre appends. Rotas que caem
+só por revogação de checker não recebem Invalidated aqui (5.10).

@@ -1,4 +1,4 @@
-//! Máquina de estados, protocolo e registry de checkers.
+//! Máquina de estados, protocolo, registry de checkers e retratação (5.9).
 //!
 //! **TCB** — regras da §4 do roadmap: sem `unsafe`, sem `unwrap`/`expect`/`panic` fora de testes.
 //! A lista de crates de TCB vive em `tcb/manifest.toml`.
@@ -14,6 +14,8 @@ pub mod propose;
 pub mod registry;
 #[cfg(target_os = "linux")]
 mod replay;
+#[cfg(target_os = "linux")]
+pub mod retract;
 #[cfg(target_os = "linux")]
 pub mod server;
 #[cfg(target_os = "linux")]

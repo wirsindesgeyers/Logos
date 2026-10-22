@@ -39,6 +39,8 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
     let registry = CheckerRegistry::new(signer.public_key().clone(), args.get(6).map(Path::new))?;
     registry.install(&mut ledger, &signer)?;
+    // Completa registros Invalidated de uma retratação interrompida (5.9).
+    logos_kernel::retract::Retractions::new(signer.public_key().clone()).reconcile(&mut ledger)?;
     let handlers = CertificationHandlers::new(
         registry,
         logos_core::Budget::new(20_000_000, 128 * 1024 * 1024, 64 * 1024 * 1024, 5000),

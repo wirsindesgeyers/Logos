@@ -1014,3 +1014,83 @@ fn index_layout_and_unsigned_epoch_match_normative_vector() {
         support::unhex(vector["epochs"][2]["hex"].as_str().unwrap())
     );
 }
+
+/// 5.9: o nó h(O) sobrevive enquanto alguma rota Verified tem premissas vivas.
+#[test]
+fn independent_routes_keep_node_and_dependents_until_every_route_falls() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let b = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let ho = fixture.obligation(&ledger, &[a, b], &truth());
+    let via_a = hash(&ledger.append(verified(ho, vec![a, b], vec![a])).unwrap()).unwrap();
+    let via_b = hash(&ledger.append(verified(ho, vec![a, b], vec![b])).unwrap()).unwrap();
+    let hd = fixture.obligation(&ledger, &[via_a], &truth());
+    let dependent = hash(
+        &ledger
+            .append(verified(hd, vec![via_a], vec![via_a]))
+            .unwrap(),
+    )
+    .unwrap();
+    let status =
+        |ledger: &Ledger<'_, FileSigner>, id| ledger.index().unwrap().status(id).unwrap().unwrap();
+
+    ledger.append(retract(a, &fixture.signer)).unwrap();
+    for id in [via_a, via_b, dependent] {
+        assert_eq!(
+            status(&ledger, id).kind,
+            EntryKind::Verified,
+            "rota independente mantém o nó"
+        );
+        assert!(ledger.index().unwrap().is_citable(id, 0).unwrap());
+    }
+    assert_eq!(status(&ledger, a).kind, EntryKind::Invalidated);
+
+    ledger.append(retract(b, &fixture.signer)).unwrap();
+    for id in [via_a, via_b, dependent] {
+        assert_eq!(
+            status(&ledger, id).kind,
+            EntryKind::Invalidated,
+            "todas as rotas caíram"
+        );
+        assert!(!ledger.index().unwrap().is_citable(id, 0).unwrap());
+    }
+    drop(ledger);
+    let rebuilt = LedgerIndex::open(&fixture.temp.0, fixture.signer.public_key()).unwrap();
+    for id in [a, b, via_a, via_b, dependent] {
+        assert_eq!(
+            rebuilt.status(id).unwrap().unwrap().kind,
+            EntryKind::Invalidated
+        );
+    }
+}
+
+/// Retratar a própria rota a mata, sem derrubar o nó sustentado pela outra.
+#[test]
+fn retracting_one_route_kills_only_that_route_while_a_sibling_supports_the_node() {
+    let fixture = Fixture::new();
+    let mut ledger = fixture.ledger();
+    let a = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let b = hash(&ledger.append(fixture.assumption("local")).unwrap()).unwrap();
+    let ho = fixture.obligation(&ledger, &[a, b], &truth());
+    let via_a = hash(&ledger.append(verified(ho, vec![a, b], vec![a])).unwrap()).unwrap();
+    let via_b = hash(&ledger.append(verified(ho, vec![a, b], vec![b])).unwrap()).unwrap();
+    let hd = fixture.obligation(&ledger, &[via_a], &truth());
+    let dependent = hash(
+        &ledger
+            .append(verified(hd, vec![via_a], vec![via_a]))
+            .unwrap(),
+    )
+    .unwrap();
+    ledger.append(retract(via_a, &fixture.signer)).unwrap();
+    let index = ledger.index().unwrap();
+    let retracted = index.status(via_a).unwrap().unwrap();
+    assert_eq!(retracted.kind, EntryKind::Invalidated);
+    assert!(retracted.retracted && !index.is_citable(via_a, 0).unwrap());
+    for id in [via_b, dependent, a, b] {
+        assert!(
+            index.is_citable(id, 0).unwrap(),
+            "nó h(O) segue vivo pela rota via_b"
+        );
+    }
+}

@@ -1,0 +1,308 @@
+[
+  {
+    "name": "node_is_per_event",
+    "source": "crates/logos-ledger/src/index_project.rs",
+    "replace_once": {
+      "from": "Some(h) if route => Node::Obligation(h),",
+      "to": "Some(h) if route && false => Node::Obligation(h),"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-ledger",
+      "--test",
+      "index",
+      "independent_routes_keep_node_and_dependents_until_every_route_falls",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "3916c9f728fb7ba9e6fcd147198e4260998dce7a655a984697049ed40f24fd19",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 2.67s",
+      "",
+      "error: test failed, to rerun pass `-p logos-ledger --test index`"
+    ]
+  },
+  {
+    "name": "support_ignored",
+    "source": "crates/logos-ledger/src/index_project.rs",
+    "replace_once": {
+      "from": "                        supported = true;\n",
+      "to": "                        supported = false;\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-ledger",
+      "--test",
+      "index",
+      "independent_routes_keep_node_and_dependents_until_every_route_falls",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "3916c9f728fb7ba9e6fcd147198e4260998dce7a655a984697049ed40f24fd19",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 1.12s",
+      "",
+      "error: test failed, to rerun pass `-p logos-ledger --test index`"
+    ]
+  },
+  {
+    "name": "no_propagation_to_dependents",
+    "source": "crates/logos-ledger/src/index_project.rs",
+    "replace_once": {
+      "from": "                    work.push(next);\n",
+      "to": "                    let _ = next;\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-ledger",
+      "--test",
+      "index",
+      "retracting_unused_citation_preserves_claim_but_used_transitive_retraction_removes_it",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "3916c9f728fb7ba9e6fcd147198e4260998dce7a655a984697049ed40f24fd19",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 1.30s",
+      "",
+      "error: test failed, to rerun pass `-p logos-ledger --test index`"
+    ]
+  },
+  {
+    "name": "author_check_dropped",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "EntryKind::Assumption => admin || author.as_ref() == Some(&key),",
+      "to": "EntryKind::Assumption => true,"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "only_admin_or_assumption_author_may_retract",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test retract`"
+    ]
+  },
+  {
+    "name": "verified_retract_open",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "EntryKind::Verified => admin,",
+      "to": "EntryKind::Verified => true,"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "only_admin_or_assumption_author_may_retract",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test retract`"
+    ]
+  },
+  {
+    "name": "double_retraction_allowed",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "        if status.retracted {\n",
+      "to": "        if false {\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "only_admin_or_assumption_author_may_retract",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 0,
+    "positive_control_exit": 0,
+    "detected": false,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "341 |     let e2 = route(&mut ledger, &fixture, &[c, y], &[y]);",
+      "    |         ^^ help: if this is intentional, prefix it with an underscore: `_e2`",
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default"
+    ]
+  },
+  {
+    "name": "cascade_not_recorded",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "        let invalidated = self.reconcile(ledger)?;\n",
+      "to": "        let invalidated = Vec::new();\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "independent_route_survives_and_cascade_is_recorded_when_both_fall",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test retract`"
+    ]
+  },
+  {
+    "name": "cause_is_max_premise",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "                    .min_by_key(|(p, _)| *p);\n",
+      "to": "                    .max_by_key(|(p, _)| *p);\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "cause_is_the_smallest_dead_premise_when_several_die_together",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test retract`"
+    ]
+  },
+  {
+    "name": "recorded_root_recomputed",
+    "source": "crates/logos-kernel/src/retract.rs",
+    "replace_once": {
+      "from": "                    .or_else(|| recorded.get(id).and_then(Option::as_ref))\n",
+      "to": "                    .or(None)\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "retract",
+      "recorded_root_is_reused_when_a_dependent_falls_later",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ca232332040212060552a2432b195df69e172b129ba63d051c5190648cc08504",
+    "mutant_output_tail": [
+      "    |",
+      "    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test retract`"
+    ]
+  }
+]
