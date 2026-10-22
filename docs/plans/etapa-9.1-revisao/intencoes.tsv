@@ -1,0 +1,51 @@
+# claim	intenção do autor da política (português livre, escrita antes da formalização)
+P01	Qualquer pessoa pode ler um recurso público.
+P02	O dono de um recurso pode escrever nele.
+P03	Administradores podem apagar qualquer recurso.
+P04	Colaboradores externos não podem ler recursos que contenham dados pessoais sensíveis.
+P05	Nenhum recurso sob retenção legal pode ser apagado, por ninguém.
+P06	Só quem tem conta ativa pode escrever em algum recurso.
+P07	Todo administrador usa autenticação de dois fatores.
+P08	Só auditores podem exportar recursos com dados sensíveis.
+P09	Recurso com dados pessoais sensíveis nunca é público.
+P10	Ninguém escreve em recurso arquivado.
+P11	Durante manutenção, só administradores podem escrever.
+P12	Só o dono ou um administrador pode compartilhar um recurso.
+P13	Colaboradores externos nunca são administradores.
+P14	Todo membro de uma equipe tem conta ativa.
+P15	O responsável por uma equipe é membro dela.
+P16	Membros da equipe do dono de um recurso podem lê-lo.
+P17	Todo recurso sensível tem consentimento registrado de alguém.
+P18	Ler um recurso sensível exige que o dono dele tenha consentido com o uso.
+P19	Todo recurso público teve a revisão aprovada por um professor.
+P20	Alunos não podem apagar recursos.
+P21	Só um administrador ou o próprio dono pode apagar um recurso.
+P22	Ninguém aprova a revisão de um recurso do qual é dono.
+P23	Durante um incidente de segurança, contas de colaboradores externos ficam inativas.
+P24	Quem pode ler uma pasta pode ler o que está dentro dela.
+P25	Um recurso é público exatamente quando a pasta que o contém é pública.
+P26	Quem pode escrever em um recurso também pode lê-lo.
+P27	Auditores podem ler todos os recursos.
+P28	Auditores não podem escrever em nenhum recurso.
+P29	Ninguém é aluno e professor ao mesmo tempo.
+P30	Todo administrador faz parte da equipe de TI.
+P31	Um recurso sob retenção legal não fica arquivado.
+P32	Recurso sob retenção legal só pode ser lido pela equipe jurídica ou por auditores.
+P33	Existe pelo menos um administrador.
+P34	Toda equipe tem ao menos um membro com conta ativa.
+P35	Cada recurso tem um único dono.
+P36	Se um colaborador externo pode escrever em um recurso, alguém aprovou a revisão desse recurso.
+P37	Colaboradores externos não exportam nenhum recurso.
+P38	Todo colaborador externo com conta ativa usa autenticação de dois fatores.
+P39	Qualquer leitura ou escrita exige conta ativa.
+P40	Manutenção e incidente de segurança nunca são declarados ao mesmo tempo.
+P41	A pasta que contém um recurso sensível também é sensível.
+P42	Nenhum recurso sensível pode ser compartilhado.
+P43	Professores não são colaboradores externos.
+P44	Alunos não leem recursos com dados sensíveis.
+P45	O responsável por uma equipe é professor ou administrador.
+P46	Recurso arquivado que continua público precisa de revisão aprovada por um auditor.
+P47	Só se apaga recurso que não está sob retenção legal.
+P48	Durante incidente de segurança, só administradores escrevem.
+P49	Nenhum recurso pertence a um colaborador externo.
+P50	Ler um recurso é permitido exatamente ao dono, a auditores e, se o recurso for público, a todos.

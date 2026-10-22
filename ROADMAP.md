@@ -129,7 +129,7 @@ Decisões tomadas aqui para que as etapas sejam acionáveis. Mudá-las é possí
 | Modelo formal | Lean 4 | Mesmo ecossistema da camada 3; comunidade ativa |
 | Verificação de Rust | Kani para invariantes locais; Verus para módulos críticos (gerador de obrigações, appender, gateway) | §5 |
 | Licença | Definir na Etapa 0.1 (sugestão: Apache-2.0 / MIT dual) | — |
-| Clientes além da TUI | **Proposta, não fixada** (ADR 0047/0048): interface web local opcional, processo separado, fora da TCB, sem chaves nem escrita no ledger; stack só após decisão na WS.0 (Apêndice G) | Mesma experiência de chat sem segundo harness nem caminho privilegiado ao kernel; a assinatura continua na interface do lado do kernel (9.2) |
+| Clientes além da TUI | **Decidida em 22/out/2026, por delegação** (ADR 0047/0048, WS.0): interface web local opcional, processo Rust separado fora da TCB (`axum`, SSE + POST), sem chaves nem escrita no ledger; frontend TypeScript/Preact embutido (Apêndice G) | Mesma experiência de chat sem segundo harness nem caminho privilegiado ao kernel; a assinatura continua na interface do lado do kernel (9.2) |
 
 ---
 
@@ -1224,9 +1224,13 @@ protocolo (5.2), as claims (5.3–5.5) e o ledger (3.x). Pode começar depois da
 A camada5R fica fora da TCB; dependências como9.1/5.7/5.9 mantêm seus contratos
 e suas TCBs. Nenhum critério da Fase10 é encerrado apenas por entregar um subconjunto.
 Histórico de chat não encerra a trilhaMEM; resumos/retrieval não viram premissas.
-A5R é o **perfil de pesquisa** do mesmo agente e do mesmo harness (ADR0047, proposto):
-não é um segundo assistente. Pontos de integração com o Apêndice G são notas, não
-dependências: nenhuma etapa5R depende de WS nem tem a web como critério.
+A5R é o **perfil de pesquisa** do mesmo agente e do mesmo harness (ADR0047):
+não é um segundo assistente. A experiência preserva o **chat simples sem fricção**
+como entrada padrão e adapta-se progressivamente à finalidade da sessão ou da
+requisição (`WS§2.2`): conversa livre, verificação inline, *Domain Packs* multi-purpose,
+CLI one-shot, sidecar MCP ou caderno de pesquisa. Pontos de integração com o
+Apêndice G são notas, não dependências: nenhuma etapa5R depende de WS nem tem a web
+como critério.
 
 **Ordem da trilha:** 5.5 → cliente10.1/farm10.2 (perfil de pesquisa) →5R.1;
 9.1 antes de5R.2;5.9 →5.7 antes de5R.3; depois5R.4 →5R.5 →5R.6.
@@ -1249,6 +1253,11 @@ sem marcar etapas completas antes de demonstrar todos os seus critérios.
   consultar ledger, auditar e exportar relatório.
 - Frames canônicos do protocolo; nenhuma ferramenta escreve diretamente fato, obrigação ou política (O só pelo PROPOSE do kernel; ADR0045).
 - Testes de integração contra o kernel real; auditoria de uma sessão completa.
+- Operações compostas de alto valor sobre o protocolo existente (fora da TCB, sempre
+  rechecadas pelo kernel): comparação de equivalência semântica (`⊢ A ↔ B` com
+  contramodelo distintivo explicado via 2.6) e busca de cenário discriminante entre
+  hipóteses ($H_1 \land \neg H_2$), utilizáveis tanto em pesquisa quanto como sidecar
+  multi-purpose em clientes MCP externos.
 
 **Critério de conclusão.**
 - [x] 10 tarefas de pesquisa executadas só via MCP, com claims e certificados reais.
@@ -1271,6 +1280,14 @@ antes de exigir confirmação por paráfrase em5R.2.
 - O formalizador é não confiável: o fluxo de interface exige confirmação antes
   de submeter a proposta. Esse registro de interação não é assinatura9.2 nem
   atestado F3/9.3; não apresentar o status lógico como fidelidade confirmada.
+- Suporte a **Domain Packs** declarativos (`vocabulary/v2` + templates `render_pt` +
+  extratores opcionais fora da TCB para código/specs, tabelas/configs `model/v1`,
+  normas/documentos ou domínio científico), carregáveis sob demanda conforme a
+  finalidade da requisição sem sair do chat simples.
+- Distinção entre **extensão monotônica** do vocabulário (apenas adição de novos
+  símbolos sem alterar sorts, `DomainSpec`, `Defined` ou `render_pt` de símbolos já
+  existentes) e mudança incompatível, evitando invalidar propostas e cartões anteriores
+  cujos `used_symbols(φ)` permanecem inalterados.
 
 **Critério de conclusão.**
 - [ ] Em 100 frases de um domínio piloto, ≥ 80% viram propostas bem tipadas sem
@@ -1293,10 +1310,22 @@ de premissas; antecipar5.7/5.9 com seus critérios integrais antes desta etapa.
   proveniência, sem semântica nova na TCB; atestações/Fact só entram pelos
   mecanismos das Fases6/7 quando existirem, nunca por conversão automática.
 - Exportação de relatório e auditoria; retratação atualiza a citabilidade.
+- Operações formais de auxílio à ciência sobre os checkers existentes (`WS§11.1`, sem
+  violar L1): (a) **desambiguação ativa de hipóteses ("experimento crucial")** via
+  2.4/2.5 + 2.3/2.6, gerando e explicando em português modelos finitos de
+  $\Gamma \cup \{H_1, \neg H_2\}$ e $\Gamma \cup \{\neg H_1, H_2\}$ restritos aos
+  predicados observáveis; (b) **diagnóstico de conflito mínimo (MUS checado)** quando
+  um conjunto de premissas/assumptions/evidências fica inconsistente ($\Gamma \vdash \bot$),
+  extraindo fora da TCB um núcleo $S \subseteq \Gamma$ e checando sua insatisfatibilidade
+  via LRAT (4.4) e minimalidade via modelos finitos (2.3) de cada $S \setminus \{p\}$
+  (antecipando a mecânica local da 17.5); e (c) **poda e teste de leis candidatas
+  contra tabelas empíricas** convertidas em `model/v1` (2.1/2.3), refutando leis
+  violadas por linhas observadas e podando leis redundantes via SAT/LRAT (4.6).
 - Ponto de integração (Apêndice G): o caderno é a primeira instância dos tipos
-  `Hypothesis`/`EvidenceReference`/`ClaimReference` de `WS§7.3`; WS.4 o importa sem
-  perda. Persistência durável entre sessões e projetos compartilhados não são
-  critério desta etapa.
+  `Hypothesis`/`EvidenceReference`/`ClaimReference` de `WS§7.3` e é serializado num
+  bundle canônico local (`notebook/v1`, fora da TCB) já alinhado a `ProjectArtifact`,
+  permitindo salvar e reabrir cadernos localmente antes de MEM.0/MEM.1; WS.4 o importa
+  sem perda. Projetos compartilhados na MEM não são critério desta etapa.
 
 **Critério de conclusão.**
 - [ ] 20 hipóteses de um domínio piloto com proveniência completa e nenhuma evidência
@@ -1318,6 +1347,10 @@ própria10.6 para começar. Seu critério completo continua na Fase10.
   `free_text` (LLM, marcado como não verificado).
 - Cartões de claim com status, premissas, contramodelo e lacunas; expansão para auditoria.
 - Nenhuma afirmação não verificada sem marcação.
+- Adaptação fluida à finalidade da requisição (`WS§2.2`): perguntas de conversa comum
+  respondem sem cerimônia; requisições que pedem prova, contraexemplo ou checagem de
+  domínio anexam cartões `ledger_ref` inline. Sob extensão monotônica de vocabulário,
+  cartões cujos `used_symbols(φ)` não mudaram preservam validade.
 - Ponto de integração (Apêndice G): o modelo de blocos e a regra de cartão stale
   desta etapa são o insumo do contrato de apresentação da WS.1.
 
@@ -1339,6 +1372,9 @@ compartilhando componentes; sem depender da10.7 completa,10.5 ou9.2.
   auditoria ao vivo.
 - Primeira integração via MCP com OpenCode e afins; TUI mínima em Rust
   (Ratatui/crossterm), compartilhada com10.7, depois.
+- Modo **CLI one-shot / headless** (`stdin/stdout` em JSON/Markdown com blocos
+  `ledger_ref`/`free_text` e bundle de auditoria) sobre o mesmo harness, permitindo uso
+  como utilitário multi-purpose em scripts, pipes e CI sem exigir TUI interativa.
 - Nenhuma reformatação de texto que o usuário venha a assinar.
 - Ponto de integração (Apêndice G): se o contrato WS.1 já existir, a TUI e o stream
   de sessão o consomem; o cliente web (WS.2) vem depois e não é critério desta etapa.
@@ -1421,6 +1457,10 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
   - `sqlite-monitor` / `pg-monitor` (contagem de conexões, existência de tabela, versão de linha);
   - `backup-svc` (mock: registra backups com timestamp);
   - `enum-source` (atesta o fecho de domínio: "os usuários são exatamente {…}").
+  - `sandbox-run` (execução determinística isolada em `bwrap`/`prlimit` sem rede,
+    padrão 4.5/10.2: atesta `Computed(h_script, h_input, h_output)` sobre um dataset ou
+    artefato local, fechando a cadeia criptográfica entre dado bruto, receita e saída
+    sem prometer verdade empírica — L1).
 - Cada atestador tem um documento "procedimento" (para o status `Anchored` dos símbolos — Etapa 1.2).
 
 **Critério de conclusão.**
@@ -1849,8 +1889,11 @@ especificações/vetores independentes, fuzz e controles por mutação.
 ## Fase 10 — Harness do agente (LLM, MCP, prover farm)
 
 Objetivo da fase: o harness completo, incluindo ações, com um agente LLM real operando **só** através do kernel. A Fase5R antecipa o perfil de pesquisa sem ações e compartilha seus componentes com esta fase. Todo o código desta fase é não confiável: bugs aqui afetam progresso (liveness), nunca correção.
-O harness é único para todos os clientes (TUI, CLI e, se adotada, a web do Apêndice G):
-respostas estruturadas, streams e telemetria servem a todos sem segundo loop.
+O harness é único para todos os clientes (TUI, CLI one-shot, sidecar MCP e, se adotada,
+a web do Apêndice G) e adapta-se progressivamente à finalidade da sessão ou da
+requisição (`WS§2.2`): começa como chat simples sem cerimônia e ativa verificação
+inline, *Domain Packs* multi-purpose (código/specs, dados/configs em `model/v1`,
+documentos/normas, ciência), projetos ou ações conforme necessário, sem segundo loop.
 
 ### Etapa 10.1 — Cliente do protocolo (`logos_client`) · `P`
 
@@ -1907,6 +1950,9 @@ vira premissa citável sem 6.6/fluxo existente; sem dependência reversa em MEM.
 - Ferramentas MCP: `logos_vocab`, `logos_propose`, `logos_prove` (chama o farm e faz `CERTIFY`), `logos_refute`, `logos_assume`, `logos_action`, `logos_ledger_query`, `logos_explain`.
 - Nenhuma ferramenta que execute efeitos diretamente.
 - Respostas sempre incluem o status do ledger (não o que o LLM "acha").
+- Ferramenta composta `logos_compare` (equivalência semântica `⊢ A ↔ B` e cenário
+  distintivo explicado via 2.6) para uso como sidecar de verificação em agentes de
+  código, refatoração de políticas e revisão de especificações.
 
 **Critério de conclusão.**
 - [ ] Um cliente MCP genérico consegue fazer o ciclo propose → prove → verified, e action → executed.
@@ -1927,6 +1973,10 @@ o mesmo componente e os critérios integrais desta etapa para a versão completa
 **Entregáveis.**
 - Prompting + parsing: texto em português → proposta AIR usando o vocabulário vigente; proposta de novos símbolos (que viram pedido de extensão de vocabulário, aprovado por humano, com status `Glossed` por padrão).
 - Loop de correção: erros de sort-check e contramodelos traduzidos voltam ao LLM.
+- Carregamento modular de **Domain Packs** (`vocabulary/v2` + templates `render_pt` +
+  extratores fora da TCB) para adaptar a formalização ao propósito da requisição
+  (engenharia de software, auditoria de configurações/tabelas, leitura de normas/editais
+  ou pesquisa) e suporte a extensão monotônica de vocabulário por `used_symbols(φ)`.
 
 **Critério de conclusão.**
 - [ ] Em 100 frases de teste do domínio operacional, ≥ 80% viram propostas bem tipadas sem intervenção (métrica de progresso, não de correção).
@@ -1944,6 +1994,9 @@ o mesmo componente e os critérios integrais desta etapa para a versão completa
 - Modos: intercalado (padrão), intercalado com especulação, pós-hoc (para comparação — Fase 16).
 - Registro de enfraquecimentos (`Weakened { from: h(φ), to: h(φ') }`) para a métrica de informatividade (ameaça 14).
 - Uso da API do Claude (modelo configurável; padrão: o mais capaz disponível).
+- Adaptação fluida por requisição e modo **CLI one-shot / batch** (`stdin/stdout`
+  estruturado com `ledger_ref`/`free_text`), permitindo usar o mesmo loop tanto como
+  chat simples quanto em scripts de automação, hooks e pipelines de CI.
 - Ponto de integração **futuro** MEM.4/5: chamada fresh a cada turno,
   snapshot settled antes dos inputs atuais, tools/system estáveis e blocos
   de memória antes do tail variável. Não simular memória persistente com
@@ -2353,6 +2406,10 @@ Objetivo da fase: `VERIFIED` para argumentos de primeira ordem fora de domínios
 **Entregáveis.**
 - `emit_smtlib(O) -> bytes` determinístico (sorts → `declare-sort`, símbolos → `declare-fun`, premissas → `assert` nomeados com o hash da premissa, objetivo negado → `assert`), na TCB junto do gerador.
 - Evento registra `h(O)` e `h(smt)`; auditor refaz a emissão.
+- Nota de evolução planejada (pós-v1): extensão controlada para aritmética linear
+  inteira/racional (`QF_UFLIA`/`UFLIA`/`UFLRA`) quando `emit_smtlib` e as regras
+  Alethe checadas pelo Carcara cobrirem o fragmento, atendendo hipóteses científicas
+  quantitativas e políticas com contadores/limiares numéricos.
 
 **Critério de conclusão.**
 - [ ] Emissão determinística (hash estável em CI, 2 arquiteturas).
@@ -2539,7 +2596,11 @@ da 15.1, com o estado atual; nenhum cliente emite selo próprio ou reutiliza o n
 **Fora do escopo.** migração automática de atestados entre versões.
 
 **Entregáveis.**
-- Nova versão incompatível de `V` → evento `VocabChanged` → todos os atestados de fidelidade com o `h(V)` antigo perdem efeito; selos recalculados.
+- Mudança incompatível de `V` (alterar sort, aridade, `DomainSpec`, `Defined`, glosa ou
+  `render_pt` de símbolo existente) → evento `VocabChanged` → todos os atestados de
+  fidelidade afetados com o `h(V)` antigo perdem efeito; selos recalculados. Uma
+  **extensão monotônica** (apenas adição de símbolos novos sem tocar nos existentes)
+  preserva atestados cujos `used_symbols(φ)` permanecem inalterados.
 
 **Critério de conclusão.**
 - [ ] Teste: mudar a glosa de `Pessoal/1` rebaixa a fidelidade de todos os claims que o usam.
@@ -3137,6 +3198,9 @@ documentos ficam fora do ledger; pedidos de verificação usam os eventos existe
 | Contexto compartilhado bloqueado por MEM.5 (que depende de8.9/9.2) | WS.6 sem dependências prontas | Anexos explícitos (WS.4) como única continuidade; não anunciar memória de projeto | Fim da Fase 10 |
 | Superfície web insegura | Revisão de segurança WS.9 com falha | Não empacotar a web; TUI continua o cliente suportado | WS.9 |
 | Stack de frontend pesada ou instável | Dependências/CSP incompatíveis na WS.0 | HTML do servidor com componentes mínimos; trocar biblioteca sem tocar na lógica formal | WS.0 |
+| Extensão de vocabulário invalida toda a sessão exploratória | Etapa 5R.2/5R.4: criar símbolo novo derruba cartões anteriores | Separar extensão monotônica (preserva fórmulas cujos `used_symbols(φ)` não mudaram) de mudança incompatível (`VocabChanged`) | Etapa 5R.2 / 15.7 |
+| Cerimônia formal atrapalha o chat simples | Usuário precisa criar projeto ou editar AIR para conversa comum | Adaptação progressiva (`WS§2.2`): chat simples sem fricção por padrão; cartões, *Domain Packs* e painéis só quando a finalidade da requisição pedir | Etapa 5R.4 / WS.1 |
+| Falta de aritmética limita hipóteses quantitativas | Etapa 5R.6 / 14.1: limiares e somas codificados como constantes cegas | Sorts finitos ordenados no grounder (4.2) e extensão planejada `UFLIA`/`UFLRA` na camada 2 quando coberta pelo Carcara | Etapa 14.1 / 14.3 |
 
 ---
 
@@ -3356,7 +3420,8 @@ migração e perfis de cache documentados. Release declara o que foi medido.
 
 **Estado: proposta especificada, nenhuma etapa WS implementada/concluída.**
 Fonte: [extensão WS§1–16](docs/spec/LOGOS-workspace-and-web-ui.md); decisões
-**propostas** em [ADR 0047](docs/adr/0047-produto-unico-com-clientes-e-workspaces.md)
+**aceitas em 22/out/2026 por delegação do mantenedor** (WS.0; plano de fase em
+[`docs/plans/fase-ws.md`](docs/plans/fase-ws.md)) em [ADR 0047](docs/adr/0047-produto-unico-com-clientes-e-workspaces.md)
 (um harness, clientes e projetos), [ADR 0048](docs/adr/0048-servidor-web-local-nao-confiavel.md)
 (servidor web local) e [ADR 0049](docs/adr/0049-artefatos-visualizacoes-e-documentos.md)
 (artefatos, visualizações e documentos). Novas etapas começam `[ ]`; documentação,
@@ -3411,12 +3476,12 @@ chat web local + sessões + cartões de claim + LaTeX básico + gráfico declara
 salvar/recuperar um artefato); plano de fase da trilha; revisão da matriz abaixo.
 
 **Critério de conclusão.**
-- [ ] ADRs 0047–0049 com estado decidido pelo mantenedor e consequências
+- [x] ADRs 0047–0049 com estado decidido pelo mantenedor e consequências
   atualizadas; nenhuma escolha de stack sem alternativas e critérios registrados.
-- [ ] Script reproduzível confere: todo link/âncora citado nesta trilha resolve;
+- [x] Script reproduzível confere: todo link/âncora citado nesta trilha resolve;
   todo ID `WS.n`, `W1–W9`, `TW1–TW13` citado existe; o grafo de dependências WS
   é acíclico e nenhuma etapa de 5R/10/MEM depende de WS.
-- [ ] Matriz requisito → etapa → dependência → critério cobre web, sessão,
+- [x] Matriz requisito → etapa → dependência → critério cobre web, sessão,
   projetos, artefatos, visualização, PDF, memória e pesquisa, sem item órfão.
 
 ### Etapa WS.1 — Contrato de sessão e apresentação · `M`
@@ -3431,10 +3496,16 @@ salvar/recuperar um artefato); plano de fase da trilha; revisão da matriz abaix
 
 **Entregáveis.** `spec/client-session.md` (a criar): envelope versionado de sessão e
 eventos (`SessionId`, cursor, `user_input`, `free_text`, `ledger_ref`, `tool_status`,
-`artifact_inline`, `degradation`, `error`, `completion`), lista fechada de componentes
-inline (cartão de claim, tabela, gráfico declarativo com dados embutidos limitados,
-fórmula, DAG, contramodelo), limites e vetores; renderer de referência fora da TCB e
-fixtures. É o mesmo contrato que a TUI (5R.5/10.7) e a web (WS.2) consomem.
+`artifact_inline`, `degradation`, `error`, `completion`), adaptação progressiva à
+finalidade da sessão/requisição (`WS§2.2`: do chat simples em `free_text` aos cartões,
+*Domain Packs* e artefatos inline sob demanda), gramática semântica de superfície e
+identidade visual híbrida (`WS§5.4`: monograma `⟦ Λ ⊢ ⟧`, três vozes tipográficas e
+pares obrigatórios `glifo + borda + cor` para cada estado epistêmico, preservando P7/W1
+em terminal monocromático e web), lista fechada de componentes inline (cartão de claim,
+tabela, gráfico declarativo com dados embutidos limitados, fórmula, DAG, contramodelo),
+regra de preservação sob extensão monotônica de vocabulário por `used_symbols(φ)`,
+limites e vetores; renderer de referência fora da TCB e fixtures. É o mesmo contrato
+que a TUI (5R.5/10.7), o modo CLI one-shot e a web (WS.2) consomem.
 
 **Critério de conclusão.**
 - [ ] Fixtures Verified/Refuted/Unknown/Pending/Invalidated/stale/erro renderizadas
@@ -3507,7 +3578,8 @@ PDF (WS.7), painéis científicos (WS.8), qualquer conversão em `Fact`/`Verifie
 `Hypothesis`/`ResearchQuestion`, `EvidenceReference`, `ClaimReference`, `Dataset`,
 `Visualization` (persistência), fonte de `Report`; operações distintas Save/Pin/
 Reference/Promote/Request verification/Retract/Archive (`WS§7.4`); revisões;
-import do caderno 5R.3; anexos explícitos à sessão com ACL revalidada.
+import sem perda do bundle `notebook/v1` da 5R.3; promoção fluida de itens de uma
+conversa simples para projeto; anexos explícitos à sessão com ACL revalidada.
 
 **Critério de conclusão.**
 - [ ] Salvar, reabrir, versionar e recuperar original byte a byte; blob adulterado e
@@ -3532,9 +3604,12 @@ existirem (não são dependência).
 execução de código do LLM, recálculo silencioso, estatística certificada.
 
 **Entregáveis.** `spec/visualization.md` (a criar): lista fechada de componentes,
-dados por hash, receita, unidades e semântica estatística, limites; gráficos, tabelas,
-DAG de claims, explorador de contramodelo e fórmulas; estados congelada/atualizada/
-stale/irrecuperável (`WS§9.4`); export derivado.
+dados por hash, receita e **executor isolado de transformações** em sandbox
+(`bwrap`/`prlimit` sem rede, padrão 4.5/10.2, vinculando `(h(dataset), h(receita)) →
+h(saída)`), unidades e semântica estatística, limites; gráficos, tabelas, DAG de
+claims, explorador de contramodelo e fórmulas; estados congelada/atualizada/stale/
+irrecuperável (`WS§9.4`, com extensão monotônica de vocabulário por `used_symbols(φ)`);
+export derivado.
 
 **Critério de conclusão.**
 - [ ] Em ≥20 datasets fixture, os valores extraídos do spec renderizado conferem com
@@ -3604,7 +3679,10 @@ científica, laboratório autônomo, estatística certificada, execução de exp
 
 **Entregáveis.** painéis MVP Overview, Hypothesis Board, Evidence Explorer,
 Argument/Proof Graph e Bibliography (`WS§11`); Gallery, Timeline e Experiments
-incrementais; rótulos epistêmicos da tabela de `WS§11`.
+incrementais; integração na UI das três operações científicas de `WS§11.1` (busca de
+**experimento crucial / cenário discriminante** entre $H_1$ e $H_2$, diagnóstico de
+**conflito mínimo via MUS checado** sobre premissas/literatura e **teste/poda de leis
+contra tabelas `model/v1`**); rótulos epistêmicos da tabela de `WS§11`.
 
 **Critério de conclusão.**
 - [ ] Roteiro scriptado num projeto piloto: pergunta → evidência → hipótese →
@@ -3640,6 +3718,7 @@ de limites demonstrados.
 | Requisito | Etapa | Dependência real | Critério verificável | Arquivos futuros |
 | --- | --- | --- | --- | --- |
 | Um chat/um harness; perfil de pesquisa | WS.0, WS.2 | 5R.5; ADR 0047 | roteiro no navegador e na TUI contra o mesmo harness | ADR 0047 revisado |
+| Adaptação fluida à finalidade (chat simples → inline → Domain Packs → workspace) | WS.1, WS.2, WS.8 | 5R.4, 5R.5; `WS§2.2` | conversa simples sem projeto/AIR e ativação progressiva por requisição | `spec/client-session.md` |
 | Sessões separadas e reabríveis | WS.1, WS.2 | 5R.5 | abas isoladas; reconexão sem duplicação | `spec/client-session.md` |
 | TUI preservada | WS.1, WS.2 | 5R.5, 10.7 | mesmo contrato e roteiro na TUI | — |
 | Web local opcional e segura | WS.2 | WS.0/ADR 0048 | testes de Origin/Host/CSRF/WS/bind | código do servidor (nome em WS.0) |
@@ -3653,6 +3732,7 @@ de limites demonstrados.
 | PDF/LaTeX reproduzível | WS.7 | WS.4, WS.5, 9.1 | sandbox negativo; reprodução | templates de documento |
 | Contexto compartilhado | WS.6 | MEM.5, MEM.6 | 3 sessões; revogação; injeção | rota `project` do router |
 | Workspace científico | WS.8 | 5R.3, WS.4–WS.7 | roteiro piloto; inventário pelo chat | painéis |
+| Operações científicas (experimento crucial, MUS checado, tabelas `model/v1`) | 5R.3, WS.8 | 2.3–2.6, 4.4, 4.6 | modelos discriminantes, núcleo MUS verificado e refutação por linha de tabela | caderno `5R.3` / painéis `WS.8` |
 | Operação e avaliação | WS.9 | MEM.7, 10.8, 23.1 | restore; revisão TW1–TW13; métricas | docs de usuário/operador |
 
 ---

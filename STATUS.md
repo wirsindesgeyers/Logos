@@ -278,13 +278,13 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 9.1a Templates versionados | ⚠ concluída localmente; CI pendente | ADR0046; vocabulary/v2, vetores14, diferencial Rust/Python, quatro mutações, fuzz3600s+60s, cenário v2 no kernel/MCP/auditor e full verify/selftest VERIFY_OK em3566.59s. [Evidências](docs/plans/etapa-9.1a-evidencias.json). |
-| 9.1 Renderizador/parser PT | ⏳ não iniciada | 9.1a pronta; implementar com todos os critérios e revisão humana. |
+| 9.1 Renderizador/parser PT | 🚧 implementada localmente; revisão humana pendente | ADR0050, `logos-seal`. Round-trip 100k distintas (75k na profundidade 6) e 82 fórmulas de spec/vectors (70 voltam, 12 recusadas por tipagem), vetores Python independentes, 11 mutações + 1 equivalente, fuzz `paraphrase_parse` 3600s/17,45M execuções. Critérios 1–2 demonstrados, marcados após full verify na ponta (ADR0051). **Critério 3: revisão humana de 50 paráfrases é do mantenedor** ([material](docs/plans/etapa-9.1-revisao/README.md)). |
 
 ## Trilha de interface e workspaces (Apêndice G, proposta)
 
 | Etapa | Estado | Gate / entrega |
 | --- | --- | --- |
-| WS.0 Decisões de produto/stack | ⏳ não iniciada | documental; ADRs 0047–0049 propostos aguardam o mantenedor |
+| WS.0 Decisões de produto/stack | ✅ concluída (documental) | ADRs 0047–0049 aceitos por delegação; stack e persistência decididas; `tools/check_ws_docs.py` no verify; [plano de fase](docs/plans/fase-ws.md) |
 | WS.1 Contrato de sessão/apresentação | ⏳ não iniciada | 5R.4 e WS.0 |
 | WS.2 Servidor web local + chat | ⏳ não iniciada | WS.0, WS.1, 5R.5 |
 | WS.3 Registry de projetos | ⏳ não iniciada | MEM.0/MEM.1 (bloqueio se ADR 0008 não for adotado) |
@@ -551,32 +551,27 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapa9.1 — renderizador/parser PT
+## Próximo passo: verificação completa da pilha e revisão humana da 9.1
 
-Pronto de que depende: AIR1.1, vocabulário1.2 e parser1.4; vocabulary/v2 com
-render_pt explícito por símbolo, validado e vinculado a h(V) (9.1a/ADR0046,
-spec/render-templates.md). Não usar gloss_pt como template.
+Pilha local (ADR0051, verificação por pilha): 9.1 + WS.0 na `main`; 5.9
+(ATMS/retratação, ADR0052), 5.6 (S4, ADR0053) e 5.7 (assumptions com escopo,
+ADR0054) em branches `etapa-*` com worktrees `../LOGOS-5.x`, a rebasear em ordem
+5.9 → 5.6 → 5.7. Cada uma tem verificação direcionada e mutações; falta **um**
+`ci/verify.sh --selftest` na ponta, depois marcar critérios e só então push.
 
-Implementar render_pt(φ,V) e parse_pt(String,V) na TCB de fidelidade, gramática
-da língua controlada em spec/paraphrase-pt.md, versão do renderizador/gramática
-no hash da paráfrase, round-trip em100k fórmulas até profundidade6 e em todos
-os vetores, fuzz de parse_pt≥1h e revisão humana registrada de50 paráfrases de
-políticas reais. Não substituir a revisão por script. Plano em
-docs/plans/etapa-9.1.md (hoje só pré-checagem) precisa ser completado.
-
-Decisões em aberto: crate/propriedade da TCB de fidelidade que recebe o código
-(manifesto), forma da gramática e tratamento de templates coincidentes de
-símbolos distintos (ADR0046, limite explícito: identidade do símbolo precisa
-ficar na gramática). Riscos: injetividade, ambiguidade de escopo e custo da
-revisão humana.9.2/5R.2 continuam fora. CI remota/ARM/noturno pendentes.
+Do mantenedor: (1) revisão humana das 50 paráfrases e decisão sobre a origem do
+corpus (docs/plans/etapa-9.1-revisao/README.md), que fecha a 9.1 e libera a
+5R.2; (2) revisar os ADRs aceitos por delegação (0047–0054). Riscos: o `snapshot`
+da 3.3 custa proporcional aos ancestrais das citações (ver Armadilhas); o
+diferencial ATMS leva ~11 min no verify.
 
 ## Decisões em aberto para o mantenedor
 
-- **Trilha de interface (Apêndice G):** aceitar, alterar ou rejeitar os ADRs
-  0047 (um harness, clientes e projetos), 0048 (servidor web local) e 0049
-  (artefatos, visualizações e documentos), todos propostos. Stack de servidor,
-  frontend, gráficos, matemática e formato de documento fica para a WS.0, com
-  alternativas e critérios. Não altera o próximo passo (9.1).
+- **Decisões tomadas por delegação (22/out), para revisão:** ADRs 0047–0049
+  (produto, web local, artefatos; stack Rust/axum, SSE+POST, Preact, Vega-Lite,
+  Cytoscape, KaTeX, Typst), direção do ADR0008 (memória) adotada, ADR0050
+  (gramática da paráfrase), 0051 (verificação por pilha) e 0052–0054 (5.9/5.6/5.7).
+  Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
   próprios, sem dependência nova). Medição anterior, após a5.5: 15131+747130=762261;
@@ -600,6 +595,18 @@ revisão humana.9.2/5R.2 continuam fora. CI remota/ARM/noturno pendentes.
   (`docs/plans/fase-0.md`); a partir da 0.5 vale seguir `AGENTS.md` §2.
 
 ## Armadilhas conhecidas
+
+- Worktrees paralelos (ADR0051): reservar números de ADR antes de começar. Em
+  22/out o ADR de processo foi criado como 0053 na `main` com 0051/0052 ainda nas
+  branches, e `tools/check_ws_docs.py` derrubou o full verify. Ordem atual:
+  0051 processo, 0052 5.9, 0053 5.6, 0054 5.7. Worktrees não têm `target/cake-lpr`:
+  copiar (não symlink, o registry abre com O_NOFOLLOW) antes dos testes de certify.
+- `LedgerIndex::snapshot` (3.3) confere o scope de **todas** as assumptions
+  ancestrais via CTE recursivo: em DAGs profundos o custo por PROPOSE cresce com os
+  ancestrais (quadrático no total). Não afeta correção; relevante para a 5R.3.
+  Fixtures de escala devem evitar `generate` por rota (ver atms_fixture, 5.9).
+- Fixtures que fazem dezenas de milhares de appends precisam de build `--release`:
+  Ed25519/SQLite em debug ficam ~10× mais lentos (18 eventos/s observados).
 
 - PROPOSE5.3 retorna propose-result/v1 `[1,h(O),O_bytes]`, sem credencial.
   Query::Status usa h(Event), não h(O); obter ObligationCreated por Subscribe.
@@ -1921,3 +1928,7 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-21 — Etapa9.1a concluída localmente sobreced0cf3 (ADR0046). Quarto full interrompido sem veredito às16:30 (farm400/500; processo e wrapper sumiram sem erro no log), preservado como attempt4 e não contado. Quinto full verify/selftest, desacoplado da sessão: VERIFY_OK/exit0 em3566.59s,491 entradas inalteradas,551 Rust/0 ignorados, Python314+25, RENDER_TEMPLATE_VECTORS_OK14, RENDER_TEMPLATES_SMOKE_OK10 tarefas v2 com auditoria, farm500 p50=1.258s. Fuzz3600s+60s e quatro mutações já demonstrados nas fontes finais. TCB15262+747130=762392 (+131), build-only64508, sem dependência nova. Recibos em docs/plans/etapa-9.1a-*.json. Próximo:9.1 integral. CI remota/ARM/noturno pendentes.
 
 - 2026-10-21 — Docs: revisão de produto a pedido do mantenedor. Trilha transversal proposta no Apêndice G do ROADMAP (WS.0–WS.9: contrato de sessão, servidor web local, registry de projetos, artefatos, visualizações, contexto de projeto, documentos, workspace científico e operação), extensão docs/spec/LOGOS-workspace-and-web-ui.md (WS§1–16), ADRs 0047–0049 propostos, invariantes W1–W9, ameaças TW1–TW13/AW1–AW3, métricas e riscos. Integrações como notas em 5R.3–5R.5, 9.1/9.2, 10, 15, 16, 23 e Apêndice F, sem novas dependências para 5R/10/MEM, sem eventos de ledger e sem mudança de TCB/critérios. Nenhuma etapa implementada ou marcada. Referências de próximo passo desatualizadas no §5 e no Apêndice F foram datadas. Validação documental: DOCS_0_7_OK, links/âncoras e grafo WS acíclico. Próximo passo continua9.1.
+
+- 2026-10-22 — Docs: refinamento do roadmap e da trilha WS/5R a pedido do mantenedor, preservando integralmente o chat simples sem fricção e a adaptação progressiva à finalidade da sessão ou requisição (`WS§2.2`: conversa simples → verificação/gráficos inline → *Domain Packs* multi-purpose → projetos/workspace científico → CLI one-shot e sidecar MCP). Incorporados nos docs (`ROADMAP.md`, `WS§`, ADRs 0047/0049, `fase-ws.md`, `visao-e-andamento.md`, `limits.md`): (1) bundle local `notebook/v1` na 5R.3 compatível com `ProjectArtifact` antes de MEM.0/MEM.1; (2) executor isolado de receitas (`bwrap`/`prlimit`) para `Visualization`/`Dataset` (WS.5) e atestador `sandbox-run` (6.3); (3) distinção entre extensão monotônica de vocabulário por `used_symbols(φ)` e mudança incompatível (5R.2/5R.4/WS.5/15.7); (4) operações científicas sobre os checkers existentes (`WS§11.1`: experimento crucial / desambiguação ativa 2.4/2.5+2.3/2.6, diagnóstico de conflito mínimo via MUS checado 4.4+2.3 antecipado para 5R.3/WS.8, e teste/poda de hipóteses contra tabelas `model/v1`); (5) *Domain Packs*, ferramenta MCP `logos_compare` e modo CLI one-shot/headless; (6) nota de evolução aritmética (`UFLIA`/`UFLRA`) na 14.1 e riscos no Apêndice E. Nenhum critério ou etapa existente removido.
+
+- 2026-10-22 — Etapa9.1 implementada localmente sobre57c8a03 (ADR0050): `logos-seal` com render_pt/parse_pt paraphrase-pt/v1, releitura obrigatória, recusa de vocabulário ambíguo, h(P) no domínio reservado. 100k fórmulas distintas, 82 de spec/vectors, vetores Python independentes, 11 mutações (+1 equivalente), fuzz 3600s/17,45M sem crash. Corpus e planilha de revisão prontos; revisão humana é do mantenedor. WS.0 concluída por delegação: ADRs 0047–0049 aceitos, stack decidida, verificador `tools/check_ws_docs.py` e plano de fase. ADR0051: verificação completa por pilha. Primeiro full verify da 9.1 falhou exit1/3391s no verificador novo por numeração de ADR (0053 criado antes de 0051/0052 das branches); corrigido renomeando. Em paralelo (worktrees): 5.9 (ATMS/retratação), 5.6 (S4) e 5.7 (escopos) com verificação direcionada. Full verify da pilha pendente; sem push.

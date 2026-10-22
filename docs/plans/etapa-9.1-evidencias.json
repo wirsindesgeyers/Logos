@@ -1,0 +1,415 @@
+{
+  "base": "57c8a03",
+  "status": "verified_locally_directed; full verify pending at stack tip (ADR0051)",
+  "fuzz": {
+    "status": "finished",
+    "target": "paraphrase_parse",
+    "seconds_requested": 3600,
+    "exit": 0,
+    "wall_seconds": 3618.73,
+    "sources": {
+      "crates/logos-seal/src/error.rs": "0b496017d036690122606d1e8fea00e1eae4ba985f8e3ab6d029885212c70982",
+      "crates/logos-seal/src/grammar.rs": "7377cc25e66682754dda9cd43ef3049109eedd41d2647ad40780499b611dfb00",
+      "crates/logos-seal/src/lib.rs": "69d71df1f26a7cc06168406fabe1268e2fb8a4d4ad68674e0052eb44920d5270",
+      "crates/logos-seal/src/paraphrase.rs": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "crates/logos-seal/src/parse.rs": "7384eaa077d7b6f7cf9e832d716c9f01a09c1e87195a7de00384768d27e281b6",
+      "crates/logos-seal/src/render.rs": "cc7e183737c2d3f78dc77e8fae37f44f08118a95f9b35b8dc5c97391fa0e7d82",
+      "fuzz/fuzz_targets/paraphrase_parse.rs": "c5d7ea9aff76be9614f670dca24415fc04d6f24b6350d05d67ae2fee5604e345",
+      "fuzz/Cargo.toml": "c85de42861faa7d4ce17bfcdd7c9d4463a988d92952faa864d420abf194cea23",
+      "spec/vectors/paraphrase/vectors.tsv": "36625c44e2a51f5f702517508e53f90ebe48fd4aff2ed5bfba6f2cd9207d696c"
+    },
+    "sources_unchanged": true,
+    "log_sha256": "a50be416ea4e7f939575eda7773833e52a1a41d358be10f72986a79108ee38b3"
+  },
+  "fuzz_batches": [
+    "Done 8533073 runs in 1801 second(s)",
+    "Done 8921351 runs in 1801 second(s)"
+  ],
+  "mutations": [
+    {
+      "name": "ambiguous_templates_ignored",
+      "source": "crates/logos-seal/src/paraphrase.rs",
+      "replace_once": {
+        "from": "if table.insert(segments.clone(), index).is_some() {",
+        "to": "if table.insert(segments.clone(), index).is_some() && false {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "paraphrase",
+        "vocabulary_without_templates_or_ambiguous_is_refused",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test paraphrase`"
+      ]
+    },
+    {
+      "name": "variable_collision_ignored",
+      "source": "crates/logos-seal/src/paraphrase.rs",
+      "replace_once": {
+        "from": "&& grammar::variable_ordinal(segments[0]).is_some()",
+        "to": "&& grammar::variable_ordinal(segments[0]).is_some() && false"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "paraphrase",
+        "vocabulary_without_templates_or_ambiguous_is_refused",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test paraphrase`"
+      ]
+    },
+    {
+      "name": "bracket_sort_name_accepted",
+      "source": "crates/logos-seal/src/paraphrase.rs",
+      "replace_once": {
+        "from": "if name.contains(OPEN_CHAR) || name.contains(CLOSE_CHAR) {",
+        "to": "if false {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "paraphrase",
+        "vocabulary_without_templates_or_ambiguous_is_refused",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "mutant_output_tail": [
+        "   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test paraphrase`"
+      ]
+    },
+    {
+      "name": "hash_omits_vocabulary",
+      "source": "crates/logos-seal/src/paraphrase.rs",
+      "replace_once": {
+        "from": "Value::Bytes(self.vocabulary.as_bytes().to_vec()),",
+        "to": "Value::Bytes(Vec::new()),"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "leading_zero_accepted",
+      "source": "crates/logos-seal/src/grammar.rs",
+      "replace_once": {
+        "from": "|| (digits.len() > 1 && digits.starts_with('0'))",
+        "to": "|| false"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7377cc25e66682754dda9cd43ef3049109eedd41d2647ad40780499b611dfb00",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "shared_connective_phrase_changed",
+      "source": "crates/logos-seal/src/grammar.rs",
+      "replace_once": {
+        "from": "pub(crate) const IMPLIES_MIDDLE: &str = \"), então (\";",
+        "to": "pub(crate) const IMPLIES_MIDDLE: &str = \"), logo (\";"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7377cc25e66682754dda9cd43ef3049109eedd41d2647ad40780499b611dfb00",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "trailing_bytes_accepted",
+      "source": "crates/logos-seal/src/parse.rs",
+      "replace_once": {
+        "from": "if parser.position != text.len() {",
+        "to": "if false {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7384eaa077d7b6f7cf9e832d716c9f01a09c1e87195a7de00384768d27e281b6",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "parse_skips_sort_check",
+      "source": "crates/logos-seal/src/parse.rs",
+      "replace_once": {
+        "from": "check(paraphraser.vocabulary, &formula)?;",
+        "to": "let _ = check(paraphraser.vocabulary, &formula);"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7384eaa077d7b6f7cf9e832d716c9f01a09c1e87195a7de00384768d27e281b6",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "plural_rule_shifted",
+      "source": "crates/logos-seal/src/parse.rs",
+      "replace_once": {
+        "from": "self.expect(if count == 1 {",
+        "to": "self.expect(if count <= 1 {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "vectors",
+        "rust_matches_independent_python_renderer_and_hash",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7384eaa077d7b6f7cf9e832d716c9f01a09c1e87195a7de00384768d27e281b6",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test vectors`"
+      ]
+    },
+    {
+      "name": "parse_depth_guard_removed",
+      "source": "crates/logos-seal/src/parse.rs",
+      "replace_once": {
+        "from": "if depth > self.paraphraser.limits.air.max_depth {",
+        "to": "if false {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "paraphrase",
+        "byte_and_depth_limits_are_errors",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "7384eaa077d7b6f7cf9e832d716c9f01a09c1e87195a7de00384768d27e281b6",
+      "mutant_output_tail": [
+        "   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test paraphrase`"
+      ]
+    },
+    {
+      "name": "render_variable_off_by_one",
+      "source": "crates/logos-seal/src/render.rs",
+      "replace_once": {
+        "from": ".checked_sub(index)",
+        "to": ".checked_sub(index + 1)"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "properties",
+        "round_trip_100k_distinct_random_formulas_up_to_depth_6",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 101,
+      "positive_control_exit": 0,
+      "detected": true,
+      "expected_detected": true,
+      "restored_sha256": "cc7e183737c2d3f78dc77e8fae37f44f08118a95f9b35b8dc5c97391fa0e7d82",
+      "mutant_output_tail": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "",
+        "error: test failed, to rerun pass `-p logos-seal --test properties`"
+      ]
+    },
+    {
+      "name": "render_self_check_removed",
+      "source": "crates/logos-seal/src/paraphrase.rs",
+      "replace_once": {
+        "from": "if self.parse(&text)? != *formula {",
+        "to": "if false {"
+      },
+      "command": [
+        "cargo",
+        "test",
+        "-q",
+        "-p",
+        "logos-seal",
+        "--test",
+        "properties",
+        "round_trip_100k_distinct_random_formulas_up_to_depth_6",
+        "--",
+        "--exact"
+      ],
+      "mutant_exit": 0,
+      "positive_control_exit": 0,
+      "detected": false,
+      "expected_detected": false,
+      "restored_sha256": "f0b977ad45002a91a072d925a16e56f52aa1916d6936b7a487fb8206f4445bb0",
+      "mutant_output_tail": [
+        "test round_trip_100k_distinct_random_formulas_up_to_depth_6 has been running for over 60 seconds",
+        ".",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 131.59s"
+      ]
+    }
+  ],
+  "full_verify_attempt1_not_counted": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 1,
+    "seconds": 3391.38,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 507,
+    "verify_ok": false,
+    "log_sha256": "e83186652b1503ac9f4bc4b6692303b859aa47d169cd22d7515808a513b9849f",
+    "input_manifest_sha256": "5763f96d06bffeb7ddf7a02e409fe34aef9f70e601f70d1ca282e0776ffecddd"
+  },
+  "full_verify_attempt1_failure": "tools/check_ws_docs.py: ADRs não sequenciais (0053 antes de 0051/0052 das branches); corrigido",
+  "tests": {
+    "properties": "PARAPHRASE_ROUNDTRIP_OK distinct_formulas=100000 distinct_texts=100000 depths=[0, 11, 411, 4507, 9342, 10436, 75293]",
+    "spec_vectors": "PARAPHRASE_SPEC_VECTORS_OK files=40 formulas=82 round_trip=70 sort_refused=12",
+    "python_vectors": "PARAPHRASE_VECTORS_OK positive=17 negative=12"
+  },
+  "tcb": {
+    "correctness": "15262+747130=762392 (inalterada)",
+    "fidelity_own": "1690 -> 2467 (logos-seal 779)"
+  }
+}

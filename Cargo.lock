@@ -395,6 +395,12 @@ dependencies = [
 [[package]]
 name = "logos-seal"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-air-text",
+ "logos-canon",
+ "logos-crypto",
+]
 
 [[package]]
 name = "logos-token"

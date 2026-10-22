@@ -102,6 +102,26 @@ if sys.argv[1] == "render_template":
         (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
 SEED
   fi
+  if [ "$t" = paraphrase_parse ]; then
+    # Textos válidos dos vetores, prefixados pelo índice do vocabulário que os lê.
+    python3 - <<'SEED'
+import hashlib
+from pathlib import Path
+corpus = Path("corpus/paraphrase_parse")
+corpus.mkdir(parents=True, exist_ok=True)
+vocabularies = []
+for line in Path("../spec/vectors/paraphrase/vectors.tsv").read_text().splitlines():
+    if line.startswith("#"):
+        continue
+    _, vocabulary, formula, text, _ = line.split("\t")
+    if vocabulary not in vocabularies:
+        vocabularies.append(vocabulary)
+    selector = bytes([vocabularies.index(vocabulary)])
+    for wire in (selector + text.encode(), selector + bytes.fromhex(formula) if formula != "-" else b""):
+        if wire:
+            (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+SEED
+  fi
   : > "../fuzz-logs/$t.log"
   remaining="$seconds"
   batch=1

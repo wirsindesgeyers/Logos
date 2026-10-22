@@ -1,0 +1,100 @@
+# Corpus de revisão da Etapa 9.1 (rascunho de autoria do agente; ver README.md).
+# Vocabulário vocabulary/v2: render_pt alinhado à ordem final dos símbolos.
+vocab v1 {
+  sort Pessoa
+  sort Recurso
+  sort Papel
+  sort Equipe
+  sort Acao
+  const admin: Papel gloss "papel de administrador"
+  const professor: Papel gloss "papel de professor"
+  const aluno: Papel gloss "papel de aluno"
+  const auditor: Papel gloss "papel de auditor"
+  const ler: Acao gloss "ação de leitura"
+  const escrever: Acao gloss "ação de escrita"
+  const apagar: Acao gloss "ação de exclusão"
+  const compartilhar: Acao gloss "ação de compartilhamento"
+  const exportar: Acao gloss "ação de exportação"
+  const ti: Equipe gloss "equipe de TI"
+  const juridico: Equipe gloss "equipe jurídica"
+  func dono(Recurso): Pessoa gloss "dono do recurso"
+  func equipe_de(Pessoa): Equipe gloss "equipe da pessoa"
+  func responsavel(Equipe): Pessoa gloss "responsável pela equipe"
+  func pasta(Recurso): Recurso gloss "pasta que contém o recurso"
+  pred TemPapel(Pessoa, Papel) gloss "pessoa tem papel"
+  pred Pode(Pessoa, Acao, Recurso) gloss "pessoa pode executar ação no recurso"
+  pred Membro(Pessoa, Equipe) gloss "pessoa é membro da equipe"
+  pred Sensivel(Recurso) gloss "recurso contém dados pessoais sensíveis"
+  pred Publico(Recurso) gloss "recurso é público"
+  pred Arquivado(Recurso) gloss "recurso está arquivado"
+  pred Consentiu(Pessoa, Recurso) gloss "pessoa consentiu com o uso do recurso"
+  pred AprovouRevisao(Pessoa, Recurso) gloss "pessoa aprovou a revisão do recurso"
+  pred Externo(Pessoa) gloss "pessoa é colaboradora externa"
+  pred Ativo(Pessoa) gloss "pessoa tem conta ativa"
+  pred MFA(Pessoa) gloss "pessoa usa autenticação de dois fatores"
+  pred Retido(Recurso) gloss "recurso está sob retenção legal"
+  pred Manutencao() gloss "sistema em manutenção"
+  pred Emergencia() gloss "incidente de segurança declarado"
+  render_pt [
+    "o papel de administrador", "o papel de professor", "o papel de aluno",
+    "o papel de auditor", "ler", "escrever", "apagar", "compartilhar", "exportar",
+    "a equipe de TI", "a equipe jurídica",
+    "o dono de {0}", "a equipe de {0}", "o responsável por {0}", "a pasta que contém {0}",
+    "{0} tem {1}", "{0} pode {1} o recurso {2}", "{0} participa de {1}",
+    "{0} contém dados pessoais sensíveis", "{0} tem acesso público", "{0} está em arquivo",
+    "{0} consentiu com o uso de {1}", "{0} aprovou a revisão de {1}",
+    "{0} tem vínculo externo", "{0} tem conta ativa",
+    "{0} usa autenticação de dois fatores", "{0} está sob retenção legal",
+    "o sistema está em manutenção", "há um incidente de segurança declarado"
+  ]
+}
+claim P01: forall p:Pessoa. forall r:Recurso. Publico(r) -> Pode(p, ler, r)
+claim P02: forall p:Pessoa. forall r:Recurso. dono(r) = p -> Pode(p, escrever, r)
+claim P03: forall p:Pessoa. forall r:Recurso. TemPapel(p, admin) -> Pode(p, apagar, r)
+claim P04: forall p:Pessoa. forall r:Recurso. Sensivel(r) and Externo(p) -> not Pode(p, ler, r)
+claim P05: forall p:Pessoa. forall r:Recurso. Retido(r) -> not Pode(p, apagar, r)
+claim P06: forall p:Pessoa. forall r:Recurso. Pode(p, escrever, r) -> Ativo(p)
+claim P07: forall p:Pessoa. TemPapel(p, admin) -> MFA(p)
+claim P08: forall p:Pessoa. forall r:Recurso. Sensivel(r) and Pode(p, exportar, r) -> TemPapel(p, auditor)
+claim P09: forall r:Recurso. Sensivel(r) -> not Publico(r)
+claim P10: forall p:Pessoa. forall r:Recurso. Arquivado(r) -> not Pode(p, escrever, r)
+claim P11: Manutencao() -> forall p:Pessoa. forall r:Recurso. not TemPapel(p, admin) -> not Pode(p, escrever, r)
+claim P12: forall p:Pessoa. forall r:Recurso. Pode(p, compartilhar, r) -> dono(r) = p or TemPapel(p, admin)
+claim P13: forall p:Pessoa. Externo(p) -> not TemPapel(p, admin)
+claim P14: forall p:Pessoa. forall e:Equipe. Membro(p, e) -> Ativo(p)
+claim P15: forall e:Equipe. Membro(responsavel(e), e)
+claim P16: forall p:Pessoa. forall r:Recurso. Membro(p, equipe_de(dono(r))) -> Pode(p, ler, r)
+claim P17: forall r:Recurso. Sensivel(r) -> exists p:Pessoa. Consentiu(p, r)
+claim P18: forall p:Pessoa. forall r:Recurso. Sensivel(r) and Pode(p, ler, r) -> Consentiu(dono(r), r)
+claim P19: forall r:Recurso. Publico(r) -> exists p:Pessoa. AprovouRevisao(p, r) and TemPapel(p, professor)
+claim P20: forall p:Pessoa. forall r:Recurso. TemPapel(p, aluno) -> not Pode(p, apagar, r)
+claim P21: forall p:Pessoa. forall r:Recurso. Pode(p, apagar, r) -> TemPapel(p, admin) or dono(r) = p
+claim P22: forall p:Pessoa. forall r:Recurso. AprovouRevisao(p, r) -> not dono(r) = p
+claim P23: Emergencia() -> forall p:Pessoa. Externo(p) -> not Ativo(p)
+claim P24: forall p:Pessoa. forall r:Recurso. Pode(p, ler, pasta(r)) -> Pode(p, ler, r)
+claim P25: forall r:Recurso. Publico(r) <-> Publico(pasta(r))
+claim P26: forall p:Pessoa. forall r:Recurso. Pode(p, escrever, r) -> Pode(p, ler, r)
+claim P27: forall p:Pessoa. TemPapel(p, auditor) -> forall r:Recurso. Pode(p, ler, r)
+claim P28: forall p:Pessoa. TemPapel(p, auditor) -> forall r:Recurso. not Pode(p, escrever, r)
+claim P29: forall p:Pessoa. not (TemPapel(p, aluno) and TemPapel(p, professor))
+claim P30: forall p:Pessoa. TemPapel(p, admin) -> Membro(p, ti)
+claim P31: forall r:Recurso. Retido(r) -> not Arquivado(r)
+claim P32: forall p:Pessoa. forall r:Recurso. Retido(r) and Pode(p, ler, r) -> Membro(p, juridico) or TemPapel(p, auditor)
+claim P33: exists p:Pessoa. TemPapel(p, admin)
+claim P34: forall e:Equipe. exists p:Pessoa. Membro(p, e) and Ativo(p)
+claim P35: forall p:Pessoa. forall q:Pessoa. forall r:Recurso. dono(r) = p and dono(r) = q -> p = q
+claim P36: forall p:Pessoa. forall r:Recurso. Externo(p) and Pode(p, escrever, r) -> exists q:Pessoa. AprovouRevisao(q, r)
+claim P37: forall p:Pessoa. forall r:Recurso. Pode(p, exportar, r) -> not Externo(p)
+claim P38: forall p:Pessoa. Externo(p) and Ativo(p) -> MFA(p)
+claim P39: forall p:Pessoa. forall r:Recurso. Pode(p, ler, r) or Pode(p, escrever, r) -> Ativo(p)
+claim P40: not (Manutencao() and Emergencia())
+claim P41: forall r:Recurso. Sensivel(r) -> Sensivel(pasta(r))
+claim P42: forall p:Pessoa. forall r:Recurso. Pode(p, compartilhar, r) and Sensivel(r) -> false
+claim P43: forall p:Pessoa. TemPapel(p, professor) -> not Externo(p)
+claim P44: forall p:Pessoa. forall r:Recurso. TemPapel(p, aluno) and Sensivel(r) -> not Pode(p, ler, r)
+claim P45: forall e:Equipe. TemPapel(responsavel(e), professor) or TemPapel(responsavel(e), admin)
+claim P46: forall r:Recurso. Arquivado(r) and Publico(r) -> exists p:Pessoa. TemPapel(p, auditor) and AprovouRevisao(p, r)
+claim P47: forall p:Pessoa. forall r:Recurso. Pode(p, apagar, r) -> not Retido(r)
+claim P48: Emergencia() -> forall p:Pessoa. forall r:Recurso. Pode(p, escrever, r) -> TemPapel(p, admin)
+claim P49: forall r:Recurso. not Externo(dono(r))
+claim P50: forall p:Pessoa. forall r:Recurso. Pode(p, ler, r) <-> Publico(r) or dono(r) = p or TemPapel(p, auditor)

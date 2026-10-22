@@ -140,7 +140,7 @@ name = "logos-seal"
 properties = ["fidelity"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/error.rs", "src/grammar.rs", "src/lib.rs", "src/paraphrase.rs", "src/parse.rs", "src/render.rs"]
 
 [[crate]]
 name = "logos-attest"
