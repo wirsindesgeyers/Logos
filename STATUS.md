@@ -252,9 +252,9 @@ fontes opacas não demonstram autenticação.
 | 5.3 PROPOSE e regra de citação | ⚠ concluída localmente após correção do índice; CI/ARM pendentes | Correção19/out (ADR0040): PROPOSE usa projeção viva e sufixos autenticados. Quatro propostas sucessivas passam com cache de disco indisponível; com5mil eventos, propostas após abertura custaram3,32/3,31ms. Novo full verify/selftest VERIFY_OK/exit0 em2006,93s. Handler generate/snapshot/CAS/transições, autoria do Genesis e resultado novo propose-result/v1 (ADR0038). Oito testes novos, executável real,50 ataques P1/STATE14/época9 passaram;14 mutações compiladas detectadas, fontes restauradas. Fuzz560503/61s/exit0; log5.2 preservado byte a byte. Full verify/selftest VERIFY_OK/exit0 em1568.40s,252 Python+25 TCB. [Plano](docs/plans/etapa-5.3.md)/[evidências](docs/plans/etapa-5.3-evidencias.json). |
 | 5.4 CERTIFY e registry de checkers | ⚠ concluída localmente; CI pendente | ADR0041; CERTIFY/REFUTE reais, registry por formato/hash e retomada privada de Pending. Onze integrações novas, dez mutações com controles positivos e full verify/selftest VERIFY_OK. |
 | 5.5 Não-vacuidade/WITNESS | ⚠ concluída localmente; CI pendente | ADR0042; WITNESS real, antes/depois, prazo lógico, replay e consulta de uso. Γ inconsistente prova False mas não autoriza ação;10 mutações, fuzz e full verify/selftest passaram. |
-| 5.6 Bloqueio de re-proposta refutada (S4) | 🚧 implementada localmente; verificação completa da pilha pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
-| 5.7 Assumptions com escopo | 🚧 implementada localmente; verificação completa da pilha pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
-| 5.9 Retratação/cascata ATMS | 🚧 implementada localmente; verificação completa da pilha pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
+| 5.6 Bloqueio de re-proposta refutada (S4) | ⚠ concluída localmente; CI pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
+| 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
+| 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 
 ## Etapas compartilhadas com a Fase10
 
@@ -281,7 +281,7 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | Etapa | Estado | Evidência / pendência |
 | --- | --- | --- |
 | 9.1a Templates versionados | ⚠ concluída localmente; CI pendente | ADR0046; vocabulary/v2, vetores14, diferencial Rust/Python, quatro mutações, fuzz3600s+60s, cenário v2 no kernel/MCP/auditor e full verify/selftest VERIFY_OK em3566.59s. [Evidências](docs/plans/etapa-9.1a-evidencias.json). |
-| 9.1 Renderizador/parser PT | 🚧 implementada localmente; revisão humana pendente | ADR0050, `logos-seal`. Round-trip 100k distintas (75k na profundidade 6) e 82 fórmulas de spec/vectors (70 voltam, 12 recusadas por tipagem), vetores Python independentes, 11 mutações + 1 equivalente, fuzz `paraphrase_parse` 3600s/17,45M execuções. Critérios 1–2 demonstrados, marcados após full verify na ponta (ADR0051). **Critério 3: revisão humana de 50 paráfrases é do mantenedor** ([material](docs/plans/etapa-9.1-revisao/README.md)). |
+| 9.1 Renderizador/parser PT | 🚧 critérios 1–2 concluídos localmente; **revisão humana pendente** | ADR0050, `logos-seal`. Round-trip 100k distintas (75k na profundidade 6) e 82 fórmulas de spec/vectors (70 voltam, 12 recusadas por tipagem), vetores Python independentes, 11 mutações + 1 equivalente, fuzz `paraphrase_parse` 3600s/17,45M execuções. Critérios 1–2 marcados após o full verify da pilha (VERIFY_OK em 401fe50). **Critério 3: revisão humana de 50 paráfrases é do mantenedor** ([material](docs/plans/etapa-9.1-revisao/README.md)). |
 
 ## Trilha de interface e workspaces (Apêndice G, proposta)
 
@@ -299,6 +299,9 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | WS.9 Operação/release | ⏳ não iniciada | WS.2–WS.8, MEM.7, 10.8, 23.1 |
 
 ## Pendências de verificação (execução remota)
+
+Pilha 9.1/WS.0/5.9/5.6/5.7 (até 401fe50): full verify/selftest local passou; CI
+remota/ARM/noturno não consultados. Recibo em docs/plans/pilha-2026-10-22-evidencias.json.
 
 Etapa9.1a: full verify/selftest local passou; CI remota/ARM/noturno do novo
 commit ainda não consultados. Evidências em docs/plans/etapa-9.1a-*.json.
@@ -554,19 +557,21 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: verificação completa da pilha e revisão humana da 9.1
+## Próximo passo: revisão humana da 9.1, depois 5R.3
 
-Pilha local (ADR0051, verificação por pilha): 9.1 + WS.0 na `main`; 5.9
-(ATMS/retratação, ADR0052), 5.6 (S4, ADR0053) e 5.7 (assumptions com escopo,
-ADR0054) em branches `etapa-*` com worktrees `../LOGOS-5.x`, a rebasear em ordem
-5.9 → 5.6 → 5.7. Cada uma tem verificação direcionada e mutações; falta **um**
-`ci/verify.sh --selftest` na ponta, depois marcar critérios e só então push.
+Pilha local verificada: `ci/verify.sh --selftest` VERIFY_OK/exit0 em2964,7s
+sobre 401fe50 (9.1, WS.0, 5.9, 5.6, 5.7 e docs), 577 Rust e 317+25 Python;
+[recibo](docs/plans/pilha-2026-10-22-evidencias.json). Nada enviado ao remoto;
+push só quando o mantenedor pedir. CI remota/ARM/noturno pendentes.
 
 Do mantenedor: (1) revisão humana das 50 paráfrases e decisão sobre a origem do
-corpus (docs/plans/etapa-9.1-revisao/README.md), que fecha a 9.1 e libera a
-5R.2; (2) revisar os ADRs aceitos por delegação (0047–0054). Riscos: o `snapshot`
-da 3.3 custa proporcional aos ancestrais das citações (ver Armadilhas); o
-diferencial ATMS leva ~11 min no verify.
+corpus ([material](docs/plans/etapa-9.1-revisao/README.md)); fecha a 9.1 e libera
+a 5R.2; (2) revisar as decisões tomadas por delegação (ADRs 0047–0054).
+
+Trabalho técnico já desbloqueado: **5R.3** (caderno de hipóteses: 5R.1, 3.3, 5.7 e
+5.9 prontas), 5.8 (especulação) e 5.10 (revogação/recheck, sobre o ATMS da 5.9).
+Riscos: custo do `snapshot` proporcional aos ancestrais (Armadilhas) e o
+diferencial ATMS (~11 min) no verify.
 
 ## Decisões em aberto para o mantenedor
 
@@ -1935,3 +1940,5 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Docs: refinamento do roadmap e da trilha WS/5R a pedido do mantenedor, preservando integralmente o chat simples sem fricção e a adaptação progressiva à finalidade da sessão ou requisição (`WS§2.2`: conversa simples → verificação/gráficos inline → *Domain Packs* multi-purpose → projetos/workspace científico → CLI one-shot e sidecar MCP). Incorporados nos docs (`ROADMAP.md`, `WS§`, ADRs 0047/0049, `fase-ws.md`, `visao-e-andamento.md`, `limits.md`): (1) bundle local `notebook/v1` na 5R.3 compatível com `ProjectArtifact` antes de MEM.0/MEM.1; (2) executor isolado de receitas (`bwrap`/`prlimit`) para `Visualization`/`Dataset` (WS.5) e atestador `sandbox-run` (6.3); (3) distinção entre extensão monotônica de vocabulário por `used_symbols(φ)` e mudança incompatível (5R.2/5R.4/WS.5/15.7); (4) operações científicas sobre os checkers existentes (`WS§11.1`: experimento crucial / desambiguação ativa 2.4/2.5+2.3/2.6, diagnóstico de conflito mínimo via MUS checado 4.4+2.3 antecipado para 5R.3/WS.8, e teste/poda de hipóteses contra tabelas `model/v1`); (5) *Domain Packs*, ferramenta MCP `logos_compare` e modo CLI one-shot/headless; (6) nota de evolução aritmética (`UFLIA`/`UFLRA`) na 14.1 e riscos no Apêndice E. Nenhum critério ou etapa existente removido.
 
 - 2026-10-22 — Etapa9.1 implementada localmente sobre57c8a03 (ADR0050): `logos-seal` com render_pt/parse_pt paraphrase-pt/v1, releitura obrigatória, recusa de vocabulário ambíguo, h(P) no domínio reservado. 100k fórmulas distintas, 82 de spec/vectors, vetores Python independentes, 11 mutações (+1 equivalente), fuzz 3600s/17,45M sem crash. Corpus e planilha de revisão prontos; revisão humana é do mantenedor. WS.0 concluída por delegação: ADRs 0047–0049 aceitos, stack decidida, verificador `tools/check_ws_docs.py` e plano de fase. ADR0051: verificação completa por pilha. Primeiro full verify da 9.1 falhou exit1/3391s no verificador novo por numeração de ADR (0053 criado antes de 0051/0052 das branches); corrigido renomeando. Em paralelo (worktrees): 5.9 (ATMS/retratação), 5.6 (S4) e 5.7 (escopos) com verificação direcionada. Full verify da pilha pendente; sem push.
+
+- 2026-10-22 — Pilha verificada: full verify/selftest VERIFY_OK/exit0 em2964,7s sobre401fe50, 577 Rust, 317+25 Python, crash 10k/24 SIGKILL, índice 1M p99=18994ns, farm500, MCP, planilha 9.1 e diferencial ATMS 10k. Marcados: 9.1 critérios 1–2 (o 3, revisão humana, segue aberto), 5.9, 5.6 e 5.7. Quatro tentativas anteriores não contadas: teste 5.3 de escopo fixo (atualizado à derivação da 5.7), `fmt` de teste, subseções WS§ citadas por edições de outra sessão ainda não commitadas (6ca273c) e teste de integração 10.1 que esperava ASSUME Unavailable (401fe50). A pilha teve quatro commits de etapa sem full verify, um acima do limite do ADR0051. Partes do trabalho da outra sessão entraram por engano em cc14e43/0e32c15/098f00f, registrado em 6ca273c. Worktrees/branches temporárias removidas. Sem push.

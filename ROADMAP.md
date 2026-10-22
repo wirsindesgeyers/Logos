@@ -1102,8 +1102,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Variações triviais (mesma fórmula, premissas reordenadas) já colapsam no mesmo `h(O)` pela canonicalização.
 
 **Critério de conclusão.**
-- [ ] Teste: refutar, re-propor a mesma coisa com citações em outra ordem → recusado.
-- [ ] Teste: um prover que dá timeout na segunda tentativa não converte refutação em `UNKNOWN`.
+- [x] Teste: refutar, re-propor a mesma coisa com citações em outra ordem → recusado.
+- [x] Teste: um prover que dá timeout na segunda tentativa não converte refutação em `UNKNOWN`.
 
 ---
 
@@ -1122,8 +1122,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Assumption do agente **nunca** satisfaz requisito de confiança de política para ações.
 
 **Critério de conclusão.**
-- [ ] Claim derivado de assumption aparece como condicional no `Query`.
-- [ ] Rejeitar uma assumption (Etapa 5.9) invalida os dependentes.
+- [x] Claim derivado de assumption aparece como condicional no `Query`.
+- [x] Rejeitar uma assumption (Etapa 5.9) invalida os dependentes.
 
 ---
 
@@ -1159,8 +1159,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Eventos `Invalidated { claim, cause_chain }`; nada é apagado.
 
 **Critério de conclusão.**
-- [ ] Teste com DAG de 10k nós: retratação produz exatamente o conjunto esperado (comparado com implementação de referência ingênua em Python).
-- [ ] Teste de rota independente: claim com duas provas sobre premissas disjuntas sobrevive à retratação de uma.
+- [x] Teste com DAG de 10k nós: retratação produz exatamente o conjunto esperado (comparado com implementação de referência ingênua em Python).
+- [x] Teste de rota independente: claim com duas provas sobre premissas disjuntas sobrevive à retratação de uma.
 
 ---
 
@@ -1843,8 +1843,8 @@ especificações/vetores independentes, fuzz e controles por mutação.
   (LaTeX/KaTeX) não substitui esta saída em atos de assinatura (W3).
 
 **Critério de conclusão.**
-- [ ] Round-trip `parse_pt(render_pt(φ)) == φ` em property test com 100k fórmulas aleatórias até profundidade 6, e em todas as fórmulas de `spec/vectors/`.
-- [ ] Gramática da língua controlada documentada; `parse_pt` com fuzz target (≥ 1h, como todo parser de TCB).
+- [x] Round-trip `parse_pt(render_pt(φ)) == φ` em property test com 100k fórmulas aleatórias até profundidade 6, e em todas as fórmulas de `spec/vectors/`.
+- [x] Gramática da língua controlada documentada; `parse_pt` com fuzz target (≥ 1h, como todo parser de TCB).
 - [ ] Revisão humana de 50 paráfrases de políticas reais: nenhuma lida de forma errada (registrar a revisão).
 
 ---

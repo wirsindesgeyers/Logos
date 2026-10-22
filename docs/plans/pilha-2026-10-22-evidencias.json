@@ -1,0 +1,105 @@
+{
+  "tip": "401fe50",
+  "covers": [
+    "cc14e43 WS.0/ADR0051",
+    "0e32c15 9.1",
+    "5c2bca8 5.9",
+    "098f00f 5.6",
+    "bd8e275 5.7",
+    "6ca273c docs outra sessão",
+    "401fe50 correção integração ASSUME"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "exit": 0,
+    "seconds": 2964.7,
+    "runtime_and_normative_files_unchanged": true,
+    "changed": [],
+    "file_count": 515,
+    "verify_ok": true,
+    "log_sha256": "f86e4cb590699f0e5f9eed2544991755330f3de9ee22cfccb9ae92e0d8369b64",
+    "input_manifest_sha256": "d7e5fd3a814582c2afe5252a6f6a12099cbbc589647689991250c5209b184b84"
+  },
+  "statistics": {
+    "rust_passed": 577,
+    "python": [
+      "317 passed in 486.01s",
+      "25 passed in 1.43s"
+    ],
+    "ledger_crash": "events=10000 sigkill=24 acknowledged=10000",
+    "index_latency": "1M eventos, p99=18994ns",
+    "farm": "500, p50=1.147s"
+  },
+  "attempts_not_counted": {
+    "attempt1": {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 101,
+      "seconds": 728.96,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 515,
+      "verify_ok": false,
+      "log_sha256": "8547924e2e2d03d6c8452ce4dc80f763828de870c760cc16b739b85c27c75ff4",
+      "input_manifest_sha256": "96569740f865d334bf8813166473be80275600bf8b907e711b6bd966addbbbf3"
+    },
+    "attempt2": {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 1,
+      "seconds": 4.13,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 515,
+      "verify_ok": false,
+      "log_sha256": "64eb92f52f3a6179559fc93d6a82af5fadedfc7dcd8f139ce4000bed1feff453",
+      "input_manifest_sha256": "0b757a277a68cd92c923085ce17fa0e6947f9770efa85b45d261cccd35108666"
+    },
+    "attempt3": {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 1,
+      "seconds": 2850.45,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 515,
+      "verify_ok": false,
+      "log_sha256": "dc021682d45a0c1f475926edb17aa9e7a0e8a5bd1959485140f9ec069502c854",
+      "input_manifest_sha256": "9e839c95877b346174170439f94fecca8f3cd87caadd90c469747f7ece6125d7"
+    },
+    "attempt4": {
+      "status": "finished",
+      "command": [
+        "ci/verify.sh",
+        "--selftest"
+      ],
+      "exit": 1,
+      "seconds": 2968.77,
+      "runtime_and_normative_files_unchanged": true,
+      "changed": [],
+      "file_count": 515,
+      "verify_ok": false,
+      "log_sha256": "9afbbdee5396e7dbf3c247acb82b8a1c462ced02f81768c06495d1824f767be6",
+      "input_manifest_sha256": "9e839c95877b346174170439f94fecca8f3cd87caadd90c469747f7ece6125d7"
+    }
+  },
+  "attempt_causes": {
+    "attempt1": "propose.rs (5.3) esperava escopo fixo; atualizado para a derivação da 5.7",
+    "attempt2": "cargo fmt do teste alterado",
+    "attempt3": "subseções WS§ citadas por edições de outra sessão ainda não commitadas (6ca273c)",
+    "attempt4": "teste de integração 10.1 esperava ASSUME Unavailable (401fe50)"
+  }
+}
