@@ -16,6 +16,8 @@ Agentes mediados por prova: um sistema de efeitos com **ledger epistêmico**, em
 | [`docs/spec/`](docs/spec/LOGOS-proof-carrying-agents.md) | Especificação conceitual (citada como `§N` no roadmap) |
 | [`docs/plans/`](docs/plans/) | Planos de fase e de etapa |
 | [`docs/adr/`](docs/adr/) | Decisões de arquitetura |
+| [`docs/spec/LOGOS-workspace-and-web-ui.md`](docs/spec/LOGOS-workspace-and-web-ui.md) | **Proposta**, não implementada: um harness, clientes TUI/CLI/web local, projetos, artefatos e visualizações (Apêndice G do roadmap) |
+| [`docs/visao-e-andamento.md`](docs/visao-e-andamento.md) | Resumo conceitual do projeto e do andamento, para leitura rápida (o estado oficial é o `STATUS.md`) |
 | [`spec/air.md`](spec/air.md) | Sintaxe FOL-ms-eq/v1: formato canônico, De Bruijn e limites estruturais |
 | [`spec/vocabulary.md`](spec/vocabulary.md) | Vocabulário versionado, grounding, dependências acíclicas e compatibilidade |
 | [`spec/sort-check.md`](spec/sort-check.md) | Tipagem, escopo De Bruijn, precedência e caminhos de erros |

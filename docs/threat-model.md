@@ -75,6 +75,45 @@ mitigação reduz risco ou torna dependências visíveis; não resolve o limite.
 | 17 | Certificados gigantes | A2, A3, A6 | 0.5 (`TooLarge`), 0.6 (`Unknown(Size)`), 17.3; sem teto global de RSS |
 | 18 | Check dependente da máquina/timeout | A3, A5 | 0.6; passos determinísticos, timeout externo é `Unknown(Time)` |
 
+## Superfície de interface web e workspaces (proposta)
+
+Revisão de 2026-10-21 para a trilha proposta do
+[Apêndice G](../ROADMAP.md#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta)
+([extensão WS§](spec/LOGOS-workspace-and-web-ui.md), ADRs 0047–0049 propostos).
+**Nada disso está implementado**; a tabela fixa destinos de mitigação. IDs `AW`/`TW`
+ficam fora das numerações A1–A8 e 1–18 da 0.7, que permanecem as da §10.
+
+Ativos adicionais: segredo de sessão do navegador; dados de projetos e artefatos
+(confidencialidade e integridade de custódia); contexto composto para o LLM;
+originais da memória. O servidor web, o frontend e os renderers não são TCB de
+correção nem de fidelidade: a interface de confirmação da 9.2 continua sendo a única
+superfície de assinatura.
+
+| ID | Participante e capacidade | Ameaças |
+| --- | --- | --- |
+| AW1 | Site malicioso aberto no mesmo navegador: envia requisições ao servidor local, tenta DNS rebinding, CSRF e WebSocket entre origens | TW3, TW4, TW9 |
+| AW2 | Processo ou usuário local sem privilégio: conecta-se à porta loopback e tenta ler sessões, projetos ou assets | TW5, TW7, TW11 |
+| AW3 | Conteúdo hostil renderizado (documento, dataset, legenda, nome de projeto, resposta do LLM, resultado MCP): tenta executar script, exfiltrar dados, injetar instruções ou travar o cliente | TW1, TW2, TW6, TW8, TW10, TW11, TW12 |
+
+A1 (LLM injetado), A2 (agente malicioso), A5 (operador curioso) e A8 (interface
+enganosa) também alcançam esta superfície: A1/A2 produzem AW3; A8 corresponde a TW13.
+
+| ID | Ameaça | Atacantes | Destino de mitigação / risco residual |
+| --- | --- | --- | --- |
+| TW1 | Script via Markdown/HTML/SVG | AW3, A1 | WS.1, WS.5: lista fechada de componentes, sanitização, CSP sem eval |
+| TW2 | Exfiltração por recurso externo | AW3, A1 | WS.2, WS.5: nenhuma requisição externa por padrão |
+| TW3 | DNS rebinding/`Host` falso | AW1 | WS.2: allowlist de `Host` |
+| TW4 | CSRF, CORS, WebSocket entre origens | AW1 | WS.2: `Origin`, token, `SameSite` |
+| TW5 | Acesso por outro processo local | AW2 | WS.2, 5.11: segredo de sessão; usuários de SO separados |
+| TW6 | Badge forjado ou status stale como atual | AW3, A1, A2 | WS.1, WS.5: status só por consulta, marca de idade/cursor |
+| TW7 | Vazamento entre projetos/stores | AW2, A2, A5 | WS.3, WS.6: ACL a cada acesso; revogação de snapshots; A5 continua podendo ler o que controla |
+| TW8 | Injeção via memória/documentos/projeto | AW3, A1 | WS.6, MEM.5/6, 6.6, 11.1: dados tipados e roles preservados; escolha entre ações permitidas continua fundamental (ameaça 13) |
+| TW9 | Rota alternativa a efeito/assinatura | AW1, A2 | WS.2, 9.2: inventário de rotas; página de assinatura só do kernel |
+| TW10 | Compilador de documento executa código | AW3 | WS.7: sandbox sem rede/shell-escape/chaves |
+| TW11 | Amplificação de recursos | AW2, AW3 | WS.2, WS.4, WS.5: limites de bytes, nós, séries, conexões |
+| TW12 | Visualização infiel aos dados/estatística | AW3, A1 | WS.5, WS.8: dados por hash, receita e semântica declaradas; representar o fenômeno continua L1 |
+| TW13 | Interface que imita a de assinatura | A8, AW1 | 9.2, WS.2: processo/origem próprios; confiança excessiva continua fundamental (ameaça 16) |
+
 ## Premissas de plataforma e fora do escopo
 
 - Compilador/toolchain, SO, hardware e filesystem executam seus contratos.

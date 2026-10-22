@@ -12,6 +12,13 @@ Referência conceitual: `LOGOS — Proof-Carrying Agents` (Oct 1, 2026), em [`do
 > lotes e compactor estão em E§5–6/20/22. MEM não está implementada, não muda
 > os critérios demonstrados e não desloca a próxima etapa principal 5.4.
 
+> **Interface e workspaces, revisão de 2026-10-21.** Trilha transversal proposta
+> no [Apêndice G](#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta)
+> (WS.0–WS.9; [extensão WS§](docs/spec/LOGOS-workspace-and-web-ui.md), ADRs
+> 0047–0049 propostos): um harness, clientes TUI/CLI/web, projetos opcionais,
+> artefatos, visualizações e documentos, fora da TCB. Nada implementado; não muda
+> critérios demonstrados, o caminho crítico nem o próximo passo do STATUS.
+
 > **Revisão 2 (2026-10-01).** Fase 0 revisada contra a especificação. Corrigidos: 0.6 passa a depender da 0.3 (`Budget` e `CheckOutcome` são registrados nos eventos, §10 ameaça 18) e proíbe também `Rejected → Refuted` (§4.4); 0.4 com assinatura e `KeyId` agnósticos de algoritmo (passkeys usam ES256, §6) atrás de uma trait `Signer` (HSM, 13.1), hash de bytes crus (`h(checker)`, certificados de prover) e mecanismo `Domain` com tags reservadas; 0.3 com identificador de versão `canon/v1` (§4.1) e versão de Unicode fixada para NFC; 0.5 com `spec/cas.md` e API preparada para streaming (§4, §7); 0.7 com atacante que bifurca o ledger (ameaça 9) e TOCTOU (ameaça 10) em `limits.md`; 0.1 com ADR registrando as divergências em relação à especificação (token próprio em vez de Biscuit; tese da §13). Novo crate de TCB `logos-core` para os tipos da 0.6. Fuzz longo roda em job noturno. Especificação movida para `docs/spec/`; convenção `§N.k` explicitada.
 
 > **Revisão 1 (2026-10-01).** Toda etapa ganhou os campos *Depende de (recebe pronto)* e *Fora do escopo*. Corrigidos: semântica de negação entre a rota Datalog e a rota FOL (4.1, 7.3); critério de injetividade da paráfrase (9.1); recheck LRAT no auditor (4.5). Decidida a divisão de linguagens (§1, ADR 0002): TCB e TUI em Rust, agente/farm/avaliação em Python. AIR = *Argument Intermediate Representation*. Fases 19–22 marcadas fora do horizonte do primeiro ciclo (§5). Acrescentado o procedimento de geração de planos (§0).
@@ -57,6 +64,7 @@ Referência conceitual: `LOGOS — Proof-Carrying Agents` (Oct 1, 2026), em [`do
 - [Apêndice D — Métricas que o sistema precisa emitir](#apêndice-d--métricas-que-o-sistema-precisa-emitir)
 - [Apêndice E — Riscos do projeto e pontos de decisão](#apêndice-e--riscos-do-projeto-e-pontos-de-decisão)
 - [Apêndice F — Memória persistente (trilha proposta)](#apêndice-f--memória-persistente-trilha-proposta)
+- [Apêndice G — Interface web, workspaces e artefatos (trilha proposta)](#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta)
 
 ---
 
@@ -121,6 +129,7 @@ Decisões tomadas aqui para que as etapas sejam acionáveis. Mudá-las é possí
 | Modelo formal | Lean 4 | Mesmo ecossistema da camada 3; comunidade ativa |
 | Verificação de Rust | Kani para invariantes locais; Verus para módulos críticos (gerador de obrigações, appender, gateway) | §5 |
 | Licença | Definir na Etapa 0.1 (sugestão: Apache-2.0 / MIT dual) | — |
+| Clientes além da TUI | **Proposta, não fixada** (ADR 0047/0048): interface web local opcional, processo separado, fora da TCB, sem chaves nem escrita no ledger; stack só após decisão na WS.0 (Apêndice G) | Mesma experiência de chat sem segundo harness nem caminho privilegiado ao kernel; a assinatura continua na interface do lado do kernel (9.2) |
 
 ---
 
@@ -163,6 +172,12 @@ logos/
 └── bench/                          # benchmarks de desempenho e tamanho de certificado
 ```
 
+Componentes **propostos** pelo Apêndice G (não existem; nomes finais na WS.0):
+servidor web local e frontend (fora da TCB, cliente do harness como a TUI),
+registry de projetos/artefatos no store da memória (namespace `Artifact`/`Project`,
+`E§13`) e renderers de visualização/documento em sandbox. Nenhum deles entra em
+`tcb/manifest.toml`.
+
 `logos-audit` **não pode depender** de `logos-kernel` nem de `logos-ledger`: ele reimplementa a verificação a partir de `spec/`. Pode depender de `logos-canon`, `logos-crypto` e `logos-core` (primitivas sem estado), mas o hash de CAS, os domínios e o formato de eventos precisam estar em `spec/` para que uma reimplementação em outra linguagem seja possível. Isso é o que torna o recheck por terceiros real (§4.9).
 
 ---
@@ -191,6 +206,22 @@ Mais quatro invariantes de sistema:
 | **S3** | O mesmo input com os mesmos limites produz o mesmo resultado em qualquer máquina (determinismo) | 2.2 |
 | **S4** | Uma obrigação refutada não pode ser re-proposta (mesmo `h(O)`) | 5.6 |
 
+Invariantes **propostos** de interface e workspace (prefixo `W`, distinto de
+`P`/`S` e de `M1–M13`; texto integral em `WS§13`). Só passam a valer quando a
+etapa indicada for implementada:
+
+| ID | Invariante (resumo) | Primeiro teste em |
+| --- | --- | --- |
+| **W1** | Status exibido vem de consulta ao kernel/ledger; texto do LLM/harness nunca recebe badge | WS.1 |
+| **W2** | Servidor web/frontend/renderers sem chaves, sem escrita no ledger, sem gateway | WS.2 |
+| **W3** | Strings assináveis byte a byte; assinatura só na interface do lado do kernel | WS.1 (9.2 completa) |
+| **W4** | Save/pin/projeto/resumo/visualização não criam Fact/Policy/Verified/Seal/capability | WS.4 |
+| **W5** | Escopos isolados; revogação vale para handles, caches e snapshots antigos | WS.3 |
+| **W6** | Artefato recuperável até os originais ou erro declarado | WS.4 |
+| **W7** | Projeção obsoleta marcada stale, nunca recalculada silenciosamente | WS.5 |
+| **W8** | Conteúdo recuperado/renderizado é dado: sem instrução privilegiada, sem código | WS.5 / WS.6 |
+| **W9** | Chat sem projeto funciona e não herda contexto de projeto | WS.3 |
+
 ---
 
 ## 4. Definition of Done global
@@ -207,6 +238,7 @@ Vale para **toda** etapa, além do critério específico dela:
   - [ ] `tcb/manifest.toml` atualizado e `tcb/count.sh` rodado (LOC confiável reportado no PR).
 - [ ] Se mudou um formato serializado: vetores de teste (golden files) em `spec/vectors/` e bump de versão do formato.
 - [ ] Se mudou semântica de evento: entrada no Apêndice C e teste em `logos-audit`.
+- [ ] Se adicionou superfície de cliente/web/renderer (Apêndice G): testes negativos dos invariantes W e das ameaças TW aplicáveis; nenhuma rota de escrita no ledger, gateway ou assinatura; nada disso entra no manifesto da TCB.
 
 ---
 
@@ -239,14 +271,20 @@ Vale para **toda** etapa, além do critério específico dela:
 | 21 | HOL / modal *(fora do horizonte)* | modal, deôntica | Camada 4 | GG |
 | 22 | Framework único *(fora do horizonte)* | todos | Pesquisa | GG |
 | 23 | Produto | — | Binário único, release | G |
+| G ∥ | Interface web, workspaces e artefatos *(trilha proposta, Apêndice G)* | ambos | Chat web local; projeto científico persistente | G |
 
 Caminho crítico até o primeiro paper: **0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11**, com a 12 em paralelo a partir da 5 e a 13 parcialmente antes da 11 (o mínimo para a avaliação ser crível).
 
-**Trilha científica (ADR0037, aceita em20/out/2026).** Próximo principal5.5;
+**Trilha científica (ADR0037, aceita em20/out/2026).** Na aceitação, o próximo principal era5.5 (já concluída; próximo vigente no STATUS.md);
 depois iniciar5R, antecipando os componentes compartilhados de10.1/10.2,
 9.1 antes de5R.2 e5.7/5.9 antes de5R.3. A trilha não exige concluir a Fase10
 nem o gateway;5.6–5.12 restantes continuam previstas. Isso não altera o
 caminho crítico do paper de segurança acima nem os critérios dessas etapas.
+
+**Trilha de interface (Apêndice G, proposta em21/out/2026).** WS.0 é documental e
+pode ocorrer a qualquer momento; WS.1/WS.2 vêm depois de5R.4/5R.5; projetos
+(WS.3+) dependem de MEM.0/MEM.1 e o contexto compartilhado (WS.6) de MEM.5/MEM.6.
+A trilha não altera o caminho crítico acima nem a ordem da5R.
 
 **Horizonte do primeiro ciclo.** As Fases 19–22 ficam fora do horizonte até o fim da Fase 16 (decisão antecipada do último risco do Apêndice E). Não gerar planos de etapa para elas antes disso; os planos de fase podem existir só como esboço.
 
@@ -1186,6 +1224,9 @@ protocolo (5.2), as claims (5.3–5.5) e o ledger (3.x). Pode começar depois da
 A camada5R fica fora da TCB; dependências como9.1/5.7/5.9 mantêm seus contratos
 e suas TCBs. Nenhum critério da Fase10 é encerrado apenas por entregar um subconjunto.
 Histórico de chat não encerra a trilhaMEM; resumos/retrieval não viram premissas.
+A5R é o **perfil de pesquisa** do mesmo agente e do mesmo harness (ADR0047, proposto):
+não é um segundo assistente. Pontos de integração com o Apêndice G são notas, não
+dependências: nenhuma etapa5R depende de WS nem tem a web como critério.
 
 **Ordem da trilha:** 5.5 → cliente10.1/farm10.2 (perfil de pesquisa) →5R.1;
 9.1 antes de5R.2;5.9 →5.7 antes de5R.3; depois5R.4 →5R.5 →5R.6.
@@ -1252,6 +1293,10 @@ de premissas; antecipar5.7/5.9 com seus critérios integrais antes desta etapa.
   proveniência, sem semântica nova na TCB; atestações/Fact só entram pelos
   mecanismos das Fases6/7 quando existirem, nunca por conversão automática.
 - Exportação de relatório e auditoria; retratação atualiza a citabilidade.
+- Ponto de integração (Apêndice G): o caderno é a primeira instância dos tipos
+  `Hypothesis`/`EvidenceReference`/`ClaimReference` de `WS§7.3`; WS.4 o importa sem
+  perda. Persistência durável entre sessões e projetos compartilhados não são
+  critério desta etapa.
 
 **Critério de conclusão.**
 - [ ] 20 hipóteses de um domínio piloto com proveniência completa e nenhuma evidência
@@ -1273,6 +1318,8 @@ própria10.6 para começar. Seu critério completo continua na Fase10.
   `free_text` (LLM, marcado como não verificado).
 - Cartões de claim com status, premissas, contramodelo e lacunas; expansão para auditoria.
 - Nenhuma afirmação não verificada sem marcação.
+- Ponto de integração (Apêndice G): o modelo de blocos e a regra de cartão stale
+  desta etapa são o insumo do contrato de apresentação da WS.1.
 
 **Critério de conclusão.**
 - [ ] 50 respostas de teste sem conteúdo não verificado sem marcação.
@@ -1293,6 +1340,8 @@ compartilhando componentes; sem depender da10.7 completa,10.5 ou9.2.
 - Primeira integração via MCP com OpenCode e afins; TUI mínima em Rust
   (Ratatui/crossterm), compartilhada com10.7, depois.
 - Nenhuma reformatação de texto que o usuário venha a assinar.
+- Ponto de integração (Apêndice G): se o contrato WS.1 já existir, a TUI e o stream
+  de sessão o consomem; o cliente web (WS.2) vem depois e não é critério desta etapa.
 
 **Critério de conclusão.**
 - [ ] Demo gravada: pergunta científica → claims → veredicto → auditoria, sem editar AIR.
@@ -1749,6 +1798,9 @@ especificações/vetores independentes, fuzz e controles por mutação.
 - **Língua controlada com parser.** A saída do renderizador pertence a uma gramática fixa (`spec/paraphrase-pt.md`), e existe `parse_pt(String, V) -> Formula`, do lado do kernel, na mesma TCB de fidelidade. **Injetividade por construção:** se `parse_pt(render_pt(φ)) == φ` para toda `φ`, duas fórmulas diferentes não podem ter a mesma paráfrase. Um teste que só procura colisões não garante isso.
 - Bônus de segurança: o kernel pode reler a string que o usuário assinou e conferir que ela volta exatamente para `a` antes de aceitar a autorização (usado na 9.2).
 - Versão do renderizador e da gramática no hash da paráfrase.
+- Ponto de integração (Apêndice G): clientes TUI/web e documentos (WS.7) exibem a
+  saída de `render_pt` byte a byte com o hash; renderização tipográfica para leitura
+  (LaTeX/KaTeX) não substitui esta saída em atos de assinatura (W3).
 
 **Critério de conclusão.**
 - [ ] Round-trip `parse_pt(render_pt(φ)) == φ` em property test com 100k fórmulas aleatórias até profundidade 6, e em todas as fórmulas de `spec/vectors/`.
@@ -1768,6 +1820,9 @@ especificações/vetores independentes, fuzz e controles por mutação.
 - WebAuthn/passkey: servidor local mínimo que mostra a paráfrase numa página e coleta a assinatura do autenticador.
 - Verificação ES256 (P-256) em `logos-crypto`, no `alg` já reservado na 0.4 (nova dependência via ADR). A assinatura WebAuthn cobre `authenticatorData ‖ h(clientData)`; o `challenge` é `h(a ‖ paráfrase)` com o domínio de autorização, e o formato fica em `spec/`.
 - Antes de registrar a autorização, o kernel confere `parse_pt(paráfrase assinada) == a` (Etapa 9.1).
+- Ponto de integração (Apêndice G, ADR0048): a página WebAuthn desta etapa é do lado do
+  kernel, em processo e origem próprios. O cliente web de produto (WS.2) só indica a
+  autorização pendente e abre essa página; não a hospeda, não a enquadra nem a imita.
 
 **Critério de conclusão.**
 - [ ] O agente não consegue alterar a string exibida (vem do kernel; teste de integração com agente que tenta injetar texto no fluxo).
@@ -1794,6 +1849,8 @@ especificações/vetores independentes, fuzz e controles por mutação.
 ## Fase 10 — Harness do agente (LLM, MCP, prover farm)
 
 Objetivo da fase: o harness completo, incluindo ações, com um agente LLM real operando **só** através do kernel. A Fase5R antecipa o perfil de pesquisa sem ações e compartilha seus componentes com esta fase. Todo o código desta fase é não confiável: bugs aqui afetam progresso (liveness), nunca correção.
+O harness é único para todos os clientes (TUI, CLI e, se adotada, a web do Apêndice G):
+respostas estruturadas, streams e telemetria servem a todos sem segundo loop.
 
 ### Etapa 10.1 — Cliente do protocolo (`logos_client`) · `P`
 
@@ -1917,6 +1974,8 @@ continua dependendo de10.5. Não criar dependência circular5R.4↔10.6.
 - O renderizador recebe o texto do LLM com marcações de citação; qualquer frase que afirme algo sem citação fica no bloco `free_text`.
 - Quando MEM.5/6 existir, citações de memória/source continuam derivadas;
   só `ledger_ref` real recebe o estado conferido. Não criar Seal de summary.
+- A versão completa usa o mesmo contrato de apresentação da WS.1 (se existir), sem
+  tornar a web critério desta etapa.
 
 **Critério de conclusão.**
 - [ ] Nenhuma saída do agente mostra conteúdo não verificado sem marcação (teste com 50 respostas).
@@ -1941,6 +2000,8 @@ conserva loop e autorizações. Não criar dependência circular5R.5↔10.7.
 - Strings de paráfrase e selos são exibidas exatamente como o kernel as produziu (com o hash ao lado); a TUI não reformata texto que o usuário vai assinar.
 - MEM.7 adicionará zoom/ranges/Free/Model/Locator e falhas explícitas à TUI;
   navegação não refina automaticamente a view do provider nem pede efeito.
+- O socket de eventos do harness é o mesmo consumido pelo cliente web do Apêndice G
+  (contrato WS.1); a TUI continua cliente suportado mesmo sem web.
 
 **Critério de conclusão.**
 - [ ] Demo gravada da TUI executando a demo da Etapa 8.9 conduzida pelo LLM.
@@ -1958,6 +2019,8 @@ conserva loop e autorizações. Não criar dependência circular5R.5↔10.7.
 - Preparar extensão `memory.*` para MEM.7/E§17: ConversationView/ContextView,
   lotes/prefixo comum e uso real input/read/write por modelo/tarefa. Cache
   simulado e tokens reais ficam em séries distintas, sem exigir MEM nesta etapa.
+- Métricas de cliente/projeto do Apêndice D marcadas WS.x entram quando a etapa
+  WS correspondente existir; não são critério desta etapa.
 
 **Critério de conclusão.**
 - [ ] Todas as métricas do Apêndice D marcadas como "Fase ≤ 10" aparecem numa execução da demo.
@@ -2373,6 +2436,10 @@ Objetivo da fase: `VERIFIED` para argumentos de primeira ordem fora de domínios
 
 Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a contribuição mais forte do projeto segundo a §11.
 
+Clientes do Apêndice G (TUI/web, documentos WS.7) exibem o `Seal` só pela API única
+da 15.1, com o estado atual; nenhum cliente emite selo próprio ou reutiliza o nome
+`Seal` para badge visual. A 15.5 continua com critério na TUI.
+
 ### Etapa 15.1 ★ — Tipo `Seal` e renderização total · `M` · ⚠ TCB (fidelidade)
 
 **Depende de (recebe pronto).** 5.5 — consistência; 9.3 — F3; 3.3 — consultas.
@@ -2494,6 +2561,9 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 ---
 
 ## Fase 16 — Regime epistêmico: benchmark e estudo com usuários
+
+A avaliação de utilidade de visualizações, projetos e contexto (WS.9) reutiliza os
+protocolos desta fase e da 11.8 quando houver participantes; não altera seus critérios.
 
 ### Etapa 16.1 — Benchmark de argumentos · `G`
 
@@ -2858,6 +2928,8 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 - Se a trilha MEM for adotada/concluída, MEM.7 estende instalação/backup com
   storage e adapter isolados; ausência de MEM não deve ser anunciada como
   memória persistente. Não embutir credenciais no Python para empacotar.
+- Subcomando `serve` (cliente web local, ADR0048) só quando WS.2 estiver concluída
+  e a revisão de segurança da WS.9 aprovada; ausência da web não bloqueia esta etapa.
 
 **Critério de conclusão.**
 - [ ] Instalação limpa em Fedora e Ubuntu até a demo da Etapa 8.9 em < 15 minutos seguindo o README.
@@ -2903,6 +2975,8 @@ Objetivo da fase: fidelidade como dimensão **tipada** do resultado (§8), a con
 - Se memória integrar o produto, publicar garantias/limitações e formatos
   demonstrados em MEM.7, incluindo retenção, perdas declaradas e custo real
   de cache; não vender acesso estrutural ao original como recall garantido.
+- Se a trilha do Apêndice G entrar no release, documentar só o demonstrado em
+  WS.9: interface, projetos e visualizações não verificam metodologia empírica.
 
 **Critério de conclusão.**
 - [ ] Release 1.0 com builds reprodutíveis, hashes publicados e cabeça do ledger de demo publicada no log de transparência.
@@ -2962,6 +3036,28 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | 17 | Certificados gigantes | Engenharia | 0.5 (`TooLarge`), 0.6 (`Unknown(Size)`), 17.3 | — |
 | 18 | Check dependente de máquina | Engenharia | 0.6 (passos determinísticos) | — |
 
+### Ameaças da superfície de interface e workspaces (proposta, Apêndice G)
+
+IDs `TW` próprios, fora da numeração da §10; atacantes `AW1–AW3` e detalhes em
+[`docs/threat-model.md`](docs/threat-model.md#superfície-de-interface-web-e-workspaces-proposta).
+Nenhuma mitigação implementada.
+
+| ID | Ameaça | Natureza | Mitigada em |
+| --- | --- | --- | --- |
+| TW1 | Execução de script via Markdown/HTML/SVG do LLM ou de conteúdo recuperado | Engenharia | WS.1, WS.5 |
+| TW2 | Exfiltração por recursos externos (imagem, link, fonte, CSS) | Engenharia | WS.2, WS.5 |
+| TW3 | DNS rebinding/`Host` falso contra o servidor local | Engenharia | WS.2 |
+| TW4 | CSRF, CORS permissivo, sequestro de WebSocket entre origens | Engenharia | WS.2 |
+| TW5 | Outro processo/usuário local acessa o servidor (localhost não autentica) | Engenharia | WS.2, 5.11 |
+| TW6 | Badge de status forjado ou cache stale exibido como atual | Engenharia | WS.1, WS.5 |
+| TW7 | Vazamento entre projetos/stores (ID forjado, cache, snapshot pós-revogação) | Engenharia | WS.3, WS.6 |
+| TW8 | Injeção via memória, documentos, nomes de projeto, legendas, resultados MCP | Parcialmente fundamental (13) | WS.6, MEM.5/MEM.6, 6.6, 11.1 |
+| TW9 | Rota alternativa a efeitos ou assinatura (botão que chama gateway, página imitando a da 9.2) | Engenharia | WS.2, 9.2 |
+| TW10 | Compilador de documento executa comando, lê arquivo privado ou acessa a rede | Engenharia | WS.7 |
+| TW11 | Amplificação de recursos (dataset, grafo, artefato ou stream gigantes) | Engenharia | WS.2, WS.4, WS.5 |
+| TW12 | Visualização infiel aos dados ou à semântica estatística | Parcialmente fundamental (L1) | WS.5, WS.8 |
+| TW13 | Interface que parece mostrar o que o usuário assina, sem ser a do kernel | Fundamental (16) | 9.2, WS.2 |
+
 ## Apêndice C — Catálogo de eventos do ledger
 
 | Evento | Introduzido em | Campos essenciais | Quem pode causar |
@@ -2997,6 +3093,9 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | `HeadPublished` | 13.2 | seq, `h(head)`, prova de inclusão no log | kernel |
 | `Imported` | 17.3 | φ, descarregadas, pendentes | kernel de B |
 
+A trilha do Apêndice G não acrescenta eventos: projetos, artefatos, visualizações e
+documentos ficam fora do ledger; pedidos de verificação usam os eventos existentes.
+
 ## Apêndice D — Métricas que o sistema precisa emitir
 
 | Métrica | Definição | A partir de |
@@ -3013,6 +3112,13 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | Tempo até premissa causadora | estudo de auditabilidade | 11.8 |
 | Fidelidade calibrada | taxa de infidelidade por método, com IC | 15.6 |
 | Aceitação indevida | % de conclusões válidas sobre formalizações infiéis aceitas | 16.3 |
+| Latência de stream e reconexões | p50/p95 até o primeiro evento; reconexões e duplicações por sessão (alvo: 0 duplicações) | WS.2 |
+| Projeções stale exibidas como atuais | visualizações/cartões com entradas mudadas sem marca stale / exibidos (alvo: 0) | WS.5 |
+| Reprodutibilidade de artefatos | artefatos `Visualization`/`Report` reconstruídos dos originais / salvos | WS.4, WS.7 |
+| Recuperação de contexto de projeto | precisão/completude com gabarito; tempo até hipótese/fonte; referências ao original / itens recuperados | WS.6 |
+| Custo de contexto | tokens e custo reais por sessão e por artefato incluído, separados de estimativas | WS.6 |
+| Falhas explícitas por componente | erros declarados de provider, índice, compilador e banco / operações | WS.9 |
+| Acessibilidade | violações automatizadas por página e navegação por teclado | WS.5, WS.9 |
 
 ## Apêndice E — Riscos do projeto e pontos de decisão
 
@@ -3027,6 +3133,10 @@ as etapas reduzem risco/explicitam dependências; o limite é só declarado.
 | Bit decisivo não quebra endosso por capacidade | Etapa 11.5 sem diferença | Publicar resultado negativo; deslocar ênfase do paper para trajetórias e reversão | Etapa 11.5 |
 | Estudo com usuários sem efeito | Etapa 16.3 | Resultado negativo é publicável (§11); investigar formatos alternativos de selo | Etapa 16.3 |
 | Escopo grande demais para uma pessoa | Caminho crítico até 11 > 12 meses | Cortar fases 19–22 do horizonte; o núcleo 0–13 é a contribuição | Revisão trimestral |
+| Trilha de interface desvia o caminho crítico | WS.2+ em andamento enquanto9.1/5.6–5.12 param | WS.0 documental pode seguir; WS.2+ só após5R.5; priorizar caminho crítico | Revisão trimestral |
+| Contexto compartilhado bloqueado por MEM.5 (que depende de8.9/9.2) | WS.6 sem dependências prontas | Anexos explícitos (WS.4) como única continuidade; não anunciar memória de projeto | Fim da Fase 10 |
+| Superfície web insegura | Revisão de segurança WS.9 com falha | Não empacotar a web; TUI continua o cliente suportado | WS.9 |
+| Stack de frontend pesada ou instável | Dependências/CSP incompatíveis na WS.0 | HTML do servidor com componentes mínimos; trocar biblioteca sem tocar na lógica formal | WS.0 |
 
 ---
 
@@ -3040,12 +3150,18 @@ revisão documental solicitada. Fonte técnica: [extensão E§1–24](docs/spec/
 Não confundir MEM com invariantes M1–M13. Etapas com `M`/`G` exigem plano
 próprio conforme §0; os campos abaixo são contrato de escopo e conclusão.
 
-Esta trilha não é uma nova fase depois da 23 nem muda o próximo passo 5.4.
+Esta trilha não é uma nova fase depois da 23 nem muda o próximo passo vigente
+(na revisão de 19/out era a 5.4; hoje ver STATUS.md).
 MEM.0 pode ser planejada documentalmente; implementação começa só depois
 da adoção/formalização e das dependências reais. O caminho de integração é
 MEM.1→2→3→4→5, junto ao harness da Fase 10; Knowledge em MEM.6; avaliação/produto
 em MEM.7. Kernel/checkers/gateway continuam independentes da memória.
 Dependência ausente é bloqueio no STATUS; não implementá-la dentro de MEM.
+Pontos de integração com o Apêndice G (proposto): MEM.0/MEM.1 fornecem a custódia
+do namespace `Artifact`/`Project` usado pelo registry de projetos (WS.3/WS.4);
+MEM.5/MEM.6 recebem a rota `project` do Memory Router (WS.6); MEM.7 articula
+backup/restore com WS.9. Nenhuma etapa MEM depende de WS, e nada aqui muda a
+semântica normativa de E§1–24.
 
 ### Etapa MEM.0 — Adoção e contratos normativos · `M`
 
@@ -3233,6 +3349,311 @@ migração e perfis de cache documentados. Release declara o que foi medido.
   refeito, séries frias/quentes/TTL e falhas; provider real separado do fake.
 - [ ] Backup/restore preserva originais/refs/views/replay; TUI não emite Seal
   para summary; instalação e docs de 23.x refletem só garantias demonstradas.
+
+---
+
+## Apêndice G — Interface web, workspaces e artefatos (trilha proposta)
+
+**Estado: proposta especificada, nenhuma etapa WS implementada/concluída.**
+Fonte: [extensão WS§1–16](docs/spec/LOGOS-workspace-and-web-ui.md); decisões
+**propostas** em [ADR 0047](docs/adr/0047-produto-unico-com-clientes-e-workspaces.md)
+(um harness, clientes e projetos), [ADR 0048](docs/adr/0048-servidor-web-local-nao-confiavel.md)
+(servidor web local) e [ADR 0049](docs/adr/0049-artefatos-visualizacoes-e-documentos.md)
+(artefatos, visualizações e documentos). Novas etapas começam `[ ]`; documentação,
+wireframe, mock ou fixture não fecham critério de integração.
+
+Trilha transversal, como o Apêndice F: não renumera as Fases 0–23, não entra no
+caminho crítico do paper 1 e não muda a ordem da 5R nem o próximo passo vigente
+(STATUS.md). Um único harness, um único ledger, uma única memória: a trilha só
+acrescenta clientes, organização e apresentação **por cima** deles. Tudo aqui fica
+fora da TCB de correção e de fidelidade. Nenhuma etapa WS cria evento de ledger;
+se uma futura precisar, exige ADR e entrada no Apêndice C. Invariantes W1–W9 no
+§3 do roadmap e em `WS§13`; ameaças TW1–TW13 no Apêndice B.
+
+**Ordem em camadas:** contrato de apresentação com fixtures (WS.1) → leitura real
+de status e chat com o harness de pesquisa (WS.2) → projetos duráveis (WS.3) →
+artefatos e anexos explícitos (WS.4) → visualizações persistentes (WS.5) e
+documentos (WS.7) → contexto compartilhado automático (WS.6, após MEM.5/MEM.6) →
+workspace científico (WS.8) → operação/release (WS.9). WS.0 é documental e pode
+ocorrer a qualquer momento. Visualizações transitórias e somente leitura (WS.1/WS.2)
+precedem a memória; contexto persistente compartilhado não é declarado pronto antes
+de persistência, origem e ACL reais. Nenhuma etapa da 5R, da Fase 10 ou da MEM
+depende de WS: os pontos de integração nessas etapas são notas, não dependências.
+
+| Etapa | Objetivo | Depende de (resumo) | Marco | Risco principal |
+| --- | --- | --- | --- | --- |
+| WS.0 | Decisões de produto, stack e persistência | ADRs 0002/0008/0037/0047–0049 | — | escolher stack por gosto |
+| WS.1 | Contrato de sessão e apresentação | 5.2–5.5, 3.3, 10.1, 2.6, 5R.4, WS.0 | — | badge forjado (TW6) |
+| WS.2 ★ | Servidor web local + chat | WS.0, WS.1, 5R.5 | Chat web local real | segurança web (TW3–TW5, TW9) |
+| WS.3 | Registry de projetos e vínculos | WS.0, WS.1, MEM.0, MEM.1 | — | vazamento entre projetos (TW7) |
+| WS.4 | Artefatos, proveniência e anexos | WS.3, MEM.1, 5R.3, 3.3 | — | status salvo tratado como atual |
+| WS.5 | Visualizações e explorador | WS.1, WS.4, 2.6, 3.3, 4.7 | — | XSS/infidelidade (TW1, TW12) |
+| WS.6 | Contexto de projeto (router) | WS.3, WS.4, MEM.5, MEM.6 | — | espera longa por MEM.5 (8.9/9.2) |
+| WS.7 | Documentos LaTeX/PDF | WS.4, WS.5, 9.1, 5R.4 | — | compilador executa código (TW10) |
+| WS.8 ★ | Workspace científico | 5R.3, 5R.4, WS.4–WS.7 | Projeto científico completo | evidência vista como prova |
+| WS.9 | Operação, avaliação e release | WS.2–WS.8, MEM.7, 10.8, 23.1 | — | prometer ganho não medido |
+
+### Etapa WS.0 — Visão de produto, fronteiras e decisões · `P`/`M`
+
+**Depende de (recebe pronto).** ADR 0002 (linguagens), 0008/0039 (memória),
+0037 (trilha científica), 0045 (MCP) e os propostos 0047–0049; `WS§1–16`; este
+apêndice. Nada de código é pressuposto.
+
+**Fora do escopo.** código, servidor, protótipo funcional, plano detalhado de
+WS.1–WS.9 (cada uma recebe o seu, §0), mudança de critérios de 5R/10/MEM.
+
+**Entregáveis.** Decisão do mantenedor sobre os ADRs 0047–0049 (aceitar, alterar ou
+rejeitar); escolha registrada de linguagem/processo do servidor, frontend,
+transporte navegador, bibliotecas de gráfico/grafo/matemática e formato de documento,
+cada uma com ≥2 alternativas, licença e critérios do ADR 0048/0049; decisão de
+persistência do registry coordenada com MEM.0; MVP fechado (proposta `WS§2.1`:
+chat web local + sessões + cartões de claim + LaTeX básico + gráfico declarativo +
+salvar/recuperar um artefato); plano de fase da trilha; revisão da matriz abaixo.
+
+**Critério de conclusão.**
+- [ ] ADRs 0047–0049 com estado decidido pelo mantenedor e consequências
+  atualizadas; nenhuma escolha de stack sem alternativas e critérios registrados.
+- [ ] Script reproduzível confere: todo link/âncora citado nesta trilha resolve;
+  todo ID `WS.n`, `W1–W9`, `TW1–TW13` citado existe; o grafo de dependências WS
+  é acíclico e nenhuma etapa de 5R/10/MEM depende de WS.
+- [ ] Matriz requisito → etapa → dependência → critério cobre web, sessão,
+  projetos, artefatos, visualização, PDF, memória e pesquisa, sem item órfão.
+
+### Etapa WS.1 — Contrato de sessão e apresentação · `M`
+
+**Depende de (recebe pronto).** 5.2–5.5 e 3.3 — status reais por `Query`/
+`Subscribe` e `propose-result/v1`, `check-result/v1`, `witness-result/v1`;
+10.1 — cliente; 2.6 — explicação de contramodelos; 5R.4 — blocos `ledger_ref`/
+`free_text` e regra de cartão stale; WS.0 — formato do contrato.
+
+**Fora do escopo.** servidor web (WS.2), loop LLM, persistência de projetos,
+`Seal` (15.x), assinatura (9.2), visualização interativa persistente (WS.5).
+
+**Entregáveis.** `spec/client-session.md` (a criar): envelope versionado de sessão e
+eventos (`SessionId`, cursor, `user_input`, `free_text`, `ledger_ref`, `tool_status`,
+`artifact_inline`, `degradation`, `error`, `completion`), lista fechada de componentes
+inline (cartão de claim, tabela, gráfico declarativo com dados embutidos limitados,
+fórmula, DAG, contramodelo), limites e vetores; renderer de referência fora da TCB e
+fixtures. É o mesmo contrato que a TUI (5R.5/10.7) e a web (WS.2) consomem.
+
+**Critério de conclusão.**
+- [ ] Fixtures Verified/Refuted/Unknown/Pending/Invalidated/stale/erro renderizadas
+  e comparadas a snapshots; `free_text` contendo "Verified"/ícones nunca recebe badge;
+  status forjado no payload do harness aparece como "não consultado".
+- [ ] Strings marcadas como assináveis/hasheadas passam byte a byte (multibyte,
+  bidi, espaços, NFC/não NFC) com hash exibido; nenhum renderer as reformata.
+- [ ] Vetores: campo desconhecido, versão errada, tamanho/profundidade excessivos
+  recusados com erro explícito; mutação que aceite campo desconhecido é detectada.
+
+### Etapa WS.2 ★ — Servidor web local e cliente de chat · `M`/`G`
+
+**Depende de (recebe pronto).** WS.0 — stack/runtime aceitos (ADR 0048); WS.1 —
+contrato; 5R.5 — chat de pesquisa com histórico e sessões reais no harness e TUI
+consumidora. Para o perfil com ações: 10.5/10.7 e 9.2 (fora desta etapa).
+
+**Fora do escopo.** ações/efeitos, assinatura, exposição remota, multiusuário,
+projetos persistentes (WS.3), contexto automático (WS.6), PDF (WS.7).
+
+**Entregáveis.** Comando provisório `logos serve`: loopback, segredo de sessão,
+allowlist de `Host`/`Origin`, CSP estrita, assets locais, streaming com cursor,
+cancelamento, idempotência, sessões isoladas, componentes WS.1; indicação de
+autorização pendente que abre a interface do lado do kernel (9.2), sem hospedá-la.
+
+**Critério de conclusão.**
+- [ ] Roteiro scriptado da 5R.5 (≥10 tarefas, sem editar AIR) completo no navegador
+  e na TUI contra o mesmo harness; status exibidos conferem com `Query`.
+- [ ] Testes adversariais recusam com erro: `Origin` externa, `Host` de rebinding,
+  mutação sem token CSRF, WebSocket cross-site, path traversal nos assets, payload e
+  número de conexões acima do limite; bind não loopback exige opção explícita.
+- [ ] Reconexão com cursor não duplica mensagem final nem artefato; cancelamento
+  distingue incompleto de concluído; duas abas/sessões não recebem eventos uma da outra.
+- [ ] Inventário de rotas e teste de permissões: nenhuma rota escreve no ledger, fala
+  com o gateway, assina, faz mint ou envia escrita ao kernel sem o harness; o processo
+  não lê chaves nem arquivos do ledger/CAS do kernel.
+
+### Etapa WS.3 — Registry de projetos, sessões e identidade · `M`
+
+**Depende de (recebe pronto).** WS.0 — decisão de persistência; WS.1 —
+`SessionId`; MEM.0 — adoção, custódia, ACL/scope e domínios CAS do namespace
+`Artifact`/`Project`; MEM.1 — store durável, idempotência, fencing, revogação.
+Sem MEM.0/MEM.1 aceitas e demonstradas, a etapa fica **bloqueada** no STATUS.
+
+**Fora do escopo.** artefatos ricos (WS.4), retrieval (WS.6), colaboração remota,
+segundo store de memória, exigência de web (CLI/TUI também operam projetos).
+
+**Entregáveis.** `spec/project-registry.md` (a criar) com `Project` e
+`ProjectSessionLink` (`WS§7.2`), revisões, arquivamento e `scope_id`; vetores; API para
+clientes e comandos CLI (nome em WS.0); nenhum evento de ledger.
+
+**Critério de conclusão.**
+- [ ] Criar/arquivar/reabrir projeto, vincular/desvincular sessão; escrita com
+  revisão antiga recusada; SIGKILL nos pontos de CAS/SQL/ack preserva tudo que teve ack.
+- [ ] Sessão do projeto A não lista nem resolve objetos de B; ID/escopo forjado e
+  handle antigo após revogação são recusados.
+- [ ] Cabeça do ledger idêntica antes/depois de todas as operações; chat sem projeto
+  funciona e não recebe dados de projeto (W9).
+
+### Etapa WS.4 — Artefatos estruturados, proveniência e anexos explícitos · `G`
+
+**Depende de (recebe pronto).** WS.3; MEM.1 — originais, pins e GC; 5R.3 —
+caderno de hipóteses/evidências/claims; 3.3 — `Query` de claims. MEM.6 não é
+dependência: sem ela, `EvidenceReference` aponta locator externo `best_effort`
+marcado como não resolvido.
+
+**Fora do escopo.** retrieval automático (WS.6), visualização interativa (WS.5),
+PDF (WS.7), painéis científicos (WS.8), qualquer conversão em `Fact`/`Verified`.
+
+**Entregáveis.** `ProjectArtifact`, `ProjectRelation` e tipos MVP (`WS§7.3`):
+`Hypothesis`/`ResearchQuestion`, `EvidenceReference`, `ClaimReference`, `Dataset`,
+`Visualization` (persistência), fonte de `Report`; operações distintas Save/Pin/
+Reference/Promote/Request verification/Retract/Archive (`WS§7.4`); revisões;
+import do caderno 5R.3; anexos explícitos à sessão com ACL revalidada.
+
+**Critério de conclusão.**
+- [ ] Salvar, reabrir, versionar e recuperar original byte a byte; blob adulterado e
+  original ausente dão erro declarado; GC não remove pinado.
+- [ ] `ClaimReference` reaberto mostra o estado atual consultado (retratado,
+  invalidado, Refuted, Unknown distintos de Verified); status do save aparece só como
+  histórico.
+- [ ] Inventário: só Request verification gera eventos (os normais do kernel via
+  harness); Promote não cria claim; Retract de artefato não invalida claims.
+- [ ] Caderno da 5R.3 importado sem perda de IDs, status consultáveis e proveniência.
+- [ ] Captura do request do harness: entram só os artefatos anexados; retirar o
+  projeto remove-os da chamada seguinte.
+
+### Etapa WS.5 — Visualizações interativas e explorador de claims · `G`
+
+**Depende de (recebe pronto).** WS.1 — componentes inline; WS.4 — persistência;
+2.6 — contramodelos explicados; 3.3/4.7 — dependentes e `used`; ADR 0049 com
+bibliotecas escolhidas em WS.0. Árvores de prova estruturadas só quando 14.x/20.x
+existirem (não são dependência).
+
+**Fora do escopo.** árvore de dedução para LRAT, mapas e domínios especializados,
+execução de código do LLM, recálculo silencioso, estatística certificada.
+
+**Entregáveis.** `spec/visualization.md` (a criar): lista fechada de componentes,
+dados por hash, receita, unidades e semântica estatística, limites; gráficos, tabelas,
+DAG de claims, explorador de contramodelo e fórmulas; estados congelada/atualizada/
+stale/irrecuperável (`WS§9.4`); export derivado.
+
+**Critério de conclusão.**
+- [ ] Em ≥20 datasets fixture, os valores extraídos do spec renderizado conferem com
+  os dados e a transformação declarada; mutação na transformação é detectada.
+- [ ] Mudar dados, `h(V)` ou certificado marca a projeção stale; nenhuma
+  substituição silenciosa; originais ausentes → irrecuperável.
+- [ ] HTML/SVG/Markdown malicioso em labels/dados não executa script nem faz
+  requisição externa (navegador headless com CSP e registro de rede); limites de
+  nós/séries/pontos/profundidade recusam excesso com erro.
+- [ ] Badges derivados de consulta com idade/cursor; teste de acessibilidade
+  automatizado (ferramenta decidida em WS.0) sem violação crítica e navegação por teclado.
+
+### Etapa WS.6 — Contexto de projeto e integração com a memória · `G`
+
+**Depende de (recebe pronto).** WS.3, WS.4; MEM.5 — harness fresh e navegação
+read-only com ACL/snapshot; MEM.6 — Knowledge Memory e Memory Router (`E§12`). Como
+MEM.5 depende de 6.6, 10.3/10.5/10.6 e 8.9/9.2, esta etapa é tardia por construção.
+
+**Fora do escopo.** novo router, árvore, vector store ou registry; colaboração
+remota; transformar score em verdade.
+
+**Entregáveis.** Rota `project` do Memory Router e `ProjectContextSnapshot`
+(`WS§8`); deduplicação por origem; degradações; métricas do Apêndice D.
+
+**Critério de conclusão.**
+- [ ] Três sessões do mesmo projeto recuperam um artefato salvo; sessão de outro
+  projeto não o recebe sem permissão (captura do request); snapshot antigo após
+  revogação falha.
+- [ ] Troca/retirada de projeto limpa contexto e caches na chamada seguinte.
+- [ ] `ClaimReference` recuperado consulta estado vigente; claim retratado nunca
+  aparece como Verified; índice/provider indisponível produz degradation explícita.
+- [ ] Injeção em PDF, histórico, legenda, dataset, resultado MCP e nome de projeto
+  permanece dado: roles inalterados, nenhuma ferramenta chamada por instrução recuperada.
+- [ ] Latência, custo, qualidade com gabarito e taxa de referência ao original
+  emitidos com denominadores.
+
+### Etapa WS.7 — Documentos, LaTeX/PDF e exportação reprodutível · `M`/`G`
+
+**Depende de (recebe pronto).** WS.4, WS.5; 9.1 — enunciados em português pela TCB
+de fidelidade; 5R.4 — cartões de status; ADR 0049 com formato escolhido. Seal
+completo (15.8) só quando existir; antes, cartões.
+
+**Fora do escopo.** selo visual próprio, editor colaborativo, publicação remota,
+compilação com shell-escape ou rede, workspace científico obrigatório.
+
+**Entregáveis.** fonte estruturada → formato de composição → PDF derivado; templates
+técnico, filosófico/matemático e científico; status datado por cursor/época;
+marcação de texto do LLM; sandbox no padrão 4.5/10.2.
+
+**Critério de conclusão.**
+- [ ] Documento com shell-escape, leitura de arquivo fora dos inputs ou acesso à rede
+  é recusado ou neutralizado (testes negativos); compilador sem chaves; limites de
+  tempo/RSS aplicados.
+- [ ] Inputs pinados reproduzem o documento (bytes do PDF, ou hash da fonte e versões
+  com a não determinação do PDF declarada); figura reconstruída do artefato `Visualization`.
+- [ ] Nenhum teorema ou Verified sem `ledger_ref`; texto livre marcado; retratação
+  posterior marca o relatório desatualizado sem alterar bytes antigos.
+
+### Etapa WS.8 ★ — Workspace científico especializado · `G`
+
+**Depende de (recebe pronto).** 5R.3 — caderno; 5R.4 — cartões; WS.4–WS.7. Painéis
+que usam documentos dependem de MEM.6; evidência atestada, de 6.x. Estatística e
+desenho experimental não têm etapa no repositório: ficam fora até etapa própria.
+
+**Fora do escopo.** verdade empírica automática, *truth score*, recomendação
+científica, laboratório autônomo, estatística certificada, execução de experimentos.
+
+**Entregáveis.** painéis MVP Overview, Hypothesis Board, Evidence Explorer,
+Argument/Proof Graph e Bibliography (`WS§11`); Gallery, Timeline e Experiments
+incrementais; rótulos epistêmicos da tabela de `WS§11`.
+
+**Critério de conclusão.**
+- [ ] Roteiro scriptado num projeto piloto: pergunta → evidência → hipótese →
+  visualização → relatório, com estados honestos e fontes auditáveis.
+- [ ] Retratação de evidência/premissa atualiza painéis sem apagar histórico;
+  associação estatística nunca rotulada como causal/provada; `Says` aparece como atribuição.
+- [ ] Inventário: toda operação do workspace também existe pelo chat padrão.
+- [ ] Avaliação com participantes, se houver, só com protocolo 11.8 aprovado.
+
+### Etapa WS.9 — Operação, avaliação, acessibilidade e release · `M`/`G`
+
+**Depende de (recebe pronto).** WS.2–WS.8 no escopo empacotado; MEM.7; 10.8;
+23.1; 11.8 se houver participantes humanos.
+
+**Fora do escopo.** hospedagem em nuvem, marketplace, colaboração remota, segundo
+gerenciador de release (articula com 23.x).
+
+**Entregáveis.** backup/restore e migração de projetos; export/import com ACL e
+redaction; revisão de segurança da web; smoke ponta a ponta; métricas; documentação
+de limites demonstrados.
+
+**Critério de conclusão.**
+- [ ] Export/import/restore preservam originais, refs, revisões e ACL; artefato
+  restrito não vaza no export redigido.
+- [ ] Revisão de segurança registrada com um teste por ameaça TW1–TW13.
+- [ ] Métricas de utilidade com gabarito/corpus e baseline sem recuperação,
+  incluindo resultados negativos; nenhum ganho alegado sem medição.
+- [ ] Instalação e docs (23.1/23.4) refletem só o demonstrado; sem web empacotada
+  se a revisão de segurança falhar.
+
+### Matriz de rastreabilidade (requisito → etapa → dependência → critério → arquivos futuros)
+
+| Requisito | Etapa | Dependência real | Critério verificável | Arquivos futuros |
+| --- | --- | --- | --- | --- |
+| Um chat/um harness; perfil de pesquisa | WS.0, WS.2 | 5R.5; ADR 0047 | roteiro no navegador e na TUI contra o mesmo harness | ADR 0047 revisado |
+| Sessões separadas e reabríveis | WS.1, WS.2 | 5R.5 | abas isoladas; reconexão sem duplicação | `spec/client-session.md` |
+| TUI preservada | WS.1, WS.2 | 5R.5, 10.7 | mesmo contrato e roteiro na TUI | — |
+| Web local opcional e segura | WS.2 | WS.0/ADR 0048 | testes de Origin/Host/CSRF/WS/bind | código do servidor (nome em WS.0) |
+| Status nunca forjado | WS.1, WS.5 | 3.3, 5R.4 | badge só por consulta; stale | renderer de referência |
+| Assinatura fora da web | WS.1, WS.2 | 9.1/9.2 | strings byte a byte; inventário de rotas | — |
+| Projetos opcionais | WS.3 | MEM.0, MEM.1 | isolamento A/B; ledger inalterado | `spec/project-registry.md` |
+| Artefatos e proveniência | WS.4 | WS.3, MEM.1, 5R.3 | recuperação de originais; adulteração | vetores do registry |
+| Salvar ≠ verdade | WS.4 | WS.3 | inventário de eventos; ClaimReference atual | — |
+| Visualização reproduzível | WS.5 | WS.4, ADR 0049 | valores conferem; stale | `spec/visualization.md` |
+| Renderização segura | WS.5 | WS.1 | headless sem script/rede | — |
+| PDF/LaTeX reproduzível | WS.7 | WS.4, WS.5, 9.1 | sandbox negativo; reprodução | templates de documento |
+| Contexto compartilhado | WS.6 | MEM.5, MEM.6 | 3 sessões; revogação; injeção | rota `project` do router |
+| Workspace científico | WS.8 | 5R.3, WS.4–WS.7 | roteiro piloto; inventário pelo chat | painéis |
+| Operação e avaliação | WS.9 | MEM.7, 10.8, 23.1 | restore; revisão TW1–TW13; métricas | docs de usuário/operador |
 
 ---
 

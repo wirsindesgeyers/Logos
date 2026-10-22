@@ -78,6 +78,28 @@ condicional atômica. Tampouco revalidar assinatura é revalidar o mundo.
 G2 limita validade instantânea às pré-condições protegidas; registrar as demais
 não as torna protegidas. Contrato errado da ferramenta permanece risco de L1.
 
+## Interfaces, projetos e visualizações (proposta)
+
+Trilha proposta do [Apêndice G](../ROADMAP.md#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta);
+nada implementado. Limites que a interface não remove:
+
+- O workspace científico, os painéis e os gráficos organizam e mostram; **não**
+  verificam metodologia empírica, representatividade de dados, causalidade ou
+  verdade de fontes (L1). "Fonte diz φ", "modelo sugere φ" e "usuário salvou φ" não
+  implicam φ.
+- Um gráfico fiel aos dados não prova que os dados representam o fenômeno. Hash e
+  assinatura garantem identidade dos bytes, não qualidade do estudo.
+- Salvar, pinar, resumir, indexar ou relacionar em projeto não cria autoridade; um
+  status salvo é histórico, não atual (W1/W4).
+- Memória e contexto de projeto melhoram continuidade, não tornam o agente
+  infalível nem garantem recall completo; recuperação é limitada por orçamento e
+  pode degradar (`E§10`).
+- Mediação continua não governando cognição (L3): conteúdo de projeto pode
+  influenciar a prosa e a escolha entre ações permitidas.
+- Um cliente web local acrescenta superfície de ataque (TW1–TW13); localhost não é
+  autenticação, e mitigações são requisitos de etapas futuras.
+- PDF exportado é um snapshot: retratação posterior não altera bytes já gerados.
+
 ## Limites de implementação e de evidência
 
 - CAS garante integridade dos bytes lidos sob premissas de filesystem local e

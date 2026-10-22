@@ -280,6 +280,21 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | 9.1a Templates versionados | ⚠ concluída localmente; CI pendente | ADR0046; vocabulary/v2, vetores14, diferencial Rust/Python, quatro mutações, fuzz3600s+60s, cenário v2 no kernel/MCP/auditor e full verify/selftest VERIFY_OK em3566.59s. [Evidências](docs/plans/etapa-9.1a-evidencias.json). |
 | 9.1 Renderizador/parser PT | ⏳ não iniciada | 9.1a pronta; implementar com todos os critérios e revisão humana. |
 
+## Trilha de interface e workspaces (Apêndice G, proposta)
+
+| Etapa | Estado | Gate / entrega |
+| --- | --- | --- |
+| WS.0 Decisões de produto/stack | ⏳ não iniciada | documental; ADRs 0047–0049 propostos aguardam o mantenedor |
+| WS.1 Contrato de sessão/apresentação | ⏳ não iniciada | 5R.4 e WS.0 |
+| WS.2 Servidor web local + chat | ⏳ não iniciada | WS.0, WS.1, 5R.5 |
+| WS.3 Registry de projetos | ⏳ não iniciada | MEM.0/MEM.1 (bloqueio se ADR 0008 não for adotado) |
+| WS.4 Artefatos e anexos | ⏳ não iniciada | WS.3, MEM.1, 5R.3 |
+| WS.5 Visualizações | ⏳ não iniciada | WS.1, WS.4 |
+| WS.6 Contexto de projeto | ⏳ não iniciada | MEM.5/MEM.6 (dependem de 8.9/9.2) |
+| WS.7 Documentos/PDF | ⏳ não iniciada | WS.4, WS.5, 9.1 |
+| WS.8 Workspace científico | ⏳ não iniciada | 5R.3, 5R.4, WS.4–WS.7 |
+| WS.9 Operação/release | ⏳ não iniciada | WS.2–WS.8, MEM.7, 10.8, 23.1 |
+
 ## Pendências de verificação (execução remota)
 
 Etapa9.1a: full verify/selftest local passou; CI remota/ARM/noturno do novo
@@ -557,6 +572,11 @@ revisão humana.9.2/5R.2 continuam fora. CI remota/ARM/noturno pendentes.
 
 ## Decisões em aberto para o mantenedor
 
+- **Trilha de interface (Apêndice G):** aceitar, alterar ou rejeitar os ADRs
+  0047 (um harness, clientes e projetos), 0048 (servidor web local) e 0049
+  (artefatos, visualizações e documentos), todos propostos. Stack de servidor,
+  frontend, gráficos, matemática e formato de documento fica para a WS.0, com
+  alternativas e critérios. Não altera o próximo passo (9.1).
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
   próprios, sem dependência nova). Medição anterior, após a5.5: 15131+747130=762261;
@@ -1899,3 +1919,5 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-21 — Transport inteiro passou após teto de startup120s:14/14 em14.48s, sem mudar limites de RPC/checker. Quarto full verify/selftest iniciado com fontes congeladas; Python preflight314+25 e fuzz1h já demonstrados. Aguardar VERIFY_OK/exit0 antes de fechar9.1a e commitar/push.
 
 - 2026-10-21 — Etapa9.1a concluída localmente sobreced0cf3 (ADR0046). Quarto full interrompido sem veredito às16:30 (farm400/500; processo e wrapper sumiram sem erro no log), preservado como attempt4 e não contado. Quinto full verify/selftest, desacoplado da sessão: VERIFY_OK/exit0 em3566.59s,491 entradas inalteradas,551 Rust/0 ignorados, Python314+25, RENDER_TEMPLATE_VECTORS_OK14, RENDER_TEMPLATES_SMOKE_OK10 tarefas v2 com auditoria, farm500 p50=1.258s. Fuzz3600s+60s e quatro mutações já demonstrados nas fontes finais. TCB15262+747130=762392 (+131), build-only64508, sem dependência nova. Recibos em docs/plans/etapa-9.1a-*.json. Próximo:9.1 integral. CI remota/ARM/noturno pendentes.
+
+- 2026-10-21 — Docs: revisão de produto a pedido do mantenedor. Trilha transversal proposta no Apêndice G do ROADMAP (WS.0–WS.9: contrato de sessão, servidor web local, registry de projetos, artefatos, visualizações, contexto de projeto, documentos, workspace científico e operação), extensão docs/spec/LOGOS-workspace-and-web-ui.md (WS§1–16), ADRs 0047–0049 propostos, invariantes W1–W9, ameaças TW1–TW13/AW1–AW3, métricas e riscos. Integrações como notas em 5R.3–5R.5, 9.1/9.2, 10, 15, 16, 23 e Apêndice F, sem novas dependências para 5R/10/MEM, sem eventos de ledger e sem mudança de TCB/critérios. Nenhuma etapa implementada ou marcada. Referências de próximo passo desatualizadas no §5 e no Apêndice F foram datadas. Validação documental: DOCS_0_7_OK, links/âncoras e grafo WS acíclico. Próximo passo continua9.1.

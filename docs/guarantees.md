@@ -167,6 +167,17 @@ futuros (6.6, 4.7/14.4, Fases 7/8 e 11.1–11.2). Teorema 12.3 e avaliação da
 Fase 11 não executados. Não implica não-interferência: dado não confiável pode
 influenciar qual ação permitida é escolhida (ameaça fundamental 13).
 
+## Clientes, projetos e visualizações (proposta)
+
+A trilha proposta do
+[Apêndice G](../ROADMAP.md#apêndice-g--interface-web-workspaces-e-artefatos-trilha-proposta)
+**não acrescenta garantia** a G1–G3 e não altera suas TCBs. Servidor web, frontend,
+registry de projetos, renderers de gráfico/documento e Memory Router ficam fora da TCB
+de correção e da de fidelidade; a interface de confirmação do lado do kernel (9.2/9.3)
+continua sendo a parte de interface que pertence à TCB de fidelidade. Os invariantes
+W1–W9 (`WS§13`) são requisitos de etapas futuras: impedem que a interface **apresente**
+algo como autorizado ou verificado sem o kernel, não estendem a garantia ao mundo.
+
 ## O que existe hoje, e o que isso não autoriza concluir
 
 | Primitiva implementada | Contrato local / fronteira |
