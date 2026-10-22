@@ -1,7 +1,7 @@
 {
-  "format": "ledger-index/v1",
+  "format": "ledger-index/v2",
   "application_id_hex": "4c494458",
-  "user_version": 1,
+  "user_version": 2,
   "statuses": {"Proposal": 0, "Pending": 1, "Verified": 2, "Refuted": 3, "Unknown": 4, "Assumption": 5, "Invalidated": 6},
   "epochs": [{"value": 0, "hex": "0000000000000000"}, {"value": 1, "hex": "0000000000000001"}, {"value": 18446744073709551615, "hex": "ffffffffffffffff"}],
   "schema": {
@@ -11,6 +11,7 @@
     "revoked": "CREATE TABLE revoked (checker BLOB PRIMARY KEY CHECK(length(checker)=32)) STRICT, WITHOUT ROWID",
     "metadata": "CREATE TABLE metadata (singleton INTEGER PRIMARY KEY CHECK(singleton=1), seq INTEGER, epoch BLOB, hash BLOB, CHECK((seq IS NULL AND epoch IS NULL AND hash IS NULL) OR (seq>=0 AND length(epoch)=8 AND length(hash)=32))) STRICT",
     "deps_premise": "CREATE INDEX deps_premise ON deps(premise,claim)",
-    "claims_checker": "CREATE INDEX claims_checker ON claims(checker)"
+    "claims_checker": "CREATE INDEX claims_checker ON claims(checker)",
+    "claims_h_o": "CREATE INDEX claims_h_o ON claims(h_o)"
   }
 }

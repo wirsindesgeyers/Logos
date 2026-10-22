@@ -346,6 +346,20 @@ pub fn encode_frame(request: &Request) -> Result<Vec<u8>, Error> {
 pub(crate) fn response(id: u64, result: Result<Value, &Error>) -> Result<Vec<u8>, Error> {
     let (tag, value) = match result {
         Ok(v) => (1, v),
+        // Único erro com detalhe: [5, h_O, h(Refuted), h(M)] (kernel-protocol, 5.6).
+        Err(Error::AlreadyRefuted {
+            obligation,
+            refuted,
+            model,
+        }) => (
+            0,
+            array(vec![
+                Value::Unsigned(5),
+                obligation.to_value()?,
+                refuted.to_value()?,
+                model.to_value()?,
+            ])?,
+        ),
         Err(e) => (0, Value::Unsigned(e.code())),
     };
     let bytes = to_canon(&array(vec![
@@ -358,4 +372,38 @@ pub(crate) fn response(id: u64, result: Result<Value, &Error>) -> Result<Vec<u8>
         return Err(Error::Limit("response bytes"));
     }
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+    use super::*;
+    use logos_crypto::Hash;
+
+    #[test]
+    fn already_refuted_detail_matches_independent_vector() {
+        let root: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../spec/vectors/kernel-protocol/already-refuted-v1.json"
+        ))
+        .unwrap();
+        let unhex = |s: &str| -> Vec<u8> {
+            (0..s.len())
+                .step_by(2)
+                .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+                .collect()
+        };
+        let digest = |field: &str, v: &serde_json::Value| -> [u8; 32] {
+            unhex(v[field].as_str().unwrap()).try_into().unwrap()
+        };
+        for v in root["vectors"].as_array().unwrap() {
+            let error = Error::AlreadyRefuted {
+                obligation: Hash::from_bytes(digest("obligation_hex", v)),
+                refuted: Hash::from_bytes(digest("refuted_hex", v)),
+                model: Hash::from_bytes(digest("model_hex", v)),
+            };
+            let bytes = response(v["request_id"].as_u64().unwrap(), Err(&error)).unwrap();
+            assert_eq!(bytes, unhex(v["response_hex"].as_str().unwrap()));
+            assert_eq!(error.code(), 5);
+        }
+    }
 }

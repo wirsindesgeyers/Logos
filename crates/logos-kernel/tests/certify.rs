@@ -1228,3 +1228,145 @@ fn independent_auditor_rejects_wrong_annex_target_and_forged_accepted_model() {
         );
     }
 }
+
+/// 5.6/S4: refutar e re-propor com citações em outra ordem → AlreadyRefuted(h(M)).
+fn refuted_setup() -> (Temp, logos_crypto::FileSigner) {
+    (Temp::new(), signer())
+}
+
+fn assume(
+    ledger: &mut Ledger<'_, logos_crypto::FileSigner>,
+    signer: &logos_crypto::FileSigner,
+    v: &Vocabulary,
+) -> Hash<Event> {
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(v).unwrap())
+        .unwrap();
+    hash(
+        &ledger
+            .append(EventBody::AssumptionDeclared {
+                vocabulary: hv,
+                formula: truth(true),
+                scope: Text::new("").unwrap(),
+                author: signer.key_id().unwrap(),
+            })
+            .unwrap(),
+    )
+    .unwrap()
+}
+
+fn refute_false_goal(
+    ledger: &mut Ledger<'_, logos_crypto::FileSigner>,
+    handlers: &CertificationHandlers,
+    v: &Vocabulary,
+    cites: Vec<Hash<Event>>,
+) -> (Hash<Obligation>, Hash<Event>, Hash<ModelObject>) {
+    let p = candidate(ledger, v, truth(false), cites);
+    let o = proposed(ledger, handlers, p);
+    let model = FiniteModel::new(
+        ModelData {
+            vocab: hash(v).unwrap(),
+            domains: vec![],
+            consts: vec![],
+            funcs: vec![],
+            preds: vec![],
+        },
+        v,
+        ModelLimits::default(),
+    )
+    .unwrap();
+    let model = ledger
+        .cas()
+        .put::<ModelObject>(&to_canon(&model).unwrap())
+        .unwrap();
+    let refuted = success(
+        &exchange(
+            ledger,
+            handlers,
+            Message::Refute {
+                obligation: o,
+                model: ObjectRef::Cas(model),
+            },
+        ),
+        1,
+    );
+    (o, refuted, model)
+}
+
+#[test]
+fn s4_reproposal_with_reordered_citations_is_refused_with_the_countermodel() {
+    let (temp, signer) = refuted_setup();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let handlers = setup(&mut ledger, &signer, None, budget());
+    let v = Vocabulary::new(1, vec![], vec![]).unwrap();
+    let a = assume(&mut ledger, &signer, &v);
+    let b = assume(&mut ledger, &signer, &v);
+    let (o, refuted, model) = refute_false_goal(&mut ledger, &handlers, &v, vec![a, b]);
+    let head = ledger.head().unwrap();
+    let objects = std::fs::read_dir(temp.0.join("ledger/cas"))
+        .unwrap()
+        .count();
+    let again = candidate(&ledger, &v, truth(false), vec![b, a]);
+    let reply = exchange(&mut ledger, &handlers, Message::Propose(again));
+    refused(&reply);
+    let detail = items(&items(&reply)[3]);
+    assert_eq!(detail[0], Value::Unsigned(5), "AlreadyRefuted");
+    use logos_canon::Canon;
+    assert_eq!(detail[1], o.to_value().unwrap());
+    assert_eq!(detail[2], refuted.to_value().unwrap());
+    assert_eq!(detail[3], model.to_value().unwrap());
+    assert_eq!(ledger.head().unwrap(), head, "nenhum evento novo");
+    assert_eq!(
+        std::fs::read_dir(temp.0.join("ledger/cas"))
+            .unwrap()
+            .count(),
+        objects,
+        "nenhum objeto órfão no CAS"
+    );
+    // Outra obrigação (outro objetivo) continua aceita.
+    let other = candidate(&ledger, &v, truth(true), vec![b, a]);
+    proposed(&mut ledger, &handlers, other);
+}
+
+#[test]
+fn s4_timeout_on_a_second_attempt_cannot_turn_refutation_into_unknown() {
+    let (temp, signer) = refuted_setup();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &signer).unwrap();
+    genesis(&mut ledger, &signer);
+    let handlers = setup(&mut ledger, &signer, None, budget());
+    let v = Vocabulary::new(1, vec![], vec![]).unwrap();
+    let a = assume(&mut ledger, &signer, &v);
+    let (o, refuted, model) = refute_false_goal(&mut ledger, &handlers, &v, vec![a]);
+    // Prover que estoura orçamento na segunda tentativa: handlers com 1 passo.
+    let starved = CertificationHandlers::new(
+        CheckerRegistry::new(signer.public_key().clone(), None).unwrap(),
+        Budget::new(1, 1024, 1024, 0),
+    );
+    let head = ledger.head().unwrap();
+    let again = candidate(&ledger, &v, truth(false), vec![a]);
+    refused(&exchange(&mut ledger, &starved, Message::Propose(again)));
+    let certificate = ledger.cas().put::<Certificate>(b"1 0 1 0\n").unwrap();
+    refused(&exchange(
+        &mut ledger,
+        &starved,
+        certify(o, certificate, LRAT),
+    ));
+    refused(&exchange(
+        &mut ledger,
+        &starved,
+        Message::Refute {
+            obligation: o,
+            model: ObjectRef::Cas(model),
+        },
+    ));
+    assert_eq!(ledger.head().unwrap(), head, "nenhum Unknown/Pending novo");
+    let status = ledger
+        .live_index()
+        .unwrap()
+        .status(refuted)
+        .unwrap()
+        .unwrap();
+    assert_eq!(status.kind, logos_obligation::EntryKind::Refuted);
+}

@@ -32,7 +32,13 @@ Scope é Text ≤64KiB. Aridades/tipos/versões/tags extras MUST ser recusados.
 ## Respostas e eventos
 
 Resposta [1,request_id,0,error_code] ou [1,request_id,1,value]. Codes:
-0 Invalid,1 Limit,2 Unauthorized,3 Unavailable,4 Storage. Não há sucesso
+0 Invalid,1 Limit,2 Unauthorized,3 Unavailable,4 Storage. Etapa5.6/ADR0053
+acrescenta o único erro com detalhe, **already-refuted/v1**: no lugar de
+error_code vem `[5, h_O, h_Refuted_Event, h_Model]` (bstr32 cada), quando o h(O)
+gerado por PROPOSE já tem Refuted registrado (S4). Nenhum evento é gravado e O
+não é publicado no CAS. Refutação é testemunha permanente: reordenar citações dá o
+mesmo h(O) e é recusado; nova tentativa não converte Refuted em Unknown. Vetor em
+`vectors/kernel-protocol/already-refuted-v1.json`. Não há sucesso
 implícito em EOF/erro. Query head retorna [] ou [seq,epoch,h_Event]; status
 retorna [] ou [kind,epoch,retracted]. Kind: Fact0, Policy1, Verified2,
 Assumption3, Pending4, Refuted5, Unknown6, Rejected7, Invalidated8, Proposal9.

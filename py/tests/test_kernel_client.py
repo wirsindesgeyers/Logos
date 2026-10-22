@@ -463,3 +463,34 @@ def test_staging_partial_writes_wrong_uid_and_ambiguous_directory_sync(tmp_path:
     assert len(extra) == 1
     assert next(iter(extra)).read_bytes() == b"ambiguous"
     assert "no automatic retry" in str(error.value.__notes__)
+
+
+def test_already_refuted_detail_vector_is_parsed_and_malformed_detail_rejected() -> None:
+    """5.6/S4: erro com detalhe [5, h_O, h(Refuted), h(M)] vira AlreadyRefuted."""
+    from logos_client.client import AlreadyRefuted, _response
+    from logos_client.protocol import ProtocolError
+
+    root = Path(__file__).resolve().parents[2]
+    vectors = json.loads(
+        (root / "spec/vectors/kernel-protocol/already-refuted-v1.json").read_text()
+    )
+
+    async def parse(payload: bytes, request_id: int) -> canon.Value:
+        reader = asyncio.StreamReader()
+        reader.feed_data(len(payload).to_bytes(4, "big") + payload)
+        reader.feed_eof()
+        return await _response(reader, request_id)
+
+    for v in vectors["vectors"]:
+        with pytest.raises(AlreadyRefuted) as caught:
+            asyncio.run(parse(bytes.fromhex(v["response_hex"]), v["request_id"]))
+        assert caught.value.code == 5
+        assert caught.value.obligation.hex() == v["obligation_hex"]
+        assert caught.value.refuted.hex() == v["refuted_hex"]
+        assert caught.value.model.hex() == v["model_hex"]
+    bad_code = canon.encode([1, 7, 0, [4, b"\0" * 32, b"\0" * 32, b"\0" * 32]])
+    with pytest.raises(ProtocolError):
+        asyncio.run(parse(bad_code, 7))
+    short = canon.encode([1, 7, 0, [5, b"\0" * 31, b"\0" * 32, b"\0" * 32]])
+    with pytest.raises(ProtocolError):
+        asyncio.run(parse(short, 7))

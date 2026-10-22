@@ -1,6 +1,7 @@
 # ADR 0048 — Servidor web local não confiável
 
-- Estado: **proposto** (2026-10-21); escolhas de stack ficam **pendentes** para WS.0.
+- Estado: **aceito** em 2026-10-22, por delegação do mantenedor, com a stack
+  abaixo; revisável a pedido dele. Proposto em 2026-10-21.
 - Base: 57c8a03
 - Relacionadas: 0002, 0035 (transporte canônico), 0043 (cliente), 0045 (MCP), 0047,
   0049; `WS§3`, `WS§12`; Etapas 5.11, 9.2, 10.7, 23.1 e Apêndice G (WS.2).
@@ -69,3 +70,17 @@ alternativas, licenças e consequências, atualizando este ADR.
 
 Nada implementado. Mitigações enunciadas aqui são requisitos de etapas futuras,
 não propriedades existentes.
+
+## Decisão de stack (2026-10-22, por delegação)
+
+| Escolha | Decisão | Motivo | Reverter se |
+| --- | --- | --- | --- |
+| Servidor | Crate Rust próprio fora da TCB (`logos-web`, nome provisório), processo separado; HTTP com `axum`/`tokio` | ADR 0002 põe a interface em Rust; reusa o contrato WS.1 como a TUI; tipos fortes para validar `Host`/`Origin`/limites; ecossistema maduro e licenças MIT. A árvore de dependências fica fora da TCB, mas entra em `deny.toml` com revisão na WS.2 | a árvore de dependências for desproporcional na revisão da WS.2 (plano B: servidor HTTP síncrono mínimo) |
+| Transporte navegador | **SSE** (servidor → navegador, `id:` por evento, reconexão com `Last-Event-ID`) + **POST** com token anti-CSRF para comandos | Cursor e reconexão nativos; elimina a classe de sequestro de WebSocket entre origens (TW4); cancelamento e idempotência ficam em POSTs com chave | precisar de fluxo bidirecional de baixa latência que SSE+POST não atenda |
+| Autenticação | URL de uso único impressa no terminal → cookie `HttpOnly`, `SameSite=Strict`, segredo de 256 bits por inicialização | Não depende de "localhost"; nada reutilizável fica no histórico do navegador | — |
+| Frontend | TypeScript + **Preact**, empacotado com `esbuild` em versão fixada, assets embutidos no binário; sem CDN; identidade visual híbrida *Swiss Lab + Editorial Científico* (`WS§5.4`: monograma `⟦ Λ ⊢ ⟧`, três vozes tipográficas e tokens `glifo + borda + cor`, com contraste anti-spoofing em relação ao recibo de assinatura da 9.2) | Componentes para cartões e painéis com ~4 KB de runtime; sem `eval`, compatível com a CSP estrita; build reprodutível; uma pessoa consegue manter | acessibilidade ou testes headless exigirem outra base |
+| Projeção | O servidor converte canon/v1 em JSON documentado por schema (`spec/client-session.md`, WS.1); o navegador nunca é autoridade | JSON é nativo no navegador; a projeção é testada contra o contrato | — |
+| Testes de navegador | Playwright headless com registro de rede e CSP; `axe-core` para acessibilidade | Cobre XSS/exfiltração (TW1/TW2) e acessibilidade (WS.5/WS.9) | — |
+
+Versões exatas e a revisão de dependências entram no plano da WS.2; nenhuma
+dependência é adicionada antes disso.

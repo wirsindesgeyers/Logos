@@ -1,6 +1,8 @@
 # ADR 0047 — Um produto, um harness, vários clientes e workspaces de projeto
 
-- Estado: **proposto** (2026-10-21); aguarda decisão do mantenedor em WS.0.
+- Estado: **aceito** em 2026-10-22, por delegação explícita do mantenedor ("tome
+  decisões competentes e deixe tudo documentado"); revisável a pedido dele.
+  Proposto em 2026-10-21.
 - Base: 57c8a03
 - Relacionadas: 0002 (linguagens), 0008/0039 (memória, propostas/aceita para
   planejamento), 0037 (trilha científica, aceita), 0045 (MCP de pesquisa), 0048, 0049;
@@ -28,14 +30,20 @@ ledger, ou badges de "verificado" produzidos pela interface.
 
 ## Decisão proposta
 
-1. **Um harness e um ledger.** Conversa comum, matemática, filosofia, programação e
-   pesquisa usam o mesmo `logos_agent` e o mesmo kernel/ledger. A "vertical LOGOS
-   Research" do ADR 0037 passa a ser lida como **perfil de pesquisa** (capacidades e
-   painéis) desse mesmo agente. O ADR 0037 e a Fase 5R permanecem válidos; esta
-   leitura não muda nenhum critério deles.
-2. **Clientes são superfícies.** TUI/CLI Rust (ADR 0002) continuam; uma interface web
-   local opcional é acrescentada (ADR 0048). Todos consomem o mesmo contrato de
-   sessão do harness (WS.1), sem caminho privilegiado ao kernel.
+1. **Um harness e um ledger, com adaptação progressiva à finalidade.** Conversa comum,
+   matemática, filosofia, programação, auditoria de dados/documentos e pesquisa usam o
+   mesmo `logos_agent` e o mesmo kernel/ledger. Toda sessão começa como **chat simples
+   sem fricção** (sem exigir projeto, vocabulário prévio ou confirmação formal) e revela
+   progressivamente verificação inline, *Domain Packs* declarativos (`vocabulary/v2` +
+   `render_pt` + extratores fora da TCB), projetos ou painéis conforme a finalidade da
+   sessão ou da requisição (`WS§2.2`). A "vertical LOGOS Research" do ADR 0037 é lida
+   como **perfil de pesquisa** (capacidades e painéis) desse mesmo agente. O ADR 0037 e
+   a Fase 5R permanecem válidos; esta leitura não muda nenhum critério deles.
+2. **Clientes e modos de execução são superfícies.** TUI/CLI Rust (ADR 0002) continuam;
+   uma interface web local opcional é acrescentada (ADR 0048); modos **CLI one-shot**
+   (`stdin/stdout` estruturado) e **sidecar MCP** (`5R.1`/`10.3`) expõem o mesmo harness
+   para scripts, CI e editores externos. Todos consomem o mesmo contrato de sessão do
+   harness (WS.1), sem caminho privilegiado ao kernel.
 3. **Status vem do kernel.** Clientes exibem status derivado de consulta com cursor;
    nunca constroem `Verified`, assinam, emitem `Seal` próprio ou hospedam a
    interface de assinatura (invariantes W1–W3).
@@ -77,12 +85,27 @@ ledger, ou badges de "verificado" produzidos pela interface.
   depende de MEM.5/MEM.6, que por sua vez dependem de 8.9/9.2. Isso adia o projeto
   com contexto automático; o roadmap declara essa espera em vez de antecipar.
 - Gateway: nenhuma rota de cliente fala com o gateway; ações seguem a Fase 8/9.2.
-- 5R: o caderno da 5R.3 é a primeira instância dos tipos de artefato; WS.4 o importa
-  sem perda. 5R.5 não ganha a web como critério.
-- Custo: trilha grande (WS.0–WS.9). Não está no caminho crítico do paper 1.
+- 5R: o caderno da 5R.3 é a primeira instância dos tipos de artefato e usa um bundle
+  canônico local (`notebook/v1`, fora da TCB) compatível com `ProjectArtifact`, para já
+  permitir salvar/reabrir cadernos localmente antes de MEM.0/MEM.1; WS.4 o importa sem
+  perda. 5R.5 não ganha a web como critério.
 
 ## Limites
 
 - Nada implementado por este ADR; nenhuma caixa do roadmap é marcada.
 - Organização, visualização e memória não verificam metodologia empírica nem
   tornam o agente infalível (L1–L3 permanecem).
+
+## Decisão do mantenedor (2026-10-22, por delegação)
+
+Aceito como escrito, com a persistência do item 5 resolvida assim:
+
+- **Projetos ficam no store da memória** (namespace `Artifact`/`Project`), e a
+  direção do ADR 0008 (Episodic + Knowledge + Router, sem autoridade) é adotada
+  como base (ver nota no ADR 0008). Motivo: evita duplicar custódia, ACL,
+  idempotência, pins e GC, que são as partes mais difíceis de acertar; um store
+  próprio só seria mais simples no começo.
+- Consequência aceita: WS.3 em diante esperam MEM.0/MEM.1 demonstradas. Se a MEM
+  ficar inviável, abrir ADR para o store próprio da alternativa 3, sem migrar dados
+  silenciosamente.
+- O caminho crítico não muda: 9.1 → … continua antes de qualquer WS de código.

@@ -16,6 +16,7 @@ OUT = Path(__file__).resolve().parent.parent / "spec/vectors/kernel-protocol/vec
 RESULT_OUT = OUT.with_name("propose-result-v1.json")
 CHECK_OUT = OUT.with_name("check-result-v1.json")
 WITNESS_OUT = OUT.with_name("witness-result-v1.json")
+REFUSED_OUT = OUT.with_name("already-refuted-v1.json")
 
 
 def encode(value: object) -> bytes:
@@ -158,6 +159,29 @@ def main() -> None:
                         value_hex=encode([1, tag, event]).hex(),
                     )
                     for tag, name in enumerate(["accepted", "rejected", "unknown"])
+                ],
+            ),
+        ),
+        (
+            REFUSED_OUT,
+            dict(
+                format="already-refuted/v1",
+                vectors=[
+                    dict(
+                        id="already-refuted",
+                        request_id=7,
+                        obligation_hex=bytes(range(32)).hex(),
+                        refuted_hex=bytes(range(32, 64)).hex(),
+                        model_hex=bytes(range(64, 96)).hex(),
+                        response_hex=encode(
+                            [
+                                1,
+                                7,
+                                0,
+                                [5, bytes(range(32)), bytes(range(32, 64)), bytes(range(64, 96))],
+                            ]
+                        ).hex(),
+                    )
                 ],
             ),
         ),

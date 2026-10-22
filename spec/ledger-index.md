@@ -45,9 +45,10 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=1. Schema SQL exato e codebook
+application_id=0x4c494458 (LIDX), user_version=2 (ledger-index/v2, Etapa 5.6: índice
+`claims_h_o`; cache v1 é recusado e reconstruído, nunca migrado). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
-conferidos por teste contra arquivo real. Sete objetos SQL, sem triggers/views:
+conferidos por teste contra arquivo real. Oito objetos SQL, sem triggers/views:
 
 | Tabela | Campos | Chave/ordem de comparação |
 | --- | --- | --- |
@@ -63,7 +64,7 @@ texto. scope conserva Text do evento. Metadata sem cabeça tem três NULL;
 cache vazio não inventa evento Genesis. Demais tabelas sem linhas é válido.
 Codebook: 0 Proposal, 1 Pending, 2 Verified, 3 Refuted, 4 Unknown,
 5 Assumption, 6 Invalidated. Fact/Policy/Rejected não têm evento neste catálogo
-e MUST NOT ser sintetizados. Índices `claims_checker`, `deps_premise`.
+e MUST NOT ser sintetizados. Índices `claims_checker`, `claims_h_o`, `deps_premise`.
 
 ## 3. Projeção
 

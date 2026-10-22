@@ -1,0 +1,101 @@
+[
+  {
+    "name": "refuted_check_skipped",
+    "source": "crates/logos-kernel/src/propose.rs",
+    "replace_once": {
+      "from": "    if let Some(refuted) = refuted {\n",
+      "to": "    if let Some(refuted) = refuted.filter(|_| false) {\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "s4_reproposal_with_reordered_citations_is_refused_with_the_countermodel",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ff2e7a096ca7ca96b7663190824e7409825a45a11b656de4481f3504564f4219",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 7.64s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ]
+  },
+  {
+    "name": "refuted_query_wrong_status",
+    "source": "crates/logos-ledger/src/index.rs",
+    "replace_once": {
+      "from": "index_project::REFUTED],",
+      "to": "index_project::VERIFIED],"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--test",
+      "certify",
+      "s4_reproposal_with_reordered_citations_is_refused_with_the_countermodel",
+      "--",
+      "--exact"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "8a8e2ef26cef114aa15516dd046415ee9abaaa619dc379681d33de546e071015",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 8.22s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+    ]
+  },
+  {
+    "name": "detail_code_changed",
+    "source": "crates/logos-kernel/src/wire.rs",
+    "replace_once": {
+      "from": "                Value::Unsigned(5),\n",
+      "to": "                Value::Unsigned(4),\n"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "cargo",
+      "test",
+      "-q",
+      "-p",
+      "logos-kernel",
+      "--lib",
+      "already_refuted_detail_matches_independent_vector"
+    ],
+    "mutant_exit": 101,
+    "positive_control_exit": 0,
+    "detected": true,
+    "compile_error": false,
+    "restored_sha256": "ab63814efc69235f81bdde1a4784f5ea21572ef65596a6f2378891323bc9aec2",
+    "mutant_output_tail": [
+      "",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s",
+      "",
+      "error: test failed, to rerun pass `-p logos-kernel --lib`"
+    ]
+  }
+]

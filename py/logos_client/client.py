@@ -32,6 +32,7 @@ from logos_client.protocol import (
     Witness,
     WitnessResult,
     array,
+    digest,
     encode_request,
     parse_event,
     parse_result,
@@ -44,8 +45,19 @@ class KernelError(Exception):
 
     def __init__(self, code: int, request_id: int) -> None:
         self.code, self.request_id = code, request_id
-        names = ("Invalid", "Limit", "Unauthorized", "Unavailable", "Storage")
+        names = ("Invalid", "Limit", "Unauthorized", "Unavailable", "Storage", "AlreadyRefuted")
         super().__init__(f"kernel {names[code]} (request {request_id})")
+
+
+class AlreadyRefuted(KernelError):
+    """S4 (5.6): PROPOSE recusado porque h(O) já tem refutação registrada.
+
+    Os hashes vêm do kernel; consultar o ledger antes de tratá-los como estado atual.
+    """
+
+    def __init__(self, request_id: int, obligation: bytes, refuted: bytes, model: bytes) -> None:
+        self.obligation, self.refuted, self.model = obligation, refuted, model
+        super().__init__(5, request_id)
 
 
 class SubscriptionInterrupted(ConnectionError):
@@ -68,6 +80,13 @@ async def _response(reader: asyncio.StreamReader, request_id: int) -> canon.Valu
             raise ProtocolError("response version/id mismatch")
         tag = uint(v[2], 1)
         if tag == 0:
+            if isinstance(v[3], list):
+                detail = array(v[3], 4)
+                if uint(detail[0]) != 5:
+                    raise ProtocolError("error detail code")
+                raise AlreadyRefuted(
+                    request_id, digest(detail[1]), digest(detail[2]), digest(detail[3])
+                )
             raise KernelError(uint(v[3], 4), request_id)
         return v[3]
     except canon.CanonError as error:

@@ -158,6 +158,34 @@ impl<'a> LedgerIndex<'a> {
         }))
     }
 
+    /// Primeiro evento Refuted da obrigação, se houver (S4, Etapa 5.6).
+    ///
+    /// Refutação é testemunha permanente: nenhuma outra linha a desfaz.
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn refuted(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT id FROM claims WHERE h_o=?1 AND status=?2 ORDER BY id LIMIT 1")?
+            .query_row(
+                params![obligation.as_bytes().as_slice(), index_project::REFUTED],
+                |r| r.get::<_, Vec<u8>>(0),
+            )
+            .optional()?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(Hash::from_bytes)
+                .map_err(|_| LedgerError::Invalid("refuted digest"))
+        })
+        .transpose()
+    }
+
     /// Citabilidade de estado na época corrente; scope é conferido no snapshot.
     ///
     /// # Errors

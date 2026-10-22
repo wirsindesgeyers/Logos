@@ -19,6 +19,15 @@ pub enum TransportError {
     Unauthorized,
     /// Handler ainda não implementado.
     Unavailable,
+    /// S4 (5.6): a obrigação gerada já foi refutada; a testemunha é permanente.
+    AlreadyRefuted {
+        /// h(O) gerado para a proposta.
+        obligation: logos_crypto::Hash<logos_obligation::Obligation>,
+        /// Primeiro evento Refuted dessa obrigação.
+        refuted: logos_crypto::Hash<logos_ledger::Event>,
+        /// Contramodelo registrado nesse evento.
+        model: logos_crypto::Hash<logos_ledger::ModelObject>,
+    },
 }
 impl std::fmt::Display for TransportError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -31,6 +40,7 @@ impl std::fmt::Display for TransportError {
             Self::Limit(e) => write!(f, "transport limit: {e}"),
             Self::Unauthorized => f.write_str("unauthorized peer UID"),
             Self::Unavailable => f.write_str("handler unavailable"),
+            Self::AlreadyRefuted { .. } => f.write_str("obligation already refuted"),
         }
     }
 }
@@ -69,6 +79,7 @@ impl TransportError {
             Self::Unauthorized => 2,
             Self::Unavailable => 3,
             Self::Io(_) | Self::Cas(_) | Self::Ledger(_) => 4,
+            Self::AlreadyRefuted { .. } => 5,
         }
     }
 }

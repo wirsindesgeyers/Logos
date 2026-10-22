@@ -41,6 +41,8 @@ const INDEXES: &[(&str, &str)] = &[
         "claims_checker",
         "CREATE INDEX claims_checker ON claims(checker)",
     ),
+    // ledger-index/v2 (5.6): consultas por obrigação (S4) e pelo nó ATMS h(O) (5.9).
+    ("claims_h_o", "CREATE INDEX claims_h_o ON claims(h_o)"),
 ];
 const QUERIES: &[&str] = &[
     "SELECT * FROM claims ORDER BY id",
@@ -79,7 +81,7 @@ pub struct RebuildReport {
 pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
     connection.execute_batch("PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;")?;
     connection.pragma_update(None, "application_id", APPLICATION_ID)?;
-    connection.pragma_update(None, "user_version", 1)?;
+    connection.pragma_update(None, "user_version", 2)?;
     for (_, sql) in TABLES.iter().chain(INDEXES) {
         connection.execute_batch(sql)?;
     }
@@ -89,11 +91,11 @@ pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
 fn valid_schema(connection: &Connection) -> Result<bool, LedgerError> {
     let app: i64 = connection.pragma_query_value(None, "application_id", |r| r.get(0))?;
     let version: i64 = connection.pragma_query_value(None, "user_version", |r| r.get(0))?;
-    if app != APPLICATION_ID || version != 1 {
+    if app != APPLICATION_ID || version != 2 {
         return Ok(false);
     }
     let mut statement =
-        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 8")?;
+        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 9")?;
     let mut rows = statement.query([])?;
     let mut expected: Vec<_> = TABLES.iter().chain(INDEXES).copied().collect();
     expected.sort_unstable_by_key(|entry| entry.0);

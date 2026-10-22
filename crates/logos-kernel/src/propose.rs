@@ -70,7 +70,28 @@ pub(crate) fn create<S: Signer>(
     if bytes.len() > DecodeLimits::DEFAULT_MAX_BYTES {
         return Err(Error::Limit("generated obligation bytes"));
     }
-    let hash = ledger.cas().put::<Obligation>(&bytes)?;
+    let hash = logos_crypto::hash_raw::<Obligation>(&bytes);
+    // S4 (5.6): antes de publicar O, recusar obrigação já refutada.
+    let refuted = ledger.live_index()?.refuted(hash)?;
+    if let Some(refuted) = refuted {
+        let mut model = None;
+        crate::replay::replay(ledger, |event| {
+            if let logos_ledger::EventBody::Refuted { model: m, .. } = &event.body
+                && logos_crypto::hash(event)? == refuted
+            {
+                model = Some(*m);
+            }
+            Ok(())
+        })?;
+        return Err(Error::AlreadyRefuted {
+            obligation: hash,
+            refuted,
+            model: model.ok_or(Error::Invalid("Refuted event missing from replay"))?,
+        });
+    }
+    if ledger.cas().put::<Obligation>(&bytes)? != hash {
+        return Err(Error::Invalid("obligation CAS identity"));
+    }
     let response = Value::Array(Array::new(vec![
         Value::Unsigned(1),
         hash.to_value()?,

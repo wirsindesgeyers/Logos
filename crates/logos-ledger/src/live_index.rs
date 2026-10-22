@@ -97,6 +97,16 @@ impl LedgerLiveIndex<'_> {
         self.index.status(reference)
     }
 
+    /// Primeiro Refuted da obrigação (S4); ausência não é prova de nada.
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn refuted(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        self.index.refuted(obligation)
+    }
+
     /// Citabilidade de estado na época atual, sem promover épocas anteriores.
     /// # Errors
     /// SQL ou projeção inválida.
