@@ -46,6 +46,7 @@ def test_200_refutable_obligations_at_least_95_percent(corpus: list[Case]) -> No
     print(f"Z3_CORPUS_OK controls=200 accepted={len(candidates)}/200")
 
 
+@pytest.mark.heavy
 def test_10k_fake_z3_zero_undue_accepted() -> None:
     """Fake Z3 supplies arbitrary certificate bytes at producer → checker boundary."""
     cases, expected = fake_z3_10k()

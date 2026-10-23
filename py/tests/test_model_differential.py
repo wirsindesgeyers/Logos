@@ -26,9 +26,10 @@ from typing import Any
 import z3  # type: ignore[import-untyped]
 
 from logos_client import canon
+from tests.tier import scaled
 
 ROOT = Path(__file__).resolve().parents[2]
-N = 10_000
+N = scaled(10_000, 1_000)
 CARGO = ["cargo", "run", "--quiet", "-p", "logos-model", "--example", "eval_diff", "--"]
 
 

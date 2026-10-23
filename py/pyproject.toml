@@ -41,3 +41,4 @@ files = ["logos_client", "logos_provers", "logos_mcp", "logos_notebook", "logos_
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["heavy: escala de critério; só no nível completo (ci/verify.sh, ADR0057)"]

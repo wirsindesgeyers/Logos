@@ -1,6 +1,6 @@
 """Teste diferencial Rust x Python da codificação canônica (roadmap 0.3).
 
-Duas direções, 100k casos cada (``LOGOS_DIFF_CASES`` ajusta):
+Duas direções, 100k casos cada (5k no nível rápido; ``LOGOS_DIFF_CASES`` ajusta):
   * Python gera objetos/mutações e julga; o Rust (`examples/diff check`) precisa concordar no
     veredito (aceite + renderização, ou o mesmo nome de erro) e reencodar os bytes aceitos
     de forma idêntica.
@@ -17,9 +17,10 @@ import pytest
 
 from logos_client import canon
 from tests import canon_gen
+from tests.tier import scaled
 
 ROOT = Path(__file__).resolve().parents[2]
-N = int(os.environ.get("LOGOS_DIFF_CASES", "100000"))
+N = int(os.environ.get("LOGOS_DIFF_CASES", str(scaled(100_000, 5_000))))
 CARGO = ["cargo", "run", "--quiet", "-p", "logos-canon", "--example", "diff", "--"]
 
 

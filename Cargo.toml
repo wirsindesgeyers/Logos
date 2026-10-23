@@ -59,3 +59,23 @@ debug-assertions = true
 opt-level = 1
 overflow-checks = true
 debug-assertions = true
+
+# ADR0057: cada append assina e verifica Ed25519; em opt-level 0 isso leva ~0,3s
+# e testes com janela de 1024 eventos levavam 5+ min. Mesmo padrão: só otimização,
+# overflow/debug mantidos; não altera o perfil de produção.
+[profile.test.package.curve25519-dalek]
+opt-level = 1
+overflow-checks = true
+debug-assertions = true
+
+[profile.test.package.ed25519-dalek]
+opt-level = 1
+overflow-checks = true
+debug-assertions = true
+
+# Idem para `cargo run`/`cargo build` de debug (smokes, kernel real dos testes Python).
+[profile.dev.package.curve25519-dalek]
+opt-level = 1
+
+[profile.dev.package.ed25519-dalek]
+opt-level = 1

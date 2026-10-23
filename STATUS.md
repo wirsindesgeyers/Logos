@@ -564,21 +564,25 @@ o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
 ## Próximo passo: full verify da pilha; depois 5.8 ou 5.11
 
-Pilha local não enviada: c50cd93 (5R.3), 28727b4 (correção do vetor SAT) e 5.10
-([plano](docs/plans/etapa-5.10.md), ADR0056). Rodar `ci/verify.sh --selftest` na
-ponta; se passar, marcar os critérios de 5R.3 e 5.10 no ROADMAP com o recibo.
-Push só quando o mantenedor pedir.
+Pilha local não enviada: c50cd93 (5R.3), 28727b4 (vetor SAT), ae32873 (5.10),
+107add8 (projeção O(n²) da 5.10 corrigida) e a verificação em níveis (ADR0057).
+Rodar `ci/verify.sh --selftest` (completo) na ponta; se passar, marcar os critérios
+de 5R.3 e 5.10 no ROADMAP com o recibo. Push só quando o mantenedor pedir.
+
+Laço de desenvolvimento a partir de agora: `ci/verify.sh --tier fast` (~5–8 min) a
+cada commit, `--tier affected` quando tocar integração; completo antes de push.
+Olhe `target/verify-times.tsv` quando uma etapa crescer.
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
-contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0056).
+contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0057).
 Nenhuma etapa técnica espera essas revisões além de 5R.2/5R.4.
 
 Trabalho técnico desbloqueado: **5.8** (especulação; depende de 5.3/5.4) e **5.11**
 (isolamento de processos: usuários de SO, sandbox do agente). Depois, 5.12 (kernel
 mínimo ponta a ponta) precisa de 5.1–5.11. Riscos: custo do `snapshot` com muitos
-ancestrais; diferencial ATMS (~11 min) no verify; retratação/recheck exigem parar o
-kernel; recheck com o checker Rust de rotas cake não tem caminho de operador.
+ancestrais; retratação/recheck exigem parar o kernel; recheck com o checker Rust de
+rotas cake não tem caminho de operador.
 
 ## Decisões em aberto para o mantenedor
 
@@ -588,7 +592,9 @@ kernel; recheck com o checker Rust de rotas cake não tem caminho de operador.
   (gramática da paráfrase), 0051 (verificação por pilha), 0052–0054 (5.9/5.6/5.7),
   0055 (caderno 5R.3: retratação offline por CLI, premissas escondidas, piloto
   sintético) e 0056 (5.10: revogação **suspende** em vez de matar; tag15; `used` não
-  recalculado no recheck; recheck por CLI só com cake_lpr).
+  recalculado no recheck; recheck por CLI só com cake_lpr) e 0057 (verificação em
+  níveis fast/affected/full; testes de escala reduzidos por `LOGOS_TIER`; Ed25519
+  com opt-level 1 nos perfis test/dev).
   Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
@@ -613,6 +619,16 @@ kernel; recheck com o checker Rust de rotas cake não tem caminho de operador.
   (`docs/plans/fase-0.md`); a partir da 0.5 vale seguir `AGENTS.md` §2.
 
 ## Armadilhas conhecidas
+
+- Desempenho só aparece em escala: a 5.10 deixou a projeção do índice O(n²) e o
+  único sintoma foi o benchmark de 1M parado por 4 h sem saída. Por isso o completo
+  segue obrigatório antes de push e o `ci/verify.sh` cronometra cada etapa.
+- Testes que fazem muitos appends ficam lentos se Ed25519 cair em opt-level 0
+  (~0,3 s por evento): não remova os overrides de `curve25519-dalek`/`ed25519-dalek`
+  do `Cargo.toml` (ADR0057).
+- `$EPOCHREALTIME` sai com vírgula decimal no locale pt_BR e não existe no zsh sem
+  `zmodload zsh/datetime`; o shell interativo daqui é zsh. Em medições ad hoc use
+  `date +%s.%N`.
 
 - Worktrees paralelos (ADR0051): reservar números de ADR antes de começar. Em
   22/out o ADR de processo foi criado como 0053 na `main` com 0051/0052 ainda nas
@@ -1961,3 +1977,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Full verify/selftest sobre c50cd93 (5R.3) falhou: exit1 em 3975s, `test_sat.py::test_transport_vectors_preserve_independent_cnf_bytes` (1 de 357 Python; 579 Rust, MCP e caderno passaram). O vetor prover-bridge/v1 fixava a resposta de `encode` sem o novo `premise_clauses`; minha verificação direcionada só rodou os testes novos do SAT. Corrigido em 28727b4 (lista vazia, obrigação sem premissas). Mantenedor delegou as decisões ("tome a decisão que for melhor e deixe documentado"); revisão 9.1 segue com ele, sem bloquear trabalho técnico.
 - 2026-10-22 — Etapa5.10 implementada em worktree sobre 28727b4 (ADR0056). Revogação passa a suspender: status Suspended (ledger-index/v3, kind10 no Query, EntryKind novo), suspensão transitiva por ponto fixo de atividade separado do de morte. Evento `Rechecked` (tag15): Accepted troca o checker efetivo e reativa, Rejected invalida com cascata registrada (`reconcile` aceita Rechecked como raiz), Unknown mantém. `Rechecks::{revoke, recheck}` (operador) e CLI `logos ledger revoke-checker|recheck --with --cake`. Auditor aceita rota com certificado ruim só após Rechecked Rejected e reporta `invalidated_by_recheck`. Critério: provas LRAT reais, revogação do Rust suspende 4 rotas, recheck com cake recupera c1/c2 e invalida a plantada e seu dependente (causa [Rechecked, planted]); auditor independente confirma. 6 testes de índice, 3 de kernel, 1 de CLI, 1 Python; 12/12 mutações mortas; fuzz event_decode 600s sem crash. Vetores: eventos (30), layout de índice v3, schema de obrigação.
 - 2026-10-22 — Full verify da pilha c50cd93/28727b4/ae32873 **não passou**: interrompido (exit143) após 4h33 no benchmark `ledger_index_scale` (p99 com 1M), parado a 100% de CPU. Causa: a 5.10 chamava `refresh()` do nó h(O) a cada Verified nova, relendo todas as rotas do nó (O(n²); o benchmark põe 1M rotas na mesma obrigação). Correção: a rota nova sempre nasce ativa (premissas citáveis, checker não revogado), então só recalcula se o nó tem rota Suspended; `claims_h_o` passou a `(h_o,status)` dentro da v3 ainda não publicada. Benchmark 1M: 7min12s (rebuild_ms=359879, p99=25.9µs; histórico 215–305s). Testes ledger/kernel/audit/cli 216/216; mutação "nunca reativar" morta por `new_route_from_active_checker_reactivates_suspended_node`. Full verify ainda pendente.
+- 2026-10-22 — Verificação em níveis (ADR0057, revisa 0051 itens 2–3): `ci/verify.sh --tier fast|affected|full` com cronometragem por etapa (`target/verify-times.tsv`, `STEP_OK`, `VERIFY_FAILED step=`); `tools/verify_plan.py` escolhe smokes pelo fecho reverso do `cargo metadata`; testes de escala leem `LOGOS_TIER` (corpus LRAT 1/10, selo 2k, corrupções do certify 1/16, diferenciais 5k/1k, ATMS 1k; Z3 falso 10k com `heavy`); `lrat_corpus.py --check` relê RUP em 1/10 no rápido. Medição por teste achou `witness_deadline…` com 332 s de 393 s do certify.rs: Ed25519 em opt-level 0 (~0,3 s/append); override opt-level 1 em test/dev → 19 s. Rápido: 23 min → 8 min 15 s (com recompilação). ci.yml passou a rodar o check do caderno (faltava desde a 5R.3). Full verify da pilha pendente.

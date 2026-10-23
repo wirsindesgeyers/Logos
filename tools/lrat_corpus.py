@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import lzma
+import os
 import subprocess
 import sys
 import tarfile
@@ -152,7 +153,10 @@ def check(cases: list[Case]) -> None:
         assert case["cnf"] == canonicalize(case["cnf"].encode())
         assert digest(b"logos/cnf/v1\0", case["cnf"]) == case["h_cnf"]
         assert digest(b"logos/certificate/v1\0", case["proof"]) == case["h_proof"]
-        assert reference(case["cnf"], case["proof"]) == case["used"]
+        # ADR0057: hashes em todos os casos; a releitura RUP (cara) em 1 de cada 10 no
+        # nível rápido, em todos no completo.
+        if os.environ.get("LOGOS_TIER") != "fast" or index % 10 == 1:
+            assert reference(case["cnf"], case["proof"]) == case["used"]
         if index % 25 == 0:
             print(f"LRAT_CORPUS_CHECK processed={index}/{len(cases)}", flush=True)
     print(f"LRAT_CORPUS_OK sat2002={len(cases)}")

@@ -13,8 +13,10 @@ import random
 import subprocess
 from pathlib import Path
 
+from tests.tier import scaled
+
 ROOT = Path(__file__).resolve().parents[2]
-CLAIMS = 10_000
+CLAIMS = scaled(10_000, 1_000)
 RETRACTIONS = 25
 
 

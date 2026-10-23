@@ -140,19 +140,32 @@ fn run(vocabulary: &Vocabulary, seed_base: u64, target: usize) -> ([usize; 7], u
     (depths, accepted_mutations, seed - seed_base)
 }
 
+/// ADR0057: 50k fórmulas por vocabulário no nível completo (padrão, critério 9.1);
+/// `LOGOS_TIER=fast` usa 2k com a mesma lógica e as mesmas sementes.
+fn per_vocabulary() -> usize {
+    if std::env::var("LOGOS_TIER").is_ok_and(|tier| tier == "fast") {
+        2_000
+    } else {
+        50_000
+    }
+}
+
 #[test]
 fn round_trip_100k_distinct_random_formulas_up_to_depth_6() {
-    let (depths_a, mutations_a, seeds_a) = run(&policy_vocabulary(), 0, 50_000);
-    let (depths_b, mutations_b, seeds_b) = run(&adversarial(), 1 << 40, 50_000);
+    let target = per_vocabulary();
+    let (depths_a, mutations_a, seeds_a) = run(&policy_vocabulary(), 0, target);
+    let (depths_b, mutations_b, seeds_b) = run(&adversarial(), 1 << 40, target);
     let depths: Vec<usize> = depths_a.iter().zip(depths_b).map(|(a, b)| a + b).collect();
     println!(
-        "PARAPHRASE_ROUNDTRIP_OK distinct_formulas=100000 distinct_texts=100000 depths={depths:?} seeds={} accepted_mutations={}",
+        "PARAPHRASE_ROUNDTRIP_OK distinct_formulas={} distinct_texts={} depths={depths:?} seeds={} accepted_mutations={}",
+        2 * target,
+        2 * target,
         seeds_a + seeds_b,
         mutations_a + mutations_b
     );
-    assert_eq!(depths.iter().sum::<usize>(), 100_000);
+    assert_eq!(depths.iter().sum::<usize>(), 2 * target);
     assert!(
-        depths[6] > 1000,
+        depths[6] > 2 * target / 100,
         "a amostra precisa atingir profundidade 6: {depths:?}"
     );
 }

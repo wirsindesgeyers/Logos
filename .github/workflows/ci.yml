@@ -210,6 +210,7 @@ jobs:
       - run: uv run python ../tools/gen_cnf_vectors.py --check
       - run: uv run python ../tools/gen_lrat_vectors.py --check
       - run: uv run python ../tools/lrat_corpus.py --check
+      - run: uv run python ../tools/gen_notebook_vectors.py --check
       - name: CNF contra SAT Z3 e tabela verdade (5 mil O)
         run: ../ci/check-cnf.sh
       - name: Dependências do produtor SAT e isolamento do checker
@@ -224,6 +225,8 @@ jobs:
         run: ../ci/check-mcp-research.sh
       - name: Templates vocabulary/v2 no kernel real
         run: ../ci/check-render-templates.sh
+      - name: Caderno 5R.3 no kernel real (retratações e auditoria do corte)
+        run: ../ci/check-notebook.sh
       - name: Arquivar evidência de templates
         if: always()
         uses: actions/upload-artifact@v4

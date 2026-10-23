@@ -14,6 +14,15 @@ impl Drop for Installed {
     }
 }
 
+/// ADR0057: corpus inteiro no nível completo (padrão); `LOGOS_TIER=fast` checa 1 a cada 10.
+fn stride() -> usize {
+    if std::env::var("LOGOS_TIER").is_ok_and(|tier| tier == "fast") {
+        10
+    } else {
+        1
+    }
+}
+
 #[test]
 fn official_sat2002_corpus_and_three_corruptions_per_proof() {
     // XZ/JSON apenas no harness não confiável; Python padrão, sem solver/rede na CI.
@@ -54,7 +63,9 @@ fn official_sat2002_corpus_and_three_corruptions_per_proof() {
     let mut hashes = BTreeSet::new();
     let mut sources = BTreeSet::new();
     let mut corrupted = 0;
-    for (position, case) in cases.iter().enumerate() {
+    let mut accepted = 0;
+    for (position, case) in cases.iter().enumerate().step_by(stride()) {
+        accepted += 1;
         let name = case["source"].as_str().unwrap();
         let cnf = case["cnf"].as_str().unwrap().as_bytes();
         let proof = case["proof"].as_str().unwrap();
@@ -130,7 +141,8 @@ fn official_sat2002_corpus_and_three_corruptions_per_proof() {
         }
     }
     println!(
-        "LRAT_CORPUS_AGREEMENT_OK rust_and_cake_accepted={} corrupted_rejected={corrupted}",
+        "LRAT_CORPUS_AGREEMENT_OK rust_and_cake_accepted={accepted}/{} corrupted_rejected={corrupted}",
         cases.len()
     );
+    assert_eq!(corrupted, 3 * accepted);
 }

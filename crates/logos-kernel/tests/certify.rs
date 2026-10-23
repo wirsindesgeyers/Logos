@@ -710,8 +710,14 @@ fn p3_p4_generated_certificate_corruptions_and_cross_obligation_proofs_never_aut
     let (o, v) = propose(&mut ledger, &handlers, true);
     let good = proof(&ledger, o, &v);
     let original = ledger.cas().get(&good).unwrap().unwrap();
-    // A byte substitution at every non-whitespace position produces an invalid proof.
-    for i in 0..original.len() {
+    // A byte substitution at every non-whitespace position produces an invalid proof
+    // (ADR0057: `LOGOS_TIER=fast` substitutes every 16th position).
+    let stride = if std::env::var("LOGOS_TIER").is_ok_and(|tier| tier == "fast") {
+        16
+    } else {
+        1
+    };
+    for i in (0..original.len()).step_by(stride) {
         if original[i].is_ascii_whitespace() {
             continue;
         }
@@ -1077,13 +1083,13 @@ fn witness_deadline_is_inclusive_and_restart_does_not_renew_it() {
     let (o, v) = propose(&mut ledger, &h, true);
     let m = empty_model(&ledger, &v);
     let pending = ledger.head().unwrap().unwrap().seq;
-    while ledger.head().unwrap().unwrap().seq + 1 < pending + WITNESS_WINDOW_EVENTS {
-        ledger
-            .append(EventBody::Proposed {
-                proposal: candidate(&ledger, &v, truth(true), vec![]),
-                author: signer.key_id().unwrap(),
-            })
-            .unwrap();
+    // Um corpo só: `candidate` grava no CAS (fsync) e a janela tem 1024 eventos.
+    let filler = EventBody::Proposed {
+        proposal: candidate(&ledger, &v, truth(true), vec![]),
+        author: signer.key_id().unwrap(),
+    };
+    for _ in pending + 1..pending + WITNESS_WINDOW_EVENTS {
+        ledger.append(filler.clone()).unwrap();
     }
     success(&exchange(&mut ledger, &h, witness(o, m)), 0);
     assert_eq!(
