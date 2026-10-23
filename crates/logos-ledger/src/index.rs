@@ -190,6 +190,80 @@ impl<'a> LedgerIndex<'a> {
         .transpose()
     }
 
+    /// Menor rota Verified ativa (não suspensa) do nó h(O), citável na época da
+    /// cabeça; base de especulação resolvida no CERTIFY (Etapa 5.8, ADR0058).
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn active_route(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        let Some(head) = self.head else {
+            return Ok(None);
+        };
+        let row = self
+            .connection
+            .prepare("SELECT claims.id FROM claims JOIN citable ON citable.ref=claims.id WHERE h_o=?1 AND checker IS NOT NULL AND status=?2 AND citable.epoch=?3 ORDER BY claims.id LIMIT 1")?
+            .query_row(
+                params![
+                    obligation.as_bytes().as_slice(),
+                    index_project::VERIFIED,
+                    head.epoch.to_be_bytes().as_slice()
+                ],
+                |r| r.get::<_, Vec<u8>>(0),
+            )
+            .optional()?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(Hash::from_bytes)
+                .map_err(|_| LedgerError::Invalid("route digest"))
+        })
+        .transpose()
+    }
+
+    /// Rotas Verified mortas do nó h(O), em ordem de h(Event), se o nó teve
+    /// rotas e nenhuma está viva (Verified ou Suspended); vazio caso contrário.
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn dead_routes(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Vec<Hash<Event>>, LedgerError> {
+        let mut statement = self.connection.prepare(
+            "SELECT id, status FROM claims WHERE h_o=?1 AND checker IS NOT NULL AND status IN (?2,?3,?4) ORDER BY id",
+        )?;
+        let rows = statement
+            .query_map(
+                params![
+                    obligation.as_bytes().as_slice(),
+                    index_project::VERIFIED,
+                    index_project::SUSPENDED,
+                    index_project::INVALIDATED
+                ],
+                |r| Ok((r.get::<_, Vec<u8>>(0)?, r.get::<_, i64>(1)?)),
+            )?
+            .collect::<Result<Vec<_>, _>>()?;
+        if rows
+            .iter()
+            .any(|(_, status)| *status != index_project::INVALIDATED)
+        {
+            return Ok(Vec::new());
+        }
+        rows.into_iter()
+            .map(|(bytes, _)| {
+                bytes
+                    .as_slice()
+                    .try_into()
+                    .map(Hash::from_bytes)
+                    .map_err(|_| LedgerError::Invalid("route digest"))
+            })
+            .collect()
+    }
+
     /// Assumptions no fecho de dependências used da referência, inclusive ela
     /// mesma, com seus scopes; ordenadas por h(Event). `None` se a referência
     /// não é linha do índice; lista vazia = claim incondicional (Etapa 5.7).

@@ -107,6 +107,26 @@ impl LedgerLiveIndex<'_> {
         self.index.refuted(obligation)
     }
 
+    /// Menor rota Verified ativa e citável do nó h(O) (5.8).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn active_route(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        self.index.active_route(obligation)
+    }
+
+    /// Rotas do nó h(O) quando todas estão mortas; vazio se alguma vive (5.8).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn dead_routes(
+        &self,
+        obligation: Hash<logos_obligation::Obligation>,
+    ) -> Result<Vec<Hash<Event>>, LedgerError> {
+        self.index.dead_routes(obligation)
+    }
+
     /// Assumptions abertas no fecho used (5.7); `None` se a referência não existe.
     /// # Errors
     /// SQL ou projeção inválida.

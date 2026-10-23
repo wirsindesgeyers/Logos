@@ -269,10 +269,8 @@ fn recovery_checks_all_events_and_fixed_external_key() {
     let signer = signer();
     populated(&temp, &signer);
     let wrong = FileSigner::from_seed(&[0x22; 32]).unwrap();
-    assert!(matches!(
-        Ledger::open(&temp.0, &wrong),
-        Err(LedgerError::Event(_))
-    ));
+    let opened = Ledger::open(&temp.0, &wrong).err();
+    assert!(matches!(opened, Some(LedgerError::Event(_))), "{opened:?}");
     Ledger::open(&temp.0, &signer).unwrap();
 }
 

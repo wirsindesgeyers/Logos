@@ -25,7 +25,7 @@ pub use decode::{
     CheckedObligation, DecodeError, DecodeLimits, decode_for_check, vocabulary_for_check,
 };
 pub use error::Reject;
-pub use generate::generate;
+pub use generate::{generate, generate_speculative};
 pub use types::{
     EntryKind, LedgerEntry, LedgerError, LedgerView, Obligation, PremiseRef, Proposal,
 };

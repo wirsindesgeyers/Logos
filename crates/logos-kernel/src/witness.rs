@@ -156,7 +156,12 @@ impl CertificationHandlers {
             {
                 return Err(Error::Invalid("witness checker/context changed"));
             }
-            let (bytes, vocabulary) = context(ledger, obligation, proposal)?;
+            let (bytes, vocabulary) = context(
+                ledger,
+                obligation,
+                proposal,
+                crate::certify::Speculation::Refused,
+            )?;
             let model_bytes = ledger
                 .cas()
                 .get(model)?
@@ -207,7 +212,12 @@ impl CertificationHandlers {
         if next > c.pending_seq.saturating_add(WITNESS_WINDOW_EVENTS) {
             return Err(Error::Invalid("witness deadline expired"));
         }
-        let (bytes, vocabulary) = context(ledger, obligation, &c.proposal)?;
+        let (bytes, vocabulary) = context(
+            ledger,
+            obligation,
+            &c.proposal,
+            crate::certify::Speculation::Refused,
+        )?;
         let model_bytes = ledger
             .cas()
             .get(&model)?

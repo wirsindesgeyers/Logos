@@ -5,7 +5,7 @@
 use logos_air::Compatibility;
 
 use crate::error::Reject;
-use crate::types::{LedgerView, Obligation, Proposal};
+use crate::types::{EntryKind, LedgerView, Obligation, PremiseRef, Proposal};
 
 /// Gera uma obrigação canônica selada $\Gamma \vdash \varphi$ a partir de uma proposta e um snapshot do ledger.
 ///
@@ -25,6 +25,31 @@ use crate::types::{LedgerView, Obligation, Proposal};
 /// Retorna [`Reject`] na primeira condição inválida encontrada de acordo com a precedência
 /// normativa, diagnosticando referências inválidas pela menor referência ordenada.
 pub fn generate(proposal: Proposal<'_>, view: &impl LedgerView) -> Result<Obligation, Reject> {
+    generate_with(proposal, &[], view)
+}
+
+/// Gera uma obrigação especulativa (Etapa 5.8, ADR 0058): $\Gamma$ inclui as
+/// citações e as bases `speculative`, cada base com a fórmula do seu `Pending`.
+///
+/// Mesmo algoritmo de [`generate`] sobre a união ordenada e deduplicada; uma
+/// referência de `speculative` precisa ter kind [`EntryKind::Pending`], e as demais
+/// continuam exigindo kind citável. Qualquer outro kind é `NotCitable`.
+///
+/// # Errors
+/// As mesmas recusas de [`generate`], na mesma precedência.
+pub fn generate_speculative(
+    proposal: Proposal<'_>,
+    speculative: &[PremiseRef],
+    view: &impl LedgerView,
+) -> Result<Obligation, Reject> {
+    generate_with(proposal, speculative, view)
+}
+
+fn generate_with(
+    proposal: Proposal<'_>,
+    speculative: &[PremiseRef],
+    view: &impl LedgerView,
+) -> Result<Obligation, Reject> {
     // 1. check(V_alvo, goal); falha => Reject::GoalSort(SortError)
     logos_air::check(proposal.vocabulary, proposal.goal).map_err(Reject::GoalSort)?;
 
@@ -33,6 +58,7 @@ pub fn generate(proposal: Proposal<'_>, view: &impl LedgerView) -> Result<Obliga
 
     // 3. Copiar referências, ordenar e deduplicar; ler época do snapshot uma vez.
     let mut refs = proposal.cites.to_vec();
+    refs.extend_from_slice(speculative);
     refs.sort_unstable();
     refs.dedup();
     let current_epoch = view.current_epoch();
@@ -60,7 +86,12 @@ pub fn generate(proposal: Proposal<'_>, view: &impl LedgerView) -> Result<Obliga
             });
         }
 
-        if !entry.kind.is_citable() {
+        let eligible = if speculative.contains(&reference) {
+            entry.kind == EntryKind::Pending
+        } else {
+            entry.kind.is_citable()
+        };
+        if !eligible {
             return Err(Reject::NotCitable {
                 reference,
                 kind: entry.kind,

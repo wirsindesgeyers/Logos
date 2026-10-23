@@ -56,7 +56,7 @@ overflow-checks = true
 debug-assertions = true
 
 [profile.test.package.sha2]
-opt-level = 1
+opt-level = 3
 overflow-checks = true
 debug-assertions = true
 
@@ -79,3 +79,9 @@ opt-level = 1
 
 [profile.dev.package.ed25519-dalek]
 opt-level = 1
+
+# ADR0057: o checker Rust é o próprio executável (/proc/self/exe), rehasheado a cada
+# registro/checagem; com debuginfo completo o binário de teste tinha ~43MB. Linhas
+# bastam para backtraces de teste.
+[profile.dev]
+debug = "line-tables-only"

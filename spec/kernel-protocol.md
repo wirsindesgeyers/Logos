@@ -54,7 +54,15 @@ históricos não mudam. Vetores independentes em
 confere junto com os vetores de requisição.
 
 PROPOSE MUST resolver V no CAS e montar a snapshot autenticada do ledger
-antes de generate. Especulação não vazia é inválida; scope opaco é vazio
+antes de generate. Especulação (5.8, ADR0058): speculative_ids são
+h(ObligationCreated) de instâncias Pending não concluídas, não invalidadas nem
+retratadas, da época corrente (obtidas por Subscribe); base já Verified/Refuted, rota,
+assumption ou id desconhecido é Invalid sem evento. O usa generate_speculative e o
+escopo derivado inclui as citações das bases, fechadas transitivamente. CERTIFY de
+proposta especulativa é Invalid sem evento enquanto alguma base não tiver rota
+Verified ativa e citável; com todas ativas, a menor rota de cada base entra em
+`cited` e substitui a base em `used`. REFUTE é aceito em qualquer estado das bases;
+WITNESS de proposta especulativa é Invalid. Scope opaco é vazio
 até5.7. O kernel MUST serializar/limitar O a1MiB e publicar os bytes no CAS
 antes de registrar Proposed+ObligationCreated pelas transições5.1.
 Resposta só após ambos os appends confirmados. Erro entre eles pode deixar

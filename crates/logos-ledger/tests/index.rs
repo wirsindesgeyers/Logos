@@ -1287,6 +1287,30 @@ fn retracting_premise_of_suspended_route_kills_it() {
     );
 }
 
+#[test]
+fn speculation_queries_skip_suspended_routes_and_report_only_fully_dead_nodes() {
+    // 5.8 (ADR0058): base especulativa se resolve só por rota Verified ativa; rota
+    // suspensa não resolve nem conta como morta.
+    let c = chain();
+    let mut ledger = Ledger::open(&c.fixture.temp.0, &c.fixture.signer).unwrap();
+    let index = ledger.index().unwrap();
+    assert_eq!(index.active_route(c.ho).unwrap(), Some(c.route));
+    assert!(index.dead_routes(c.ho).unwrap().is_empty());
+    drop(index);
+    ledger.append(revoke(&c.fixture.signer)).unwrap();
+    let index = ledger.index().unwrap();
+    assert_eq!(index.active_route(c.ho).unwrap(), None);
+    assert!(index.dead_routes(c.ho).unwrap().is_empty());
+    drop(index);
+    ledger.append(retract(c.a, &c.fixture.signer)).unwrap();
+    let index = ledger.index().unwrap();
+    assert_eq!(index.active_route(c.ho).unwrap(), None);
+    assert_eq!(index.dead_routes(c.ho).unwrap(), vec![c.route]);
+    let without_routes = Hash::<Obligation>::from_bytes([9; 32]);
+    assert_eq!(index.active_route(without_routes).unwrap(), None);
+    assert!(index.dead_routes(without_routes).unwrap().is_empty());
+}
+
 type BuildBody = fn(&Chain, &mut Ledger<'_, FileSigner>) -> EventBody;
 
 #[test]

@@ -14,6 +14,7 @@ use logos_air::{
 use logos_canon::{Text, to_canon};
 use logos_obligation::{
     EntryKind, LedgerEntry, LedgerError, LedgerView, PremiseRef, Proposal, Reject, generate,
+    generate_speculative,
 };
 
 // ---------------------------------------------------------------------------
@@ -304,6 +305,117 @@ fn test_reject_all_six_non_citable_kinds() {
             other => panic!("expected NotCitable({kind:?}), got {other:?}"),
         }
     }
+}
+
+#[test]
+fn test_speculative_bases_must_be_pending_and_enter_gamma() {
+    // Etapa 5.8 (ADR 0058): base especulativa só com kind Pending; citação continua
+    // exigindo kind citável, inclusive dentro de generate_speculative.
+    let vocab = base_vocab();
+    let goal = formula_true();
+    let (cite, base) = (make_ref(1), make_ref(2));
+    let mut ledger = FakeLedger::new(7);
+    ledger.insert_entry(
+        cite,
+        EntryKind::Verified,
+        7,
+        false,
+        vocab.clone(),
+        formula_true(),
+    );
+    ledger.insert_entry(
+        base,
+        EntryKind::Pending,
+        7,
+        false,
+        vocab.clone(),
+        formula_false(),
+    );
+    let proposal = Proposal {
+        vocabulary: &vocab,
+        goal: &goal,
+        cites: &[cite],
+    };
+    let obligation = generate_speculative(proposal, &[base], &ledger).unwrap();
+    assert_eq!(
+        obligation.premises(),
+        &[(cite, formula_true()), (base, formula_false())]
+    );
+    // A mesma referência como citação comum continua não citável.
+    let pending_cited = Proposal {
+        vocabulary: &vocab,
+        goal: &goal,
+        cites: &[base],
+    };
+    assert!(matches!(
+        generate_speculative(pending_cited, &[], &ledger),
+        Err(Reject::NotCitable { reference, kind: EntryKind::Pending }) if reference == base
+    ));
+    // Qualquer kind diferente de Pending é recusado como base, inclusive citáveis.
+    for kind in [
+        EntryKind::Fact,
+        EntryKind::Policy,
+        EntryKind::Verified,
+        EntryKind::Assumption,
+        EntryKind::Refuted,
+        EntryKind::Unknown,
+        EntryKind::Rejected,
+        EntryKind::Invalidated,
+        EntryKind::Proposal,
+        EntryKind::Suspended,
+    ] {
+        let mut ledger = FakeLedger::new(7);
+        ledger.insert_entry(base, kind, 7, false, vocab.clone(), formula_true());
+        let proposal = Proposal {
+            vocabulary: &vocab,
+            goal: &goal,
+            cites: &[],
+        };
+        assert!(
+            matches!(
+                generate_speculative(proposal, &[base], &ledger),
+                Err(Reject::NotCitable { reference, kind: k }) if reference == base && k == kind
+            ),
+            "{kind:?}"
+        );
+    }
+    // Época e retratação valem para a base como para citações.
+    let mut stale = FakeLedger::new(8);
+    stale.insert_entry(
+        base,
+        EntryKind::Pending,
+        7,
+        false,
+        vocab.clone(),
+        formula_true(),
+    );
+    let mut retracted = FakeLedger::new(7);
+    retracted.insert_entry(
+        base,
+        EntryKind::Pending,
+        7,
+        true,
+        vocab.clone(),
+        formula_true(),
+    );
+    let empty = Proposal {
+        vocabulary: &vocab,
+        goal: &goal,
+        cites: &[],
+    };
+    assert!(matches!(
+        generate_speculative(empty, &[base], &stale),
+        Err(Reject::InvalidEpoch { .. })
+    ));
+    let empty = Proposal {
+        vocabulary: &vocab,
+        goal: &goal,
+        cites: &[],
+    };
+    assert!(matches!(
+        generate_speculative(empty, &[base], &retracted),
+        Err(Reject::Retracted(r)) if r == base
+    ));
 }
 
 #[test]

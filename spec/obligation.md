@@ -119,7 +119,14 @@ identidade. O não transforma isso em fato incondicional. Escopo/proveniência
 válidos vêm da view; propagação condicional/eventos/tokens depende de fases futuras.
 Gerador não prova consistência, não fecha obrigação, não expande Defined, não
 executa solvers e não verifica assinatura de ledger inexistente. LedgerView fake
-não prova autenticidade real. Sem CNF/SMT/Lean, especulação ou protocolo 1.6.
+não prova autenticidade real. Sem CNF/SMT/Lean ou protocolo 1.6.
+
+**Especulação (Etapa 5.8, ADR0058).** `generate_speculative(proposal, speculative,
+view)` executa o mesmo algoritmo sobre a união ordenada e deduplicada de `cites` e
+`speculative`. Uma referência de `speculative` MUST ter kind Pending (sua fórmula é
+a meta da obrigação Pending); as demais continuam exigindo kind citável. Qualquer
+outro kind é `NotCitable`, na mesma precedência. O formato obligation/v1 não muda:
+a base é uma premissa comum de Γ identificada pelo h(Event) do Pending.
 
 ## 5. Evidência reproduzível
 

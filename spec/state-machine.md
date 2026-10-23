@@ -87,3 +87,18 @@ e grava Rechecked: Accepted reativa, Rejected invalida e o `reconcile` da §4
 registra a cascata com a raiz no Rechecked, Unknown mantém a suspensão. Falha
 operacional do checker é erro sem append. `used` registrado não é recalculado.
 
+## 6. Especulação (Etapa 5.8, ADR0058)
+
+Um Pending pode especular sobre outros Pending (`speculative_on`): fica Pending
+condicional, nunca citável (P5: nem por PROPOSE nem por ação). Só vira Verified pelo
+CERTIFY depois que toda base tem rota Verified ativa (kernel-protocol.md); a partir
+daí vale o ATMS das §4–5 pelas arestas `used`.
+
+Base falha: linha invalidada (especulação dela falhou), h(O) refutado, ou nó h(O)
+com rotas e nenhuma viva. Todo Pending especulativo não concluído com base falha
+recebe `Invalidated { claim: h(Pending), causes: [raiz, h(base)] }` —
+`SpeculationFailed(base)` —, onde a raiz é o Refuted da base, a raiz registrada da
+base ou da rota morta, ou a rota nascida morta. A varredura é idempotente, em ordem
+de seq (a menor base falha decide a causa), e roda após todo Refuted e no fim do
+`reconcile` (retratação, recheck, boot). Pending concluído (com Verified ou Refuted
+do seu h(O)) não é varrido.

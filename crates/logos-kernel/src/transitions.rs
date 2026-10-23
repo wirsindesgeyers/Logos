@@ -244,6 +244,90 @@ impl<'writer, 'signer, S: Signer> Transitions<'writer, 'signer, S> {
         })
     }
 
+    /// Reconstrói o Claim<Pending> de uma instância ObligationCreated dada, para
+    /// registrar `SpeculationFailed` (5.8). Não decide se ela deve cair.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn recover_pending_at(
+        &self,
+        target: Hash<Event>,
+    ) -> Result<Claim<Pending>, crate::TransportError> {
+        use crate::{TransportError as Error, replay::replay};
+        let mut proposed: Option<Event> = None;
+        let mut found: Option<(Event, Event)> = None;
+        replay(self.ledger, |event| {
+            match &event.body {
+                EventBody::Proposed { .. } => proposed = Some(event.clone()),
+                EventBody::ObligationCreated { .. } if found.is_none() => {
+                    let draft = proposed
+                        .take()
+                        .ok_or(Error::Invalid("Pending without proposal"))?;
+                    if hash(event)? == target {
+                        found = Some((draft, event.clone()));
+                    }
+                }
+                _ => {}
+            }
+            Ok(())
+        })?;
+        let (draft, event) = found.ok_or(Error::Invalid("target is not a Pending instance"))?;
+        let EventBody::ObligationCreated { obligation, .. } = &event.body else {
+            return Err(Error::Invalid("Pending body"));
+        };
+        let EventBody::Proposed { proposal, .. } = &draft.body else {
+            return Err(Error::Invalid("Pending proposal body"));
+        };
+        let mut cited = proposal.cites.clone();
+        cited.sort_unstable();
+        cited.dedup();
+        Ok(Claim {
+            origin: Origin {
+                session: Arc::clone(&self.session),
+                proposal: hash(&draft)?,
+                epoch: event.epoch,
+                obligation: Some(*obligation),
+                cited,
+            },
+            receipt: SignedEvent {
+                hash: target,
+                event,
+                state: PhantomData,
+            },
+        })
+    }
+
+    /// Acrescenta às citações do claim as rotas Verified que resolvem suas bases
+    /// especulativas (5.8). Chamado só pelo CERTIFY depois de conferir cada rota.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn settle(
+        &self,
+        mut claim: Claim<Pending>,
+        routes: &[Hash<Event>],
+    ) -> Result<Claim<Pending>, LedgerError> {
+        self.validate(&claim, true)?;
+        claim.origin.cited.extend_from_slice(routes);
+        claim.origin.cited.sort_unstable();
+        claim.origin.cited.dedup();
+        Ok(claim)
+    }
+
+    // Causa selecionada pelo módulo speculation (5.8, ADR0058): base falha.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn abandon(
+        &mut self,
+        claim: Claim<Pending>,
+        causes: Vec<Hash<Event>>,
+    ) -> Result<Claim<Invalidated>, LedgerError> {
+        self.validate(&claim, false)?;
+        let receipt = self.append(EventBody::Invalidated {
+            claim: claim.receipt().hash(),
+            causes,
+        })?;
+        Ok(Claim {
+            origin: claim.origin,
+            receipt,
+        })
+    }
+
     fn append<T>(&mut self, body: EventBody) -> Result<SignedEvent<T>, LedgerError> {
         let event = self.ledger.append(body)?;
         let hash = hash(&event)?;

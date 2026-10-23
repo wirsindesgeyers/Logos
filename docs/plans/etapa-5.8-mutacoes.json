@@ -1,0 +1,82 @@
+{
+  "stage": "5.8",
+  "command": "LOGOS_TIER=fast cargo test -q <testes indicados> por mutação",
+  "killed": 12,
+  "total": 14,
+  "equivalent": [
+    "M4",
+    "M13"
+  ],
+  "mutations": [
+    {
+      "mutation": "M1 gerador aceita qualquer kind como base",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M2 gerador aceita Pending citado",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M3 base concluída aceita",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M4 base invalidada aceita",
+      "killed": false,
+      "note": "equivalente: o gerador recebe a base com kind Invalidated e recusa NotCitable; a recusa do teste continua, só por outra camada"
+    },
+    {
+      "mutation": "M5 CERTIFY sem exigir base Verified",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M6 used não mapeado para a rota",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M7 REFUTE não varre",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M8 reconcile não varre",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M9 cascata não transitiva",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M10 rota morta não derruba base",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M11 escopo ignora bases",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M12 WITNESS aceita especulativo",
+      "killed": true,
+      "note": ""
+    },
+    {
+      "mutation": "M13 rota suspensa resolve base",
+      "killed": false,
+      "note": "equivalente: rota Suspended sai de `citable` (5.10), e o JOIN com citable já a exclui; o filtro de status é redundante"
+    },
+    {
+      "mutation": "M14 nó com rota suspensa conta como morto",
+      "killed": true,
+      "note": ""
+    }
+  ]
+}

@@ -9,7 +9,7 @@ use logos_air::{Limits, Vocabulary};
 use logos_canon::{Array, Canon, Value, to_canon};
 use logos_crypto::Signer;
 use logos_ledger::{EventProposal, Ledger, Route};
-use logos_obligation::{DecodeLimits, Obligation, PremiseRef, Proposal, generate};
+use logos_obligation::{DecodeLimits, Obligation, PremiseRef, Proposal, generate_speculative};
 
 /// Handler sem estado lógico próprio; identidade e contexto vêm do ledger.
 /// A autoria de Proposed é a do kernel, não uma assinatura do agente.
@@ -31,9 +31,6 @@ pub(crate) fn create<S: Signer>(
     proposal: EventProposal,
     layer1: bool,
 ) -> Result<Value, Error> {
-    if !proposal.speculative_on.is_empty() {
-        return Err(Error::Invalid("speculation requires 5.8"));
-    }
     let author = ledger
         .events_from(0, 1)?
         .first()
@@ -56,14 +53,28 @@ pub(crate) fn create<S: Signer>(
             .head()?
             .ok_or(Error::Invalid("PROPOSE requires Genesis"))?
             .epoch;
-        let scope = crate::scope::for_proposal(&index, &proposal.cites, epoch)?;
-        let view = index.snapshot(ledger.cas(), &references, &scope)?;
-        generate(
+        // 5.8 (ADR0058): bases especulativas são instâncias Pending não concluídas;
+        // entram em Γ com a meta delas e no cálculo do escopo derivado.
+        let (speculative, scope_cites) = if proposal.speculative_on.is_empty() {
+            (Vec::new(), proposal.cites.clone())
+        } else {
+            let history = crate::speculation::History::read(ledger)?;
+            (
+                history.bases(&index, &proposal.speculative_on, epoch)?,
+                history.scope_cites(&proposal),
+            )
+        };
+        let scope = crate::scope::for_proposal(&index, &scope_cites, epoch)?;
+        let mut snapshot_refs = references.clone();
+        snapshot_refs.extend_from_slice(&speculative);
+        let view = index.snapshot(ledger.cas(), &snapshot_refs, &scope)?;
+        generate_speculative(
             Proposal {
                 vocabulary: &vocabulary,
                 goal: &proposal.goal,
                 cites: &references,
             },
+            &speculative,
             &view,
         )
         .map_err(|error| {

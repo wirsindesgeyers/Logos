@@ -49,7 +49,9 @@ Proposal = [text_pt_utf8_bytes, Formula, cites, speculative_on, hV]
 Text_pt preserva UTF-8 original como bytes, inclusive não NFC; continua tainted.
 Não converter para Text canônico, normalizar, interpretar ou promover a política.
 Formula é AIR integral; não aplicar sort-check sem V. speculative_on são IDs
-opacos bytes32, não referências autenticadas; preservam ordem e duplicatas.
+bytes32 preservados em ordem e com duplicatas; o codec não os autentica. Desde a
+5.8 (ADR0058) o kernel só grava Proposed cujas bases são instâncias Pending
+(h(ObligationCreated)) não concluídas da época (state-machine.md §6).
 Cites da proposta preservam ordem/duplicatas, tal como proposal/v1.
 Demais conjuntos de refs MUST estar estritamente ordenados e sem duplicatas;
 `causes` é caminho ordenado e não vazio, preservado, não conjunto. Para a

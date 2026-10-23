@@ -254,6 +254,7 @@ fontes opacas não demonstram autenticação.
 | 5.5 Não-vacuidade/WITNESS | ⚠ concluída localmente; CI pendente | ADR0042; WITNESS real, antes/depois, prazo lógico, replay e consulta de uso. Γ inconsistente prova False mas não autoriza ação;10 mutações, fuzz e full verify/selftest passaram. |
 | 5.6 Bloqueio de re-proposta refutada (S4) | ⚠ concluída localmente; CI pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
 | 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
+| 5.8 Especulação de claims | 🚧 implementada localmente; full verify pendente | ADR0058; `speculative_on` = h(Pending) não concluído; `generate_speculative`; CERTIFY só com base Verified (rota em `cited`, base→rota em `used`); `SpeculationFailed` = `Invalidated{pending,[raiz,base]}` por varredura idempotente após Refuted e no reconcile. Critérios demonstrados: C7 refutado → C8/C9 invalidados; 1000 cadeias com profundidade 0 sem especulação (controle especulativo 138). 12/14 mutações mortas, 2 equivalentes. Sem formato novo. |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -562,12 +563,15 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: 5.8 ou 5.11
+## Próximo passo: 5.11 (isolamento de processos)
 
 Pilha local não enviada, coberta por full verify (recibo
 [pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json)): c50cd93 (5R.3),
 28727b4, ae32873 (5.10), 107add8 (projeção O(n²)) e 856929f (níveis). Critérios de
-5R.3 e 5.10 marcados; push e CI quando o mantenedor pedir.
+5R.3 e 5.10 marcados; push e CI quando o mantenedor pedir. Depois: 5.8
+([plano](docs/plans/etapa-5.8.md), ADR0058) commitada com `--tier affected`; seus
+dois critérios foram demonstrados (inclusive as 1000 cadeias à parte) e só serão
+marcados após o full verify na ponta.
 
 Laço de desenvolvimento a partir de agora: `ci/verify.sh --tier fast` (~5–8 min) a
 cada commit, `--tier affected` quando tocar integração; completo antes de push.
@@ -575,12 +579,14 @@ Olhe `target/verify-times.tsv` quando uma etapa crescer.
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
-contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0057).
+contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0058).
 Nenhuma etapa técnica espera essas revisões além de 5R.2/5R.4.
 
-Trabalho técnico desbloqueado: **5.8** (especulação; depende de 5.3/5.4) e **5.11**
-(isolamento de processos: usuários de SO, sandbox do agente). Depois, 5.12 (kernel
-mínimo ponta a ponta) precisa de 5.1–5.11. Riscos: custo do `snapshot` com muitos
+Trabalho técnico desbloqueado: **5.11** (isolamento de processos: usuários de SO,
+sandbox do agente; teste de penetração scriptado com gateway stub). Depois, 5.12
+(kernel mínimo ponta a ponta) precisa de 5.1–5.11. Riscos da 5.8: varredura e
+resolução de bases custam um replay completo; o auditor não confere a semântica da
+cascata. Riscos: custo do `snapshot` com muitos
 ancestrais; retratação/recheck exigem parar o kernel; recheck com o checker Rust de
 rotas cake não tem caminho de operador.
 
@@ -594,7 +600,9 @@ rotas cake não tem caminho de operador.
   sintético) e 0056 (5.10: revogação **suspende** em vez de matar; tag15; `used` não
   recalculado no recheck; recheck por CLI só com cake_lpr) e 0057 (verificação em
   níveis fast/affected/full; testes de escala reduzidos por `LOGOS_TIER`; Ed25519
-  com opt-level 1 nos perfis test/dev).
+  com opt-level 1 nos perfis test/dev) e 0058 (5.8: base especulativa = h(Pending)
+  não concluído; CERTIFY só com base Verified; `SpeculationFailed` como Invalidated
+  `[raiz, base]`; sem formato novo nem arestas especulativas no índice).
   Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
@@ -619,6 +627,13 @@ rotas cake não tem caminho de operador.
   (`docs/plans/fase-0.md`); a partir da 0.5 vale seguir `AGENTS.md` §2.
 
 ## Armadilhas conhecidas
+
+- `logos-ledger/tests/ledger.rs::recovery_checks_all_events_and_fixed_external_key`
+  falhou uma vez (23/out) dentro do verify e passou isolado 7×; não reproduziu sob
+  carga. A asserção agora imprime o erro recebido: se voltar, investigar por ele.
+- O checker Rust é o próprio executável e é rehasheado a cada evento que o cita:
+  testes com muitos CERTIFY/REFUTE ficam caros. Agrupe em poucos ledgers e
+  paralelize por ledger (ADR0057, adendo).
 
 - Desempenho só aparece em escala: a 5.10 deixou a projeção do índice O(n²) e o
   único sintoma foi o benchmark de 1M parado por 4 h sem saída. Por isso o completo
@@ -1979,3 +1994,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Full verify da pilha c50cd93/28727b4/ae32873 **não passou**: interrompido (exit143) após 4h33 no benchmark `ledger_index_scale` (p99 com 1M), parado a 100% de CPU. Causa: a 5.10 chamava `refresh()` do nó h(O) a cada Verified nova, relendo todas as rotas do nó (O(n²); o benchmark põe 1M rotas na mesma obrigação). Correção: a rota nova sempre nasce ativa (premissas citáveis, checker não revogado), então só recalcula se o nó tem rota Suspended; `claims_h_o` passou a `(h_o,status)` dentro da v3 ainda não publicada. Benchmark 1M: 7min12s (rebuild_ms=359879, p99=25.9µs; histórico 215–305s). Testes ledger/kernel/audit/cli 216/216; mutação "nunca reativar" morta por `new_route_from_active_checker_reactivates_suspended_node`. Full verify ainda pendente.
 - 2026-10-22 — Verificação em níveis (ADR0057, revisa 0051 itens 2–3): `ci/verify.sh --tier fast|affected|full` com cronometragem por etapa (`target/verify-times.tsv`, `STEP_OK`, `VERIFY_FAILED step=`); `tools/verify_plan.py` escolhe smokes pelo fecho reverso do `cargo metadata`; testes de escala leem `LOGOS_TIER` (corpus LRAT 1/10, selo 2k, corrupções do certify 1/16, diferenciais 5k/1k, ATMS 1k; Z3 falso 10k com `heavy`); `lrat_corpus.py --check` relê RUP em 1/10 no rápido. Medição por teste achou `witness_deadline…` com 332 s de 393 s do certify.rs: Ed25519 em opt-level 0 (~0,3 s/append); override opt-level 1 em test/dev → 19 s. Rápido: 23 min → 8 min 15 s (com recompilação). ci.yml passou a rodar o check do caderno (faltava desde a 5R.3). Full verify da pilha pendente.
 - 2026-10-23 — Full verify/selftest na ponta 856929f: VERIFY_OK tier=full, exit0 em 2733s (45,5min, com `nice`; antes 50–78min). Rust 589/0 ignorados, Python 358+25, farm 500, MCP, caderno (20 hipóteses, corte [C4,E3]/[C1,C2,C3,E1,P1,P1B], 121 eventos auditados), SAT 300/300, crash 10k/24 SIGKILL, índice 1M p99=21.9µs rebuild 241s. Recibo `docs/plans/pilha-2026-10-23-evidencias.json` cobre c50cd93, 28727b4, ae32873, 107add8, 856929f. Critérios marcados: 5R.3 (2) e 5.10 (1). Etapas mais lentas: farm 840s, cargo test 591s, pytest 501s, índice 291s.
+- 2026-10-23 — Etapa5.8 implementada (ADR0058): `generate_speculative`, consultas `active_route`/`dead_routes`, módulo `speculation` (bases, escopo transitivo, varredura `SpeculationFailed`), transições `recover_pending_at`/`settle`/`abandon`; CERTIFY só com base Verified (rota citada, `used` mapeado); REFUTE e reconcile varrem; WITNESS recusa. Testes: 5 em `logos-kernel/tests/speculation.rs`, 1 no gerador, 1 no índice. Critério das 1000 cadeias: `interleaved_depth=0`, controle especulativo 138 (100 cadeias), 419s com 8 threads. Mutações 12/14 (M4/M13 equivalentes por defesa em profundidade). Perfil dev com `line-tables-only` e sha2 opt3 em teste (adendo ADR0057). `--tier affected` OK em 2003s (Cargo.toml mudou → todos os smokes); uma falha intermitente em `ledger.rs` antes disso (Armadilhas). Full verify pendente.

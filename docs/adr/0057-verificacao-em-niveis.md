@@ -84,3 +84,14 @@ continua indispensável, mas não pode ser o laço de desenvolvimento.
   do push, e a cronometragem por etapa torna o crescimento visível.
 - Um commit local verificado só pelo rápido pode quebrar um smoke; o afetado reduz
   isso e o completo na ponta da pilha pega o resto antes de sair da máquina.
+
+## Adendo (2026-10-23, Etapa 5.8)
+
+O teste de profundidade de propagação (1000 cadeias pelo kernel real) mostrou outro
+custo fixo: o checker Rust é o próprio executável, e o registro e cada evento que o
+referencia rehasheiam o objeto no CAS (`verified_present`, regra de integridade que
+não muda). Com debuginfo completo o binário de teste tinha ~43 MB. O perfil `dev`
+(herdado por `test`) passa a `debug = "line-tables-only"` (~22 MB, backtraces com
+linha) e `sha2` sobe para `opt-level = 3` no perfil de teste, com checks mantidos.
+O teste também agrupa 25 cadeias por ledger e roda os lotes em paralelo (até 8
+threads): 1000 cadeias em ~7 min no completo, 40 em ~36 s no rápido.

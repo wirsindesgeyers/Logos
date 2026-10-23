@@ -8,7 +8,7 @@ use logos_ground::{GroundError, GroundLimits, clausify, ground_for_check};
 use logos_ledger::{Certificate, CheckRecord, EventProposal, Ledger, ModelObject};
 use logos_lrat::{LratChecker, UsedError, used_premises};
 use logos_model::{FiniteModel, ModelChecker};
-use logos_obligation::{DecodeLimits, Obligation, PremiseRef, Proposal, generate};
+use logos_obligation::{DecodeLimits, Obligation, PremiseRef, Proposal, generate_speculative};
 
 use crate::{
     TransportError as Error,
@@ -35,7 +35,7 @@ impl CertificationHandlers {
         transitions: &mut Transitions<'_, '_, S>,
         claim: crate::Claim<crate::state::Pending>,
         check: CheckRecord,
-        proposal: EventProposal,
+        cited: Vec<Hash<logos_ledger::Event>>,
         used: Vec<Hash<logos_ledger::Event>>,
         model: Option<Hash<ModelObject>>,
     ) -> Result<Value, Error> {
@@ -43,9 +43,6 @@ impl CertificationHandlers {
             CheckOutcome::Accepted => match model {
                 Some(model) => (1, transitions.refute(claim, check, model)?.receipt().hash()),
                 None => {
-                    let mut cited = proposal.cites;
-                    cited.sort_unstable();
-                    cited.dedup();
                     let consistency =
                         self.pending_consistency(transitions.ledger(), check.obligation)?;
                     (
@@ -82,6 +79,7 @@ pub(crate) fn context<S: Signer>(
     ledger: &Ledger<'_, S>,
     obligation: Hash<Obligation>,
     proposal: &EventProposal,
+    speculation: Speculation,
 ) -> Result<(Vec<u8>, Vocabulary), Error> {
     let bytes = ledger
         .cas()
@@ -101,27 +99,42 @@ pub(crate) fn context<S: Signer>(
     {
         return Err(Error::Invalid("unresolved enumeration source"));
     }
-    if !proposal.speculative_on.is_empty() {
-        return Err(Error::Invalid("speculative certification"));
+    if !proposal.speculative_on.is_empty() && speculation == Speculation::Refused {
+        return Err(Error::Invalid("speculative consistency witness"));
     }
     let references: Vec<_> = proposal
         .cites
         .iter()
         .map(|h| PremiseRef::from_event_hash(*h.as_bytes()))
         .collect();
+    let speculative: Vec<_> = proposal
+        .speculative_on
+        .iter()
+        .map(|h| PremiseRef::from_event_hash(*h))
+        .collect();
     let index = ledger.live_index()?;
     let epoch = ledger
         .head()?
         .ok_or(Error::Invalid("Pending without head"))?
         .epoch;
-    let scope = crate::scope::for_proposal(&index, &proposal.cites, epoch)?;
-    let view = index.snapshot(ledger.cas(), &references, &scope)?;
-    let regenerated = generate(
+    // Mesmo escopo do PROPOSE (5.8): citações das bases, fechadas transitivamente.
+    let scope_cites = if speculative.is_empty() {
+        proposal.cites.clone()
+    } else {
+        crate::speculation::History::read(ledger)?.scope_cites(proposal)
+    };
+    let scope = crate::scope::for_proposal(&index, &scope_cites, epoch)?;
+    let mut snapshot_refs = references.clone();
+    snapshot_refs.extend_from_slice(&speculative);
+    let view = index.snapshot(ledger.cas(), &snapshot_refs, &scope)?;
+    // Base invalidada deixa de ser Pending: a regeneração falha e nada é gravado.
+    let regenerated = generate_speculative(
         Proposal {
             vocabulary: &vocabulary,
             goal: &proposal.goal,
             cites: &references,
         },
+        &speculative,
         &view,
     )
     .map_err(|_| Error::Invalid("Pending context no longer eligible"))?;
@@ -131,6 +144,13 @@ pub(crate) fn context<S: Signer>(
         ));
     }
     Ok((bytes, vocabulary))
+}
+
+/// Se a regeneração aceita bases especulativas (CERTIFY/REFUTE) ou não (WITNESS).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Speculation {
+    Allowed,
+    Refused,
 }
 
 impl<S: Signer> Handlers<S> for CertificationHandlers {
@@ -161,7 +181,14 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
         let mut transitions = Transitions::new(ledger);
         let (claim, proposal) = transitions.recover_pending(obligation)?;
         let ledger = transitions.ledger();
-        let (bytes, vocabulary) = context(ledger, obligation, &proposal)?;
+        let (bytes, vocabulary) = context(ledger, obligation, &proposal, Speculation::Allowed)?;
+        // 5.8: especulativo só é checado com toda base Verified ativa; senão nada é gravado.
+        let settled = if proposal.speculative_on.is_empty() {
+            Vec::new()
+        } else {
+            let history = crate::speculation::History::read(ledger)?;
+            crate::speculation::settle_bases(&history, &ledger.live_index()?, &proposal)?
+        };
         let proof = ledger
             .cas()
             .get(&certificate)?
@@ -214,11 +241,20 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
                 if check.outcome == CheckOutcome::Accepted {
                     match used_premises(&report, &map, obligation, &self.budget) {
                         Ok(projected) => {
+                            // Base especulativa usada vira a rota Verified que a resolve.
                             used = projected
                                 .premises()
                                 .iter()
-                                .map(|r| Hash::from_bytes(*r.event_hash()))
-                                .collect()
+                                .map(|r| {
+                                    let id = Hash::from_bytes(*r.event_hash());
+                                    settled
+                                        .iter()
+                                        .find(|(base, _)| *base == id)
+                                        .map_or(id, |(_, route)| *route)
+                                })
+                                .collect();
+                            used.sort_unstable();
+                            used.dedup();
                         }
                         Err(UsedError::Unknown(reason)) => {
                             check.outcome = CheckOutcome::Unknown(reason)
@@ -228,7 +264,18 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
                 }
             }
         }
-        self.finish(&mut transitions, claim, check, proposal, used, None)
+        let routes: Vec<_> = settled.iter().map(|(_, route)| *route).collect();
+        // 5.8: rotas que resolvem bases especulativas também são citadas.
+        let claim = if routes.is_empty() {
+            claim
+        } else {
+            transitions.settle(claim, &routes)?
+        };
+        let mut cited = proposal.cites;
+        cited.extend_from_slice(&routes);
+        cited.sort_unstable();
+        cited.dedup();
+        self.finish(&mut transitions, claim, check, cited, used, None)
     }
 
     fn witness(
@@ -254,16 +301,16 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
 
     fn refute(
         &self,
-        ledger: &mut Ledger<'_, S>,
+        writer: &mut Ledger<'_, S>,
         _peer: &Peer,
         obligation: Hash<Obligation>,
         model: Hash<ModelObject>,
     ) -> Result<Value, Error> {
-        let checker = self.registry.active(ledger, MODEL)?;
-        let mut transitions = Transitions::new(ledger);
+        let checker = self.registry.active(writer, MODEL)?;
+        let mut transitions = Transitions::new(writer);
         let (claim, proposal) = transitions.recover_pending(obligation)?;
         let ledger = transitions.ledger();
-        let (bytes, vocabulary) = context(ledger, obligation, &proposal)?;
+        let (bytes, vocabulary) = context(ledger, obligation, &proposal, Speculation::Allowed)?;
         let model_bytes = ledger
             .cas()
             .get(&model)?
@@ -284,14 +331,17 @@ impl<S: Signer> Handlers<S> for CertificationHandlers {
             budget: self.budget,
             outcome,
         };
-        self.finish(
+        let result = self.finish(
             &mut transitions,
             claim,
             check,
-            proposal,
+            proposal.cites,
             Vec::new(),
             Some(model),
-        )
+        )?;
+        // 5.8: refutação derruba especulativos pendentes sobre esta obrigação.
+        crate::speculation::sweep(writer)?;
+        Ok(result)
     }
 }
 

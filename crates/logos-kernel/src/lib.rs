@@ -25,6 +25,8 @@ mod scope;
 #[cfg(target_os = "linux")]
 pub mod server;
 #[cfg(target_os = "linux")]
+mod speculation;
+#[cfg(target_os = "linux")]
 pub mod staging;
 pub mod state;
 mod transitions;

@@ -115,6 +115,8 @@ impl Retractions {
     /// Grava Invalidated faltantes para rotas derrubadas por retratação ou por
     /// recheck rejeitado (5.10): a raiz é o Retracted ou o Rechecked do alvo.
     ///
+    /// Termina com a varredura de especulação (5.8, ADR0058).
+    ///
     /// Idempotente: rodar de novo não grava nada. Revogação só suspende (5.10);
     /// Verified emitida por checker já revogado nasce morta e não tem registro.
     ///
@@ -228,6 +230,8 @@ impl Retractions {
             let claim = transitions.recover_verified(id)?;
             out.push(transitions.invalidate(claim, causes)?.receipt().hash());
         }
+        // 5.8: rota morta ou base invalidada derruba especulativos pendentes.
+        out.extend(crate::speculation::sweep(ledger)?);
         Ok(out)
     }
 }
