@@ -41,8 +41,12 @@ const INDEXES: &[(&str, &str)] = &[
         "claims_checker",
         "CREATE INDEX claims_checker ON claims(checker)",
     ),
-    // ledger-index/v2 (5.6): consultas por obrigação (S4) e pelo nó ATMS h(O) (5.9).
-    ("claims_h_o", "CREATE INDEX claims_h_o ON claims(h_o)"),
+    // ledger-index/v2 (5.6): consultas por obrigação (S4) e pelo nó ATMS h(O) (5.9);
+    // v3 acrescenta status para achar rotas Suspended do nó sem varrê-lo (5.10).
+    (
+        "claims_h_o",
+        "CREATE INDEX claims_h_o ON claims(h_o,status)",
+    ),
 ];
 const QUERIES: &[&str] = &[
     "SELECT * FROM claims ORDER BY id",

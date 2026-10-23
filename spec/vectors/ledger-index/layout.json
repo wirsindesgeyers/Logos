@@ -12,6 +12,6 @@
     "metadata": "CREATE TABLE metadata (singleton INTEGER PRIMARY KEY CHECK(singleton=1), seq INTEGER, epoch BLOB, hash BLOB, CHECK((seq IS NULL AND epoch IS NULL AND hash IS NULL) OR (seq>=0 AND length(epoch)=8 AND length(hash)=32))) STRICT",
     "deps_premise": "CREATE INDEX deps_premise ON deps(premise,claim)",
     "claims_checker": "CREATE INDEX claims_checker ON claims(checker)",
-    "claims_h_o": "CREATE INDEX claims_h_o ON claims(h_o)"
+    "claims_h_o": "CREATE INDEX claims_h_o ON claims(h_o,status)"
   }
 }

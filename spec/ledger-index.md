@@ -46,7 +46,7 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 ## 2. Layout
 
 application_id=0x4c494458 (LIDX), user_version=3 (ledger-index/v3, Etapa 5.10: status
-Suspended=7; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
+Suspended=7 e `claims_h_o` sobre `(h_o,status)`; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
 reconstruídos, nunca migrados). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
 conferidos por teste contra arquivo real. Oito objetos SQL, sem triggers/views:

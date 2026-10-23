@@ -424,8 +424,18 @@ pub(crate) fn apply(
     if status == VERIFIED
         && let Some(h) = obligation
     {
-        // Rota nova ativa reativa rotas suspensas do mesmo nó e seus dependentes.
-        refresh(connection, vec![h.to_vec()])?;
+        // Rota nova ativa reativa rotas suspensas do mesmo nó e seus dependentes. Ela
+        // nasce ativa (premissas citáveis acima, checker não revogado), então só muda
+        // o nó se ele tiver rota Suspended; sem esse filtro cada Verified relia todas
+        // as rotas do nó (O(n²) com 1M rotas de uma obrigação; ADR0057).
+        let suspended = connection
+            .prepare("SELECT 1 FROM claims WHERE h_o=?1 AND status=7 LIMIT 1")?
+            .query_row([h], |_| Ok(()))
+            .optional()?
+            .is_some();
+        if suspended {
+            refresh(connection, vec![h.to_vec()])?;
+        }
     }
     Ok(())
 }
