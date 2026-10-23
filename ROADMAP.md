@@ -1139,8 +1139,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Claim especulativo **nunca** é citável por ação (P5, reforçado na Fase 8).
 
 **Critério de conclusão.**
-- [ ] Teste: C8 especula sobre C7; C7 refutado → C8 `Invalidated` com causa `SpeculationFailed(C7)`.
-- [ ] Métrica: profundidade de propagação de erro (Apêndice D) = 0 sem especulação, em teste com 1000 cadeias aleatórias.
+- [x] Teste: C8 especula sobre C7; C7 refutado → C8 `Invalidated` com causa `SpeculationFailed(C7)`.
+- [x] Métrica: profundidade de propagação de erro (Apêndice D) = 0 sem especulação, em teste com 1000 cadeias aleatórias.
 
 ---
 
@@ -1194,7 +1194,7 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Units `systemd` (ou `docker-compose`) de referência.
 
 **Critério de conclusão.**
-- [ ] Teste de penetração scriptado: a partir do processo do agente, tentar ler a chave do kernel, abrir o SQLite do ledger em escrita, conectar ao gateway diretamente, ler as credenciais das ferramentas — todas falham.
+- [x] Teste de penetração scriptado: a partir do processo do agente, tentar ler a chave do kernel, abrir o SQLite do ledger em escrita, conectar ao gateway diretamente, ler as credenciais das ferramentas — todas falham.
 
 ---
 
@@ -1207,8 +1207,8 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 **Objetivo.** Marco: fim do item 1 da ordem de construção da §12.
 
 **Critério de conclusão.**
-- [ ] Script de demo: vocabulário → fatos de teste (inseridos por um atestador de teste) → 3 propostas → uma `Verified` via LRAT, uma `Refuted` via modelo, uma `Unknown` por timeout → retratação de um fato → cascata → `logos-audit` verifica e recheca tudo.
-- [ ] Toda a demo reproduzível com um comando (`make demo-kernel`).
+- [x] Script de demo: vocabulário → fatos de teste (inseridos por um atestador de teste) → 3 propostas → uma `Verified` via LRAT, uma `Refuted` via modelo, uma `Unknown` por timeout → retratação de um fato → cascata → `logos-audit` verifica e recheca tudo.
+- [x] Toda a demo reproduzível com um comando (`make demo-kernel`).
 
 ---
 

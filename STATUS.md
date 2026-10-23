@@ -254,9 +254,9 @@ fontes opacas não demonstram autenticação.
 | 5.5 Não-vacuidade/WITNESS | ⚠ concluída localmente; CI pendente | ADR0042; WITNESS real, antes/depois, prazo lógico, replay e consulta de uso. Γ inconsistente prova False mas não autoriza ação;10 mutações, fuzz e full verify/selftest passaram. |
 | 5.6 Bloqueio de re-proposta refutada (S4) | ⚠ concluída localmente; CI pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
 | 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
-| 5.8 Especulação de claims | 🚧 implementada localmente; full verify pendente | ADR0058; `speculative_on` = h(Pending) não concluído; `generate_speculative`; CERTIFY só com base Verified (rota em `cited`, base→rota em `used`); `SpeculationFailed` = `Invalidated{pending,[raiz,base]}` por varredura idempotente após Refuted e no reconcile. Critérios demonstrados: C7 refutado → C8/C9 invalidados; 1000 cadeias com profundidade 0 sem especulação (controle especulativo 138). 12/14 mutações mortas, 2 equivalentes. Sem formato novo. |
-| 5.11 Isolamento de processos | 🚧 implementada localmente; full verify pendente | ADR0059; crate `logos-sandbox` (TCB): agente em bwrap sem rede, só socket do kernel, staging, código ro e proxy restrito ao LLM; `deploy/systemd` com usuários `logos-kernel`/`logos-gateway`/`logos-agent`. Pentest `ci/check-isolation.sh`: 9 tentativas proibidas conseguem fora (controle) e falham dentro; kernel/staging/LLM funcionam dentro. 9/9 mutações. Usuários de SO reais não exercitados (precisa root); gateway stub, repetir na 8.4. |
-| 5.12 ★ Kernel mínimo ponta a ponta | 🚧 implementada localmente; full verify pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
+| 5.8 Especulação de claims | ⚠ concluída localmente; CI pendente | ADR0058; `speculative_on` = h(Pending) não concluído; `generate_speculative`; CERTIFY só com base Verified (rota em `cited`, base→rota em `used`); `SpeculationFailed` = `Invalidated{pending,[raiz,base]}` por varredura idempotente após Refuted e no reconcile. Critérios demonstrados: C7 refutado → C8/C9 invalidados; 1000 cadeias com profundidade 0 sem especulação (controle especulativo 138). 12/14 mutações mortas, 2 equivalentes. Sem formato novo. |
+| 5.11 Isolamento de processos | ⚠ concluída localmente; CI pendente | ADR0059; crate `logos-sandbox` (TCB): agente em bwrap sem rede, só socket do kernel, staging, código ro e proxy restrito ao LLM; `deploy/systemd` com usuários `logos-kernel`/`logos-gateway`/`logos-agent`. Pentest `ci/check-isolation.sh`: 9 tentativas proibidas conseguem fora (controle) e falham dentro; kernel/staging/LLM funcionam dentro. 9/9 mutações. Usuários de SO reais não exercitados (precisa root); gateway stub, repetir na 8.4. |
+| 5.12 ★ Kernel mínimo ponta a ponta | ⚠ concluída localmente; CI pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -565,19 +565,19 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: full verify da pilha (5.8, 5.11, 5.12); depois a Fase 6
+## Próximo passo: Etapa 6.1 (objeto Fact) — 6.1a em worktree
 
-Pilha local não enviada, coberta por full verify (recibo
-[pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json)): c50cd93 (5R.3),
-28727b4, ae32873 (5.10), 107add8 (projeção O(n²)) e 856929f (níveis). Critérios de
-5R.3 e 5.10 marcados; push e CI quando o mantenedor pedir. Depois: 5.8
-([plano](docs/plans/etapa-5.8.md), ADR0058) commitada com `--tier affected`; seus
-dois critérios foram demonstrados (inclusive as 1000 cadeias à parte) e só serão
-marcados após o full verify na ponta.
+Pilha local não enviada, coberta por full verify (recibos
+[pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json) e
+[pilha-2026-10-23b](docs/plans/pilha-2026-10-23b-evidencias.json)): 5R.3, 5.10,
+5.8, 5.11, 5.12 e correções. Fase 5 completa localmente; push e CI quando o
+mantenedor pedir.
 
-Laço de desenvolvimento a partir de agora: `ci/verify.sh --tier fast` (~5–8 min) a
-cada commit, `--tier affected` quando tocar integração; completo antes de push.
-Olhe `target/verify-times.tsv` quando uma etapa crescer.
+6.1 em andamento no worktree `../LOGOS-6.1` (branch `etapa-6.1`, ADR0061), dividida
+em 6.1a (objeto fact/v1, `FactRegistered` tag16, raiz de confiança do kernel,
+janela por épocas/`Until`, índice v4, `Reject::Expired`, auditor
+`facts_verified`; critérios 1–3) e 6.1b (fonte `Fact` de enumeração com axiomas em
+O e `used`/deps; critério 4, ADR0026).
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
@@ -2016,3 +2016,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-23 — Etapa5.8 implementada (ADR0058): `generate_speculative`, consultas `active_route`/`dead_routes`, módulo `speculation` (bases, escopo transitivo, varredura `SpeculationFailed`), transições `recover_pending_at`/`settle`/`abandon`; CERTIFY só com base Verified (rota citada, `used` mapeado); REFUTE e reconcile varrem; WITNESS recusa. Testes: 5 em `logos-kernel/tests/speculation.rs`, 1 no gerador, 1 no índice. Critério das 1000 cadeias: `interleaved_depth=0`, controle especulativo 138 (100 cadeias), 419s com 8 threads. Mutações 12/14 (M4/M13 equivalentes por defesa em profundidade). Perfil dev com `line-tables-only` e sha2 opt3 em teste (adendo ADR0057). `--tier affected` OK em 2003s (Cargo.toml mudou → todos os smokes); uma falha intermitente em `ledger.rs` antes disso (Armadilhas). Full verify pendente.
 - 2026-10-23 — Etapa5.11 implementada (ADR0059): crate `logos-sandbox` (TCB estrita, só std + /usr/bin/bwrap) com `Plan` e `LlmProxy`, binário `logos-agent-sandbox`; `deploy/systemd` (sysusers, tmpfiles, units kernel/gateway/agente); probe `logos_agent.isolation_probe`; `tools/check_isolation.py`/`ci/check-isolation.sh` no verify, no seletor do affected e na CI. `ISOLATION_OK forbidden=9 blocked=all control_reached=9 allowed=3 units=3`. Mutações: primeira rodada 7/9 (sem PID ns e home montado passavam); o pentest ganhou `/proc/<kernel>/cmdline` e credenciais no home → 9/9. Usuários de SO reais não exercitados (root).
 - 2026-10-23 — Full verify/selftest sobre ecc463c (5.8+5.11) falhou só em `cargo-deny` (exit2, 3058s): `logos-sandbox` fora de `[bans].allow`; todas as etapas anteriores passaram. Corrigido no `deny.toml`. Etapa5.12 implementada (ADR0060): `examples/demo_kernel.rs` pelo transporte real, atestador stub com chave própria, Unknown por 100k cópias RUP contra teto de 50k passos, retratação pelo atestador; `ci/demo-kernel.sh`/`make demo-kernel` com `logos-audit` → `DEMO_KERNEL_AUDIT_OK`. A máquina suspendeu 03:39–14:54 durante o affected da 5.11 (check-farm marcou 41441s); full agora roda sob `systemd-inhibit`.
+- 2026-10-23 — Full verify/selftest na ponta 0e9be61 (5.8, 5.11, 772235f, 5.12): VERIFY_OK tier=full, exit0 em 3371s sob `systemd-inhibit`. Rust 599, isolamento `ISOLATION_OK forbidden=9`, demo `DEMO_KERNEL_AUDIT_OK`, 1000 cadeias da 5.8 no cargo-test. Recibo `docs/plans/pilha-2026-10-23b-evidencias.json`. Critérios marcados: 5.8 (2), 5.11 (1), 5.12 (2). Fase 5 completa localmente. 6.1 iniciada em worktree.

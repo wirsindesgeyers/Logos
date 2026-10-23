@@ -1,0 +1,73 @@
+{
+  "tip": "0e9be61",
+  "covers": [
+    "d6f2c56 5.8",
+    "ecc463c 5.11",
+    "772235f correção deny.toml",
+    "0e9be61 5.12"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "systemd-inhibit",
+      "nice",
+      "-n",
+      "10",
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "tier": "full",
+    "exit": 0,
+    "seconds": 3371,
+    "verify_ok": true,
+    "log_sha256": "1e052bfb287310294f063b32dd47d82978497358d3c30d50eff65ea28ea15b90"
+  },
+  "statistics": {
+    "rust_passed": 599,
+    "python_summaries": [
+      "358 passed in 683.53s (0:11:23)",
+      "25 passed in 1.29s"
+    ],
+    "speculation": [
+      "criterion_error_propagation_depth_is_zero_without_speculation_over_random_chains passou no cargo-test (LOGOS_TIER=full, 1000 cadeias; saída capturada pelo libtest)",
+      "medição à parte em 23/out: ERROR_PROPAGATION_DEPTH chains=1000 interleaved_depth=0 speculative_chains=100 speculative_depth=138 (419s)"
+    ],
+    "isolation": [
+      "ISOLATION_OK forbidden=9 blocked=all control_reached=9 allowed=3 units=3"
+    ],
+    "demo": [
+      "AUDIT_OK events=16 refutations_rechecked=1 consistencies_rechecked=0 proofs_unchecked=0 failures=0 head=d57c1ef1934c4fbb015af5e4740aa66af4b7d2262694935bc6a0d6b5df29c159 cnf_rederived=3 lrat_rust_rechecked=1 lrat_cake_rechecked=1 invalidated_by_recheck=0",
+      "DEMO_KERNEL_AUDIT_OK verified=1 refuted=1 unknown=1 invalidated=1 audit=complete"
+    ],
+    "farm": [
+      "FARM_SMOKE_OK count=500 p50=1.249338102992624"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=52.91s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=22553 (private SQLite snapshot; cold rebuild_ms=232400)"
+    ]
+  },
+  "step_seconds": {
+    "cargo-test": 954.4,
+    "check-farm": 856.8,
+    "pytest": 685.5,
+    "check-ledger-index": 279.0,
+    "lrat-corpus-manifest": 266.9,
+    "check-sat": 86.3,
+    "check-ledger-crash": 53.5,
+    "check-cnf": 41.8,
+    "selftest": 29.4,
+    "check-notebook": 27.0
+  },
+  "attempts_not_counted": [
+    {
+      "tip": "ecc463c",
+      "exit": 2,
+      "seconds": 3058,
+      "cause": "cargo-deny: logos-sandbox fora de [bans].allow; corrigido em 772235f"
+    }
+  ]
+}
