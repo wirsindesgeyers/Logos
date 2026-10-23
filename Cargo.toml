@@ -19,6 +19,7 @@ members = [
     "crates/logos-token",
     "crates/logos-kernel",
     "crates/logos-gateway",
+    "crates/logos-sandbox",
     "crates/logos-attest",
     "crates/logos-audit",
     "crates/logos-cli",

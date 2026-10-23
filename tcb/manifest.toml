@@ -136,6 +136,13 @@ verified = "none"
 files = ["src/lib.rs"]
 
 [[crate]]
+name = "logos-sandbox"
+properties = ["correctness"]
+strict = true
+verified = "none"
+files = ["src/lib.rs", "src/main.rs"]
+
+[[crate]]
 name = "logos-seal"
 properties = ["fidelity"]
 strict = true

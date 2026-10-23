@@ -1,0 +1,33 @@
+# Etapa 5.11 (ADR0059): agente como logos-agent, dentro de logos-agent-sandbox.
+# Sem chave, ledger, gateway ou credenciais; rede só pelo proxy do LLM.
+[Unit]
+Description=LOGOS agente
+After=logos-kernel.service
+Requires=logos-kernel.service
+
+[Service]
+Type=simple
+User=logos-agent
+Group=logos-agent
+SupplementaryGroups=logos-socket
+RuntimeDirectory=logos-agent
+RuntimeDirectoryMode=0700
+# LLM_ENDPOINT=host:porta da API do LLM (EnvironmentFile do operador).
+EnvironmentFile=/etc/logos/agent.env
+ExecStart=/usr/local/bin/logos-agent-sandbox --kernel-socket /run/logos-kernel/kernel.sock --staging /var/lib/logos-agent/staging --code /opt/logos/py --llm ${LLM_ENDPOINT} --proxy-dir /run/logos-agent -- /usr/bin/env PYTHONPATH=/opt/logos /opt/logos/.venv/bin/python -m logos_agent
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/logos-agent/staging
+InaccessiblePaths=/etc/logos/kernel.key /etc/logos/gateway-credentials /var/lib/logos-kernel /var/lib/logos-gateway /run/logos-gateway
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

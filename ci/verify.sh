@@ -79,7 +79,7 @@ step mypy-tools py uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../t
   ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py \
   ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py \
   ../tools/build_cadical.py ../tools/gen_sat_vectors.py ../tools/check_cnf.py \
-  ../tools/check_ledger_crash.py ../tools/verify_plan.py
+  ../tools/check_ledger_crash.py ../tools/verify_plan.py ../tools/check_isolation.py
 # Vetores normativos: todo gerador confere os arquivos versionados (--check).
 for generator in unicode_assigned crypto_vectors cas_vectors core_vectors air_vectors \
   vocabulary_vectors paraphrase_vectors notebook_vectors obligation_vectors protocol_vectors \
@@ -120,6 +120,7 @@ smokes=(
   "check-farm:ci/check-farm.sh"
   "check-mcp-research:ci/check-mcp-research.sh"
   "check-notebook:ci/check-notebook.sh"
+  "check-isolation:ci/check-isolation.sh"
   "check-render-templates:ci/check-render-templates.sh"
   "check-ledger-crash:ci/check-ledger-crash.sh"
   "check-ledger-index:ci/check-ledger-index.sh"

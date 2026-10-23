@@ -61,7 +61,8 @@ ci/verify.sh --tier affected  # fast + smokes/ci/check-*.sh das áreas tocadas d
 ci/verify.sh                  # completo (padrão, ~1 h): tudo em escala de critério — corpus LRAT SAT-2002 ×
                               # cake_lpr, selo 50k/vocabulário, diferenciais canon 100k/modelo 10k, Z3 falso 10k,
                               # farm ×500, MCP, caderno, crash do ledger (SIGKILL, 10k appends), índices
-                              # (rebuild 100k, p99 com 1M), todos os smokes — + cargo deny/audit.
+                              # (rebuild 100k, p99 com 1M), pentest do agente isolado (5.11), todos os
+                              # smokes — + cargo deny/audit.
                               # Exigido antes de push e para marcar critérios no ROADMAP.
 ci/verify.sh --selftest       # completo + autoteste: a CI bloqueia o que deveria, pelo motivo certo (~2 min)
 ```
@@ -136,6 +137,7 @@ tcb/        manifest.toml + tcb.py (check/report/diff) + history/
 ci/         verificações reproduzíveis localmente (selftest.sh, check-*.sh)
 tools/      geradores (gen_unicode_assigned.py)
 fuzz/       alvos de cargo fuzz (workspace próprio)
+deploy/     units systemd, sysusers e tmpfiles de referência (5.11)
 .github/    CI (ci.yml) e fuzz noturno (fuzz.yml)
 ```
 

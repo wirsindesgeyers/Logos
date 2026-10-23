@@ -1,0 +1,28 @@
+# Etapa 5.11 (ADR0059): gateway como logos-gateway; único leitor das credenciais.
+# Stub até a 8.4: o executável real do gateway ainda não existe.
+[Unit]
+Description=LOGOS gateway (stub até a Etapa 8.4)
+
+[Service]
+Type=simple
+User=logos-gateway
+Group=logos-gateway
+RuntimeDirectory=logos-gateway
+RuntimeDirectoryMode=0700
+ExecStart=/usr/local/bin/logos-gateway /run/logos-gateway/gateway.sock /etc/logos/gateway-credentials
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/logos-gateway
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -46,12 +46,13 @@ SMOKES: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     "check-mcp-research": (("logos-kernel", "logos-audit"), ("logos_mcp",)),
     "check-notebook": (("logos-kernel", "logos-audit", "logos-cli"), ("logos_notebook",)),
     "check-render-templates": (("logos-kernel", "logos-audit"), ("logos_provers",)),
+    "check-isolation": (("logos-kernel", "logos-sandbox"), ("logos_agent",)),
     "check-ledger-crash": (("logos-ledger",), ()),
     "check-ledger-index": (("logos-ledger",), ()),
 }
 # Pacote Python -> pacotes que dependem dele (importam).
 PY_DEPENDENTS = {
-    "logos_client": {"logos_provers", "logos_mcp", "logos_notebook"},
+    "logos_client": {"logos_provers", "logos_mcp", "logos_notebook", "logos_agent"},
     "logos_provers": {"logos_mcp", "logos_notebook"},
     "logos_mcp": {"logos_notebook"},
 }
@@ -129,6 +130,8 @@ def plan(paths: list[str]) -> str:
             crates.add(parts[1])
         elif parts[0] == "py" and len(parts) > 2 and parts[1].startswith("logos_"):
             packages.add(parts[1])
+        elif parts[0] == "deploy":
+            named.add("check-isolation")
         elif parts[0] == "ci" and path.startswith("ci/check-") and path.endswith(".sh"):
             named.add(Path(path).stem)
         else:

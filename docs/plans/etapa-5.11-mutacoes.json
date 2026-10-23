@@ -1,0 +1,89 @@
+{
+  "stage": "5.11",
+  "killed": 9,
+  "total": 9,
+  "note": "primeira rodada: M2 (sem namespace de PID) e M3 (home montado) sobreviveram; o pentest ganhou /proc/<kernel>/cmdline e credenciais no home, e então 9/9",
+  "mutations": [
+    {
+      "mutation": "M1 sem --unshare-net",
+      "killed": true,
+      "detected_by": "python3 tools/check_isolation.py",
+      "evidence": [
+        "ISOLATION_FAILED",
+        "sandbox: connect_gateway_tcp must fail: {'detail': 'gateway:ping', 'ok': True}"
+      ]
+    },
+    {
+      "mutation": "M2 sem --unshare-pid",
+      "killed": true,
+      "detected_by": "python3 tools/check_isolation.py",
+      "evidence": [
+        "ISOLATION_FAILED",
+        "sandbox: read_kernel_cmdline must fail: {'detail': 'read', 'ok': True}"
+      ]
+    },
+    {
+      "mutation": "M3 home do operador montado",
+      "killed": true,
+      "detected_by": "python3 tools/check_isolation.py",
+      "evidence": [
+        "ISOLATION_FAILED",
+        "sandbox: read_tool_credentials must fail: {'detail': 'read', 'ok': True}"
+      ]
+    },
+    {
+      "mutation": "M4 /tmp do host montado",
+      "killed": true,
+      "detected_by": "python3 tools/check_isolation.py",
+      "evidence": [
+        "ISOLATION_FAILED",
+        "sandbox: connect_gateway_unix must fail: {'detail': 'gateway:ping', 'ok': True}"
+      ]
+    },
+    {
+      "mutation": "M5 código montado com escrita",
+      "killed": true,
+      "detected_by": "cargo test",
+      "evidence": [
+        "arguments_mount_only_the_granted_paths_and_isolate_every_namespace --- FAILED",
+        "thread 'arguments_mount_only_the_granted_paths_and_isolate_every_namespace' (325332) panicked at crates/logos-sandbox/tests/sandbox.rs:93:5:"
+      ]
+    },
+    {
+      "mutation": "M6 sem --clearenv",
+      "killed": true,
+      "detected_by": "cargo test",
+      "evidence": [
+        "arguments_mount_only_the_granted_paths_and_isolate_every_namespace --- FAILED",
+        "thread 'arguments_mount_only_the_granted_paths_and_isolate_every_namespace' (325654) panicked at crates/logos-sandbox/tests/sandbox.rs:79:9:"
+      ]
+    },
+    {
+      "mutation": "M7 proxy aceita diretório público",
+      "killed": true,
+      "detected_by": "cargo test",
+      "evidence": [
+        "llm_proxy_forwards_only_to_the_fixed_upstream_and_needs_a_private_directory --- FAILED",
+        "thread 'llm_proxy_forwards_only_to_the_fixed_upstream_and_needs_a_private_directory' (326034) panicked at crates/logos-sandbox/tests/sandbox.rs:157:5:"
+      ]
+    },
+    {
+      "mutation": "M8 kernel socket sem checar tipo",
+      "killed": true,
+      "detected_by": "cargo test",
+      "evidence": [
+        "invalid_plans_are_refused_before_anything_runs --- FAILED",
+        "thread 'invalid_plans_are_refused_before_anything_runs' (326358) panicked at crates/logos-sandbox/tests/sandbox.rs:56:18:"
+      ]
+    },
+    {
+      "mutation": "M9 sem --cap-drop ALL",
+      "killed": true,
+      "detected_by": "cargo test",
+      "evidence": [
+        "arguments_mount_only_the_granted_paths_and_isolate_every_namespace --- FAILED",
+        "thread 'arguments_mount_only_the_granted_paths_and_isolate_every_namespace' (326682) panicked at crates/logos-sandbox/tests/sandbox.rs:82:58:"
+      ]
+    }
+  ]
+}

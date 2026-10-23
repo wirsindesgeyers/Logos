@@ -396,6 +396,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "logos-sandbox"
+version = "0.0.0"
+
+[[package]]
 name = "logos-seal"
 version = "0.0.0"
 dependencies = [

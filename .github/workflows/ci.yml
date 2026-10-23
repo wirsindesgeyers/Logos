@@ -227,6 +227,8 @@ jobs:
         run: ../ci/check-render-templates.sh
       - name: Caderno 5R.3 no kernel real (retratações e auditoria do corte)
         run: ../ci/check-notebook.sh
+      - name: Isolamento 5.11 (pentest do agente em bwrap e units systemd)
+        run: ../ci/check-isolation.sh
       - name: Arquivar evidência de templates
         if: always()
         uses: actions/upload-artifact@v4

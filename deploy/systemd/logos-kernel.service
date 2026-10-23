@@ -1,0 +1,38 @@
+# Etapa 5.11 (ADR0059): kernel como logos-kernel; único dono da chave e do ledger.
+[Unit]
+Description=LOGOS kernel
+After=systemd-tmpfiles-setup.service
+
+[Service]
+Type=simple
+User=logos-kernel
+Group=logos-socket
+# Socket em /run/logos-kernel (0750 logos-kernel:logos-socket); o kernel cria o
+# socket 0660 e ainda autentica o UID do peer (SO_PEERCRED) = logos-agent.
+RuntimeDirectory=logos-kernel
+RuntimeDirectoryMode=0750
+# AGENT_UID: preencha com `id -u logos-agent` (EnvironmentFile do operador).
+EnvironmentFile=/etc/logos/kernel.env
+ExecStart=/usr/local/bin/logos-kernel /run/logos-kernel/kernel.sock /var/lib/logos-kernel/ledger /etc/logos/kernel.key /var/lib/logos-agent/staging /var/lib/logos-kernel/private ${AGENT_UID}
+# Staging: o kernel move uploads do diretório 0700 do agente para a área privada.
+# A capability vale só dentro deste namespace de montagem estrito.
+AmbientCapabilities=CAP_DAC_OVERRIDE
+CapabilityBoundingSet=CAP_DAC_OVERRIDE
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/logos-kernel /var/lib/logos-agent/staging
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+# Sem RestrictNamespaces/MemoryDenyWriteExecute: o cake_lpr roda em bwrap (user ns).
+LockPersonality=yes
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
