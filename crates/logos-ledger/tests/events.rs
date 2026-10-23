@@ -191,7 +191,7 @@ fn test_all_canonical_vectors_decode_encode_verify() {
         .iter()
         .map(|v| v["body_tag"].as_u64().unwrap())
         .collect();
-    assert_eq!(tags, (0..16).collect());
+    assert_eq!(tags, (0..17).collect());
 }
 
 // -----------------------------------------------------------------------------

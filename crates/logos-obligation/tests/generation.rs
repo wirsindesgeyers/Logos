@@ -210,6 +210,7 @@ impl LedgerView for FakeLedger {
                 kind: record.kind,
                 epoch: record.epoch,
                 retracted: record.retracted,
+                expired: false,
                 vocabulary: &record.vocabulary,
                 formula: &record.formula,
             }))

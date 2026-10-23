@@ -11,6 +11,7 @@ pub(crate) mod cas_domain;
 mod event;
 mod event_body;
 mod event_body_codec;
+mod fact;
 mod index;
 mod index_project;
 mod index_resolve;
@@ -27,6 +28,7 @@ pub use event_body::{
     Authority, Certificate, CheckRecord, Checker, CnfObject, CnfRecord, Consistency, EventBody,
     EventProposal, ModelObject, Route, TaintedText,
 };
+pub use fact::{Fact, FactError, FactSignature, MAX_FACT_BYTES, ResourceVersion, Validity};
 pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot, OpenAssumptions};
 pub use index_store::{IndexComparison, RebuildReport};
 pub use ledger::{Ledger, LedgerHead};

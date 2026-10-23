@@ -74,6 +74,7 @@ fn main() {
             kind: EntryKind::Fact,
             epoch: 1,
             retracted: false,
+            expired: false,
             vocabulary: &vocab,
             formula: &goal,
         },

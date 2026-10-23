@@ -449,6 +449,7 @@ impl LedgerView for Snapshot<'_> {
                 kind: self.kind,
                 epoch: 1,
                 retracted: false,
+                expired: false,
                 vocabulary: self.vocabulary,
                 formula: self.premise,
             })

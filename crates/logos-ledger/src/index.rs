@@ -87,8 +87,9 @@ impl<'a> LedgerIndex<'a> {
         let mut connection = Connection::open_in_memory()?;
         index_store::create(&connection)?;
         let transaction = connection.transaction()?;
+        let cas = crate::Cas::open(path.join("cas"), crate::Limits::default())?;
         let head = ledger::scan(&source_transaction, public_key, |event, head| {
-            index_project::apply(&transaction, event, head)
+            index_project::apply(&transaction, &cas, event, head)
         })?;
         if expected.is_some_and(|expected| expected != head) {
             return Err(LedgerError::Invalid("live index head"));
@@ -147,6 +148,7 @@ impl<'a> LedgerIndex<'a> {
             index_project::ASSUMPTION => EntryKind::Assumption,
             index_project::INVALIDATED => EntryKind::Invalidated,
             index_project::SUSPENDED => EntryKind::Suspended,
+            index_project::FACT => EntryKind::Fact,
             _ => return Err(LedgerError::Invalid("index status")),
         };
         let epoch = u64::from_be_bytes(
@@ -303,7 +305,7 @@ impl<'a> LedgerIndex<'a> {
         if self.head.is_none_or(|head| head.epoch != epoch) {
             return Ok(false);
         }
-        Ok(self
+        let listed = self
             .connection
             .prepare("SELECT 1 FROM citable WHERE ref=?1 AND epoch=?2")?
             .query_row(
@@ -314,7 +316,108 @@ impl<'a> LedgerIndex<'a> {
                 |_| Ok(()),
             )
             .optional()?
-            .is_some())
+            .is_some();
+        if listed {
+            return Ok(true);
+        }
+        // 6.1: fato vivo é citável enquanto a janela incluir a época e o instante.
+        Ok(match self.fact_window(reference)? {
+            Some((registered, validity)) => validity.applicable(epoch, unix_now()?, registered),
+            None => false,
+        })
+    }
+
+    /// Época de registro e janela de um fato vivo (status Fact), se for um.
+    fn fact_window(
+        &self,
+        reference: Hash<Event>,
+    ) -> Result<Option<(u64, crate::Validity)>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT claims.epoch, facts.first, facts.last, facts.until FROM facts JOIN claims ON claims.id=facts.id WHERE facts.id=?1 AND claims.status=?2")?
+            .query_row(
+                params![reference.as_bytes().as_slice(), index_project::FACT],
+                |r| {
+                    Ok((
+                        r.get::<_, Vec<u8>>(0)?,
+                        r.get::<_, Option<Vec<u8>>>(1)?,
+                        r.get::<_, Option<Vec<u8>>>(2)?,
+                        r.get::<_, Option<Vec<u8>>>(3)?,
+                    ))
+                },
+            )
+            .optional()?;
+        let Some((registered, first, last, until)) = row else {
+            return Ok(None);
+        };
+        let number = |bytes: &[u8]| -> Result<u64, LedgerError> {
+            Ok(u64::from_be_bytes(
+                bytes
+                    .try_into()
+                    .map_err(|_| LedgerError::Invalid("fact window bytes"))?,
+            ))
+        };
+        let validity = match (first, last, until) {
+            (Some(first), Some(last), None) => crate::Validity::Epochs(
+                logos_core::EpochRange::new(number(&first)?, number(&last)?)
+                    .map_err(|_| LedgerError::Invalid("fact window range"))?,
+            ),
+            (None, None, Some(until)) => crate::Validity::Until(number(&until)?),
+            _ => return Err(LedgerError::Invalid("fact window shape")),
+        };
+        Ok(Some((number(&registered)?, validity)))
+    }
+
+    /// Época de aplicabilidade do fato no snapshot: a corrente se a janela a inclui;
+    /// senão o limite mais próximo (o gerador recusa com InvalidEpoch). `Until`
+    /// vencido marca `expired` (o gerador recusa com Expired).
+    fn resolve_fact_window(
+        &self,
+        reference: Hash<Event>,
+        entry: &mut ResolvedEntry,
+    ) -> Result<(), LedgerError> {
+        let current = self.head.map_or(0, |h| h.epoch);
+        let Some((registered, validity)) = self.fact_window(reference)? else {
+            return Err(LedgerError::Invalid("fact without window"));
+        };
+        match validity {
+            crate::Validity::Epochs(range) => {
+                entry.status.epoch = if range.contains(current) {
+                    current
+                } else if current < range.first() {
+                    range.first()
+                } else {
+                    range.last()
+                };
+            }
+            crate::Validity::Until(instant) => {
+                entry.expired = unix_now()? > instant;
+                if !entry.expired && current >= registered {
+                    entry.status.epoch = current;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Evento FactRegistered de um fato, se registrado (6.1).
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn fact_event(&self, fact: Hash<crate::Fact>) -> Result<Option<Hash<Event>>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT id FROM facts WHERE fact=?1")?
+            .query_row([fact.as_bytes().as_slice()], |r| r.get::<_, Vec<u8>>(0))
+            .optional()?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(Hash::from_bytes)
+                .map_err(|_| LedgerError::Invalid("fact event digest"))
+        })
+        .transpose()
     }
 
     /// Dependentes diretos ordenados por h(Event), exclusivamente dos used.
@@ -381,7 +484,12 @@ impl<'a> LedgerIndex<'a> {
                     if mismatch {
                         return Err(LedgerError::Invalid("assumption scope mismatch"));
                     }
-                    Some(resolver.resolve(&self.connection, cas, reference.event_hash(), status)?)
+                    let mut resolved =
+                        resolver.resolve(&self.connection, cas, reference.event_hash(), status)?;
+                    if resolved.status.kind == EntryKind::Fact {
+                        self.resolve_fact_window(hash, &mut resolved)?;
+                    }
+                    Some(resolved)
                 }
             };
             entries.insert(*reference, entry);
@@ -392,6 +500,14 @@ impl<'a> LedgerIndex<'a> {
             _index: PhantomData,
         })
     }
+}
+
+/// Instante Unix corrente, para a janela `Until` de fatos (6.1).
+fn unix_now() -> Result<u64, LedgerError> {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .map_err(|_| LedgerError::Invalid("system clock before the Unix epoch"))
 }
 
 pub(crate) fn write_head(
@@ -432,6 +548,7 @@ impl LedgerView for LedgerSnapshot<'_> {
             kind: entry.status.kind,
             epoch: entry.status.epoch,
             retracted: entry.status.retracted,
+            expired: entry.expired,
             vocabulary: &entry.vocabulary,
             formula: &entry.formula,
         }))

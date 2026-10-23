@@ -36,7 +36,7 @@ pub(crate) fn borrow<'a>(
             .try_borrow_mut()
             .map_err(|_| LedgerError::Invalid("live index borrow"))?;
         let result = match slot.as_mut() {
-            Some(index) => refresh(index, source, key, target),
+            Some(index) => refresh(index, source, path, key, target),
             None => {
                 let index = LedgerIndex::build(path, key, None, None, Some(target))?;
                 *slot = Some(index);
@@ -60,14 +60,16 @@ pub(crate) fn borrow<'a>(
 fn refresh(
     index: &mut LedgerIndex<'static>,
     source: &Connection,
+    path: &Path,
     key: &PublicKey,
     target: Option<LedgerHead>,
 ) -> Result<(), LedgerError> {
     index.connection.execute_batch("PRAGMA query_only=OFF")?;
     let result = (|| {
+        let cas = crate::Cas::open(path.join("cas"), crate::Limits::default())?;
         let transaction = index.connection.transaction()?;
         let head = ledger::scan_after(source, key, index.head, |event, head| {
-            index_project::apply(&transaction, event, head)
+            index_project::apply(&transaction, &cas, event, head)
         })?;
         if head != target {
             return Err(LedgerError::Invalid("live index head"));
@@ -105,6 +107,13 @@ impl LedgerLiveIndex<'_> {
         obligation: Hash<logos_obligation::Obligation>,
     ) -> Result<Option<Hash<Event>>, LedgerError> {
         self.index.refuted(obligation)
+    }
+
+    /// Evento FactRegistered de um fato, se registrado (6.1).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn fact_event(&self, fact: Hash<crate::Fact>) -> Result<Option<Hash<Event>>, LedgerError> {
+        self.index.fact_event(fact)
     }
 
     /// Menor rota Verified ativa e citável do nó h(O) (5.8).

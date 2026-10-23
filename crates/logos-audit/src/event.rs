@@ -25,6 +25,11 @@ pub(crate) struct Checker;
 impl Domain for Checker {
     const TAG: &'static [u8] = tags::CHECKER;
 }
+/// Objeto fact/v1 (6.1), conferido no CAS e com assinatura reverificada.
+pub(crate) struct FactObject;
+impl Domain for FactObject {
+    const TAG: &'static [u8] = tags::FACT;
+}
 
 #[derive(Clone)]
 pub(crate) struct Check {
@@ -336,6 +341,9 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             p.proof = true;
             p.proof_check = Some(c);
         }
+        [Value::Unsigned(1), Value::Unsigned(16), fact] => {
+            p.refs.push(("fact", digest(fact)?));
+        }
         [Value::Unsigned(1), Value::Unsigned(15), route, record] => {
             let c = check(record, &mut p)?;
             p.rechecked = Some((digest(route)?, c));
@@ -458,7 +466,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 30);
+        assert_eq!(vectors.len(), 31);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

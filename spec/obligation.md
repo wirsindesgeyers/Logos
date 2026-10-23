@@ -91,7 +91,8 @@ entrada lógica válida em duas épocas produz os mesmos bytes/hash.
 2. Calcular h(V_alvo); erro canônico => `Reject::Canon(CanonError)`.
 3. Copiar referências, ordenar e deduplicar; ler época do snapshot uma vez.
 4. Para cada referência ordenada: lookup; erro => Ledger, None => UnknownCitation.
-5. Se retracted => Retracted; época diferente => InvalidEpoch; kind fora de
+5. Se retracted => Retracted; expirado (fato `Until` vencido, 6.1) => Expired;
+   época diferente => InvalidEpoch; kind fora de
    Fact/Policy/Verified/Assumption => NotCitable. Pending nunca é hipótese
    automaticamente; Unknown/Rejected/Refuted/Invalidated não são Verified.
 6. Exigir `V_alvo.compatibility_with(V_origem) == Compatible` (inclui igualdade).
@@ -104,7 +105,7 @@ entrada lógica válida em duas épocas produz os mesmos bytes/hash.
 8. Construir O privado com lógica, encoder 1, h(V_alvo), premissas e goal próprios.
 
 Erros públicos (com payloads precisos): UnknownCitation(PremiseRef),
-Retracted(PremiseRef), InvalidEpoch { reference, expected, actual },
+Retracted(PremiseRef), Expired(PremiseRef), InvalidEpoch { reference, expected, actual },
 NotCitable { reference, kind }, IncompatibleVocabulary(PremiseRef),
 GoalSort(SortError), PremiseSort { reference, error }, Ledger { reference, error },
 Canon(CanonError). Sem conversão de rejeição em veredicto. Referências inválidas

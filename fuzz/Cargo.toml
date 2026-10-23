@@ -108,6 +108,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "fact_decode"
+path = "fuzz_targets/fact_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "event_decode"
 path = "fuzz_targets/event_decode.rs"
 test = false

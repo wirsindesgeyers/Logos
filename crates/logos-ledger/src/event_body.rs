@@ -297,6 +297,14 @@ pub enum EventBody {
         /// Mesmos h(O)/h(certificado) da rota, com o checker novo e o desfecho.
         check: CheckRecord,
     },
+    /// Registro de um fato assinado por emissor da raiz de confiança (6.1, ADR0061).
+    ///
+    /// O objeto fact/v1 fica no CAS; o kernel só grava este evento depois de
+    /// conferir emissor, assinatura e tipagem da fórmula.
+    FactRegistered {
+        /// Fato registrado (identidade fact/v1 no CAS).
+        fact: Hash<crate::Fact>,
+    },
     /// Revogação formal de um verificador de provas previamente registrado.
     CheckerRevoked {
         /// Identificador do checker revogado.
@@ -396,6 +404,7 @@ impl EventBody {
             Self::CheckerRegistered { .. } => 11,
             Self::CheckerRevoked { .. } => 12,
             Self::Rechecked { .. } => 15,
+            Self::FactRegistered { .. } => 16,
         }
     }
 
@@ -423,7 +432,7 @@ impl EventBody {
                     return Err(EventError::Invalid("Genesis ledger_version must be 1"));
                 }
             }
-            Self::VocabPublished { .. } => {}
+            Self::VocabPublished { .. } | Self::FactRegistered { .. } => {}
             Self::Proposed { proposal, .. } => proposal.validate()?,
             Self::ObligationCreated { route, cnf, .. } => {
                 if let Some(c) = cnf

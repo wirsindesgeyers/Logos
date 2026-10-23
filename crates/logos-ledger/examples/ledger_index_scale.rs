@@ -169,6 +169,7 @@ fn equal_tables(a: &Path, b: &Path) -> Result<(), Box<dyn Error>> {
         "SELECT * FROM deps ORDER BY claim,premise",
         "SELECT * FROM citable ORDER BY ref,epoch",
         "SELECT * FROM revoked ORDER BY checker",
+        "SELECT * FROM facts ORDER BY id",
         "SELECT * FROM metadata ORDER BY singleton",
     ] {
         let mut x = left.prepare(query)?;
@@ -215,7 +216,7 @@ fn measure(
         );
         assert_eq!(rebuilt.head(), expected_head);
         equal_tables(&root.join("before.sqlite3"), &root.join("index.sqlite3"))?;
-        println!("LEDGER_INDEX_REBUILD_OK events={total} tables=5 exact=true");
+        println!("LEDGER_INDEX_REBUILD_OK events={total} tables=6 exact=true");
         return Ok(
             serde_json::json!({"events":total,"rebuild_equal":true,"tables":5,"build_ms":build_ms,"elapsed_ms":started.elapsed().as_millis()}),
         );

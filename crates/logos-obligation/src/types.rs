@@ -133,6 +133,8 @@ pub struct LedgerEntry<'a> {
     pub epoch: u64,
     /// Indica se a entrada foi retratada.
     pub retracted: bool,
+    /// A janela de validade da entrada (fato com `Until`) já passou (6.1).
+    pub expired: bool,
     /// Vocabulário associado à entrada.
     pub vocabulary: &'a Vocabulary,
     /// Fórmula da premissa atestada/provada no ledger.

@@ -148,6 +148,7 @@ fn test_all_20_obligation_vectors() {
                     kind,
                     epoch: p_epoch,
                     retracted,
+                    expired: false,
                     vocabulary: v_ref,
                     formula: f_ref,
                 },

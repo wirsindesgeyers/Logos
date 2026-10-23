@@ -11,6 +11,8 @@ mod assume;
 #[cfg(target_os = "linux")]
 pub mod certify;
 #[cfg(target_os = "linux")]
+pub mod facts;
+#[cfg(target_os = "linux")]
 pub mod propose;
 #[cfg(target_os = "linux")]
 pub mod recheck;

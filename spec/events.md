@@ -78,6 +78,7 @@ qualquer caminho não vazio do catálogo v1.
 | 12 | CheckerRevoked | hChecker, reason_Text, authority |
 | 13 | CertificateRejected | check (corpo v2) |
 | 15 | Rechecked (5.10) | route_hEvent, check (qualquer desfecho) |
+| 16 | FactRegistered (6.1) | h(Fact) |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -232,4 +233,14 @@ checker efetivo da rota e a reativa, Rejected a invalida (raiz da cascata,
 suspensão. Sem assinatura de autoridade: é registro do kernel, como Verified.
 A projeção recusa alvo que não é rota viva, h(O) diferente da rota e Accepted
 de checker revogado (ledger-index.md §3).
+
+## 11. Fato — fact-registered-body/v1 (Etapa6.1, ADR0061)
+
+`[1,16,h(Fact)]` é FactRegistered: h(Fact) é bytes32 (domínio Fact, fact.md). O
+objeto fact/v1 MUST estar no CAS antes do append. Aridade exata; outra versão
+recusa a tag16. O kernel só grava o evento para emissor da raiz de confiança, com
+assinatura válida, fórmula bem tipada, janela não vencida e fato ainda não
+registrado (fact.md §2). Sem assinatura de autoridade: a autoridade é a do
+emissor, dentro do objeto. A projeção lê o fato do CAS e recusa registro repetido
+(ledger-index.md §3).
 

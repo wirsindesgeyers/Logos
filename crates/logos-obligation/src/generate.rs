@@ -78,6 +78,10 @@ fn generate_with(
             return Err(Reject::Retracted(reference));
         }
 
+        if entry.expired {
+            return Err(Reject::Expired(reference));
+        }
+
         if entry.epoch != current_epoch {
             return Err(Reject::InvalidEpoch {
                 reference,

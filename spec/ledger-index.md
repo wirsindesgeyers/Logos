@@ -45,11 +45,12 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=3 (ledger-index/v3, Etapa 5.10: status
-Suspended=7 e `claims_h_o` sobre `(h_o,status)`; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
+application_id=0x4c494458 (LIDX), user_version=4 (ledger-index/v4, Etapa 6.1: status
+Fact=8 e tabela `facts` com a janela de cada fato; v3 (5.10) acrescentou Suspended=7 e
+`claims_h_o` sobre `(h_o,status)`; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
 reconstruídos, nunca migrados). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
-conferidos por teste contra arquivo real. Oito objetos SQL, sem triggers/views:
+conferidos por teste contra arquivo real. Dez objetos SQL, sem triggers/views:
 
 | Tabela | Campos | Chave/ordem de comparação |
 | --- | --- | --- |
@@ -57,6 +58,7 @@ conferidos por teste contra arquivo real. Oito objetos SQL, sem triggers/views:
 | deps | claim, premise | claim,premise; índice reverso premise,claim |
 | citable | ref, epoch | ref,epoch |
 | revoked | checker | checker |
+| facts | id, fact, first?, last?, until? | id; fact único |
 | metadata | singleton=1, seq?, epoch?, hash? | singleton |
 
 Digests são BLOB32; epoch é BLOB8 big-endian unsigned (inclusive u64::MAX).
@@ -64,8 +66,9 @@ seq usa INTEGER não negativo, como na fonte. formula é canon(Formula), não
 texto. scope conserva Text do evento. Metadata sem cabeça tem três NULL;
 cache vazio não inventa evento Genesis. Demais tabelas sem linhas é válido.
 Codebook: 0 Proposal, 1 Pending, 2 Verified, 3 Refuted, 4 Unknown,
-5 Assumption, 6 Invalidated. Fact/Policy/Rejected não têm evento neste catálogo
-e MUST NOT ser sintetizados. Índices `claims_checker`, `claims_h_o`, `deps_premise`.
+5 Assumption, 6 Invalidated, 7 Suspended, 8 Fact. Fact só nasce de FactRegistered
+(6.1; janela em `facts`: épocas first/last BLOB8 ou instante until BLOB8);
+Policy/Rejected não têm evento neste catálogo e MUST NOT ser sintetizados. Índices `claims_checker`, `claims_h_o`, `deps_premise`, `facts_fact` (único).
 
 ## 3. Projeção
 

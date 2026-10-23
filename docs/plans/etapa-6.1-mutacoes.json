@@ -1,0 +1,78 @@
+{
+  "stage": "6.1a",
+  "killed": 10,
+  "total": 10,
+  "note": "M10 sobreviveu na primeira rodada (registro de janela de épocas vencida não era testado); teste acrescentado e M10 morta",
+  "mutations": [
+    {
+      "mutation": "M1 raiz de confiança ignorada",
+      "killed": true,
+      "evidence": [
+        "thread 'unknown_issuer_bad_signature_and_duplicates_are_refused_without_events' (698721) panicked at crates/logos-kernel/tests/facts.rs:228:5:"
+      ]
+    },
+    {
+      "mutation": "M2 assinatura não conferida no registro",
+      "killed": true,
+      "evidence": [
+        "thread 'unknown_issuer_bad_signature_and_duplicates_are_refused_without_events' (699558) panicked at crates/logos-kernel/tests/facts.rs:248:5:"
+      ]
+    },
+    {
+      "mutation": "M3 janela exclusiva no fim",
+      "killed": true,
+      "evidence": [
+        "thread 'validity_windows_are_inclusive_and_until_needs_registration_epoch' (700078) panicked at crates/logos-ledger/tests/fact.rs:73:9:"
+      ]
+    },
+    {
+      "mutation": "M4 snapshot ignora janela de épocas",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_fact_valid_3_to_5_is_citable_in_4_and_refused_in_6' (700935) panicked at crates/logos-kernel/tests/facts.rs:80:5:"
+      ]
+    },
+    {
+      "mutation": "M5 projeção ignora janela no used",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_refuses_a_used_fact_outside_its_window' (702043) panicked at crates/logos-kernel/tests/facts.rs:442:5:"
+      ]
+    },
+    {
+      "mutation": "M6 gerador ignora expirado",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_expired_fact_is_not_citable' (703621) panicked at crates/logos-kernel/tests/facts.rs:80:5:"
+      ]
+    },
+    {
+      "mutation": "M7 Until sem relógio no snapshot",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_expired_fact_is_not_citable' (705187) panicked at crates/logos-kernel/tests/facts.rs:80:5:"
+      ]
+    },
+    {
+      "mutation": "M8 registro duplicado aceito",
+      "killed": true,
+      "evidence": [
+        "thread 'unknown_issuer_bad_signature_and_duplicates_are_refused_without_events' (706188) panicked at crates/logos-kernel/tests/facts.rs:259:5:"
+      ]
+    },
+    {
+      "mutation": "M9 auditor não verifica assinatura",
+      "killed": true,
+      "evidence": [
+        "thread 'independent_auditor_reverifies_fact_signatures' (707205) panicked at crates/logos-kernel/tests/facts.rs:402:84:"
+      ]
+    },
+    {
+      "mutation": "M10 registro aceita janela vencida",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_expired_fact_is_not_citable' (709810) panicked at crates/logos-kernel/tests/facts.rs:400:5:"
+      ]
+    }
+  ]
+}

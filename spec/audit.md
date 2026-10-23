@@ -59,7 +59,9 @@ ou política administrativa do kernel futuro.
 
 Sucesso: exit0, AUDIT_OK com events, refutations_rechecked,
 consistencies_rechecked, proofs_unchecked, failures=0, head, cnf_rederived,
-lrat_rust_rechecked, lrat_cake_rechecked e invalidated_by_recheck (5.10).
+lrat_rust_rechecked, lrat_cake_rechecked, invalidated_by_recheck (5.10) e
+facts_verified (6.1: FactRegistered com fact/v1 no CAS e assinatura do emissor
+reverificada; a confiança no emissor é configuração do kernel até a 6.2).
 Rota LRAT cujo certificado falha no recheck só é aceita se um Rechecked Rejected
 posterior a invalidar (incidente contado, não escondido); Rechecked precisa casar
 com h(O)/h(certificado) da rota, usar checker permitido e ter Accepted/Rejected

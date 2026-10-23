@@ -58,6 +58,24 @@ for vector in vectors:
 print(f"event_decode: {len(vectors)} vetores canônicos no corpus")
 PY
   fi
+  if [ "$t" = fact_decode ]; then
+    # Fatos válidos e inválidos dos vetores independentes (6.1) como sementes.
+    python3 - ../spec/vectors/fact/fact.json corpus/fact_decode <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+corpus = Path(sys.argv[2])
+corpus.mkdir(parents=True, exist_ok=True)
+cases = root["valid"] + root["invalid"] + root["bad_signature"]
+for case in cases:
+    wire = bytes.fromhex(case["fact_canon_hex"])
+    (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+print(f"fact_decode: {len(cases)} sementes no corpus")
+PY
+  fi
   if [ "$t" = cnf_decode ] || [ "$t" = lrat_decode ]; then
     python3 - "$t" <<'SEED'
 import hashlib

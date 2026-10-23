@@ -105,7 +105,7 @@ name = "logos-ledger"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/cas.rs", "src/cas_domain.rs", "src/event.rs", "src/event_body.rs", "src/event_body_codec.rs", "src/index.rs", "src/index_project.rs", "src/index_resolve.rs", "src/index_store.rs", "src/ledger.rs", "src/ledger_cas.rs", "src/ledger_error.rs", "src/ledger_store.rs", "src/lib.rs", "src/live_index.rs"]
+files = ["src/cas.rs", "src/cas_domain.rs", "src/event.rs", "src/event_body.rs", "src/event_body_codec.rs", "src/fact.rs", "src/index.rs", "src/index_project.rs", "src/index_resolve.rs", "src/index_store.rs", "src/ledger.rs", "src/ledger_cas.rs", "src/ledger_error.rs", "src/ledger_store.rs", "src/lib.rs", "src/live_index.rs"]
 
 [[crate]]
 name = "logos-policy"
@@ -126,7 +126,7 @@ name = "logos-kernel"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/assume.rs", "src/certify.rs", "src/recheck.rs", "src/registry.rs", "src/replay.rs", "src/retract.rs", "src/scope.rs", "src/lib.rs", "src/main.rs", "src/propose.rs", "src/server.rs", "src/speculation.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs", "src/witness.rs"]
+files = ["src/assume.rs", "src/certify.rs", "src/facts.rs", "src/recheck.rs", "src/registry.rs", "src/replay.rs", "src/retract.rs", "src/scope.rs", "src/lib.rs", "src/main.rs", "src/propose.rs", "src/server.rs", "src/speculation.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs", "src/witness.rs"]
 
 [[crate]]
 name = "logos-gateway"

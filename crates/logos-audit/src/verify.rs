@@ -16,7 +16,7 @@ use logos_lrat::{CakeRegistry, LratCertificate, LratChecker};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
 
-use crate::event::{Certificate, Checker, Parsed, Recheck};
+use crate::event::{Certificate, Checker, FactObject, Parsed, Recheck};
 use crate::{AuditError, Report, Result, event, fail, source};
 
 pub(crate) fn walk(
@@ -105,6 +105,7 @@ pub fn verify_with_checkers(
     let mut routes: BTreeMap<[u8; 32], (Hash<Obligation>, Hash<Certificate>)> = BTreeMap::new();
     let mut failed: BTreeMap<[u8; 32], String> = BTreeMap::new();
     let mut invalidated_by_recheck = 0;
+    let mut facts = 0;
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -125,6 +126,10 @@ pub fn verify_with_checkers(
                 }
                 "checker" => {
                     source::cas::<Checker>(cas, Hash::from_bytes(*digest))?;
+                }
+                "fact" => {
+                    fact_signature(&source::cas::<FactObject>(cas, Hash::from_bytes(*digest))?)?;
+                    facts += 1;
                 }
                 _ => return Err(fail("unhandled CAS reference domain")),
             }
@@ -229,12 +234,42 @@ pub fn verify_with_checkers(
         )));
     }
     report.invalidated_by_recheck = invalidated_by_recheck;
+    report.facts = facts;
     report.refutations = refutations;
     report.consistencies = consistencies;
     report.cnf_derivations = cnf_derivations;
     report.lrat_proofs = lrat_proofs;
     report.unchecked_proofs -= lrat_proofs + invalidated_by_recheck;
     Ok(report)
+}
+
+/// Reverifica a assinatura do emissor de um fact/v1 (6.1) sem o decoder do ledger:
+/// corpo = os oito primeiros campos, assinatura = o nono. Não decide confiança no
+/// emissor (raiz de confiança é configuração do kernel até a 6.2).
+fn fact_signature(bytes: &[u8]) -> Result<()> {
+    let value: logos_canon::Value = from_canon(bytes)?;
+    let logos_canon::Value::Array(array) = value else {
+        return Err(fail("fact is not an array"));
+    };
+    let [first, .., sig] = array.items() else {
+        return Err(fail("fact arity"));
+    };
+    if array.items().len() != 9 || *first != logos_canon::Value::Unsigned(1) {
+        return Err(fail("fact version/arity"));
+    }
+    let body = logos_canon::to_canon(&logos_canon::Value::Array(logos_canon::Array::new(
+        array.items()[..8].to_vec(),
+    )?))?;
+    let issuer = <PublicKey as logos_canon::CanonDecode>::from_value(&array.items()[3])?;
+    let sig = <logos_crypto::Signature as logos_canon::CanonDecode>::from_value(sig)?;
+    logos_crypto::verify::<FactSig>(&body, &sig, &issuer)
+        .map_err(|_| fail("fact signature does not verify"))?;
+    Ok(())
+}
+
+struct FactSig;
+impl logos_crypto::SigDomain for FactSig {
+    const TAG: &'static [u8] = logos_crypto::sig_tags::FACT;
 }
 
 fn recheck(root: &Path, r: &Recheck) -> Result<()> {

@@ -14,6 +14,8 @@ pub(crate) struct ResolvedEntry {
     pub(crate) status: ClaimStatus,
     pub(crate) vocabulary: Arc<Vocabulary>,
     pub(crate) formula: Arc<Formula>,
+    /// Fato com validade `Until` já vencida no snapshot (6.1).
+    pub(crate) expired: bool,
 }
 
 #[derive(Default)]
@@ -98,6 +100,7 @@ impl Resolver {
             status,
             vocabulary,
             formula,
+            expired: false,
         })
     }
 }

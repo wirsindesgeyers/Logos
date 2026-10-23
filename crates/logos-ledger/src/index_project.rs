@@ -3,7 +3,7 @@
 use logos_canon::to_canon;
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::{Event, EventBody, LedgerError, LedgerHead};
+use crate::{Cas, Event, EventBody, Fact, LedgerError, LedgerHead, Validity};
 
 // Mesmo layout/codebook publicado em spec/ledger-index.md.
 pub(crate) const PROPOSAL: i64 = 0;
@@ -14,6 +14,7 @@ pub(crate) const UNKNOWN: i64 = 4;
 pub(crate) const ASSUMPTION: i64 = 5;
 pub(crate) const INVALIDATED: i64 = 6;
 pub(crate) const SUSPENDED: i64 = 7;
+pub(crate) const FACT: i64 = 8;
 
 /// Nó ATMS de uma linha: rotas Verified (h_o e checker presentes) pertencem ao
 /// nó h(O); as demais linhas (assumptions, propostas) são nós de si mesmas.
@@ -48,7 +49,7 @@ fn premise_alive(connection: &Connection, premise: &[u8]) -> Result<bool, Ledger
             .optional()?
             .is_some(),
         Some(Node::Single(id)) => connection
-            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5)")?
+            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5,8)")?
             .query_row([id], |_| Ok(()))
             .optional()?
             .is_some(),
@@ -65,7 +66,7 @@ fn premise_active(connection: &Connection, premise: &[u8]) -> Result<bool, Ledge
             .optional()?
             .is_some(),
         Some(Node::Single(id)) => connection
-            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5)")?
+            .prepare("SELECT 1 FROM claims WHERE id=?1 AND status IN (2,5,8)")?
             .query_row([id], |_| Ok(()))
             .optional()?
             .is_some(),
@@ -244,8 +245,62 @@ fn invalidate(connection: &Connection, killed: &[Vec<u8>]) -> Result<Vec<Vec<u8>
     Ok(touched)
 }
 
+/// Fato aplicável na época `epoch` para fins de `used` (6.1). `Until` não depende
+/// do relógio aqui: a replay precisa ser determinística; o kernel confere o
+/// instante ao regenerar a obrigação.
+fn fact_applicable(connection: &Connection, id: &[u8], epoch: &[u8]) -> Result<bool, LedgerError> {
+    Ok(connection
+        .prepare("SELECT 1 FROM facts JOIN claims ON claims.id=facts.id WHERE facts.id=?1 AND claims.status=8 AND ((facts.first<=?2 AND facts.last>=?2) OR (facts.until IS NOT NULL AND claims.epoch<=?2))")?
+        .query_row(params![id, epoch], |_| Ok(()))
+        .optional()?
+        .is_some())
+}
+
+fn register_fact(
+    connection: &Connection,
+    cas: &Cas,
+    id: &[u8],
+    epoch: &[u8],
+    fact: logos_crypto::Hash<Fact>,
+) -> Result<(), LedgerError> {
+    // Leitura do CAS confere o hash; decode estrito de fact/v1.
+    let bytes = cas
+        .get(&fact)?
+        .ok_or(LedgerError::Invalid("registered fact missing from CAS"))?;
+    let decoded: Fact = logos_canon::from_canon(&bytes)?;
+    let duplicate = connection
+        .prepare("SELECT 1 FROM facts WHERE fact=?1")?
+        .query_row([fact.as_bytes().as_slice()], |_| Ok(()))
+        .optional()?
+        .is_some();
+    if duplicate {
+        return Err(LedgerError::Invalid("fact registered twice"));
+    }
+    connection.prepare("INSERT INTO claims(id,h_o,status,epoch,retracted,vocab,formula,scope,checker) VALUES (?1,NULL,?2,?3,0,?4,?5,NULL,NULL)")?
+        .execute(params![id, FACT, epoch, decoded.vocabulary.as_bytes().as_slice(), to_canon(&decoded.formula)?])?;
+    let (first, last, until) = match decoded.valid {
+        Validity::Epochs(range) => (
+            Some(range.first().to_be_bytes()),
+            Some(range.last().to_be_bytes()),
+            None,
+        ),
+        Validity::Until(instant) => (None, None, Some(instant.to_be_bytes())),
+    };
+    connection
+        .prepare("INSERT INTO facts(id,fact,first,last,until) VALUES (?1,?2,?3,?4,?5)")?
+        .execute(params![
+            id,
+            fact.as_bytes().as_slice(),
+            first.as_ref().map(|b| b.as_slice()),
+            last.as_ref().map(|b| b.as_slice()),
+            until.as_ref().map(|b| b.as_slice())
+        ])?;
+    Ok(())
+}
+
 pub(crate) fn apply(
     connection: &Connection,
+    cas: &Cas,
     event: &Event,
     head: LedgerHead,
 ) -> Result<(), LedgerError> {
@@ -335,6 +390,9 @@ pub(crate) fn apply(
             refresh(connection, nodes)?;
             return Ok(());
         }
+        EventBody::FactRegistered { fact } => {
+            return register_fact(connection, cas, id, epoch.as_slice(), *fact);
+        }
         EventBody::Rechecked { route, check } => {
             let row = connection
                 .prepare("SELECT h_o, status FROM claims WHERE id=?1 AND checker IS NOT NULL")?
@@ -391,7 +449,8 @@ pub(crate) fn apply(
                 |_| Ok(()),
             )
             .optional()?
-            .is_some();
+            .is_some()
+            || fact_applicable(connection, premise.as_bytes(), epoch.as_slice())?;
         if !eligible {
             return Err(LedgerError::Invalid(
                 "used premise is not an earlier citable claim in this epoch",

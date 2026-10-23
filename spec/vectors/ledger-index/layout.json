@@ -1,17 +1,42 @@
 {
-  "format": "ledger-index/v3",
+  "format": "ledger-index/v4",
   "application_id_hex": "4c494458",
-  "user_version": 3,
-  "statuses": {"Proposal": 0, "Pending": 1, "Verified": 2, "Refuted": 3, "Unknown": 4, "Assumption": 5, "Invalidated": 6, "Suspended": 7},
-  "epochs": [{"value": 0, "hex": "0000000000000000"}, {"value": 1, "hex": "0000000000000001"}, {"value": 18446744073709551615, "hex": "ffffffffffffffff"}],
+  "user_version": 4,
+  "statuses": {
+    "Proposal": 0,
+    "Pending": 1,
+    "Verified": 2,
+    "Refuted": 3,
+    "Unknown": 4,
+    "Assumption": 5,
+    "Invalidated": 6,
+    "Suspended": 7,
+    "Fact": 8
+  },
+  "epochs": [
+    {
+      "value": 0,
+      "hex": "0000000000000000"
+    },
+    {
+      "value": 1,
+      "hex": "0000000000000001"
+    },
+    {
+      "value": 18446744073709551615,
+      "hex": "ffffffffffffffff"
+    }
+  ],
   "schema": {
-    "claims": "CREATE TABLE claims (id BLOB PRIMARY KEY CHECK(length(id)=32), h_o BLOB CHECK(h_o IS NULL OR length(h_o)=32), status INTEGER NOT NULL CHECK(status BETWEEN 0 AND 7), epoch BLOB NOT NULL CHECK(length(epoch)=8), retracted INTEGER NOT NULL CHECK(retracted IN (0,1)), vocab BLOB CHECK(vocab IS NULL OR length(vocab)=32), formula BLOB, scope TEXT, checker BLOB CHECK(checker IS NULL OR length(checker)=32)) STRICT, WITHOUT ROWID",
+    "claims": "CREATE TABLE claims (id BLOB PRIMARY KEY CHECK(length(id)=32), h_o BLOB CHECK(h_o IS NULL OR length(h_o)=32), status INTEGER NOT NULL CHECK(status BETWEEN 0 AND 8), epoch BLOB NOT NULL CHECK(length(epoch)=8), retracted INTEGER NOT NULL CHECK(retracted IN (0,1)), vocab BLOB CHECK(vocab IS NULL OR length(vocab)=32), formula BLOB, scope TEXT, checker BLOB CHECK(checker IS NULL OR length(checker)=32)) STRICT, WITHOUT ROWID",
     "deps": "CREATE TABLE deps (claim BLOB NOT NULL CHECK(length(claim)=32), premise BLOB NOT NULL CHECK(length(premise)=32), PRIMARY KEY(claim,premise)) STRICT, WITHOUT ROWID",
     "citable": "CREATE TABLE citable (ref BLOB NOT NULL CHECK(length(ref)=32), epoch BLOB NOT NULL CHECK(length(epoch)=8), PRIMARY KEY(ref,epoch)) STRICT, WITHOUT ROWID",
     "revoked": "CREATE TABLE revoked (checker BLOB PRIMARY KEY CHECK(length(checker)=32)) STRICT, WITHOUT ROWID",
+    "facts": "CREATE TABLE facts (id BLOB PRIMARY KEY CHECK(length(id)=32), fact BLOB NOT NULL CHECK(length(fact)=32), first BLOB CHECK(first IS NULL OR length(first)=8), last BLOB CHECK(last IS NULL OR length(last)=8), until BLOB CHECK(until IS NULL OR length(until)=8), CHECK((first IS NULL AND last IS NULL AND until IS NOT NULL) OR (first IS NOT NULL AND last IS NOT NULL AND until IS NULL))) STRICT, WITHOUT ROWID",
     "metadata": "CREATE TABLE metadata (singleton INTEGER PRIMARY KEY CHECK(singleton=1), seq INTEGER, epoch BLOB, hash BLOB, CHECK((seq IS NULL AND epoch IS NULL AND hash IS NULL) OR (seq>=0 AND length(epoch)=8 AND length(hash)=32))) STRICT",
     "deps_premise": "CREATE INDEX deps_premise ON deps(premise,claim)",
     "claims_checker": "CREATE INDEX claims_checker ON claims(checker)",
-    "claims_h_o": "CREATE INDEX claims_h_o ON claims(h_o,status)"
+    "claims_h_o": "CREATE INDEX claims_h_o ON claims(h_o,status)",
+    "facts_fact": "CREATE UNIQUE INDEX facts_fact ON facts(fact)"
   }
 }

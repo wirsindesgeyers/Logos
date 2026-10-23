@@ -29,6 +29,8 @@ pub enum CasReference {
     Model(Hash<ModelObject>),
     /// DIMACS canônico registrado em ObligationCreated.
     Cnf(Hash<CnfObject>),
+    /// Fato fact/v1 registrado em FactRegistered (6.1).
+    Fact(Hash<crate::Fact>),
 }
 
 impl CasReference {
@@ -42,6 +44,7 @@ impl CasReference {
             Self::Checker(_) => "checker-v1",
             Self::Model(_) => "model-v1",
             Self::Cnf(_) => "cnf-v1",
+            Self::Fact(_) => "fact-v1",
         }
     }
     /// Digest dentro do domínio explícito.
@@ -54,6 +57,7 @@ impl CasReference {
             Self::Checker(h) => *h.as_bytes(),
             Self::Model(h) => *h.as_bytes(),
             Self::Cnf(h) => *h.as_bytes(),
+            Self::Fact(h) => *h.as_bytes(),
         }
     }
     pub(crate) fn require(self, cas: &Cas) -> Result<(), LedgerError> {
@@ -64,6 +68,7 @@ impl CasReference {
             Self::Checker(h) => cas.verified_present(&h),
             Self::Model(h) => cas.verified_present(&h),
             Self::Cnf(h) => cas.verified_present(&h),
+            Self::Fact(h) => cas.verified_present(&h),
         }?;
         if !present {
             return Err(LedgerError::MissingObject(self));
@@ -139,6 +144,9 @@ impl EventBody {
             }
             Self::CheckerRegistered { checker, .. } | Self::CheckerRevoked { checker, .. } => {
                 result.insert(CasReference::Checker(*checker));
+            }
+            Self::FactRegistered { fact } => {
+                result.insert(CasReference::Fact(*fact));
             }
             Self::Genesis { .. }
             | Self::Retracted { .. }

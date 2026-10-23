@@ -69,6 +69,8 @@ pub struct Report {
     /// Rotas cujo certificado falha no recheck do auditor e que um Rechecked
     /// Rejected do kernel invalidou (5.10); incidente visível, não falha.
     pub invalidated_by_recheck: u64,
+    /// Fatos registrados com objeto no CAS e assinatura do emissor reverificada (6.1).
+    pub facts: u64,
     /// Digest integral do último evento; None no vazio.
     pub head: Option<[u8; 32]>,
 }
@@ -78,7 +80,7 @@ impl fmt::Display for Report {
         let head = self.head.map(hex).unwrap_or_else(|| "none".into());
         write!(
             f,
-            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={} invalidated_by_recheck={}",
+            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={} invalidated_by_recheck={} facts_verified={}",
             self.events,
             self.refutations,
             self.consistencies,
@@ -86,7 +88,8 @@ impl fmt::Display for Report {
             self.cnf_derivations,
             self.lrat_proofs,
             self.lrat_proofs,
-            self.invalidated_by_recheck
+            self.invalidated_by_recheck,
+            self.facts
         )
     }
 }

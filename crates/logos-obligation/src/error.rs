@@ -18,6 +18,8 @@ pub enum Reject {
     UnknownCitation(PremiseRef),
     /// A entrada citada foi retratada no ledger.
     Retracted(PremiseRef),
+    /// A validade da entrada (fato) já expirou no instante do snapshot (6.1).
+    Expired(PremiseRef),
     /// A época de aplicabilidade da entrada diverge da época corrente do snapshot.
     InvalidEpoch {
         /// Referência da premissa.
@@ -64,6 +66,9 @@ impl fmt::Display for Reject {
             }
             Self::Retracted(reference) => {
                 write!(f, "premise citation is retracted: {reference}")
+            }
+            Self::Expired(reference) => {
+                write!(f, "premise citation has expired: {reference}")
             }
             Self::InvalidEpoch {
                 reference,
@@ -112,6 +117,7 @@ impl std::error::Error for Reject {
             Self::Canon(error) => Some(error),
             Self::UnknownCitation(_)
             | Self::Retracted(_)
+            | Self::Expired(_)
             | Self::InvalidEpoch { .. }
             | Self::NotCitable { .. }
             | Self::IncompatibleVocabulary(_) => None,

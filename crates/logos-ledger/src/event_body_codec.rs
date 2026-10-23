@@ -359,6 +359,11 @@ impl Canon for EventBody {
                 route.to_value()?,
                 check.to_value()?,
             ]),
+            Self::FactRegistered { fact } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(16),
+                fact.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -677,6 +682,9 @@ impl CanonDecode for EventBody {
             (15, [route_val, check_val]) => Self::Rechecked {
                 route: digest::<Event>(route_val)?,
                 check: CheckRecord::from_value(check_val)?,
+            },
+            (16, [fact_val]) => Self::FactRegistered {
+                fact: digest::<crate::Fact>(fact_val)?,
             },
             (12, [checker_val, reason_val, auth_val]) => {
                 let checker = digest::<Checker>(checker_val)?;

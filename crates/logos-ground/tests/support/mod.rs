@@ -137,6 +137,7 @@ impl LedgerView for View<'_> {
             kind: EntryKind::Assumption,
             epoch: 0,
             retracted: false,
+            expired: false,
             vocabulary: self.v,
             formula,
         }))
