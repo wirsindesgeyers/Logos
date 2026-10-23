@@ -255,7 +255,7 @@ fontes opacas não demonstram autenticação.
 | 5.6 Bloqueio de re-proposta refutada (S4) | ⚠ concluída localmente; CI pendente | ADR0053; PROPOSE recusa h(O) refutado antes do CAS com erro already-refuted/v1 `[5,h_O,h(Refuted),h(M)]`; ledger-index/v2 (`claims_h_o`); cliente Python `AlreadyRefuted`. Critérios no transporte real, 3/3 mutações. |
 | 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
-| 5.10 Revogação de checker e recheck | 🚧 implementada localmente; full verify pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
+| 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
 ## Etapas compartilhadas com a Fase10
 
@@ -272,7 +272,7 @@ ADR0037 aceito em20/out. Incorporação documental não é implementação.
 | --- | --- | --- |
 | 5R.1 MCP de pesquisa | ⚠ concluída localmente; CI pendente | ADR0045; seis ferramentas stdio,10 tarefas (5 provas/5 refutações), auditoria Rust+cake_lpr e export rechecado;24 testes Python+2 CLI/full verify passaram. |
 | 5R.2 Formalizador com confirmação | ⏳ não iniciada | 5R.1 e9.1 completa (TCB de fidelidade). |
-| 5R.3 Caderno de hipóteses | 🚧 implementada localmente; full verify pendente | ADR0055; `py/logos_notebook` (notebook/v1), `logos ledger retract`, SAT com premissas escondidas; piloto 20 hipóteses, duas retratações com corte auditado, experimento crucial/MUS/leis × tabela (`ci/check-notebook.sh`). |
+| 5R.3 Caderno de hipóteses | ⚠ concluída localmente; CI pendente | ADR0055; `py/logos_notebook` (notebook/v1), `logos ledger retract`, SAT com premissas escondidas; piloto 20 hipóteses, duas retratações com corte auditado, experimento crucial/MUS/leis × tabela (`ci/check-notebook.sh`). |
 | 5R.4 Resposta com cartões | ⏳ não iniciada | 5R.2/5R.3; perfil de pesquisa10.6 entregue aqui. |
 | 5R.5 Chat/TUI de pesquisa | ⏳ não iniciada | 5R.4; perfil de pesquisa10.7 entregue aqui, sem ações. |
 | 5R.6 Piloto técnico/UEA | ⏳ não iniciada | 5R.1–5R.5;11.8 antes de coleta com participantes. |
@@ -562,12 +562,12 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: full verify da pilha; depois 5.8 ou 5.11
+## Próximo passo: 5.8 ou 5.11
 
-Pilha local não enviada: c50cd93 (5R.3), 28727b4 (vetor SAT), ae32873 (5.10),
-107add8 (projeção O(n²) da 5.10 corrigida) e a verificação em níveis (ADR0057).
-Rodar `ci/verify.sh --selftest` (completo) na ponta; se passar, marcar os critérios
-de 5R.3 e 5.10 no ROADMAP com o recibo. Push só quando o mantenedor pedir.
+Pilha local não enviada, coberta por full verify (recibo
+[pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json)): c50cd93 (5R.3),
+28727b4, ae32873 (5.10), 107add8 (projeção O(n²)) e 856929f (níveis). Critérios de
+5R.3 e 5.10 marcados; push e CI quando o mantenedor pedir.
 
 Laço de desenvolvimento a partir de agora: `ci/verify.sh --tier fast` (~5–8 min) a
 cada commit, `--tier affected` quando tocar integração; completo antes de push.
@@ -1978,3 +1978,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-22 — Etapa5.10 implementada em worktree sobre 28727b4 (ADR0056). Revogação passa a suspender: status Suspended (ledger-index/v3, kind10 no Query, EntryKind novo), suspensão transitiva por ponto fixo de atividade separado do de morte. Evento `Rechecked` (tag15): Accepted troca o checker efetivo e reativa, Rejected invalida com cascata registrada (`reconcile` aceita Rechecked como raiz), Unknown mantém. `Rechecks::{revoke, recheck}` (operador) e CLI `logos ledger revoke-checker|recheck --with --cake`. Auditor aceita rota com certificado ruim só após Rechecked Rejected e reporta `invalidated_by_recheck`. Critério: provas LRAT reais, revogação do Rust suspende 4 rotas, recheck com cake recupera c1/c2 e invalida a plantada e seu dependente (causa [Rechecked, planted]); auditor independente confirma. 6 testes de índice, 3 de kernel, 1 de CLI, 1 Python; 12/12 mutações mortas; fuzz event_decode 600s sem crash. Vetores: eventos (30), layout de índice v3, schema de obrigação.
 - 2026-10-22 — Full verify da pilha c50cd93/28727b4/ae32873 **não passou**: interrompido (exit143) após 4h33 no benchmark `ledger_index_scale` (p99 com 1M), parado a 100% de CPU. Causa: a 5.10 chamava `refresh()` do nó h(O) a cada Verified nova, relendo todas as rotas do nó (O(n²); o benchmark põe 1M rotas na mesma obrigação). Correção: a rota nova sempre nasce ativa (premissas citáveis, checker não revogado), então só recalcula se o nó tem rota Suspended; `claims_h_o` passou a `(h_o,status)` dentro da v3 ainda não publicada. Benchmark 1M: 7min12s (rebuild_ms=359879, p99=25.9µs; histórico 215–305s). Testes ledger/kernel/audit/cli 216/216; mutação "nunca reativar" morta por `new_route_from_active_checker_reactivates_suspended_node`. Full verify ainda pendente.
 - 2026-10-22 — Verificação em níveis (ADR0057, revisa 0051 itens 2–3): `ci/verify.sh --tier fast|affected|full` com cronometragem por etapa (`target/verify-times.tsv`, `STEP_OK`, `VERIFY_FAILED step=`); `tools/verify_plan.py` escolhe smokes pelo fecho reverso do `cargo metadata`; testes de escala leem `LOGOS_TIER` (corpus LRAT 1/10, selo 2k, corrupções do certify 1/16, diferenciais 5k/1k, ATMS 1k; Z3 falso 10k com `heavy`); `lrat_corpus.py --check` relê RUP em 1/10 no rápido. Medição por teste achou `witness_deadline…` com 332 s de 393 s do certify.rs: Ed25519 em opt-level 0 (~0,3 s/append); override opt-level 1 em test/dev → 19 s. Rápido: 23 min → 8 min 15 s (com recompilação). ci.yml passou a rodar o check do caderno (faltava desde a 5R.3). Full verify da pilha pendente.
+- 2026-10-23 — Full verify/selftest na ponta 856929f: VERIFY_OK tier=full, exit0 em 2733s (45,5min, com `nice`; antes 50–78min). Rust 589/0 ignorados, Python 358+25, farm 500, MCP, caderno (20 hipóteses, corte [C4,E3]/[C1,C2,C3,E1,P1,P1B], 121 eventos auditados), SAT 300/300, crash 10k/24 SIGKILL, índice 1M p99=21.9µs rebuild 241s. Recibo `docs/plans/pilha-2026-10-23-evidencias.json` cobre c50cd93, 28727b4, ae32873, 107add8, 856929f. Critérios marcados: 5R.3 (2) e 5.10 (1). Etapas mais lentas: farm 840s, cargo test 591s, pytest 501s, índice 291s.

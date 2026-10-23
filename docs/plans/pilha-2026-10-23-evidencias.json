@@ -1,0 +1,85 @@
+{
+  "tip": "856929f",
+  "covers": [
+    "c50cd93 5R.3",
+    "28727b4 correção vetor SAT",
+    "ae32873 5.10",
+    "107add8 correção projeção O(n²) da 5.10",
+    "856929f verificação em níveis (ADR0057)"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "nice",
+      "-n",
+      "10",
+      "ci/verify.sh",
+      "--selftest"
+    ],
+    "tier": "full",
+    "exit": 0,
+    "seconds": 2733,
+    "verify_ok": true,
+    "log_sha256": "6779b1419be753b676fa54e4644631e63c94c2f721adc772fe090b83841fece9"
+  },
+  "statistics": {
+    "rust_passed": 589,
+    "rust_ignored": 0,
+    "python_summaries": [
+      "358 passed in 499.52s (0:08:19)",
+      "25 passed in 1.54s"
+    ],
+    "farm": [
+      "FARM_SMOKE_OK count=500 p50=1.1395157240040135"
+    ],
+    "mcp": [
+      "MCP_RESEARCH_SMOKE_OK tasks=10 verified=5 refuted=5 audit=complete",
+      "MCP_RESEARCH_SMOKE_OK tasks=10 verified=5 refuted=5 audit=complete"
+    ],
+    "notebook": [
+      "NOTEBOOK_SMOKE_OK hypotheses=20 artifacts=45 retractions=2 cut=[['C4', 'E3'], ['C1', 'C2', 'C3', 'E1', 'P1', 'P1B']] audit_events=121"
+    ],
+    "render_templates": [
+      "RENDER_TEMPLATES_SMOKE_OK tasks=10 vocabulary_format=2 audit=complete"
+    ],
+    "sat": [
+      "SAT_VECTORS_OK valid=300 sat=300",
+      "SAT_PRODUCER_OK valid=300/300 distinct_cnf=300 sat=300/300 controls=7 proofs=301 models=306 consistent=300 claims=0"
+    ],
+    "ledger_crash": [
+      "LEDGER_CRASH_OK events=10000 sigkill=24 seed=320026 acknowledged=9999 elapsed=53.27s"
+    ],
+    "ledger_index": [
+      "LEDGER_INDEX_REBUILD_OK events=100000 tables=5 exact=true",
+      "LEDGER_INDEX_LATENCY_OK events=1000000 samples=20000 positives=5142 p99_ns=21879 (private SQLite snapshot; cold rebuild_ms=240924)"
+    ]
+  },
+  "step_seconds": {
+    "check-farm": 839.5,
+    "cargo-test": 591.1,
+    "pytest": 501.0,
+    "check-ledger-index": 291.1,
+    "lrat-corpus-manifest": 145.3,
+    "check-sat": 102.2,
+    "check-ledger-crash": 55.6,
+    "check-cnf": 44.2,
+    "check-notebook": 30.1,
+    "selftest": 27.7,
+    "check-mcp-research": 23.0,
+    "check-render-templates": 22.7
+  },
+  "attempts_not_counted": [
+    {
+      "tip": "ae32873",
+      "exit": 143,
+      "seconds": 16436,
+      "cause": "interrompido após 4h33 em ledger_index_scale (1M): projeção O(n²) introduzida pela 5.10, corrigida em 107add8"
+    },
+    {
+      "tip": "c50cd93",
+      "exit": 1,
+      "seconds": 3975,
+      "cause": "vetor de transporte SAT sem premise_clauses, corrigido em 28727b4"
+    }
+  ]
+}

@@ -1176,7 +1176,7 @@ Objetivo da fase: `logos-kernel` como processo isolado, implementando a máquina
 - Claims sustentados só por um checker revogado e ainda não rechecados ficam em estado `Suspended` (não citáveis por ações).
 
 **Critério de conclusão.**
-- [ ] Cenário: revogar o checker LRAT próprio; rechecar tudo com `cake_lpr`; nenhum claim perdido se os certificados forem bons; certificado plantado como falso-aceito é invalidado.
+- [x] Cenário: revogar o checker LRAT próprio; rechecar tudo com `cake_lpr`; nenhum claim perdido se os certificados forem bons; certificado plantado como falso-aceito é invalidado.
 
 ---
 
@@ -1328,9 +1328,9 @@ de premissas; antecipar5.7/5.9 com seus critérios integrais antes desta etapa.
   sem perda. Projetos compartilhados na MEM não são critério desta etapa.
 
 **Critério de conclusão.**
-- [ ] 20 hipóteses de um domínio piloto com proveniência completa e nenhuma evidência
+- [x] 20 hipóteses de um domínio piloto com proveniência completa e nenhuma evidência
   apresentada como teorema.
-- [ ] Retirar uma premissa invalida exatamente os claims que perderam todas
+- [x] Retirar uma premissa invalida exatamente os claims que perderam todas
   as rotas de sustentação, preservando rotas independentes; a auditoria mostra
   o corte segundo5.9 e as dependências normativas used, não todas as citações.
 
