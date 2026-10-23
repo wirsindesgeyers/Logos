@@ -121,6 +121,7 @@ smokes=(
   "check-mcp-research:ci/check-mcp-research.sh"
   "check-notebook:ci/check-notebook.sh"
   "check-isolation:ci/check-isolation.sh"
+  "demo-kernel:ci/demo-kernel.sh"
   "check-render-templates:ci/check-render-templates.sh"
   "check-ledger-crash:ci/check-ledger-crash.sh"
   "check-ledger-index:ci/check-ledger-index.sh"

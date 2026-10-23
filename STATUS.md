@@ -256,6 +256,7 @@ fontes opacas não demonstram autenticação.
 | 5.7 Assumptions com escopo | ⚠ concluída localmente; CI pendente | ADR0054; ASSUME real (autor = kernel, origem agente), escopos `session:`/`until:`/`claim:`, escopo do PROPOSE derivado (mesmo no CERTIFY/WITNESS), Query `[2,h]` → open-result/v1. Critérios no transporte real (condicional no Query; retratar invalida dependente), 5 mutações + 1 equivalente. |
 | 5.8 Especulação de claims | 🚧 implementada localmente; full verify pendente | ADR0058; `speculative_on` = h(Pending) não concluído; `generate_speculative`; CERTIFY só com base Verified (rota em `cited`, base→rota em `used`); `SpeculationFailed` = `Invalidated{pending,[raiz,base]}` por varredura idempotente após Refuted e no reconcile. Critérios demonstrados: C7 refutado → C8/C9 invalidados; 1000 cadeias com profundidade 0 sem especulação (controle especulativo 138). 12/14 mutações mortas, 2 equivalentes. Sem formato novo. |
 | 5.11 Isolamento de processos | 🚧 implementada localmente; full verify pendente | ADR0059; crate `logos-sandbox` (TCB): agente em bwrap sem rede, só socket do kernel, staging, código ro e proxy restrito ao LLM; `deploy/systemd` com usuários `logos-kernel`/`logos-gateway`/`logos-agent`. Pentest `ci/check-isolation.sh`: 9 tentativas proibidas conseguem fora (controle) e falham dentro; kernel/staging/LLM funcionam dentro. 9/9 mutações. Usuários de SO reais não exercitados (precisa root); gateway stub, repetir na 8.4. |
+| 5.12 ★ Kernel mínimo ponta a ponta | 🚧 implementada localmente; full verify pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -564,7 +565,7 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: full verify da pilha; depois 5.12 (kernel mínimo ponta a ponta)
+## Próximo passo: full verify da pilha (5.8, 5.11, 5.12); depois a Fase 6
 
 Pilha local não enviada, coberta por full verify (recibo
 [pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json)): c50cd93 (5R.3),
@@ -580,17 +581,19 @@ Olhe `target/verify-times.tsv` quando uma etapa crescer.
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
-contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0059).
+contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0060).
 Nenhuma etapa técnica espera essas revisões além de 5R.2/5R.4.
 
 Na pilha também: 5.11 ([plano](docs/plans/etapa-5.11.md), ADR0059), commitada
 com `--tier affected`. Rodar `ci/verify.sh --selftest` na ponta e, se passar, marcar
 os critérios de 5.8 e 5.11 com o recibo.
 
-Trabalho técnico seguinte: **5.12** (kernel mínimo ponta a ponta: demo scriptada
-vocabulário → fatos de um atestador de teste → 3 propostas Verified/Refuted/Unknown
-→ retratação → cascata → `logos-audit`; `make demo-kernel`). Depende de 5.1–5.11 e
-de um atestador stub. Do mantenedor, quando quiser: instalar o deploy com usuários
+Também na pilha: 5.12 ([plano](docs/plans/etapa-5.12.md), ADR0060) e a correção do
+`deny.toml` para o crate novo (o primeiro full sobre ecc463c falhou só em
+`cargo-deny`). Com o full verde, marcar os critérios de 5.8, 5.11 e 5.12 com o recibo.
+
+Fim da Fase 5 (kernel mínimo). Próximas frentes: **Fase 6** (6.1 objeto `Fact`, que
+substitui o atestador stub da demo) e as pendências humanas abaixo. Do mantenedor, quando quiser: instalar o deploy com usuários
 de SO (precisa root; `deploy/README.md`). Riscos da 5.8: varredura e
 resolução de bases custam um replay completo; o auditor não confere a semântica da
 cascata. Riscos: custo do `snapshot` com muitos
@@ -612,7 +615,8 @@ rotas cake não tem caminho de operador.
   `[raiz, base]`; sem formato novo nem arestas especulativas no índice) e 0059
   (5.11: sandbox bwrap como camada testada sem root; usuários de SO como units de
   referência; proxy Unix→TCP fixo para o LLM; `CAP_DAC_OVERRIDE` no kernel para o
-  staging entre usuários).
+  staging entre usuários) e 0060 (5.12: fatos de teste como assumptions de um
+  atestador stub até a 6.1; timeout = teto de passos determinístico).
   Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
@@ -2011,3 +2015,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-23 — Full verify/selftest na ponta 856929f: VERIFY_OK tier=full, exit0 em 2733s (45,5min, com `nice`; antes 50–78min). Rust 589/0 ignorados, Python 358+25, farm 500, MCP, caderno (20 hipóteses, corte [C4,E3]/[C1,C2,C3,E1,P1,P1B], 121 eventos auditados), SAT 300/300, crash 10k/24 SIGKILL, índice 1M p99=21.9µs rebuild 241s. Recibo `docs/plans/pilha-2026-10-23-evidencias.json` cobre c50cd93, 28727b4, ae32873, 107add8, 856929f. Critérios marcados: 5R.3 (2) e 5.10 (1). Etapas mais lentas: farm 840s, cargo test 591s, pytest 501s, índice 291s.
 - 2026-10-23 — Etapa5.8 implementada (ADR0058): `generate_speculative`, consultas `active_route`/`dead_routes`, módulo `speculation` (bases, escopo transitivo, varredura `SpeculationFailed`), transições `recover_pending_at`/`settle`/`abandon`; CERTIFY só com base Verified (rota citada, `used` mapeado); REFUTE e reconcile varrem; WITNESS recusa. Testes: 5 em `logos-kernel/tests/speculation.rs`, 1 no gerador, 1 no índice. Critério das 1000 cadeias: `interleaved_depth=0`, controle especulativo 138 (100 cadeias), 419s com 8 threads. Mutações 12/14 (M4/M13 equivalentes por defesa em profundidade). Perfil dev com `line-tables-only` e sha2 opt3 em teste (adendo ADR0057). `--tier affected` OK em 2003s (Cargo.toml mudou → todos os smokes); uma falha intermitente em `ledger.rs` antes disso (Armadilhas). Full verify pendente.
 - 2026-10-23 — Etapa5.11 implementada (ADR0059): crate `logos-sandbox` (TCB estrita, só std + /usr/bin/bwrap) com `Plan` e `LlmProxy`, binário `logos-agent-sandbox`; `deploy/systemd` (sysusers, tmpfiles, units kernel/gateway/agente); probe `logos_agent.isolation_probe`; `tools/check_isolation.py`/`ci/check-isolation.sh` no verify, no seletor do affected e na CI. `ISOLATION_OK forbidden=9 blocked=all control_reached=9 allowed=3 units=3`. Mutações: primeira rodada 7/9 (sem PID ns e home montado passavam); o pentest ganhou `/proc/<kernel>/cmdline` e credenciais no home → 9/9. Usuários de SO reais não exercitados (root).
+- 2026-10-23 — Full verify/selftest sobre ecc463c (5.8+5.11) falhou só em `cargo-deny` (exit2, 3058s): `logos-sandbox` fora de `[bans].allow`; todas as etapas anteriores passaram. Corrigido no `deny.toml`. Etapa5.12 implementada (ADR0060): `examples/demo_kernel.rs` pelo transporte real, atestador stub com chave própria, Unknown por 100k cópias RUP contra teto de 50k passos, retratação pelo atestador; `ci/demo-kernel.sh`/`make demo-kernel` com `logos-audit` → `DEMO_KERNEL_AUDIT_OK`. A máquina suspendeu 03:39–14:54 durante o affected da 5.11 (check-farm marcou 41441s); full agora roda sob `systemd-inhibit`.

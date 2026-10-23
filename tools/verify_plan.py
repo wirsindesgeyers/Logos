@@ -47,6 +47,7 @@ SMOKES: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
     "check-notebook": (("logos-kernel", "logos-audit", "logos-cli"), ("logos_notebook",)),
     "check-render-templates": (("logos-kernel", "logos-audit"), ("logos_provers",)),
     "check-isolation": (("logos-kernel", "logos-sandbox"), ("logos_agent",)),
+    "demo-kernel": (("logos-kernel", "logos-audit"), ()),
     "check-ledger-crash": (("logos-ledger",), ()),
     "check-ledger-index": (("logos-ledger",), ()),
 }
