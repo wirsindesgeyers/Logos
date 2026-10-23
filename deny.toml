@@ -37,6 +37,7 @@ allow = [
   { name = "logos-token" },
   { name = "logos-kernel" }, # ADR0034/0035: air/canon/core/crypto/ledger/obligation/rustix; protocol/trybuild/JSON dev
   { name = "logos-gateway" },
+  { name = "logos-sandbox" },
   { name = "logos-attest" },
   { name = "logos-audit" }, # canon/crypto/checkers/rusqlite, fora da TCB, ADRs0025/0028/0031; ground/lrat para rederivação e recheck
   { name = "logos-cli" }, # ledger/crypto/canon locais; fora da TCB, ADRs 0022/0024
