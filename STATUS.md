@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-24 · 6.1 concluída localmente (full verify); 6.2 (ADR0063) e 6.4 (ADR0064) commitadas com `--tier affected`, falta full verify para marcar os critérios. Próximo: ver "Próximo passo".
+> Última atualização: 2026-10-24 · 6.1, 6.2 e 6.4 concluídas localmente com full verify (critérios marcados). Próximo: 6.3 (SDK de atestador), ver "Próximo passo".
 
 ## Resumo
 
@@ -258,8 +258,8 @@ fontes opacas não demonstram autenticação.
 | 5.11 Isolamento de processos | ⚠ concluída localmente; CI pendente | ADR0059; crate `logos-sandbox` (TCB): agente em bwrap sem rede, só socket do kernel, staging, código ro e proxy restrito ao LLM; `deploy/systemd` com usuários `logos-kernel`/`logos-gateway`/`logos-agent`. Pentest `ci/check-isolation.sh`: 9 tentativas proibidas conseguem fora (controle) e falham dentro; kernel/staging/LLM funcionam dentro. 9/9 mutações. Usuários de SO reais não exercitados (precisa root); gateway stub, repetir na 8.4. |
 | 5.12 ★ Kernel mínimo ponta a ponta | ⚠ concluída localmente; CI pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
 | 6.1 Objeto Fact | ✅ concluída localmente (full verify; CI remota pendente) | ADR0061/0062; fact/v1 no CAS, `FactRegistered` tag16 só para emissor da raiz de confiança com assinatura/tipagem/janela válidas; índice v4 (Fact=8, tabela `facts`); janela por épocas ou `Until` (`Reject::Expired`); auditor reverifica assinatura (`facts_verified`). Mutações 10/10; fuzz `fact_decode` 1,8M execuções. 6.1b (ADR0062): `FactRef` = hash da conjunção fecho ∧ nomes únicos; grounder aceita a conjunção como suporte único; kernel (`enumeration.rs`) exige que venha de entrada `Fact` no PROPOSE e no CERTIFY; prova LRAT real com `used`/deps no fato; Policy recusada até a 7.3. Mutações 9/9. [Plano](docs/plans/etapa-6.1.md). |
-| 6.2 Confiança por tópico | 🚧 implementada; falta full verify para marcar | ADR0063; trust/v1 no CAS (tag `logos/trust/v1`, CAS `trust-v1`), `TrustConfigPublished` tag17 com Authority do admin e versão crescente; índice v5 (`trust`, `trust_configs`, emissor/tópico em `facts`); registro e citação exigem `Trusted(emissor, tópico)` (`Reject::Untrusted`); concessão consultável (`fact_trust`); auditor reaplica configurações (`trust_configs=`). Mutações 20/20; fuzz `trust_decode` 1,09M execuções. [Plano](docs/plans/etapa-6.2.md). |
-| 6.4 Revogação de fatos e atestadores | 🚧 implementada; falta full verify para marcar | ADR0064; `IssuerRevoked` tag18 (admin) mata todo fato do emissor com época de registro ≥ since e bloqueia fatos novos dele; `Retracted` aceita fato (admin); `reconcile` grava a cascata com `causes = [raiz, premissa]`; índice v6 (`revoked_issuers`); auditor recusa fato de emissor revogado e revogação dupla. Mutações 11/11. [Plano](docs/plans/etapa-6.4.md). |
+| 6.2 Confiança por tópico | ✅ concluída localmente (full verify; CI remota pendente) | ADR0063; trust/v1 no CAS (tag `logos/trust/v1`, CAS `trust-v1`), `TrustConfigPublished` tag17 com Authority do admin e versão crescente; índice v5 (`trust`, `trust_configs`, emissor/tópico em `facts`); registro e citação exigem `Trusted(emissor, tópico)` (`Reject::Untrusted`); concessão consultável (`fact_trust`); auditor reaplica configurações (`trust_configs=`). Mutações 20/20; fuzz `trust_decode` 1,09M execuções. [Plano](docs/plans/etapa-6.2.md). |
+| 6.4 Revogação de fatos e atestadores | ✅ concluída localmente (full verify; CI remota pendente) | ADR0064; `IssuerRevoked` tag18 (admin) mata todo fato do emissor com época de registro ≥ since e bloqueia fatos novos dele; `Retracted` aceita fato (admin); `reconcile` grava a cascata com `causes = [raiz, premissa]`; índice v6 (`revoked_issuers`); auditor recusa fato de emissor revogado e revogação dupla. Mutações 11/11. [Plano](docs/plans/etapa-6.4.md). |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -570,7 +570,7 @@ o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
 ## Próximo passo: Etapa 6.2 (confiança por tópico) — implementada em worktree
 
-Pilha local não enviada, coberta por full verify (recibos
+Pilha local não enviada (Fase 5, 6.1, 6.2, 6.4), coberta por full verify (recibos
 [pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json),
 [pilha-2026-10-23b](docs/plans/pilha-2026-10-23b-evidencias.json) e
 [pilha-2026-10-23c](docs/plans/pilha-2026-10-23c-evidencias.json)): Fase 5 e 6.1
@@ -578,8 +578,9 @@ Pilha local não enviada, coberta por full verify (recibos
 quando o mantenedor pedir.
 
 6.2 (ADR0063, confiança por tópico) e 6.4 (ADR0064, revogação de fatos e de
-emissores) commitadas com `--tier affected`. Falta o full verify na ponta para
-marcar os critérios das duas (no máximo três commits de etapa sem ele). Depois:
+emissores) concluídas localmente: full verify na ponta eed6fb8 (recibo
+[pilha-2026-10-24](docs/plans/pilha-2026-10-24-evidencias.json)), critérios
+marcados. Próximo:
 6.3 (SDK de atestador e atestadores de referência; sugestão: incluir a CLI de
 operador para publicar confiança e revogar). Divergência registrada na 6.2:
 `Trusted(issuer, topic)` é premissa explícita no ledger, não fórmula AIR (forma
@@ -2051,3 +2052,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-23 — Etapa6.2 implementada (ADR0063): trust/v1, `TrustConfigPublished` tag17, índice v5, `facts::{publish_trust, register}` (sem `TrustRoots`; testes da 6.1 migrados), `Reject::Untrusted`, consultas `trust_grant`/`trust_version`/`fact_trust`, auditor com `trust_configs=`, vetores Python independentes (trust e evento tag17), fuzz `trust_decode` 120s/1.095.923 execuções. Critério: `db-monitor` assinando `backup` recusado; retirada do tópico barra citações novas. Mutações: 13/14 na primeira rodada (M4 equivalente pela UNIQUE de versões; teste de versão menor acrescentado) → 14/14.
 - 2026-10-24 — Revisão da pilha 6.1/6.2: auditor passou a decodificar trust/v1 de forma estrita (ordem, unicidade, tetos; mutações M15–M20 mortas, 20/20 na 6.2); invariante de que a conjunção da 6.1b cabe no teto AIR fixado em teste (o teto que manda é `max_axioms`, n=141); docs corrigidas (cabeçalho do STATUS, events §4, fact.md §3, comentários de fact.rs, plano 6.1); lacunas registradas (sem caminho de operador para fatos/confiança; admin fora do ledger). Teste Python de domínios atualizado para 19 tags.
 - 2026-10-24 — Etapa6.2 commitada (`680e3bf`, `--tier affected` OK em 2447s, depois de corrigir ruff, vetores de domínio/CAS e contagens Python para a tag nova). Etapa6.4 implementada (ADR0064): `IssuerRevoked` tag18, índice v6, `revoke_issuer`, retratação de fato, cascata com fatos no `reconcile`, auditor; critério de `backup-svc` demonstrado; mutações 11/11. Flake de `ledger.rs` (`WriterBusy` sob carga) explicado: o filho de `second_process_fails_to_open_writer` herda, entre fork e exec, cópia do `writer.lock` de outro teste; spawn e reaberturas agora serializados por mutex no teste (3/3 OK; falha não reproduzida de forma determinística).
+- 2026-10-24 — Full verify na ponta eed6fb8 (6.2+6.4): VERIFY_OK tier=full, exit0 em 3009s; Rust 623, Python 358+25. Recibo `docs/plans/pilha-2026-10-24-evidencias.json`. Critérios da 6.2 e 6.4 marcados. Nada enviado ao remoto.

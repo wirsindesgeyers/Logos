@@ -1441,7 +1441,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - Na lógica, a confiança aparece como premissa explícita (prepara P8): `Trusted(issuer, topic)`.
 
 **Critério de conclusão.**
-- [ ] Teste: `db-monitor` assinando fato de tópico `backup` → não citável.
+- [x] Teste: `db-monitor` assinando fato de tópico `backup` → não citável.
 
 ---
 
@@ -1481,7 +1481,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - `Retract` (Etapa 5.9) para fatos; `IssuerRevoked { KeyId, since }` para atestador comprometido → retrata em massa todos os fatos dele após `since` (cascata).
 
 **Critério de conclusão.**
-- [ ] Revogar `backup-svc` invalida todos os claims que dependiam de fatos dele, e só esses.
+- [x] Revogar `backup-svc` invalida todos os claims que dependiam de fatos dele, e só esses.
 
 ---
 

@@ -1,0 +1,30 @@
+{
+  "tip": "eed6fb8",
+  "covers": [
+    "680e3bf 6.2",
+    "eed6fb8 6.4"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "systemd-inhibit",
+      "ci/verify.sh"
+    ],
+    "tier": "full",
+    "exit": 0,
+    "seconds": 3009,
+    "verify_ok": true,
+    "log_sha256": "24e22cb0c2cc866013d089a14e784845dcd69b7fc7ff7b6ac77931cef07293db"
+  },
+  "statistics": {
+    "rust_passed": 623,
+    "python_summaries": [
+      "358 passed in 573.28s (0:09:33)",
+      "25 passed in 1.26s"
+    ]
+  },
+  "criteria_marked": [
+    "6.2 (1)",
+    "6.4 (1)"
+  ]
+}
