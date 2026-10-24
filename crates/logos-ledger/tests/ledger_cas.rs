@@ -61,6 +61,10 @@ fn store(cas: &Cas, reference: CasReference, bytes: &[u8]) {
             .put::<logos_ledger::TrustConfig>(bytes)
             .unwrap()
             .as_bytes(),
+        CasReference::Policy(_) => *cas
+            .put::<logos_ledger::PolicyObject>(bytes)
+            .unwrap()
+            .as_bytes(),
     };
     assert_eq!(digest, reference.digest());
 }

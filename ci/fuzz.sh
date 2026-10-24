@@ -112,6 +112,27 @@ for case in cases:
 print(f"policy_decode: {len(cases)} sementes no corpus")
 PY
   fi
+  if [ "$t" = policy_proof_decode ]; then
+    # Provas de não-pertinência montadas pelo gerador Python independente (7.2) como sementes.
+    python3 - ../spec/vectors/policy/policy.json corpus/policy_proof_decode <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+corpus = Path(sys.argv[2])
+corpus.mkdir(parents=True, exist_ok=True)
+wires = [
+    bytes.fromhex(item["proof_canon_hex"])
+    for section in root["merkle"]
+    for item in section["absent"]
+]
+for wire in wires:
+    (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+print(f"policy_proof_decode: {len(wires)} sementes no corpus")
+PY
+  fi
   if [ "$t" = cnf_decode ] || [ "$t" = lrat_decode ]; then
     python3 - "$t" <<'SEED'
 import hashlib

@@ -258,6 +258,7 @@ dependencies = [
  "logos-lrat",
  "logos-model",
  "logos-obligation",
+ "logos-policy",
  "rusqlite",
  "serde_json",
 ]
@@ -323,6 +324,7 @@ name = "logos-kernel"
 version = "0.0.0"
 dependencies = [
  "logos-air",
+ "logos-air-text",
  "logos-audit",
  "logos-canon",
  "logos-core",
@@ -332,6 +334,8 @@ dependencies = [
  "logos-lrat",
  "logos-model",
  "logos-obligation",
+ "logos-policy",
+ "logos-policy-text",
  "logos-protocol",
  "rustix",
  "serde_json",

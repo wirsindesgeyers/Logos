@@ -25,6 +25,10 @@ OUT = ROOT / "spec/vectors/policy/policy.json"
 # Vocabulário canônico bruto: contexto e semente do fuzz policy_decode.
 VOCABULARY_OUT = ROOT / "spec/vectors/policy/vocabulary.bin"
 POLICY_TAG = b"logos/policy/v1\0"
+RULE_TAG = b"logos/rule/v1\0"
+LEAF_TAG = b"logos/merkle-leaf/v1\0"
+NODE_TAG = b"logos/merkle-node/v1\0"
+EMPTY_TAG = b"logos/merkle-empty/v1\0"
 VOCAB_TAG = b"logos/vocab/v1\0"
 
 VOCABULARY = """
@@ -48,6 +52,9 @@ vocab v1 {
   pred signs(Person, Action)
   pred p(Action)
   pred q(Action)
+  func drop(Action): Action
+  func send(Action): Action
+  func wipe(Action): Action
 }
 """
 CLASSES = {"allow": 0, "deny": 1, "require": 2, "derive": 3}
@@ -64,6 +71,101 @@ R9 = (
     "forall x:Action. is_drop(x) and (not exists t:Moment. "
     "(executed(backup_of(x), t) and recent(t))) -> not Allowed(x)"
 )
+
+
+def sha(tag: bytes, *parts: bytes) -> bytes:
+    return hashlib.sha256(tag + b"".join(parts)).digest()
+
+
+def split(n: int) -> int:
+    """Maior potência de 2 estritamente menor que n (RFC 9162 §2.1.1)."""
+    k = 1
+    while k * 2 < n:
+        k *= 2
+    return k
+
+
+def mth(leaves: list[bytes]) -> bytes:
+    if not leaves:
+        return sha(EMPTY_TAG)
+    if len(leaves) == 1:
+        return leaves[0]
+    k = split(len(leaves))
+    return sha(NODE_TAG, mth(leaves[:k]), mth(leaves[k:]))
+
+
+def audit_path(index: int, leaves: list[bytes]) -> list[bytes]:
+    if len(leaves) <= 1:
+        return []
+    k = split(len(leaves))
+    if index < k:
+        return [*audit_path(index, leaves[:k]), mth(leaves[k:])]
+    return [*audit_path(index - k, leaves[k:]), mth(leaves[:k])]
+
+
+def merkle_section(name: str, version: int, rules: list[tuple[list[Any], str]]) -> dict[str, Any]:
+    """Árvore ordenada por (classe, símbolo, h(regra)); chaves declaradas na construção."""
+    entries = []
+    for value, symbol in rules:
+        assert isinstance(value, list)
+        rule_hash = sha(RULE_TAG, canon.encode(value))
+        entries.append((value[1], symbol.encode(), symbol, rule_hash, str(value[0])))
+    entries.sort(key=lambda e: (e[0], e[1], e[3]))
+    digests = [
+        sha(LEAF_TAG, canon.encode([cls, symbol, rule_hash]))
+        for cls, _, symbol, rule_hash, _ in entries
+    ]
+    leaves = [
+        {
+            "rule": rule_id,
+            "class": cls,
+            "symbol": symbol,
+            "rule_hash_hex": rule_hash.hex(),
+            "path_hex": [h.hex() for h in audit_path(i, digests)],
+        }
+        for i, (cls, _, symbol, rule_hash, rule_id) in enumerate(entries)
+    ]
+    keys = sorted(
+        {(e[0], e[2]) for e in entries}
+        | {(c, s) for c in range(4) for s in ("", "drop", "send", "read", "zzz")}
+    )
+    absent: list[dict[str, Any]] = []
+    for cls, symbol in keys:
+        if any((e[0], e[2]) == (cls, symbol) for e in entries):
+            continue
+        order = (cls, symbol.encode())
+        after = sum(1 for e in entries if (e[0], e[1]) < order)
+        absent.append(
+            {
+                "class": cls,
+                "symbol": symbol,
+                "left": after - 1 if after > 0 else None,
+                "right": after if after < len(entries) else None,
+            }
+        )
+
+    def neighbour(index: int) -> Value:
+        cls, _, symbol, rule_hash, _ = entries[index]
+        leaf: Value = [cls, symbol, rule_hash]
+        inclusion: Value = [index, len(entries), list(audit_path(index, digests))]
+        return [[leaf, inclusion]]
+
+    for item in absent:
+        left, right = item["left"], item["right"]
+        proof: Value = [
+            len(entries),
+            neighbour(left) if left is not None else [],
+            neighbour(right) if right is not None else [],
+        ]
+        item["proof_canon_hex"] = canon.encode(proof).hex()
+    return {
+        "policy": name,
+        "version": version,
+        "root_hex": mth(digests).hex(),
+        "size": len(entries),
+        "leaves": leaves,
+        "absent": absent,
+    }
 
 
 def build() -> dict[str, Any]:
@@ -93,7 +195,39 @@ def build() -> dict[str, Any]:
             rule("d1", "derive", "forall x:Action. p(x) -> q(x)"),
             rule("d2", "derive", "forall x:Action. q(x) -> p(x)"),
         ],
+        "actions": [
+            rule("a1", "allow", "forall x:Action. p(x) -> Allowed(drop(x))"),
+            rule("a2", "allow", "forall x:Action. p(x) -> Allowed(send(x))"),
+            rule("a3", "allow", "forall x:Action. q(x) -> Allowed(x)"),
+            rule("d1", "deny", "forall x:Action. q(x) -> not Allowed(wipe(x))"),
+            rule("d2", "deny", "forall x:Action. p(x) -> not Allowed(wipe(x))"),
+            rule("e1", "derive", "forall x:Action. p(x) -> q(x)"),
+            rule("q1", "require", "forall x:Action. p(x) -> Allowed(x)"),
+        ],
     }
+    # Símbolo da chave de indexação de cada regra, declarado aqui por construção.
+    key_symbols: dict[str, dict[str, str]] = {
+        "empty": {},
+        "example": {"r1": "", "r7": "", "r9": ""},
+        "derive-chain": {"a1": "", "d1": "q", "d2": "p"},
+        "actions": {
+            "a1": "drop",
+            "a2": "send",
+            "a3": "",
+            "d1": "wipe",
+            "d2": "wipe",
+            "e1": "q",
+            "q1": "",
+        },
+    }
+    merkle = [
+        merkle_section(
+            name,
+            12,
+            [(r, key_symbols[name][str(r[0])]) for r in rules if isinstance(r, list)],
+        )
+        for name, rules in valid_rules.items()
+    ]
     valid = []
     for name, rules in valid_rules.items():
         data = policy(12, rules)
@@ -204,6 +338,7 @@ def build() -> dict[str, Any]:
         "vocabulary_hash_hex": vocabulary_hash.hex(),
         "valid": valid,
         "invalid": invalid,
+        "merkle": merkle,
     }
 
 

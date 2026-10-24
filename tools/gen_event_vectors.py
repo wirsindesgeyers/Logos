@@ -164,6 +164,13 @@ def build_vectors() -> list[dict[str, Any]]:
         [1, 19, vocabulary, "email1", b"\xc0" * 32, true, author.key_id],
         epoch=(1 << 64) - 1,
     )
+    # policy-published-body/v1 (7.2, ADR0070): h(Policy), versão, raiz Merkle e autoridade do admin.
+    add(
+        "PolicyPublished",
+        [1, 20, b"\x70" * 32, 4, b"\x71" * 32, admin.key_id],
+        (1 << 64) - 1,
+        admin,
+    )
     return vectors
 
 

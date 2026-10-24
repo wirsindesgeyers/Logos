@@ -186,3 +186,10 @@ path = "fuzz_targets/policy_decode.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "policy_proof_decode"
+path = "fuzz_targets/policy_proof_decode.rs"
+test = false
+doc = false
+bench = false

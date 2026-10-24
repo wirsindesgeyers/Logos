@@ -33,6 +33,8 @@ pub enum CasReference {
     Fact(Hash<crate::Fact>),
     /// Configuração trust/v1 publicada em TrustConfigPublished (6.2).
     Trust(Hash<crate::TrustConfig>),
+    /// Política policy/v1 publicada em PolicyPublished (7.2).
+    Policy(Hash<crate::PolicyObject>),
 }
 
 impl CasReference {
@@ -48,6 +50,7 @@ impl CasReference {
             Self::Cnf(_) => "cnf-v1",
             Self::Fact(_) => "fact-v1",
             Self::Trust(_) => "trust-v1",
+            Self::Policy(_) => "policy-v1",
         }
     }
     /// Digest dentro do domínio explícito.
@@ -62,6 +65,7 @@ impl CasReference {
             Self::Cnf(h) => *h.as_bytes(),
             Self::Fact(h) => *h.as_bytes(),
             Self::Trust(h) => *h.as_bytes(),
+            Self::Policy(h) => *h.as_bytes(),
         }
     }
     pub(crate) fn require(self, cas: &Cas) -> Result<(), LedgerError> {
@@ -74,6 +78,7 @@ impl CasReference {
             Self::Cnf(h) => cas.verified_present(&h),
             Self::Fact(h) => cas.verified_present(&h),
             Self::Trust(h) => cas.verified_present(&h),
+            Self::Policy(h) => cas.verified_present(&h),
         }?;
         if !present {
             return Err(LedgerError::MissingObject(self));
@@ -156,6 +161,9 @@ impl EventBody {
             }
             Self::TrustConfigPublished { config, .. } => {
                 result.insert(CasReference::Trust(*config));
+            }
+            Self::PolicyPublished { policy, .. } => {
+                result.insert(CasReference::Policy(*policy));
             }
             Self::Genesis { .. }
             | Self::IssuerRevoked { .. }

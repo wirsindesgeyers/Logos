@@ -43,9 +43,13 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 | token | `logos/token/v1` | canonical | 8.3 |
 | assumption | `logos/assumption/v1` | canonical | 5.7 |
 | trust | `logos/trust/v1` | canonical | 6.2 (ADR0063) |
+| rule | `logos/rule/v1` | canonical | 7.2 (ADR0070) |
+| merkle-leaf | `logos/merkle-leaf/v1` | canonical | 7.2 (ADR0070) |
+| merkle-node | `logos/merkle-node/v1` | raw | 7.2 (ADR0070) |
+| merkle-empty | `logos/merkle-empty/v1` | raw | 7.2 (ADR0070) |
 
 Os domínios originais foram *reservados* na Etapa 0.4; ground foi acrescentado
-na4.2 pelo ADR0027; trust, na 6.2 pelo ADR0063 (`trust.md`). Os tipos nascem nas etapas indicadas. Um domínio novo ou
+na4.2 pelo ADR0027; trust, na 6.2 pelo ADR0063 (`trust.md`); rule e os três de Merkle, na 7.2 pelo ADR0070 (`policy-merkle.md`). Os tipos nascem nas etapas indicadas. Um domínio novo ou
 uma mudança de tag exige entrada nesta tabela, ADR e novos vetores;
 mudar o conteúdo de um domínio existente é uma nova versão (`v2`), nunca uma edição da `v1`.
 Formato `obligation/v1` é definido em [`obligation.md`](obligation.md); usa a

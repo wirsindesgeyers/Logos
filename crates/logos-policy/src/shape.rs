@@ -6,7 +6,7 @@
 //! aninhado, `∀` no corpo, negação dupla) fica fora do fragmento decidível e só pode ser regra
 //! `require`, que exige certificado (L2).
 
-use logos_air::{Formula, FormulaNode};
+use logos_air::{Formula, FormulaNode, TermNode};
 
 use crate::{ALLOWED, Class, PolicyError};
 
@@ -64,6 +64,9 @@ pub struct Shape {
     pub negative: Vec<String>,
     /// Nome do predicado da cabeça (`Allowed` para `allow` e `deny`).
     pub head: String,
+    /// Símbolo-cabeça do termo de ação da cabeça (`Allowed(drop(x))` → `drop`); vazio quando o
+    /// argumento é variável ou a cabeça não é `Allowed`. É a chave de indexação (7.2).
+    pub action: String,
 }
 
 #[derive(Clone, Copy)]
@@ -115,8 +118,17 @@ pub(crate) fn analyse(id: &str, class: Class, tree: &Tree<'_>) -> Result<Shape, 
             ));
         }
     };
+    // `Allowed` é unário (conferido no vocabulário) e todo termo tem ao menos um nó.
+    let action = match &tree.nodes[atom] {
+        FormulaNode::Pred { args, .. } if head_name == ALLOWED => match &args[0].nodes()[0] {
+            TermNode::App { symbol, .. } => symbol.name.as_str().to_owned(),
+            TermNode::Var { .. } => String::new(),
+        },
+        _ => String::new(),
+    };
     let mut shape = Shape {
         head: head_name.to_owned(),
+        action,
         ..Shape::default()
     };
     let mut work: Vec<(usize, Mode)> = body.map(|b| (b, Mode::Positive)).into_iter().collect();

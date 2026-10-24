@@ -40,7 +40,7 @@ def spec_tags() -> tuple[dict[str, bytes], dict[str, bytes]]:
     hash_tags: dict[str, bytes] = {}
     sig_tags: dict[str, bytes] = {}
     for line in SPEC.read_text().splitlines():
-        m = re.match(r"\| ([a-z]+) \| `(logos/[a-z0-9/]+)` \|", line)
+        m = re.match(r"\| ([a-z-]+) \| `(logos/[a-z0-9/-]+)` \|", line)
         if not m:
             continue
         name, tag = m.group(1), m.group(2).encode() + b"\x00"

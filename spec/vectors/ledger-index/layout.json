@@ -1,7 +1,7 @@
 {
-  "format": "ledger-index/v6",
+  "format": "ledger-index/v7",
   "application_id_hex": "4c494458",
-  "user_version": 6,
+  "user_version": 7,
   "statuses": {
     "Proposal": 0,
     "Pending": 1,
@@ -33,6 +33,7 @@
     "citable": "CREATE TABLE citable (ref BLOB NOT NULL CHECK(length(ref)=32), epoch BLOB NOT NULL CHECK(length(epoch)=8), PRIMARY KEY(ref,epoch)) STRICT, WITHOUT ROWID",
     "revoked": "CREATE TABLE revoked (checker BLOB PRIMARY KEY CHECK(length(checker)=32)) STRICT, WITHOUT ROWID",
     "facts": "CREATE TABLE facts (id BLOB PRIMARY KEY CHECK(length(id)=32), fact BLOB NOT NULL CHECK(length(fact)=32), issuer BLOB NOT NULL CHECK(length(issuer)=32), topic TEXT NOT NULL, first BLOB CHECK(first IS NULL OR length(first)=8), last BLOB CHECK(last IS NULL OR length(last)=8), until BLOB CHECK(until IS NULL OR length(until)=8), CHECK((first IS NULL AND last IS NULL AND until IS NOT NULL) OR (first IS NOT NULL AND last IS NOT NULL AND until IS NULL))) STRICT, WITHOUT ROWID",
+    "policies": "CREATE TABLE policies (version BLOB PRIMARY KEY CHECK(length(version)=8), policy BLOB NOT NULL CHECK(length(policy)=32), root BLOB NOT NULL CHECK(length(root)=32), event BLOB NOT NULL CHECK(length(event)=32)) STRICT, WITHOUT ROWID",
     "metadata": "CREATE TABLE metadata (singleton INTEGER PRIMARY KEY CHECK(singleton=1), seq INTEGER, epoch BLOB, hash BLOB, CHECK((seq IS NULL AND epoch IS NULL AND hash IS NULL) OR (seq>=0 AND length(epoch)=8 AND length(hash)=32))) STRICT",
     "deps_premise": "CREATE INDEX deps_premise ON deps(premise,claim)",
     "claims_checker": "CREATE INDEX claims_checker ON claims(checker)",

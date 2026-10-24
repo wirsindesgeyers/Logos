@@ -485,6 +485,40 @@ pub(crate) fn apply(
         EventBody::TrustConfigPublished { config, .. } => {
             return publish_trust(connection, cas, id, *config);
         }
+        EventBody::PolicyPublished {
+            policy,
+            version,
+            root,
+            ..
+        } => {
+            // 7.2: o objeto precisa estar no CAS e a versão só cresce.
+            if cas.get(policy)?.is_none() {
+                return Err(LedgerError::Invalid("policy missing from CAS"));
+            }
+            let current = connection
+                .prepare("SELECT max(version) FROM policies")?
+                .query_row([], |r| r.get::<_, Option<Vec<u8>>>(0))?;
+            if let Some(current) = current {
+                let current = u64::from_be_bytes(
+                    current
+                        .as_slice()
+                        .try_into()
+                        .map_err(|_| LedgerError::Invalid("policy version bytes"))?,
+                );
+                if *version <= current {
+                    return Err(LedgerError::Invalid("policy version not increasing"));
+                }
+            }
+            connection
+                .prepare("INSERT INTO policies(version,policy,root,event) VALUES (?1,?2,?3,?4)")?
+                .execute(params![
+                    version.to_be_bytes().as_slice(),
+                    policy.as_bytes().as_slice(),
+                    root.as_slice(),
+                    id
+                ])?;
+            return Ok(());
+        }
         EventBody::IssuerRevoked { issuer, since, .. } => {
             // 6.4: uma revogação por emissor; mata os fatos vivos dele registrados
             // na época `since` ou depois e propaga como uma retratação.

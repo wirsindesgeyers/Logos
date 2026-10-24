@@ -82,6 +82,7 @@ qualquer caminho não vazio do catálogo v1.
 | 17 | TrustConfigPublished (6.2) | h(TrustConfig), Authority |
 | 18 | IssuerRevoked (6.4) | KeyId, since_u64, Authority |
 | 19 | Extracted (6.6) | hV, source_Text, content_bytes32, Formula, extractor_KeyId |
+| 20 | PolicyPublished (7.2) | h(Policy), version_u64, root_bytes32, Authority |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -273,3 +274,15 @@ extrator tem `Trusted(extractor, "extraction")` e não está revogado, a fórmul
 e é um **literal `Says`-lifted fechado da fonte** (`spec/says.md`). A projeção a trata como
 assumption de escopo `session:extracted` (`EXTRACTED_SCOPE`): citável, retratável pelo extrator ou
 pelo admin, e condição aberta de toda conclusão que a use. Nunca é `Fact`.
+
+## 15. Política publicada — policy-published-body/v1 (Etapa7.2, ADR0070)
+
+`[1,20,h(Policy),version_u64,root_bytes32,Authority]` é PolicyPublished; Authority como em §4,
+assinando `[1,20,h,version,root,KeyId]`. O objeto `policy/v1` MUST estar no CAS antes do append e
+`version ≥ 1`. O kernel (`logos_kernel::policy::publish`) só grava com o signer admin, depois de
+revalidar a política contra o vocabulário (`spec/policy.md` §2), conferir que `version` supera a
+vigente e **recomputar** `root` como a raiz Merkle das regras (`spec/policy-merkle.md`); em
+seguida grava `EpochAdvanced { policy_root: Some(root), vocab: Some(hV) }` (epochs.md). A projeção
+recusa versão não crescente (ledger-index.md); o auditor rederiva a raiz do objeto no CAS e recusa
+evento com raiz ou versão diferentes da do objeto.
+

@@ -112,7 +112,7 @@ name = "logos-policy"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/error.rs", "src/lib.rs", "src/policy.rs", "src/shape.rs", "src/stratify.rs"]
+files = ["src/error.rs", "src/lib.rs", "src/merkle.rs", "src/policy.rs", "src/shape.rs", "src/stratify.rs"]
 
 [[crate]]
 name = "logos-token"
@@ -126,7 +126,7 @@ name = "logos-kernel"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/assume.rs", "src/certify.rs", "src/enumeration.rs", "src/extracted.rs", "src/facts.rs", "src/recheck.rs", "src/registry.rs", "src/replay.rs", "src/retract.rs", "src/scope.rs", "src/lib.rs", "src/main.rs", "src/propose.rs", "src/server.rs", "src/speculation.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs", "src/witness.rs"]
+files = ["src/assume.rs", "src/certify.rs", "src/enumeration.rs", "src/extracted.rs", "src/facts.rs", "src/recheck.rs", "src/registry.rs", "src/replay.rs", "src/retract.rs", "src/scope.rs", "src/lib.rs", "src/main.rs", "src/policy.rs", "src/propose.rs", "src/server.rs", "src/speculation.rs", "src/staging.rs", "src/state.rs", "src/transitions.rs", "src/transport_error.rs", "src/wire.rs", "src/witness.rs"]
 
 [[crate]]
 name = "logos-gateway"

@@ -141,6 +141,13 @@ impl LedgerLiveIndex<'_> {
         self.index.trust_version()
     }
 
+    /// Política vigente (7.2).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn current_policy(&self) -> Result<Option<crate::index::CurrentPolicy>, LedgerError> {
+        self.index.current_policy()
+    }
+
     /// Concessão vigente que torna citável o fato do evento `reference` (6.2).
     /// # Errors
     /// SQL ou projeção inválida.

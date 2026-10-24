@@ -16,6 +16,19 @@ use crate::{
     ledger_store,
 };
 
+/// Política vigente no índice (7.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CurrentPolicy {
+    /// Versão publicada.
+    pub version: u64,
+    /// Objeto policy/v1 no CAS.
+    pub policy: Hash<crate::PolicyObject>,
+    /// Raiz Merkle `r_v`.
+    pub root: [u8; 32],
+    /// Evento `PolicyPublished`.
+    pub event: Hash<Event>,
+}
+
 /// Assumptions abertas de um claim (5.7): `(h(AssumptionDeclared), scope)`.
 pub type OpenAssumptions = Vec<(Hash<Event>, String)>;
 
@@ -460,6 +473,45 @@ impl<'a> LedgerIndex<'a> {
                 .try_into()
                 .map(u64::from_be_bytes)
                 .map_err(|_| LedgerError::Invalid("trust config version bytes"))
+        })
+        .transpose()
+    }
+
+    /// Política vigente (a de maior versão publicada) (7.2).
+    ///
+    /// # Errors
+    /// Falha SQL ou bytes de versão/digest inválidos.
+    pub fn current_policy(&self) -> Result<Option<CurrentPolicy>, LedgerError> {
+        let row = self
+            .connection
+            .prepare(
+                "SELECT version,policy,root,event FROM policies ORDER BY version DESC LIMIT 1",
+            )?
+            .query_row([], |r| {
+                Ok((
+                    r.get::<_, Vec<u8>>(0)?,
+                    r.get::<_, Vec<u8>>(1)?,
+                    r.get::<_, Vec<u8>>(2)?,
+                    r.get::<_, Vec<u8>>(3)?,
+                ))
+            })
+            .optional()?;
+        row.map(|(version, policy, root, event)| {
+            let digest = |bytes: Vec<u8>| {
+                <[u8; 32]>::try_from(bytes.as_slice())
+                    .map_err(|_| LedgerError::Invalid("policy row digest"))
+            };
+            Ok(CurrentPolicy {
+                version: u64::from_be_bytes(
+                    version
+                        .as_slice()
+                        .try_into()
+                        .map_err(|_| LedgerError::Invalid("policy version bytes"))?,
+                ),
+                policy: Hash::from_bytes(digest(policy)?),
+                root: digest(root)?,
+                event: Hash::from_bytes(digest(event)?),
+            })
         })
         .transpose()
     }

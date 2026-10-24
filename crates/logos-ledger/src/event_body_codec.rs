@@ -370,6 +370,19 @@ impl Canon for EventBody {
                 config.to_value()?,
                 authority.to_value()?,
             ]),
+            Self::PolicyPublished {
+                policy,
+                version,
+                root,
+                authority,
+            } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(20),
+                policy.to_value()?,
+                Value::Unsigned(*version),
+                Value::Bytes(root.to_vec()),
+                authority.to_value()?,
+            ]),
             Self::IssuerRevoked {
                 issuer,
                 since,
@@ -720,6 +733,12 @@ impl CanonDecode for EventBody {
             },
             (17, [config_val, auth_val]) => Self::TrustConfigPublished {
                 config: digest::<crate::TrustConfig>(config_val)?,
+                authority: Authority::from_value(auth_val)?,
+            },
+            (20, [policy_val, version_val, root_val, auth_val]) => Self::PolicyPublished {
+                policy: digest::<crate::PolicyObject>(policy_val)?,
+                version: u64::from_value(version_val)?,
+                root: bytes32(root_val)?,
                 authority: Authority::from_value(auth_val)?,
             },
             (18, [issuer_val, since_val, auth_val]) => Self::IssuerRevoked {

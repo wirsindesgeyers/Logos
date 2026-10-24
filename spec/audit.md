@@ -61,7 +61,7 @@ Sucesso: exit0, AUDIT_OK com events, refutations_rechecked,
 consistencies_rechecked, proofs_unchecked, failures=0, head, cnf_rederived,
 lrat_rust_rechecked, lrat_cake_rechecked, invalidated_by_recheck (5.10) e
 facts_verified (6.1: FactRegistered com fact/v1 no CAS e assinatura do emissor
-reverificada) e trust_configs (6.2: TrustConfigPublished reaplicados na ordem, com
+reverificada) e policies (7.2: PolicyPublished com a raiz Merkle rederivada do objeto policy/v1 no CAS e versão estritamente crescente) e trust_configs (6.2: TrustConfigPublished reaplicados na ordem, com
 versão crescente; cada fato precisa de `Trusted(emissor, tópico)` vigente no ponto
 do registro, trust.md §4; 6.4: fato de emissor já revogado e revogação repetida
 são falhas).

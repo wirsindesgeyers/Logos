@@ -73,9 +73,17 @@ pub mod tags {
     pub const ASSUMPTION: &[u8] = b"logos/assumption/v1\0";
     /// Configuração de confiança por tópico (6.2, ADR0063).
     pub const TRUST: &[u8] = b"logos/trust/v1\0";
+    /// Regra de política, identidade usada nas folhas da árvore Merkle (7.2, ADR0070).
+    pub const RULE: &[u8] = b"logos/rule/v1\0";
+    /// Folha da árvore Merkle de política (7.2).
+    pub const MERKLE_LEAF: &[u8] = b"logos/merkle-leaf/v1\0";
+    /// Nó interno da árvore Merkle de política (7.2).
+    pub const MERKLE_NODE: &[u8] = b"logos/merkle-node/v1\0";
+    /// Raiz da árvore Merkle vazia (7.2).
+    pub const MERKLE_EMPTY: &[u8] = b"logos/merkle-empty/v1\0";
 
     /// `(nome, tag, codificação)` de todos os domínios reservados; `"raw"` = bytes crus.
-    pub const RESERVED: [(&str, &[u8], &str); 19] = [
+    pub const RESERVED: [(&str, &[u8], &str); 23] = [
         ("key", KEY, "canonical"),
         ("formula", FORMULA, "canonical"),
         ("vocab", VOCAB, "canonical"),
@@ -95,6 +103,10 @@ pub mod tags {
         ("token", TOKEN, "canonical"),
         ("assumption", ASSUMPTION, "canonical"),
         ("trust", TRUST, "canonical"),
+        ("rule", RULE, "canonical"),
+        ("merkle-leaf", MERKLE_LEAF, "canonical"),
+        ("merkle-node", MERKLE_NODE, "raw"),
+        ("merkle-empty", MERKLE_EMPTY, "raw"),
     ];
 }
 

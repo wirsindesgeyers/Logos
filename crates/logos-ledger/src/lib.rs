@@ -27,10 +27,10 @@ pub use cas::{Cas, CasError, Limits};
 pub use event::{Event, EventError, MAX_EVENT_BYTES};
 pub use event_body::{
     Authority, Certificate, CheckRecord, Checker, CnfObject, CnfRecord, Consistency,
-    EXTRACTED_SCOPE, EventBody, EventProposal, ModelObject, Route, TaintedText,
+    EXTRACTED_SCOPE, EventBody, EventProposal, ModelObject, PolicyObject, Route, TaintedText,
 };
 pub use fact::{Fact, FactError, FactSignature, MAX_FACT_BYTES, ResourceVersion, Validity};
-pub use index::{ClaimStatus, LedgerIndex, LedgerSnapshot, OpenAssumptions};
+pub use index::{ClaimStatus, CurrentPolicy, LedgerIndex, LedgerSnapshot, OpenAssumptions};
 pub use index_store::{IndexComparison, RebuildReport};
 pub use ledger::{Ledger, LedgerHead};
 pub use ledger_cas::{CasReference, LedgerReferences, ledger_references};

@@ -42,6 +42,8 @@ hash_domains! {
     DModel => tags::MODEL, DGround => tags::GROUND, DCnf => tags::CNF, DEvent => tags::EVENT, DFact => tags::FACT, DPolicy => tags::POLICY,
     DContract => tags::CONTRACT, DAction => tags::ACTION, DParaphrase => tags::PARAPHRASE,
     DToken => tags::TOKEN, DAssumption => tags::ASSUMPTION, DTrust => tags::TRUST,
+    DRule => tags::RULE, DMerkleLeaf => tags::MERKLE_LEAF, DMerkleNode => tags::MERKLE_NODE,
+    DMerkleEmpty => tags::MERKLE_EMPTY,
 }
 
 /// `hash_raw` no domínio chamado `name` (nome da tabela de spec/domains.md).
@@ -67,6 +69,10 @@ pub fn hash_by_name(name: &str, msg: &[u8]) -> String {
         "token" => hash_raw::<DToken>(msg).to_hex(),
         "assumption" => hash_raw::<DAssumption>(msg).to_hex(),
         "trust" => hash_raw::<DTrust>(msg).to_hex(),
+        "rule" => hash_raw::<DRule>(msg).to_hex(),
+        "merkle-leaf" => hash_raw::<DMerkleLeaf>(msg).to_hex(),
+        "merkle-node" => hash_raw::<DMerkleNode>(msg).to_hex(),
+        "merkle-empty" => hash_raw::<DMerkleEmpty>(msg).to_hex(),
         other => panic!("domínio desconhecido nos vetores: {other}"),
     }
 }

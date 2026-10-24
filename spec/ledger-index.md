@@ -45,7 +45,7 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=6 (ledger-index/v6, Etapa 6.4: tabela
+application_id=0x4c494458 (LIDX), user_version=7 (ledger-index/v7, Etapa 7.2: tabela `policies(version,policy,root,event)` com a política vigente = maior versão; ledger-index/v6, Etapa 6.4: tabela
 `revoked_issuers`; v5 (6.2): emissor e
 tópico em `facts`, tabelas `trust` e `trust_configs`; v4 (6.1): status
 Fact=8 e tabela `facts` com a janela de cada fato; v3 (5.10) acrescentou Suspended=7 e

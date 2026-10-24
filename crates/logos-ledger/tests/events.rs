@@ -191,7 +191,7 @@ fn test_all_canonical_vectors_decode_encode_verify() {
         .iter()
         .map(|v| v["body_tag"].as_u64().unwrap())
         .collect();
-    assert_eq!(tags, (0..20).collect());
+    assert_eq!(tags, (0..21).collect());
 }
 
 // -----------------------------------------------------------------------------
@@ -1039,6 +1039,7 @@ fn authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature()
             | EventBody::CheckerRegistered { authority, .. }
             | EventBody::CheckerRevoked { authority, .. }
             | EventBody::TrustConfigPublished { authority, .. }
+            | EventBody::PolicyPublished { authority, .. }
             | EventBody::IssuerRevoked { authority, .. } => authority.key = other.key_id().unwrap(),
             _ => unreachable!(),
         }
@@ -1052,6 +1053,7 @@ fn authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature()
             | EventBody::CheckerRegistered { authority, .. }
             | EventBody::CheckerRevoked { authority, .. }
             | EventBody::TrustConfigPublished { authority, .. }
+            | EventBody::PolicyPublished { authority, .. }
             | EventBody::IssuerRevoked { authority, .. } => authority.sig = signature,
             _ => unreachable!(),
         }

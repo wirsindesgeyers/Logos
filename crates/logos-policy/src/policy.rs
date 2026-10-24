@@ -43,7 +43,7 @@ pub enum Class {
 }
 
 impl Class {
-    const fn tag(self) -> u64 {
+    pub(crate) const fn tag(self) -> u64 {
         match self {
             Self::Allow => 0,
             Self::Deny => 1,
@@ -52,7 +52,7 @@ impl Class {
         }
     }
 
-    fn from_tag(tag: u64) -> Result<Self, CanonError> {
+    pub(crate) fn from_tag(tag: u64) -> Result<Self, CanonError> {
         match tag {
             0 => Ok(Self::Allow),
             1 => Ok(Self::Deny),
@@ -231,16 +231,22 @@ fn items(value: &Value) -> Result<&[Value], CanonError> {
     }
 }
 
+impl Canon for Rule {
+    fn to_value(&self) -> Result<Value, CanonError> {
+        array(vec![
+            self.id.to_value()?,
+            Value::Unsigned(self.class.tag()),
+            self.formula.to_value()?,
+            self.comment.to_value()?,
+        ])
+    }
+}
+
 impl Canon for Policy {
     fn to_value(&self) -> Result<Value, CanonError> {
         let mut rules = Vec::with_capacity(self.rules.len());
         for rule in &self.rules {
-            rules.push(array(vec![
-                rule.id.to_value()?,
-                Value::Unsigned(rule.class.tag()),
-                rule.formula.to_value()?,
-                rule.comment.to_value()?,
-            ])?);
+            rules.push(rule.to_value()?);
         }
         array(vec![
             Value::Unsigned(1),

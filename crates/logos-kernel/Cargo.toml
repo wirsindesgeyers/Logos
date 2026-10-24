@@ -14,6 +14,7 @@ logos-canon = { path = "../logos-canon" }
 logos-core = { path = "../logos-core" }
 logos-crypto = { path = "../logos-crypto" }
 logos-ledger = { path = "../logos-ledger" }
+logos-policy = { path = "../logos-policy" }
 logos-obligation = { path = "../logos-obligation" }
 logos-ground = { path = "../logos-ground" }
 logos-lrat = { path = "../logos-lrat" }
@@ -21,7 +22,9 @@ logos-model = { path = "../logos-model" }
 rustix = { version = "=1.1.5", default-features = false, features = ["std", "fs", "net", "process"] }
 
 [dev-dependencies]
+logos-air-text = { path = "../logos-air-text" }
 logos-audit = { path = "../logos-audit" }
+logos-policy-text = { path = "../logos-policy-text" }
 logos-protocol = { path = "../logos-protocol" }
 serde_json = "=1.0.151"
 trybuild = "=1.0.121"

@@ -1,0 +1,111 @@
+{
+  "etapa": "7.2",
+  "comando": "cargo test -p logos-policy --test merkle --test vectors --test policy -p logos-kernel --test policy -p logos-audit",
+  "mutacoes": [
+    {
+      "id": "Q1",
+      "descricao": "folhas ordenadas só pelo hash",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q2",
+      "descricao": "divisão na potência errada",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q3",
+      "descricao": "índice fora do tamanho aceito",
+      "resultado": "morta (após o teste do alias índice 2 → 0)"
+    },
+    {
+      "id": "Q4",
+      "descricao": "operandos trocados na subida",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q5",
+      "descricao": "adjacência não conferida",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q6",
+      "descricao": "vizinha esquerda com <=",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q7",
+      "descricao": "borda esquerda sem índice 0",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q8",
+      "descricao": "borda direita sem último índice",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q9",
+      "descricao": "árvore vazia contra qualquer raiz",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q10",
+      "descricao": "NoRule sem curinga",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q11",
+      "descricao": "NoRule sem chave específica",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q12",
+      "descricao": "chave da regra sem símbolo da ação",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q13",
+      "descricao": "não-pertinência de chave existente",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q14",
+      "descricao": "folha com tag de nó",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q15",
+      "descricao": "publicação sem admin",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q16",
+      "descricao": "versão não crescente aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q17",
+      "descricao": "raiz do evento zerada",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q18",
+      "descricao": "EpochAdvanced sem raiz",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q19",
+      "descricao": "projeção aceita versão antiga",
+      "resultado": "equivalente: a chave primária de `policies` também recusa a versão repetida"
+    },
+    {
+      "id": "Q20",
+      "descricao": "auditor não compara a raiz",
+      "resultado": "morta"
+    },
+    {
+      "id": "Q21",
+      "descricao": "política recusada pela TCB é publicada",
+      "resultado": "morta (após o teste dos bytes costurados com ciclo pela negação)"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ use logos_lrat::{CakeRegistry, LratCertificate, LratChecker};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
 
-use crate::event::{Certificate, Checker, FactObject, Parsed, Recheck, TrustObject};
+use crate::event::{Certificate, Checker, FactObject, Parsed, PolicyObject, Recheck, TrustObject};
 use crate::{AuditError, Report, Result, event, fail, source};
 
 pub(crate) fn walk(
@@ -107,6 +107,7 @@ pub fn verify_with_checkers(
     let mut invalidated_by_recheck = 0;
     let mut facts = 0;
     let mut trust = Grants::default();
+    let mut policy_version = 0u64;
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -145,6 +146,9 @@ pub fn verify_with_checkers(
                     if !trust.revoked.insert(*digest) {
                         return Err(fail("issuer revoked twice"));
                     }
+                }
+                "policy" => {
+                    source::cas::<PolicyObject>(cas, Hash::from_bytes(*digest))?;
                 }
                 "trust" => {
                     trust.publish(&source::cas::<TrustObject>(cas, Hash::from_bytes(*digest))?)?;
@@ -210,6 +214,26 @@ pub fn verify_with_checkers(
                 }
             } else if cake.is_some_and(|cake| c.checker == *cake.identity().as_bytes()) {
                 return Err(fail("LRAT obligation metadata missing"));
+            }
+        }
+        if let Some((policy, version, root)) = p.policy {
+            if version <= policy_version {
+                return Err(fail("policy version not increasing"));
+            }
+            policy_version = version;
+            // Rederiva a raiz Merkle do objeto no CAS: um evento com raiz forjada não passa.
+            let bytes = source::cas(cas, Hash::<PolicyObject>::from_bytes(policy))?;
+            let header: logos_policy::Policy = from_canon(&bytes)?;
+            let vocabulary = from_canon::<Vocabulary>(&source::cas(cas, header.vocabulary())?)?;
+            let decoded = logos_policy::Policy::decode(&bytes, &vocabulary)
+                .map_err(|e| fail(format!("published policy: {e}")))?;
+            if decoded.version() != version {
+                return Err(fail("policy version differs from the object"));
+            }
+            let tree = logos_policy::PolicyTree::new(&decoded)
+                .map_err(|e| fail(format!("policy tree: {e}")))?;
+            if tree.root() != &root {
+                return Err(fail("policy root does not match the published object"));
             }
         }
         if let Some((route, c)) = &p.rechecked {

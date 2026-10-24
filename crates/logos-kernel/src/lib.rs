@@ -16,6 +16,7 @@ pub mod extracted;
 #[cfg(target_os = "linux")]
 pub mod facts;
 #[cfg(target_os = "linux")]
+pub mod policy;
 pub mod propose;
 #[cfg(target_os = "linux")]
 pub mod recheck;

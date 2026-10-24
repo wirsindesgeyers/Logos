@@ -114,6 +114,13 @@ pub struct EventProposal {
     pub vocabulary: Hash<Vocabulary>,
 }
 
+/// Marca do objeto `policy/v1` no CAS (7.2); o tipo real vive em `logos-policy`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PolicyObject;
+impl Domain for PolicyObject {
+    const TAG: &'static [u8] = tags::POLICY;
+}
+
 /// Marcador de bytes DIMACS canônicos (cnf/v1), sem executar solver.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CnfObject;
@@ -324,6 +331,18 @@ pub enum EventBody {
         /// Assinatura de autorização administrativa.
         authority: Authority,
     },
+    /// Publicação de uma política (7.2, ADR0070): o objeto `policy/v1` fica no CAS e `root` é a
+    /// raiz Merkle `r_v` das regras, recomputada pelo kernel antes do append.
+    PolicyPublished {
+        /// Objeto policy/v1 publicado.
+        policy: Hash<PolicyObject>,
+        /// Versão da política (estritamente crescente).
+        version: u64,
+        /// Raiz Merkle `r_v`.
+        root: [u8; 32],
+        /// Assinatura de autorização administrativa.
+        authority: Authority,
+    },
     /// Conteúdo externo atribuído (6.6, ADR0068): o extrator afirma que `source` disse
     /// `formula` (literal `Says`-lifted). É premissa de confiança "extração por X",
     /// citável como assumption de escopo `session:extracted`; nunca é fato.
@@ -445,6 +464,7 @@ impl EventBody {
             Self::TrustConfigPublished { .. } => 17,
             Self::IssuerRevoked { .. } => 18,
             Self::Extracted { .. } => 19,
+            Self::PolicyPublished { .. } => 20,
         }
     }
 
@@ -457,6 +477,7 @@ impl EventBody {
             | Self::CheckerRegistered { authority, .. }
             | Self::CheckerRevoked { authority, .. }
             | Self::TrustConfigPublished { authority, .. }
+            | Self::PolicyPublished { authority, .. }
             | Self::IssuerRevoked { authority, .. } => Some(authority),
             _ => None,
         }
@@ -472,6 +493,13 @@ impl EventBody {
             Self::Genesis { ledger_version, .. } => {
                 if *ledger_version != 1 {
                     return Err(EventError::Invalid("Genesis ledger_version must be 1"));
+                }
+            }
+            Self::PolicyPublished { version, .. } => {
+                if *version == 0 {
+                    return Err(EventError::Invalid(
+                        "PolicyPublished version must be positive",
+                    ));
                 }
             }
             Self::VocabPublished { .. }
@@ -650,6 +678,19 @@ impl EventBody {
                 Value::Unsigned(1),
                 Value::Unsigned(17),
                 config.to_value()?,
+                authority.key.to_value()?,
+            ])?),
+            Self::PolicyPublished {
+                policy,
+                version,
+                root,
+                authority,
+            } => Value::Array(Array::new(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(20),
+                policy.to_value()?,
+                Value::Unsigned(*version),
+                Value::Bytes(root.to_vec()),
                 authority.key.to_value()?,
             ])?),
             Self::IssuerRevoked {

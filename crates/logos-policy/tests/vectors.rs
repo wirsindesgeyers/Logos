@@ -95,3 +95,90 @@ fn every_invalid_vector_is_refused_for_the_named_reason() {
         );
     }
 }
+
+fn class_of(tag: u64) -> logos_policy::Class {
+    match tag {
+        0 => logos_policy::Class::Allow,
+        1 => logos_policy::Class::Deny,
+        2 => logos_policy::Class::Require,
+        _ => logos_policy::Class::Derive,
+    }
+}
+
+#[test]
+fn rust_tree_matches_the_independent_python_merkle_implementation() {
+    let vectors = vectors();
+    let vocabulary = Vocabulary::decode_with_limits(
+        &unhex(vectors["vocabulary_canon_hex"].as_str().unwrap()),
+        Limits::default(),
+    )
+    .unwrap();
+    let sections = vectors["merkle"].as_array().unwrap();
+    assert_eq!(sections.len(), 4);
+    for section in sections {
+        let name = section["policy"].as_str().unwrap();
+        let case = vectors["valid"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == name)
+            .unwrap();
+        let policy = Policy::decode(
+            &unhex(case["policy_canon_hex"].as_str().unwrap()),
+            &vocabulary,
+        )
+        .unwrap();
+        let tree = logos_policy::PolicyTree::new(&policy).unwrap();
+        let hex = |bytes: &[u8]| -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() };
+        assert_eq!(
+            hex(tree.root()),
+            section["root_hex"].as_str().unwrap(),
+            "{name}: root"
+        );
+        let leaves = section["leaves"].as_array().unwrap();
+        assert_eq!(tree.leaves().len(), leaves.len(), "{name}: size");
+        assert_eq!(section["size"].as_u64().unwrap() as usize, leaves.len());
+        for (leaf, expected) in tree.leaves().iter().zip(leaves) {
+            assert_eq!(
+                leaf.key().class().unwrap(),
+                class_of(expected["class"].as_u64().unwrap()),
+                "{name}: class"
+            );
+            assert_eq!(
+                leaf.key().symbol(),
+                expected["symbol"].as_str().unwrap(),
+                "{name}: key"
+            );
+            assert_eq!(
+                hex(leaf.rule_hash()),
+                expected["rule_hash_hex"].as_str().unwrap(),
+                "{name}: rule hash"
+            );
+            let (_, proof) = tree.prove_inclusion(leaf.rule_hash()).unwrap();
+            let path: Vec<String> = proof.path.iter().map(|h| hex(h)).collect();
+            let expected_path: Vec<&str> = expected["path_hex"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap())
+                .collect();
+            assert_eq!(path, expected_path, "{name}: path");
+        }
+        for absent in section["absent"].as_array().unwrap() {
+            let key = logos_policy::IndexKey::new(
+                class_of(absent["class"].as_u64().unwrap()),
+                absent["symbol"].as_str().unwrap(),
+            );
+            let proof = tree.prove_non_membership(&key).unwrap();
+            let left = proof.left.as_ref().map(|(_, p)| p.index);
+            let right = proof.right.as_ref().map(|(_, p)| p.index);
+            assert_eq!(left, absent["left"].as_u64(), "{name}: {key:?} left");
+            assert_eq!(right, absent["right"].as_u64(), "{name}: {key:?} right");
+            assert!(logos_policy::verify_non_membership(
+                tree.root(),
+                &key,
+                &proof
+            ));
+        }
+    }
+}

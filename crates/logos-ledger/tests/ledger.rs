@@ -120,7 +120,7 @@ fn every_historical_catalog_vector_replays_byte_for_byte_without_cas_migration()
     let _fork = fork_guard();
     drop(ledger);
     let ledger = Ledger::open(&temp.0, &signer).unwrap();
-    assert_eq!(ledger.head().unwrap().unwrap().seq, 33);
+    assert_eq!(ledger.head().unwrap().unwrap().seq, 34);
 }
 
 #[test]
@@ -278,6 +278,8 @@ fn recovery_rejects_holes_signed_wrong_links_row_seq_and_signatures() {
 
 #[test]
 fn recovery_checks_all_events_and_fixed_external_key() {
+    // Abre o ledger três vezes: o lock não pode correr com o spawn de outro teste (flake sob carga).
+    let _fork = fork_guard();
     let temp = Temp::new();
     let signer = signer();
     populated(&temp, &signer);

@@ -30,6 +30,12 @@ pub(crate) struct FactObject;
 impl Domain for FactObject {
     const TAG: &'static [u8] = tags::FACT;
 }
+/// Objeto policy/v1 (7.2), conferido no CAS (o auditor não reavalia a política).
+pub(crate) struct PolicyObject;
+impl Domain for PolicyObject {
+    const TAG: &'static [u8] = tags::POLICY;
+}
+
 /// Objeto trust/v1 (6.2), conferido no CAS; concessões reaplicadas na ordem.
 pub(crate) struct TrustObject;
 impl Domain for TrustObject {
@@ -72,6 +78,8 @@ pub(crate) struct Parsed {
     pub claim_obligation: Option<Hash<Obligation>>,
     /// Rechecked (5.10): rota alvo e o novo registro de checagem.
     pub rechecked: Option<([u8; 32], Check)>,
+    /// PolicyPublished (7.2): objeto, versão e raiz Merkle declaradas.
+    pub policy: Option<([u8; 32], u64, [u8; 32])>,
 }
 
 pub(crate) fn arr(v: &Value) -> Result<&[Value]> {
@@ -208,6 +216,7 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         consistency_target: None,
         claim_obligation: None,
         rechecked: None,
+        policy: None,
     };
     let b = arr(body)?;
     if let [
@@ -364,6 +373,23 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             p.refs.push(("issuer-revoked", digest(issuer)?));
             authority(auth)?;
         }
+        [
+            Value::Unsigned(1),
+            Value::Unsigned(20),
+            policy,
+            Value::Unsigned(version),
+            root,
+            auth,
+        ] => {
+            // 7.2: o objeto fica no CAS; a versão só cresce e a raiz acompanha o epoch seguinte.
+            if *version == 0 {
+                return Err(fail("policy version must be positive"));
+            }
+            let (policy, root) = (digest(policy)?, digest(root)?);
+            p.refs.push(("policy", policy));
+            authority(auth)?;
+            p.policy = Some((policy, *version, root));
+        }
         [Value::Unsigned(1), Value::Unsigned(15), route, record] => {
             let c = check(record, &mut p)?;
             p.rechecked = Some((digest(route)?, c));
@@ -504,7 +530,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 34);
+        assert_eq!(vectors.len(), 35);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,
