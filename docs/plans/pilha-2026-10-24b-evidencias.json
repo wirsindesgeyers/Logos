@@ -1,0 +1,46 @@
+{
+  "tip": "48c0a4a",
+  "covers": [
+    "3ec7a0b 6.3",
+    "70e7cfd 6.5",
+    "bff971b 6.6",
+    "bcba1c6 7.1",
+    "48c0a4a 7.2"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "systemd-inhibit",
+      "nice -n 10",
+      "ci/verify.sh --selftest"
+    ],
+    "tier": "full",
+    "exit": 0,
+    "seconds": 6969,
+    "verify_ok": true,
+    "log_sha256": "fa97a69b2d157d99a1beb2f11b19bf57d7705efc2e26770fd02e58edd337d0b7",
+    "where": "git worktree ../LOGOS-verify sobre 48c0a4a"
+  },
+  "statistics": {
+    "rust_passed": 671,
+    "python_summaries": [
+      "370 passed in 1269.90s (0:21:09)",
+      "25 passed in 2.37s"
+    ],
+    "isolation": "ISOLATION_OK forbidden=11 blocked=all control_reached=11 allowed=3 units=3",
+    "demo_kernel": "DEMO_KERNEL_AUDIT_OK verified=1 refuted=1 unknown=1 invalidated=1 audit=complete",
+    "ledger_index": "rebuild 100k exact; p99_ns=136048 com 1M eventos",
+    "ledger_crash": "10000 eventos, 24 SIGKILL, 9998 reconhecidos"
+  },
+  "criteria_marked": [
+    "6.3 (2)",
+    "6.5 (1)",
+    "6.6 (2)",
+    "7.1 (2)",
+    "7.2 (2)"
+  ],
+  "notes": [
+    "A primeira tentativa de full (sobre bff971b) falhou só por faltar target/cadical no worktree novo (361 de 366 testes Python passaram; os 5 que falharam chamam o cadical); refeita sobre 48c0a4a com o binário copiado.",
+    "Fase 6 fechada: 6.1–6.6 com critérios marcados."
+  ]
+}

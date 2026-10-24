@@ -1466,8 +1466,8 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - Cada atestador tem um documento "procedimento" (para o status `Anchored` dos símbolos — Etapa 1.2).
 
 **Critério de conclusão.**
-- [ ] Cada atestador de referência tem teste de integração produzindo um fato citável.
-- [ ] O vocabulário de exemplo tem todos os símbolos operacionais `Anchored` ou `Defined`.
+- [x] Cada atestador de referência tem teste de integração produzindo um fato citável. Demonstrado: `logos-attest/tests/reference.rs` (seis atestadores, ledger/kernel/auditor reais; fora do tópico ou sem confiança o registro é recusado sem evento). [Plano](docs/plans/etapa-6.3.md), ADR0065.
+- [x] O vocabulário de exemplo tem todos os símbolos operacionais `Anchored` ou `Defined`. Demonstrado: `example_vocabulary_is_fully_anchored_to_documented_procedures` (nenhum `Glossed`; atestador e procedimento batem com `REFERENCES` e `docs/attesters/`).
 
 ---
 
@@ -1496,7 +1496,7 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - Assinaturas do usuário são feitas **fora do processo do agente** (CLI separada ou TUI do lado do kernel). Passkey/WebAuthn na Fase 9.
 
 **Critério de conclusão.**
-- [ ] O processo do agente não consegue produzir assinatura do usuário (a chave não é legível por ele — teste do 5.11 estendido).
+- [x] O processo do agente não consegue produzir assinatura do usuário (a chave não é legível por ele — teste do 5.11 estendido). Demonstrado: `tools/check_isolation.py` (`ISOLATION_OK forbidden=11`: `read_user_key` e `sign_as_user` conseguem fora do sandbox e falham dentro; mutação de `/home` morta). [Plano](docs/plans/etapa-6.5.md), ADR0067.
 
 ---
 
@@ -1518,8 +1518,8 @@ não depende de memória e não a implementa.
 - Extração (LLM em quarentena, Fase 11) produz `Says(s, φ)` como **proposta** que o kernel registra como `Extracted { source: s, h(c), φ, extractor: id }` — premissa de confiança "extração por X", nunca fato.
 
 **Critério de conclusão.**
-- [ ] Um `Says(email1, Pedido(x))` nunca satisfaz uma premissa que exige `Pedido(x)` sem a regra de política que o endossa.
-- [ ] O certificado de qualquer prova que use conteúdo externo mostra a premissa `Says(...)` em `used`.
+- [x] Um `Says(email1, Pedido(x))` nunca satisfaz uma premissa que exige `Pedido(x)` sem a regra de política que o endossa. Demonstrado: `logos-kernel/tests/extracted.rs::criterion_says_never_satisfies_…` (CNF satisfatível sem a regra; com a regra, prova LRAT rechecada por cake_lpr). `Says` por levantamento `says_P` (ADR0068).
+- [x] O certificado de qualquer prova que use conteúdo externo mostra a premissa `Says(...)` em `used`. Demonstrado no mesmo teste (`used`, `dependents` e `open_assumptions` com escopo `session:extracted`). [Plano](docs/plans/etapa-6.6.md).
 
 ---
 
@@ -1547,8 +1547,8 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 - Semântica: `Allowed(a)` só é derivável se alguma regra `allow` dispara e nenhuma `deny` aplicável dispara (semântica deny-overrides, documentada).
 
 **Critério de conclusão.**
-- [ ] Parser + sort-check de políticas com 100% de cobertura de ramos.
-- [ ] Estratificação: política com ciclo pela negação é recusada.
+- [x] Parser + sort-check de políticas com 100% de cobertura de ramos. Demonstrado localmente: `ci/check-policy-coverage.sh` (100% dos ramos de `logos-policy/src`: policy, shape, stratify, merkle, error); parser de superfície fora da TCB (ADR0069 §5) com testes próprios e diferencial Python. Job `policy-coverage` na CI ainda não observado.
+- [x] Estratificação: política com ciclo pela negação é recusada. Demonstrado: `negation_cycles_are_refused` e vetores `negation-cycle`/`deny-depends-on-allowed` (Python independente). [Plano](docs/plans/etapa-7.1.md).
 
 ---
 
@@ -1565,8 +1565,8 @@ Objetivo da fase: políticas formais, escritas por humanos direto em lógica (fi
 - Não-pertinência vira premissa checada: `NoRule(deny, key(a), v)`.
 
 **Critério de conclusão.**
-- [ ] Property test: para toda chave, exatamente uma das provas (inclusão ou não-pertinência) verifica.
-- [ ] Adulterar uma regra muda `r_v`; prova antiga deixa de verificar.
+- [x] Property test: para toda chave, exatamente uma das provas (inclusão ou não-pertinência) verifica. Demonstrado: `for_every_key_exactly_one_kind_of_proof_verifies` (40 políticas aleatórias, todas as provas que um adversário monta com folhas reais). [Plano](docs/plans/etapa-7.2.md), ADR0070.
+- [x] Adulterar uma regra muda `r_v`; prova antiga deixa de verificar. Demonstrado: `tampering_with_a_rule_changes_the_root_and_old_proofs_stop_verifying` e a segunda versão publicada pelo kernel (`logos-kernel/tests/policy.rs`).
 
 ---
 
