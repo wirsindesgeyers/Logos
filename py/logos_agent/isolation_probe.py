@@ -1,7 +1,7 @@
 """Probe de isolamento da 5.11 (ADR0059): roda como o agente e tenta o proibido.
 
 Recebe em JSON os caminhos/portas que um atacante conheceria (chave do kernel,
-arquivos do ledger, gateway, credenciais, PID do kernel) e imprime em JSON, para
+arquivos do ledger, gateway, credenciais, chave do usuário, PID do kernel) e imprime em JSON, para
 cada tentativa, se ela conseguiu. Fora do sandbox serve de controle positivo:
 as tentativas proibidas precisam conseguir, senão o teste não detectaria nada.
 """
@@ -59,6 +59,16 @@ def _tcp(port: int) -> str:
         return client.recv(64).decode(errors="replace")
 
 
+def _sign_as_user(path: str) -> str:
+    """Produz uma assinatura do usuário: só possível se a chave for legível pelo agente."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    seed = bytes.fromhex(Path(path).read_text(encoding="ascii").strip())
+    key = Ed25519PrivateKey.from_private_bytes(seed)
+    key.sign(b"authorize: drop table users")
+    return "signed as the user"
+
+
 def _kernel_head(path: str) -> str:
     head = asyncio.run(KernelClient(Path(path), timeout=TIMEOUT * 10).head())
     if head is None:
@@ -89,6 +99,9 @@ def main() -> None:
         "connect_gateway_unix": lambda: _unix(target["gateway_socket"]),
         "connect_gateway_tcp": lambda: _tcp(target["gateway_port"]),
         "read_tool_credentials": lambda: _read(target["credentials"]),
+        # 6.5: o agente não lê a chave do usuário, logo não produz assinatura dele.
+        "read_user_key": lambda: _read(target["user_key"]),
+        "sign_as_user": lambda: _sign_as_user(target["user_key"]),
         "direct_network_to_llm": lambda: _tcp(target["llm_port"]),
         "read_kernel_process": lambda: _read(f"/proc/{target['kernel_pid']}/environ"),
         # cmdline não passa pela checagem de ptrace: só o namespace de PID o esconde.

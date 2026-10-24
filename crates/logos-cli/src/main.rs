@@ -8,6 +8,8 @@ mod gc;
 mod recheck;
 #[cfg(target_os = "linux")]
 mod retract;
+#[cfg(target_os = "linux")]
+mod user;
 
 use std::ffi::OsString;
 use std::path::Path;
@@ -28,14 +30,25 @@ fn hex32(text: &std::ffi::OsStr, what: &str) -> Result<[u8; 32], Box<dyn std::er
 }
 
 fn run(args: Vec<OsString>) -> Result<(), Box<dyn std::error::Error>> {
-    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX\n       logos ledger retract DIRECTORY --key KEYFILE --target EVENT_HEX --reason TEXT\n       logos ledger revoke-checker DIRECTORY --key KEYFILE --checker CHECKER_HEX --reason TEXT\n       logos ledger recheck DIRECTORY --key KEYFILE --checker CHECKER_HEX --with CHECKER_HEX --cake CAKE_BINARY\n       logos ledger trust-publish DIRECTORY --key KEYFILE --version N --root PUBKEY_HEX:NAME:TOPIC[,TOPIC...]...\n       logos ledger fact-register DIRECTORY --key KEYFILE --fact FILE --vocabulary FILE\n       logos ledger revoke-issuer DIRECTORY --key KEYFILE --issuer KEYID_HEX --since EPOCH";
+    let usage = "usage: logos ledger rebuild-index DIRECTORY --public-key ED25519_HEX\n       logos ledger gc --dry-run DIRECTORY --public-key ED25519_HEX\n       logos ledger retract DIRECTORY --key KEYFILE --target EVENT_HEX --reason TEXT\n       logos ledger revoke-checker DIRECTORY --key KEYFILE --checker CHECKER_HEX --reason TEXT\n       logos ledger recheck DIRECTORY --key KEYFILE --checker CHECKER_HEX --with CHECKER_HEX --cake CAKE_BINARY\n       logos ledger trust-publish DIRECTORY --key KEYFILE --version N --root PUBKEY_HEX:NAME:TOPIC[,TOPIC...]...\n       logos ledger fact-register DIRECTORY --key KEYFILE --fact FILE --vocabulary FILE\n       logos user init --key KEYFILE\n       logos ledger user-trust DIRECTORY --key KEYFILE --user-public PUBKEY_HEX\n       logos ledger revoke-issuer DIRECTORY --key KEYFILE --issuer KEYID_HEX --since EPOCH";
     #[cfg(target_os = "linux")]
     if let [ledger, command, directory, rest @ ..] = args.as_slice()
         && ledger == "ledger"
         && let Some(command) = command.to_str()
-        && matches!(command, "trust-publish" | "fact-register" | "revoke-issuer")
+        && matches!(
+            command,
+            "trust-publish" | "fact-register" | "revoke-issuer" | "user-trust"
+        )
     {
         return facts::run(command, Path::new(directory), rest);
+    }
+    #[cfg(target_os = "linux")]
+    if let [user, init, flag, path] = args.as_slice()
+        && user == "user"
+        && init == "init"
+        && flag == "--key"
+    {
+        return user::init(Path::new(path));
     }
     let (directory, public_key, gc) = match args.as_slice() {
         [ledger, command, directory, flag, key]

@@ -9,7 +9,7 @@ use logos_air::Vocabulary;
 use logos_canon::Text;
 use logos_crypto::{FileSigner, Hash, KeyId, PublicKey, SigAlg, Signer};
 use logos_kernel::facts::{publish_trust, register, revoke_issuer};
-use logos_ledger::{Fact, Ledger, TrustConfig, TrustRoot};
+use logos_ledger::{EventBody, Fact, Ledger, TrustConfig, TrustRoot};
 
 type Error = Box<dyn std::error::Error>;
 
@@ -100,6 +100,34 @@ fn parse_root(text: &str) -> Result<TrustRoot, Error> {
     })
 }
 
+/// Tópicos que o usuário atesta (6.5): autorizar ações, confirmar e assumir premissas.
+const USER_TOPICS: [&str; 3] = ["assume", "authorize", "confirm"];
+
+/// Configuração de confiança vigente (a de maior versão publicada), se houver.
+fn current_trust(ledger: &Ledger<'_, FileSigner>) -> Result<Option<TrustConfig>, Error> {
+    let mut best: Option<TrustConfig> = None;
+    let mut from = 0;
+    loop {
+        let page = ledger.events_from(from, 256)?;
+        let Some(last) = page.last().map(|e| e.seq) else {
+            return Ok(best);
+        };
+        for event in &page {
+            if let EventBody::TrustConfigPublished { config, .. } = &event.body {
+                let bytes = ledger
+                    .cas()
+                    .get(config)?
+                    .ok_or("trust config missing from CAS")?;
+                let decoded: TrustConfig = logos_canon::from_canon(&bytes)?;
+                if best.as_ref().is_none_or(|b| decoded.version > b.version) {
+                    best = Some(decoded);
+                }
+            }
+        }
+        from = last + 1;
+    }
+}
+
 pub fn run(command: &str, directory: &Path, rest: &[OsString]) -> Result<(), Error> {
     let flags = Flags::parse(rest)?;
     match command {
@@ -136,6 +164,45 @@ pub fn run(command: &str, directory: &Path, rest: &[OsString]) -> Result<(), Err
             println!(
                 "{{\"fact\":\"{}\",\"event\":\"{}\"}}",
                 fact.to_hex(),
+                event.to_hex()
+            );
+        }
+        "user-trust" => {
+            flags.only(&["--key", "--user-public"])?;
+            let signer = FileSigner::load(Path::new(flags.one("--key")?))?;
+            let user = PublicKey::new(
+                SigAlg::Ed25519,
+                &hex32(flags.one("--user-public")?, "user public key")?,
+            )?;
+            let mut ledger = Ledger::open(directory, &signer)?;
+            let current = current_trust(&ledger)?;
+            let version = current.as_ref().map_or(1, |c| c.version + 1);
+            let mut roots = current.map(|c| c.roots).unwrap_or_default();
+            let user_id = user.key_id()?;
+            if roots
+                .iter()
+                .any(|r| r.issuer.key_id().is_ok_and(|id| id == user_id))
+            {
+                return Err("user key is already a trust root".into());
+            }
+            roots.push(TrustRoot {
+                issuer: user,
+                name: Text::new("user")?,
+                topics: USER_TOPICS
+                    .iter()
+                    .map(|t| Text::new(*t))
+                    .collect::<Result<_, _>>()?,
+                level: 1,
+            });
+            roots.sort_by_key(|r| r.issuer.key_id().map(|k| *k.as_bytes()).unwrap_or_default());
+            let config = TrustConfig::new(version, roots)?;
+            let hash = ledger
+                .cas()
+                .put::<TrustConfig>(&logos_canon::to_canon(&config)?)?;
+            let event = publish_trust(&mut ledger, signer.public_key(), &signer, hash)?;
+            println!(
+                "{{\"config\":\"{}\",\"event\":\"{}\",\"version\":{version}}}",
+                hash.to_hex(),
                 event.to_hex()
             );
         }

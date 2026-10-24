@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PY = ROOT / "py"
 
 
-def build() -> tuple[Path, Path, Path]:
+def build() -> tuple[Path, Path, Path, Path]:
     subprocess.run(
         [
             "cargo",
@@ -45,13 +45,22 @@ def build() -> tuple[Path, Path, Path]:
             "logos-sandbox",
             "--bin",
             "logos-agent-sandbox",
+            "-p",
+            "logos-cli",
+            "--bin",
+            "logos",
         ],
         cwd=ROOT,
         check=True,
         timeout=900,
     )
     debug = ROOT / "target/debug"
-    return debug / "logos-kernel", debug / "examples/client_fixture", debug / "logos-agent-sandbox"
+    return (
+        debug / "logos-kernel",
+        debug / "examples/client_fixture",
+        debug / "logos-agent-sandbox",
+        debug / "logos",
+    )
 
 
 def serve(listener: socket.socket, reply: bytes) -> None:
@@ -135,7 +144,7 @@ def check_units() -> int:
 
 def main() -> None:
     units = check_units()
-    kernel_binary, fixture, sandbox = build()
+    kernel_binary, fixture, sandbox, logos = build()
     with tempfile.TemporaryDirectory(prefix="logos-isolation-") as temporary:
         root = Path(temporary)
         root.chmod(0o700)
@@ -147,6 +156,14 @@ def main() -> None:
         credentials = home / "credentials.json"
         credentials.write_text('{"tool": "token-secreto-de-teste"}')
         credentials.chmod(0o600)
+        # 6.5: chave do usuário criada pela CLI, no home do usuário, fora do alcance do agente.
+        user_key = home / "user.key"
+        subprocess.run(
+            [str(logos), "user", "init", "--key", str(user_key)],
+            check=True,
+            capture_output=True,
+            timeout=60,
+        )
         unix_server(root / "gateway.sock", b"gateway:")
         gateway_port = tcp_server(b"gateway:")
         llm_port = tcp_server(b"llm:")
@@ -180,6 +197,7 @@ def main() -> None:
                 "gateway_socket": str(root / "gateway.sock"),
                 "gateway_port": gateway_port,
                 "credentials": str(credentials),
+                "user_key": str(user_key),
                 "llm_port": llm_port,
                 "kernel_pid": kernel.pid,
             }

@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-24 · 6.1, 6.2 e 6.4 concluídas localmente com full verify (critérios marcados); 6.3 implementada (fast OK, critérios aguardam o full do fim da Fase 6, ADR 0066). Próximo: 6.5 e 6.6, depois a Fase 7, ver "Próximo passo".
+> Última atualização: 2026-10-24 · 6.1, 6.2 e 6.4 concluídas localmente com full verify (critérios marcados); 6.3 implementada (fast OK, critérios aguardam o full do fim da Fase 6, ADR 0066). 6.5 implementada. Próximo: 6.6, depois a Fase 7, ver "Próximo passo".
 
 ## Resumo
 
@@ -261,6 +261,7 @@ fontes opacas não demonstram autenticação.
 | 6.2 Confiança por tópico | ✅ concluída localmente (full verify; CI remota pendente) | ADR0063; trust/v1 no CAS (tag `logos/trust/v1`, CAS `trust-v1`), `TrustConfigPublished` tag17 com Authority do admin e versão crescente; índice v5 (`trust`, `trust_configs`, emissor/tópico em `facts`); registro e citação exigem `Trusted(emissor, tópico)` (`Reject::Untrusted`); concessão consultável (`fact_trust`); auditor reaplica configurações (`trust_configs=`). Mutações 20/20; fuzz `trust_decode` 1,09M execuções. [Plano](docs/plans/etapa-6.2.md). |
 | 6.4 Revogação de fatos e atestadores | ✅ concluída localmente (full verify; CI remota pendente) | ADR0064; `IssuerRevoked` tag18 (admin) mata todo fato do emissor com época de registro ≥ since e bloqueia fatos novos dele; `Retracted` aceita fato (admin); `reconcile` grava a cascata com `causes = [raiz, premissa]`; índice v6 (`revoked_issuers`); auditor recusa fato de emissor revogado e revogação dupla. Mutações 11/11. [Plano](docs/plans/etapa-6.4.md). |
 | 6.3 SDK de atestador e atestadores de referência | ⚠ implementada localmente; full verify da fase pendente | ADR0065; `logos-attest` (`Attester`, `attest`, `submit`) + seis atestadores (`clock`, `fs-stat`, `db-monitor` com mock `pg-monitor`, `backup-svc`, `enum-source`, `sandbox-run` em bwrap/prlimit sem rede, duas execuções idênticas) e `example_vocabulary` 100% `Anchored`; procedimentos em `docs/attesters/`. CLI de operador `logos ledger trust-publish\|fact-register\|revoke-issuer`. Python `logos_attest` com paridade byte a byte do `clock` (`spec/vectors/attest/clock.json`). Mutações 15/15; `--tier fast` VERIFY_OK. Critérios do ROADMAP **não** marcados ainda. [Plano](docs/plans/etapa-6.3.md). |
+| 6.5 Chave do usuário (v1) | ⚠ implementada localmente; full verify da fase pendente | ADR0067; `logos user init` (O_EXCL, 0600, semente do SO) e `logos ledger user-trust` (raiz `user` com `assume`/`authorize`/`confirm`, preserva as outras raízes). Pentest de isolamento ampliado: `read_user_key` e `sign_as_user` conseguem fora do sandbox e falham dentro (`ISOLATION_OK forbidden=11`); mutação "expor /home" derruba o pentest. Sem comando de assinatura (formatos das Fases 8/9). [Plano](docs/plans/etapa-6.5.md). |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -569,7 +570,7 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: Etapas 6.5 e 6.6 (fim da Fase 6), depois Fase 7
+## Próximo passo: Etapa 6.6 (fim da Fase 6), depois Fase 7
 
 Pilha local não enviada (Fase 5, 6.1, 6.2, 6.4), coberta por full verify (recibos
 [pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json),
@@ -2057,3 +2058,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-24 — Etapa6.2 commitada (`680e3bf`, `--tier affected` OK em 2447s, depois de corrigir ruff, vetores de domínio/CAS e contagens Python para a tag nova). Etapa6.4 implementada (ADR0064): `IssuerRevoked` tag18, índice v6, `revoke_issuer`, retratação de fato, cascata com fatos no `reconcile`, auditor; critério de `backup-svc` demonstrado; mutações 11/11. Flake de `ledger.rs` (`WriterBusy` sob carga) explicado: o filho de `second_process_fails_to_open_writer` herda, entre fork e exec, cópia do `writer.lock` de outro teste; spawn e reaberturas agora serializados por mutex no teste (3/3 OK; falha não reproduzida de forma determinística).
 - 2026-10-24 — Full verify na ponta eed6fb8 (6.2+6.4): VERIFY_OK tier=full, exit0 em 3009s; Rust 623, Python 358+25. Recibo `docs/plans/pilha-2026-10-24-evidencias.json`. Critérios da 6.2 e 6.4 marcados. Nada enviado ao remoto.
 - 2026-10-24 — Etapa6.3 implementada (ADR0065): SDK Rust/Python, seis atestadores de referência, CLI de operador, vetor de paridade `clock`; 15/15 mutações (2 sobreviventes viraram teste de fronteira e de corrida); `--tier fast` VERIFY_OK. `sandbox-run` sem `--nproc` (RLIMIT_NPROC é por usuário e quebrava o bwrap). ADR0066: verificação pesada só no fim da fase (revisa 0051/0057), a pedido do mantenedor. Critérios da 6.3 aguardam o full da Fase 6; sem push.
+- 2026-10-24 — Etapa6.5 implementada (ADR0067): `logos user init`, `logos ledger user-trust`, pentest 5.11 com chave do usuário (11/11 controle, 11/11 bloqueadas; mutação de /home morta). Testes direcionados e isolamento verdes; sem `verify.sh` (ADR0066). Próximo: 6.6 (`Says`, TCB: formato AIR novo, vetores, fuzz), que a 7.1 exige. Sem push.
