@@ -353,6 +353,17 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             p.refs.push(("trust", digest(config)?));
             authority(auth)?;
         }
+        [
+            Value::Unsigned(1),
+            Value::Unsigned(18),
+            issuer,
+            Value::Unsigned(_since),
+            auth,
+        ] => {
+            // Não é objeto do CAS: só marca o emissor como revogado na caminhada (6.4).
+            p.refs.push(("issuer-revoked", digest(issuer)?));
+            authority(auth)?;
+        }
         [Value::Unsigned(1), Value::Unsigned(15), route, record] => {
             let c = check(record, &mut p)?;
             p.rechecked = Some((digest(route)?, c));
@@ -475,7 +486,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 32);
+        assert_eq!(vectors.len(), 33);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

@@ -45,13 +45,14 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=5 (ledger-index/v5, Etapa 6.2: emissor e
+application_id=0x4c494458 (LIDX), user_version=6 (ledger-index/v6, Etapa 6.4: tabela
+`revoked_issuers`; v5 (6.2): emissor e
 tópico em `facts`, tabelas `trust` e `trust_configs`; v4 (6.1): status
 Fact=8 e tabela `facts` com a janela de cada fato; v3 (5.10) acrescentou Suspended=7 e
 `claims_h_o` sobre `(h_o,status)`; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
 reconstruídos, nunca migrados). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
-conferidos por teste contra arquivo real. Treze objetos SQL, sem triggers/views:
+conferidos por teste contra arquivo real. Catorze objetos SQL, sem triggers/views:
 
 | Tabela | Campos | Chave/ordem de comparação |
 | --- | --- | --- |
@@ -62,6 +63,7 @@ conferidos por teste contra arquivo real. Treze objetos SQL, sem triggers/views:
 | facts | id, fact, issuer, topic, first?, last?, until? | id; fact único |
 | trust | issuer, topic, config | issuer,topic (concessões vigentes; config = h(TrustConfigPublished)) |
 | trust_configs | id, version | id; version única (BLOB8) |
+| revoked_issuers | issuer, since, event | issuer (uma revogação por emissor) |
 | metadata | singleton=1, seq?, epoch?, hash? | singleton |
 
 Digests são BLOB32; epoch é BLOB8 big-endian unsigned (inclusive u64::MAX).
@@ -95,6 +97,9 @@ a janela aplicável e `Trusted(issuer, topic)` na tabela `trust`; `used` de fato
 exige o mesmo na época do Verified. TrustConfigPublished (6.2) lê trust/v1 do CAS,
 exige versão maior que todas as anteriores, grava `trust_configs` e substitui
 `trust`. FactRegistered sem concessão vigente é erro de reconstrução.
+IssuerRevoked (6.4) grava `revoked_issuers` (repetida é erro) e mata, como um
+Retracted, todo Fact vivo do emissor com época de registro ≥ since; FactRegistered
+posterior de emissor revogado é erro de reconstrução. Retracted aceita Fact.
 
 Retracted/Invalidated MUST ter alvo lógico anterior; Retracted marca retracted
 só no alvo. Cascata ATMS (Etapa 5.9, ADR0052): o **nó** de uma linha Verified é

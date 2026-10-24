@@ -136,7 +136,15 @@ pub fn verify_with_checkers(
                     if !trust.grants.contains(&(issuer, topic)) {
                         return Err(fail("fact issuer not trusted for its topic"));
                     }
+                    if trust.revoked.contains(&issuer) {
+                        return Err(fail("fact from a revoked issuer"));
+                    }
                     facts += 1;
+                }
+                "issuer-revoked" => {
+                    if !trust.revoked.insert(*digest) {
+                        return Err(fail("issuer revoked twice"));
+                    }
                 }
                 "trust" => {
                     trust.publish(&source::cas::<TrustObject>(cas, Hash::from_bytes(*digest))?)?;
@@ -260,6 +268,8 @@ struct Grants {
     grants: std::collections::BTreeSet<([u8; 32], String)>,
     version: Option<u64>,
     configs: u64,
+    /// Emissores revogados até o ponto da caminhada (6.4).
+    revoked: std::collections::BTreeSet<[u8; 32]>,
 }
 
 impl Grants {

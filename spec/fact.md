@@ -74,7 +74,17 @@ Como ela é o suporte do sort no grounding, o `used` de qualquer prova que toque
 domínio inclui o evento do fato, e o índice o registra em deps. Fonte `Policy` é
 recusada (`unresolved enumeration source`) até a 7.3. Recusa não grava evento.
 
-## 5. Auditoria
+## 5. Revogação (6.4, ADR0064)
+
+- `Retracted` sobre um `FactRegistered` (só o admin) mata o fato; a cascata ATMS
+  derruba os claims que dependiam dele sem rota alternativa.
+- `IssuerRevoked { KeyId, since }` (admin) mata todo fato vivo do emissor com
+  **época de registro** ≥ `since` (não `observed_at`, que o emissor assina) e
+  impede fatos novos dele. Fatos anteriores a `since` continuam válidos.
+- Em ambos, o kernel grava `Invalidated { causes: [raiz, premissa morta] }` para os
+  claims derrubados; a raiz é o `Retracted` ou o `IssuerRevoked`.
+
+## 6. Auditoria
 
 O auditor independente confere o objeto no CAS e reverifica a assinatura do
 emissor (`facts_verified` em audit.md). Ele não decide confiança no emissor.

@@ -314,6 +314,16 @@ pub enum EventBody {
         /// Assinatura de autorização administrativa.
         authority: Authority,
     },
+    /// Revogação de um emissor comprometido (6.4, ADR0064): mata todo fato dele
+    /// registrado na época `since` ou depois e recusa fatos novos dele.
+    IssuerRevoked {
+        /// Emissor revogado.
+        issuer: KeyId,
+        /// Primeira época de registro afetada.
+        since: u64,
+        /// Assinatura de autorização administrativa.
+        authority: Authority,
+    },
     /// Revogação formal de um verificador de provas previamente registrado.
     CheckerRevoked {
         /// Identificador do checker revogado.
@@ -415,6 +425,7 @@ impl EventBody {
             Self::Rechecked { .. } => 15,
             Self::FactRegistered { .. } => 16,
             Self::TrustConfigPublished { .. } => 17,
+            Self::IssuerRevoked { .. } => 18,
         }
     }
 
@@ -426,7 +437,8 @@ impl EventBody {
             | Self::Retracted { authority, .. }
             | Self::CheckerRegistered { authority, .. }
             | Self::CheckerRevoked { authority, .. }
-            | Self::TrustConfigPublished { authority, .. } => Some(authority),
+            | Self::TrustConfigPublished { authority, .. }
+            | Self::IssuerRevoked { authority, .. } => Some(authority),
             _ => None,
         }
     }
@@ -445,7 +457,8 @@ impl EventBody {
             }
             Self::VocabPublished { .. }
             | Self::FactRegistered { .. }
-            | Self::TrustConfigPublished { .. } => {}
+            | Self::TrustConfigPublished { .. }
+            | Self::IssuerRevoked { .. } => {}
             Self::Proposed { proposal, .. } => proposal.validate()?,
             Self::ObligationCreated { route, cnf, .. } => {
                 if let Some(c) = cnf
@@ -609,6 +622,17 @@ impl EventBody {
                 Value::Unsigned(1),
                 Value::Unsigned(17),
                 config.to_value()?,
+                authority.key.to_value()?,
+            ])?),
+            Self::IssuerRevoked {
+                issuer,
+                since,
+                authority,
+            } => Value::Array(Array::new(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(18),
+                issuer.to_value()?,
+                Value::Unsigned(*since),
                 authority.key.to_value()?,
             ])?),
             _ => return Ok(None),

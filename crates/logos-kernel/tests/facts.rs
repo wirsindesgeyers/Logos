@@ -13,7 +13,7 @@ use logos_crypto::{FileSigner, Hash, Signer};
 use logos_kernel::{
     TransportError,
     certify::CertificationHandlers,
-    facts::{publish_trust, register},
+    facts::{publish_trust, register, revoke_issuer},
     registry::{CheckerRegistry, LRAT},
     server::Server,
     staging::Staging,
@@ -1300,5 +1300,266 @@ fn auditor_decodes_trust_configs_strictly() {
         drop(ledger);
         let error = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap_err();
         assert!(error.to_string().contains(reason), "{reason}: {error}");
+    }
+}
+
+/// PROPOSE + CERTIFY LRAT de `chove` citando `cites`; devolve o Verified.
+fn verify_citing(ledger: &mut L<'_>, w: &World, cites: Vec<Hash<Event>>) -> Hash<Event> {
+    let reply = propose(ledger, w, cites);
+    let o: Hash<Obligation> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
+    let c = proof(ledger, o, &w.v);
+    let reply = exchange(
+        ledger,
+        &w.handlers,
+        Message::Certify {
+            obligation: o,
+            format: Text::new(LRAT).unwrap(),
+            certificate: ObjectRef::Cas(c),
+        },
+    );
+    logos_canon::CanonDecode::from_value(&accepted(&reply)[2]).unwrap()
+}
+
+fn kind(ledger: &L<'_>, event: Hash<Event>) -> EntryKind {
+    ledger
+        .live_index()
+        .unwrap()
+        .status(event)
+        .unwrap()
+        .unwrap()
+        .kind
+}
+
+#[test]
+fn criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let db = FileSigner::from_seed(&[0xdb; 32]).unwrap();
+    let backup = FileSigner::from_seed(&[0xba; 32]).unwrap();
+    grant(
+        &mut ledger,
+        &[
+            (&db, "db-monitor", &["db"]),
+            (&backup, "backup-svc", &["backup"]),
+        ],
+        1,
+    );
+    // Fato antigo do backup-svc (época 0), anterior ao comprometimento.
+    let early = fact_on(&ledger, &backup, &w, "backup");
+    let early = register(&mut ledger, early).unwrap();
+    advance(&mut ledger, 1);
+    let late = Fact::sign(
+        &backup,
+        w.chove.clone(),
+        w.hv,
+        Text::new("backup").unwrap(),
+        1_700_000_001,
+        Validity::Until(u64::MAX),
+        None,
+    )
+    .unwrap();
+    let late = ledger.cas().put::<Fact>(&to_canon(&late).unwrap()).unwrap();
+    let late = register(&mut ledger, late).unwrap();
+    let from_db = fact_on(&ledger, &db, &w, "db");
+    let from_db = register(&mut ledger, from_db).unwrap();
+    // Claims: a depende do fato comprometido; d depende de a; b do db-monitor; e do
+    // fato antigo do backup-svc.
+    let a = verify_citing(&mut ledger, &w, vec![late]);
+    let d = verify_citing(&mut ledger, &w, vec![a]);
+    let b = verify_citing(&mut ledger, &w, vec![from_db]);
+    let e = verify_citing(&mut ledger, &w, vec![early]);
+    let used = |ledger: &L<'_>, claim| ledger.live_index().unwrap().dependents(claim).unwrap();
+    assert_eq!(used(&ledger, late), vec![a]);
+    assert_eq!(used(&ledger, a), vec![d]);
+    // Só o admin revoga.
+    let admin = admin();
+    let issuer = backup.key_id().unwrap();
+    assert!(matches!(
+        revoke_issuer(&mut ledger, admin.public_key(), &db, issuer, 1),
+        Err(TransportError::Unauthorized)
+    ));
+    let revocation = revoke_issuer(&mut ledger, admin.public_key(), &admin, issuer, 1).unwrap();
+    // Invalidated gravados para a e d (causa: a revogação), e nada mais.
+    assert_eq!(revocation.invalidated.len(), 2);
+    for (claim, expected) in [
+        (late, EntryKind::Invalidated),
+        (a, EntryKind::Invalidated),
+        (d, EntryKind::Invalidated),
+        (early, EntryKind::Fact),
+        (from_db, EntryKind::Fact),
+        (b, EntryKind::Verified),
+        (e, EntryKind::Verified),
+    ] {
+        assert_eq!(kind(&ledger, claim), expected);
+    }
+    let causes: Vec<_> = ledger
+        .events_from(0, 256)
+        .unwrap()
+        .into_iter()
+        .filter_map(|event| match event.body {
+            EventBody::Invalidated { claim, causes } => Some((claim, causes)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        causes,
+        vec![
+            (a, vec![revocation.revoked, late]),
+            (d, vec![revocation.revoked, a])
+        ]
+    );
+    // Idempotente; segunda revogação recusada; fatos novos dele recusados.
+    assert!(
+        logos_kernel::retract::Retractions::new(admin.public_key().clone())
+            .reconcile(&mut ledger)
+            .unwrap()
+            .is_empty()
+    );
+    assert!(revoke_issuer(&mut ledger, admin.public_key(), &admin, issuer, 0).is_err());
+    let after = Fact::sign(
+        &backup,
+        w.chove.clone(),
+        w.hv,
+        Text::new("backup").unwrap(),
+        1_700_000_002,
+        Validity::Until(u64::MAX),
+        None,
+    )
+    .unwrap();
+    let after = ledger
+        .cas()
+        .put::<Fact>(&to_canon(&after).unwrap())
+        .unwrap();
+    assert!(matches!(
+        register(&mut ledger, after),
+        Err(TransportError::Unauthorized)
+    ));
+    refused(&propose(&mut ledger, &w, vec![late]));
+    // Índice reconstruído e auditor independente concordam.
+    drop(ledger);
+    let rebuilt = LedgerIndex::open(&path, kernel.public_key()).unwrap();
+    assert_eq!(
+        rebuilt.status(d).unwrap().unwrap().kind,
+        EntryKind::Invalidated
+    );
+    assert_eq!(
+        rebuilt.status(e).unwrap().unwrap().kind,
+        EntryKind::Verified
+    );
+    drop(rebuilt);
+    let cake = logos_lrat::CakeRegistry::register(std::path::Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../target/cake-lpr/cake_lpr"
+    )))
+    .unwrap();
+    let identity =
+        logos_crypto::hash_raw::<logos_ledger::Checker>(&std::fs::read("/proc/self/exe").unwrap());
+    let report = logos_audit::verify_with_checkers(
+        &path,
+        &path.join("cas"),
+        kernel.public_key(),
+        Some(&cake),
+        &[*identity.as_bytes()],
+    )
+    .unwrap();
+    assert_eq!((report.facts, report.lrat_proofs), (3, 4));
+}
+
+#[test]
+fn admin_retracts_a_single_fact_and_its_dependents_fall() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let trusted = issuer();
+    trust(&mut ledger, &trusted, 1);
+    let one = fact(&ledger, &trusted, &w, Validity::Until(u64::MAX));
+    let one = register(&mut ledger, one).unwrap();
+    let other = Fact::sign(
+        &trusted,
+        w.chove.clone(),
+        w.hv,
+        Text::new("clima").unwrap(),
+        2,
+        Validity::Until(u64::MAX),
+        None,
+    )
+    .unwrap();
+    let other = ledger
+        .cas()
+        .put::<Fact>(&to_canon(&other).unwrap())
+        .unwrap();
+    let other = register(&mut ledger, other).unwrap();
+    let a = verify_citing(&mut ledger, &w, vec![one]);
+    let b = verify_citing(&mut ledger, &w, vec![other]);
+    let admin = admin();
+    let retractions = logos_kernel::retract::Retractions::new(admin.public_key().clone());
+    // O emissor do fato não retrata pelo kernel; só o admin.
+    assert!(matches!(
+        retractions.retract(&mut ledger, &trusted, one, Text::new("x").unwrap()),
+        Err(TransportError::Unauthorized)
+    ));
+    let done = retractions
+        .retract(
+            &mut ledger,
+            &admin,
+            one,
+            Text::new("leitura errada").unwrap(),
+        )
+        .unwrap();
+    assert_eq!(done.invalidated.len(), 1);
+    assert_eq!(kind(&ledger, one), EntryKind::Invalidated);
+    assert_eq!(kind(&ledger, a), EntryKind::Invalidated);
+    assert_eq!(kind(&ledger, b), EntryKind::Verified);
+    assert!(!ledger.live_index().unwrap().is_citable(one, 0).unwrap());
+}
+
+#[test]
+fn projection_and_auditor_refuse_facts_of_a_revoked_issuer_and_double_revocations() {
+    let kernel = signer();
+    let admin = admin();
+    let backup = FileSigner::from_seed(&[0xba; 32]).unwrap();
+    let issuer = backup.key_id().unwrap();
+    let signed = |body: EventBody| {
+        let mut body = body;
+        let message = body.authority_message().unwrap().unwrap();
+        if let EventBody::IssuerRevoked { authority, .. } = &mut body {
+            authority.sig = admin.sign::<Event>(&message).unwrap();
+        }
+        body
+    };
+    let revocation = || {
+        signed(EventBody::IssuerRevoked {
+            issuer,
+            since: 0,
+            authority: logos_ledger::Authority {
+                key: admin.key_id().unwrap(),
+                sig: admin.sign::<Event>(b"").unwrap(),
+            },
+        })
+    };
+    for (case, reason) in [("fact", "revoked issuer"), ("twice", "revoked twice")] {
+        let temp = Temp::new();
+        let path = temp.0.join("ledger");
+        let mut ledger = Ledger::open(&path, &kernel).unwrap();
+        let w = world(&mut ledger, &kernel);
+        grant(&mut ledger, &[(&backup, "backup-svc", &["backup"])], 1);
+        revoke_issuer(&mut ledger, admin.public_key(), &admin, issuer, 0).unwrap();
+        // Gravado sem o kernel depois da revogação.
+        let forged = if case == "fact" {
+            let f = fact_on(&ledger, &backup, &w, "backup");
+            EventBody::FactRegistered { fact: f }
+        } else {
+            revocation()
+        };
+        let appended = ledger.append(forged);
+        assert!(appended.is_ok());
+        assert!(ledger.live_index().is_err(), "{case}");
+        drop(ledger);
+        let error = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap_err();
+        assert!(error.to_string().contains(reason), "{case}: {error}");
     }
 }

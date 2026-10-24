@@ -156,6 +156,8 @@ def build_vectors() -> list[dict[str, Any]]:
     add("FactRegistered", [1, 16, b"\xfa" * 32], epoch=(1 << 64) - 1)
     # trust-config-body/v1 (6.2, ADR0063): h(TrustConfig) assinado pelo admin.
     add("TrustConfigPublished", [1, 17, b"\x7c" * 32, admin.key_id], (1 << 64) - 1, admin)
+    # issuer-revoked-body/v1 (6.4, ADR0064): KeyId do emissor e época de registro.
+    add("IssuerRevoked", [1, 18, b"\x5e" * 32, 3, admin.key_id], (1 << 64) - 1, admin)
     return vectors
 
 
@@ -169,7 +171,7 @@ def main() -> None:
             {
                 "format": "event/v1+epoch-body/v2+certificate-rejected-body/v2"
                 "+consistency-body/v3+rechecked-body/v1+fact-registered-body/v1"
-                "+trust-config-body/v1",
+                "+trust-config-body/v1+issuer-revoked-body/v1",
                 "vectors": vectors,
             },
             ensure_ascii=False,

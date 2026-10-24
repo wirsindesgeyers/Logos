@@ -43,6 +43,11 @@ pub(crate) const TABLES: &[(&str, &str)] = &[
         "trust_configs",
         "CREATE TABLE trust_configs (id BLOB PRIMARY KEY CHECK(length(id)=32), version BLOB NOT NULL CHECK(length(version)=8)) STRICT, WITHOUT ROWID",
     ),
+    // ledger-index/v6 (6.4): emissores revogados; seus fatos de época ≥ since morrem.
+    (
+        "revoked_issuers",
+        "CREATE TABLE revoked_issuers (issuer BLOB PRIMARY KEY CHECK(length(issuer)=32), since BLOB NOT NULL CHECK(length(since)=8), event BLOB NOT NULL CHECK(length(event)=32)) STRICT, WITHOUT ROWID",
+    ),
     (
         "metadata",
         "CREATE TABLE metadata (singleton INTEGER PRIMARY KEY CHECK(singleton=1), seq INTEGER, epoch BLOB, hash BLOB, CHECK((seq IS NULL AND epoch IS NULL AND hash IS NULL) OR (seq>=0 AND length(epoch)=8 AND length(hash)=32))) STRICT",
@@ -81,6 +86,7 @@ const QUERIES: &[&str] = &[
     "SELECT * FROM facts ORDER BY id",
     "SELECT * FROM trust ORDER BY issuer,topic",
     "SELECT * FROM trust_configs ORDER BY id",
+    "SELECT * FROM revoked_issuers ORDER BY issuer",
     "SELECT * FROM metadata ORDER BY singleton",
 ];
 
@@ -113,7 +119,7 @@ pub struct RebuildReport {
 pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
     connection.execute_batch("PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;")?;
     connection.pragma_update(None, "application_id", APPLICATION_ID)?;
-    connection.pragma_update(None, "user_version", 5)?;
+    connection.pragma_update(None, "user_version", 6)?;
     for (_, sql) in TABLES.iter().chain(INDEXES) {
         connection.execute_batch(sql)?;
     }
@@ -123,11 +129,11 @@ pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
 fn valid_schema(connection: &Connection) -> Result<bool, LedgerError> {
     let app: i64 = connection.pragma_query_value(None, "application_id", |r| r.get(0))?;
     let version: i64 = connection.pragma_query_value(None, "user_version", |r| r.get(0))?;
-    if app != APPLICATION_ID || version != 5 {
+    if app != APPLICATION_ID || version != 6 {
         return Ok(false);
     }
     let mut statement =
-        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 14")?;
+        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 15")?;
     let mut rows = statement.query([])?;
     let mut expected: Vec<_> = TABLES.iter().chain(INDEXES).copied().collect();
     expected.sort_unstable_by_key(|entry| entry.0);

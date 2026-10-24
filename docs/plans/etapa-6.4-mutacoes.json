@@ -1,0 +1,96 @@
+{
+  "stage": "6.4",
+  "killed": 11,
+  "total": 11,
+  "note": "todas mortas na primeira rodada",
+  "mutations": [
+    {
+      "mutation": "M1 revogação sem conferir o admin",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1695586) panicked at crates/logos-kernel/tests/facts.rs:1380:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M2 registro aceita emissor revogado",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1697188) panicked at crates/logos-kernel/tests/facts.rs:1436:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M3 projeção não mata os fatos do emissor",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1699175) panicked at crates/logos-kernel/tests/facts.rs:1386:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M4 since ignorado (mata todos os fatos)",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1701405) panicked at crates/logos-kernel/tests/facts.rs:1396:9:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M5 since exclusivo",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1703787) panicked at crates/logos-kernel/tests/facts.rs:1386:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M6 projeção aceita fato de emissor revogado",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_facts_of_a_revoked_issuer_and_double_revocations' (1705956) panicked at crates/logos-kernel/tests/facts.rs:1560:9:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M7 projeção aceita revogação dupla",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_facts_of_a_revoked_issuer_and_double_revocations' (1707829) panicked at crates/logos-kernel/tests/facts.rs:1560:9:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M8 reconcile ignora a revogação como raiz",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_revoking_backup_svc_invalidates_exactly_the_claims_that_depended_on_it' (1709686) panicked at crates/logos-kernel/tests/facts.rs:1386:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M9 retratação de fato por não-admin",
+      "killed": true,
+      "evidence": [
+        "thread 'admin_retracts_a_single_fact_and_its_dependents_fall' (1711233) panicked at crates/logos-kernel/tests/facts.rs:1501:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M10 auditor aceita fato de emissor revogado",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_facts_of_a_revoked_issuer_and_double_revocations' (1713006) panicked at crates/logos-kernel/tests/facts.rs:1562:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M11 auditor aceita revogação dupla",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_facts_of_a_revoked_issuer_and_double_revocations' (1714291) panicked at crates/logos-kernel/tests/facts.rs:1562:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    }
+  ]
+}

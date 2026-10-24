@@ -80,6 +80,7 @@ qualquer caminho não vazio do catálogo v1.
 | 15 | Rechecked (5.10) | route_hEvent, check (qualquer desfecho) |
 | 16 | FactRegistered (6.1) | h(Fact) |
 | 17 | TrustConfigPublished (6.2) | h(TrustConfig), Authority |
+| 18 | IssuerRevoked (6.4) | KeyId, since_u64, Authority |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -128,8 +129,8 @@ exige obter certificado, fora deste decoder.
 
 ## 4. Assinaturas de autoridade
 
-VocabPublished, Retracted, CheckerRegistered, CheckerRevoked e
-TrustConfigPublished (6.2) carregam
+VocabPublished, Retracted, CheckerRegistered, CheckerRevoked,
+TrustConfigPublished (6.2) e IssuerRevoked (6.4) carregam
 assinatura do admin/emissor além da assinatura externa do kernel.
 O payload de autoridade é `canon([1, 1, body_without_authority_signature])`;
 body conserva seu envelope/tag/campos e substitui Authority por somente KeyId.
@@ -253,3 +254,11 @@ emissor, dentro do objeto. A projeção lê o fato do CAS e recusa registro repe
 O objeto trust/v1 MUST estar no CAS antes do append. Aridade exata. O kernel só
 grava o evento com o signer admin configurado e versão maior que a vigente. A
 projeção substitui as concessões e recusa versão que não cresce (ledger-index.md §3).
+
+## 13. Revogação de emissor — issuer-revoked-body/v1 (Etapa6.4, ADR0064)
+
+`[1,18,KeyId,since_u64,Authority]` é IssuerRevoked; Authority como em §4. O kernel
+só grava com o signer admin e emissor ainda não revogado. A projeção mata todo
+fato vivo do emissor com época de registro ≥ `since` (propagando como Retracted),
+recusa revogação repetida e FactRegistered posterior do mesmo emissor
+(ledger-index.md §3). O kernel registra a cascata com `Invalidated`.

@@ -370,6 +370,17 @@ impl Canon for EventBody {
                 config.to_value()?,
                 authority.to_value()?,
             ]),
+            Self::IssuerRevoked {
+                issuer,
+                since,
+                authority,
+            } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(18),
+                issuer.to_value()?,
+                Value::Unsigned(*since),
+                authority.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -694,6 +705,11 @@ impl CanonDecode for EventBody {
             },
             (17, [config_val, auth_val]) => Self::TrustConfigPublished {
                 config: digest::<crate::TrustConfig>(config_val)?,
+                authority: Authority::from_value(auth_val)?,
+            },
+            (18, [issuer_val, since_val, auth_val]) => Self::IssuerRevoked {
+                issuer: digest::<logos_crypto::PublicKey>(issuer_val)?,
+                since: u64::from_value(since_val)?,
                 authority: Authority::from_value(auth_val)?,
             },
             (12, [checker_val, reason_val, auth_val]) => {

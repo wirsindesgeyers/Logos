@@ -296,6 +296,15 @@ fn register_fact(
             "fact issuer not trusted for its topic",
         ));
     }
+    // 6.4: emissor revogado não registra mais fatos.
+    let revoked = connection
+        .prepare("SELECT 1 FROM revoked_issuers WHERE issuer=?1")?
+        .query_row([issuer.as_bytes().as_slice()], |_| Ok(()))
+        .optional()?
+        .is_some();
+    if revoked {
+        return Err(LedgerError::Invalid("fact issuer was revoked"));
+    }
     connection.prepare("INSERT INTO claims(id,h_o,status,epoch,retracted,vocab,formula,scope,checker) VALUES (?1,NULL,?2,?3,0,?4,?5,NULL,NULL)")?
         .execute(params![id, FACT, epoch, decoded.vocabulary.as_bytes().as_slice(), to_canon(&decoded.formula)?])?;
     let (first, last, until) = match decoded.valid {
@@ -461,6 +470,34 @@ pub(crate) fn apply(
         }
         EventBody::TrustConfigPublished { config, .. } => {
             return publish_trust(connection, cas, id, *config);
+        }
+        EventBody::IssuerRevoked { issuer, since, .. } => {
+            // 6.4: uma revogação por emissor; mata os fatos vivos dele registrados
+            // na época `since` ou depois e propaga como uma retratação.
+            let inserted = connection
+                .prepare(
+                    "INSERT OR IGNORE INTO revoked_issuers(issuer,since,event) VALUES (?1,?2,?3)",
+                )?
+                .execute(params![
+                    issuer.as_bytes().as_slice(),
+                    since.to_be_bytes().as_slice(),
+                    id
+                ])?;
+            if inserted == 0 {
+                return Err(LedgerError::Invalid("issuer revoked twice"));
+            }
+            let mut statement = connection.prepare(
+                "SELECT facts.id FROM facts JOIN claims ON claims.id=facts.id WHERE facts.issuer=?1 AND claims.status=8 AND claims.epoch>=?2 ORDER BY facts.id",
+            )?;
+            let killed = statement
+                .query_map(
+                    params![issuer.as_bytes().as_slice(), since.to_be_bytes().as_slice()],
+                    |row| row.get::<_, Vec<u8>>(0),
+                )?
+                .collect::<Result<Vec<_>, _>>()?;
+            let touched = invalidate(connection, &killed)?;
+            refresh(connection, touched)?;
+            return Ok(());
         }
         EventBody::Rechecked { route, check } => {
             let row = connection

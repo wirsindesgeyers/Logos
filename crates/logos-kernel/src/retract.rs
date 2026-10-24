@@ -76,9 +76,11 @@ impl Retractions {
         let allowed = match status.kind {
             EntryKind::Verified | EntryKind::Suspended => admin,
             EntryKind::Assumption => admin || author.as_ref() == Some(&key),
+            // 6.4: fato só pelo admin (o emissor não assina eventos do kernel).
+            EntryKind::Fact => admin,
             _ => {
                 return Err(Error::Invalid(
-                    "only Verified or Assumption can be retracted",
+                    "only Verified, Assumption or Fact can be retracted",
                 ));
             }
         };
@@ -132,6 +134,8 @@ impl Retractions {
         let mut recorded: HashMap<Hash<Event>, Option<Hash<Event>>> = HashMap::new();
         let mut revoked = HashSet::new();
         let mut born_dead = HashSet::new();
+        let mut facts = Vec::new();
+        let cas = ledger.cas();
         replay(ledger, |event| {
             let id = hash(event)?;
             match &event.body {
@@ -149,6 +153,27 @@ impl Retractions {
                     );
                 }
                 EventBody::AssumptionDeclared { .. } => order.push(id),
+                // 6.4: fato morto (retratado ou de emissor revogado) é raiz da cascata.
+                EventBody::FactRegistered { fact } => {
+                    order.push(id);
+                    let bytes = cas
+                        .get(fact)?
+                        .ok_or(Error::Invalid("registered fact missing from CAS"))?;
+                    let decoded: logos_ledger::Fact = logos_canon::from_canon(&bytes)
+                        .map_err(|_| Error::Invalid("registered fact"))?;
+                    let issuer = decoded
+                        .issuer
+                        .key_id()
+                        .map_err(|_| Error::Invalid("fact issuer key"))?;
+                    facts.push((id, issuer, event.epoch));
+                }
+                EventBody::IssuerRevoked { issuer, since, .. } => {
+                    for (fact, by, epoch) in &facts {
+                        if by == issuer && epoch >= since {
+                            roots.entry(*fact).or_insert(id);
+                        }
+                    }
+                }
                 EventBody::Retracted { target, .. } => {
                     roots.entry(*target).or_insert(id);
                 }

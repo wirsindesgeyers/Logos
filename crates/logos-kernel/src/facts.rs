@@ -7,7 +7,7 @@
 //! registrado. A citação confere a mesma concessão de novo (índice/snapshot).
 
 use logos_air::{Limits, Vocabulary};
-use logos_crypto::{Hash, PublicKey, Signer, hash};
+use logos_crypto::{Hash, KeyId, PublicKey, Signer, hash};
 use logos_ledger::{Authority, Event, EventBody, Fact, Ledger, TrustConfig, Validity};
 
 use crate::TransportError as Error;
@@ -93,6 +93,10 @@ pub fn register<S: Signer>(
         .issuer
         .key_id()
         .map_err(|_| Error::Invalid("fact issuer key"))?;
+    // 6.4: emissor revogado não registra mais fatos.
+    if ledger.live_index()?.issuer_revoked(&issuer)? {
+        return Err(Error::Unauthorized);
+    }
     // 6.2: `db-monitor` não atesta `backup`; sem configuração publicada, ninguém atesta.
     if ledger
         .live_index()?
@@ -127,4 +131,63 @@ pub fn register<S: Signer>(
         return Err(Error::Invalid("fact already registered"));
     }
     Ok(hash(&ledger.append(EventBody::FactRegistered { fact })?)?)
+}
+
+/// Resultado de uma revogação de emissor (6.4, ADR0064).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IssuerRevocation {
+    /// Evento IssuerRevoked gravado.
+    pub revoked: Hash<Event>,
+    /// Invalidated gravados pela cascata (claims que dependiam dos fatos mortos).
+    pub invalidated: Vec<Hash<Event>>,
+}
+
+/// Revoga o emissor `issuer` (assinado pelo admin): todo fato dele registrado na
+/// época `since` ou depois morre, a cascata ATMS derruba quem dependia só deles e
+/// fatos novos dele passam a ser recusados. `since` é a época de **registro**
+/// (gravada pelo kernel), não o `observed_at` que o emissor comprometido assina.
+///
+/// # Errors
+/// Signer que não é o admin; emissor já revogado; replay, índice ou append.
+pub fn revoke_issuer<S: Signer, A: Signer>(
+    ledger: &mut Ledger<'_, S>,
+    admin: &PublicKey,
+    signer: &A,
+    issuer: KeyId,
+    since: u64,
+) -> Result<IssuerRevocation, Error> {
+    if signer.public_key() != admin {
+        return Err(Error::Unauthorized);
+    }
+    if ledger.live_index()?.issuer_revoked(&issuer)? {
+        return Err(Error::Invalid("issuer already revoked"));
+    }
+    let key = signer
+        .key_id()
+        .map_err(|_| Error::Invalid("authority key"))?;
+    let mut body = EventBody::IssuerRevoked {
+        issuer,
+        since,
+        authority: Authority {
+            key,
+            sig: signer
+                .sign::<Event>(b"")
+                .map_err(|_| Error::Invalid("authority signature"))?,
+        },
+    };
+    let message = body
+        .authority_message()?
+        .ok_or(Error::Invalid("issuer revocation authority"))?;
+    let EventBody::IssuerRevoked { authority, .. } = &mut body else {
+        return Err(Error::Invalid("issuer revocation body"));
+    };
+    authority.sig = signer
+        .sign::<Event>(&message)
+        .map_err(|_| Error::Invalid("authority signature"))?;
+    let revoked = hash(&ledger.append(body)?)?;
+    let invalidated = crate::retract::Retractions::new(admin.clone()).reconcile(ledger)?;
+    Ok(IssuerRevocation {
+        revoked,
+        invalidated,
+    })
 }

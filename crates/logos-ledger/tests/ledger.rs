@@ -7,6 +7,17 @@ use std::cell::Cell;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
 
+/// Entre fork e exec, o filho de `second_process_fails_to_open_writer` carrega cópias
+/// de todos os descritores do processo de teste, inclusive o `writer.lock` de outro
+/// teste: o flock só cai quando todas as cópias fecham. Testes que soltam e reabrem
+/// o lock seguram este mutex para não correr com o spawn (flake visto sob carga).
+static FORK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn fork_guard() -> std::sync::MutexGuard<'static, ()> {
+    FORK.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 use logos_canon::to_canon;
 use logos_crypto::{CryptoError, FileSigner, Hash, PublicKey, SigDomain, Signature, Signer, hash};
 use logos_ledger::{Event, Ledger, LedgerError, LedgerHead};
@@ -106,9 +117,10 @@ fn every_historical_catalog_vector_replays_byte_for_byte_without_cas_migration()
         actual.verify(signer.public_key()).unwrap();
         assert_eq!(to_canon(&actual).unwrap(), to_canon(&expected).unwrap());
     }
+    let _fork = fork_guard();
     drop(ledger);
     let ledger = Ledger::open(&temp.0, &signer).unwrap();
-    assert_eq!(ledger.head().unwrap().unwrap().seq, 31);
+    assert_eq!(ledger.head().unwrap().unwrap().seq, 32);
 }
 
 #[test]
@@ -160,6 +172,7 @@ fn failed_insert_rolls_back_and_requires_reopening() {
     connection
         .execute_batch("DROP TRIGGER injected_failure")
         .unwrap();
+    let _fork = fork_guard();
     drop(ledger);
     let mut ledger = Ledger::open(&temp.0, &signer).unwrap();
     assert_eq!(ledger.append(ordinary(1)).unwrap().seq, 1);
@@ -321,6 +334,7 @@ fn sqlite_failure_poisoned_handle_requires_replay() {
         Err(LedgerError::Poisoned)
     ));
     busy.rollback().unwrap();
+    let _fork = fork_guard();
     drop(ledger);
     let mut ledger = Ledger::open(&temp.0, &signer).unwrap();
     assert_eq!(ledger.head().unwrap().unwrap().seq, 0);
@@ -381,6 +395,7 @@ fn lock_is_held_between_transactions_and_released_on_drop() {
         Ledger::open(&temp.0.join("."), &signer),
         Err(LedgerError::WriterBusy)
     ));
+    let _fork = fork_guard();
     drop(ledger);
     Ledger::open(&temp.0, &signer).unwrap();
 }
@@ -401,13 +416,16 @@ fn subprocess_lock_holder() {
 #[test]
 fn second_process_fails_to_open_writer() {
     let temp = Temp::new();
-    let mut child = Command::new(std::env::current_exe().unwrap())
-        .args(["--exact", "subprocess_lock_holder", "--nocapture"])
-        .env("LOGOS_LEDGER_LOCK_TEST", &temp.0)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
+    let mut child = {
+        let _fork = fork_guard();
+        Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "subprocess_lock_holder", "--nocapture"])
+            .env("LOGOS_LEDGER_LOCK_TEST", &temp.0)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap()
+    };
     let mut reader = BufReader::new(child.stdout.take().unwrap());
     let mut line = String::new();
     loop {
@@ -442,6 +460,7 @@ fn directory_symlink_uses_same_lock_and_database_symlink_is_rejected() {
         Ledger::open(&alias, &signer),
         Err(LedgerError::WriterBusy)
     ));
+    let _fork = fork_guard();
     drop(ledger);
     let renamed = temp.0.join("moved.sqlite3");
     std::fs::rename(temp.database(), &renamed).unwrap();

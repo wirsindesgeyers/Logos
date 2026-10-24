@@ -191,7 +191,7 @@ fn test_all_canonical_vectors_decode_encode_verify() {
         .iter()
         .map(|v| v["body_tag"].as_u64().unwrap())
         .collect();
-    assert_eq!(tags, (0..18).collect());
+    assert_eq!(tags, (0..19).collect());
 }
 
 // -----------------------------------------------------------------------------
@@ -1038,9 +1038,8 @@ fn authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature()
             | EventBody::Retracted { authority, .. }
             | EventBody::CheckerRegistered { authority, .. }
             | EventBody::CheckerRevoked { authority, .. }
-            | EventBody::TrustConfigPublished { authority, .. } => {
-                authority.key = other.key_id().unwrap()
-            }
+            | EventBody::TrustConfigPublished { authority, .. }
+            | EventBody::IssuerRevoked { authority, .. } => authority.key = other.key_id().unwrap(),
             _ => unreachable!(),
         }
         // Signature is cryptographically valid under admin A, but receipt claims B.
@@ -1052,7 +1051,8 @@ fn authority_receipt_binds_body_identity_and_is_separate_from_kernel_signature()
             | EventBody::Retracted { authority, .. }
             | EventBody::CheckerRegistered { authority, .. }
             | EventBody::CheckerRevoked { authority, .. }
-            | EventBody::TrustConfigPublished { authority, .. } => authority.sig = signature,
+            | EventBody::TrustConfigPublished { authority, .. }
+            | EventBody::IssuerRevoked { authority, .. } => authority.sig = signature,
             _ => unreachable!(),
         }
         assert!(matches!(

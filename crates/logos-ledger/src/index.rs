@@ -432,6 +432,19 @@ impl<'a> LedgerIndex<'a> {
         .transpose()
     }
 
+    /// O emissor foi revogado (6.4): não registra mais fatos.
+    ///
+    /// # Errors
+    /// Falha SQL.
+    pub fn issuer_revoked(&self, issuer: &logos_crypto::KeyId) -> Result<bool, LedgerError> {
+        Ok(self
+            .connection
+            .prepare("SELECT 1 FROM revoked_issuers WHERE issuer=?1")?
+            .query_row([issuer.as_bytes().as_slice()], |_| Ok(()))
+            .optional()?
+            .is_some())
+    }
+
     /// Versão da configuração de confiança vigente, se alguma foi publicada (6.2).
     ///
     /// # Errors

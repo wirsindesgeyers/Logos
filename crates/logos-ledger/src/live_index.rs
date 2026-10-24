@@ -127,6 +127,13 @@ impl LedgerLiveIndex<'_> {
         self.index.trust_grant(issuer, topic)
     }
 
+    /// O emissor foi revogado (6.4).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn issuer_revoked(&self, issuer: &logos_crypto::KeyId) -> Result<bool, LedgerError> {
+        self.index.issuer_revoked(issuer)
+    }
+
     /// Versão da configuração de confiança vigente (6.2).
     /// # Errors
     /// SQL ou projeção inválida.

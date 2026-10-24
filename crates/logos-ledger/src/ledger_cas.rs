@@ -157,6 +157,7 @@ impl EventBody {
                 result.insert(CasReference::Trust(*config));
             }
             Self::Genesis { .. }
+            | Self::IssuerRevoked { .. }
             | Self::Retracted { .. }
             | Self::Invalidated { .. }
             | Self::EpochAdvanced { vocab: None, .. } => {}

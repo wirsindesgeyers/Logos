@@ -2,7 +2,7 @@
 
 > Mantido pelo agente (regras em [`AGENTS.md`](AGENTS.md) §6). Para continuar, peça:
 > **"implemente o próximo passo do STATUS.md"**.
-> Última atualização: 2026-10-24 · 6.1 concluída localmente com full verify (critérios marcados); 6.2 (confiança por tópico, ADR0063) commitada com `--tier affected`, falta full verify. Próximo: ver "Próximo passo".
+> Última atualização: 2026-10-24 · 6.1 concluída localmente (full verify); 6.2 (ADR0063) e 6.4 (ADR0064) commitadas com `--tier affected`, falta full verify para marcar os critérios. Próximo: ver "Próximo passo".
 
 ## Resumo
 
@@ -259,6 +259,7 @@ fontes opacas não demonstram autenticação.
 | 5.12 ★ Kernel mínimo ponta a ponta | ⚠ concluída localmente; CI pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
 | 6.1 Objeto Fact | ✅ concluída localmente (full verify; CI remota pendente) | ADR0061/0062; fact/v1 no CAS, `FactRegistered` tag16 só para emissor da raiz de confiança com assinatura/tipagem/janela válidas; índice v4 (Fact=8, tabela `facts`); janela por épocas ou `Until` (`Reject::Expired`); auditor reverifica assinatura (`facts_verified`). Mutações 10/10; fuzz `fact_decode` 1,8M execuções. 6.1b (ADR0062): `FactRef` = hash da conjunção fecho ∧ nomes únicos; grounder aceita a conjunção como suporte único; kernel (`enumeration.rs`) exige que venha de entrada `Fact` no PROPOSE e no CERTIFY; prova LRAT real com `used`/deps no fato; Policy recusada até a 7.3. Mutações 9/9. [Plano](docs/plans/etapa-6.1.md). |
 | 6.2 Confiança por tópico | 🚧 implementada; falta full verify para marcar | ADR0063; trust/v1 no CAS (tag `logos/trust/v1`, CAS `trust-v1`), `TrustConfigPublished` tag17 com Authority do admin e versão crescente; índice v5 (`trust`, `trust_configs`, emissor/tópico em `facts`); registro e citação exigem `Trusted(emissor, tópico)` (`Reject::Untrusted`); concessão consultável (`fact_trust`); auditor reaplica configurações (`trust_configs=`). Mutações 20/20; fuzz `trust_decode` 1,09M execuções. [Plano](docs/plans/etapa-6.2.md). |
+| 6.4 Revogação de fatos e atestadores | 🚧 implementada; falta full verify para marcar | ADR0064; `IssuerRevoked` tag18 (admin) mata todo fato do emissor com época de registro ≥ since e bloqueia fatos novos dele; `Retracted` aceita fato (admin); `reconcile` grava a cascata com `causes = [raiz, premissa]`; índice v6 (`revoked_issuers`); auditor recusa fato de emissor revogado e revogação dupla. Mutações 11/11. [Plano](docs/plans/etapa-6.4.md). |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -576,24 +577,25 @@ Pilha local não enviada, coberta por full verify (recibos
 (6.1a ADR0061, 6.1b ADR0062), com os quatro critérios da 6.1 marcados. Push e CI
 quando o mantenedor pedir.
 
-6.2 (ADR0063) commitada com `--tier affected`: trust/v1 no CAS,
-`TrustConfigPublished` tag17 assinado pelo admin, índice v5, regra no registro e
-na citação (`Reject::Untrusted`), auditor reconfere. Falta o full verify para marcar
-o critério. Divergência registrada: `Trusted(issuer, topic)` é premissa explícita no
-ledger, não fórmula AIR (forma lógica na 17.4). Riscos: chave do admin fora do
-ledger (o auditor não a autentica); retirar tópico não derruba claims antigos (6.4).
+6.2 (ADR0063, confiança por tópico) e 6.4 (ADR0064, revogação de fatos e de
+emissores) commitadas com `--tier affected`. Falta o full verify na ponta para
+marcar os critérios das duas (no máximo três commits de etapa sem ele). Depois:
+6.3 (SDK de atestador e atestadores de referência; sugestão: incluir a CLI de
+operador para publicar confiança e revogar). Divergência registrada na 6.2:
+`Trusted(issuer, topic)` é premissa explícita no ledger, não fórmula AIR (forma
+lógica na 17.4). Riscos: chave do admin fora do ledger (o auditor não a
+autentica); retirar tópico não derruba claims antigos (revogar o emissor sim);
+`since` da revogação é época de registro e depende de o operador saber quando o
+comprometimento começou.
 Lacunas da revisão de 24/out, sem dono ainda: o binário do kernel não expõe
-`publish_trust`/`facts::register` (nem protocolo nem CLI; o envio de fatos vem com o
-SDK da 6.3, a publicação pelo admin precisa de etapa); todo sort enumerado exige
-fonte mesmo sem uso no objetivo. Medição da TCB está desatualizada (última após a
-9.1a; rodar `cargo xtask tcb report`).
-Próxima etapa: 6.3 (SDK de atestador e atestadores de referência) ou 6.4
-(revogação de fatos/emissores). Bend2 como produtor não confiável: spike só com OK
-do mantenedor.
+`publish_trust`/`facts::register`/`revoke_issuer` (nem protocolo nem CLI); todo
+sort enumerado exige fonte mesmo sem uso no objetivo. Medição da TCB desatualizada
+(última após a 9.1a; rodar `cargo xtask tcb report`). Bend2 como produtor não
+confiável: spike só com OK do mantenedor.
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
-contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0063).
+contratual e libera 5R.2/5R.4; e revisão das decisões por delegação (ADRs 0047–0064).
 Nenhuma etapa técnica espera essas revisões além de 5R.2/5R.4.
 
 Na pilha também: 5.11 ([plano](docs/plans/etapa-5.11.md), ADR0059), commitada
@@ -635,7 +637,9 @@ rotas cake não tem caminho de operador.
   daria ciclo; um fato por sort; kernel confere a fonte no PROPOSE e no CERTIFY) e 0063
   (6.2: confiança no ledger por evento com Authority do admin; tópico por igualdade
   exata; `Trusted` como premissa explícita no ledger, não em AIR; retirar tópico só
-  barra citações novas; `level` informativo).
+  barra citações novas; `level` informativo) e 0064 (6.4: `since` por época de
+  registro, não `observed_at`; revogação de emissor é terminal e mata, não suspende;
+  retratação de fato só pelo admin).
   Templates do corpus 9.1 neutros em gênero. Qualquer um pode ser revertido.
 - **Tamanho da TCB de correção (execução):** 15262 LOC Rust próprios + 747130
   de dependências Rust = 762392 (+64508 só de compilação), após a9.1a (+131
@@ -669,6 +673,11 @@ rotas cake não tem caminho de operador.
 - `logos-ledger/tests/ledger.rs::recovery_checks_all_events_and_fixed_external_key`
   falhou uma vez (23/out) dentro do verify e passou isolado 7×; não reproduziu sob
   carga. A asserção agora imprime o erro recebido: se voltar, investigar por ele.
+  Causa provável (24/out): `WriterBusy` em testes que soltam e reabrem o lock
+  enquanto `second_process_fails_to_open_writer` faz spawn; entre fork e exec o
+  filho carrega cópia do `writer.lock` de outro teste e o flock só cai quando ela
+  fecha. Serializado por mutex em `tests/ledger.rs`. Outros binários de teste que
+  disparam bwrap/cake enquanto outro teste reabre um ledger têm a mesma janela.
 - O checker Rust é o próprio executável e é rehasheado a cada evento que o cita:
   testes com muitos CERTIFY/REFUTE ficam caros. Agrupe em poucos ledgers e
   paralelize por ledger (ADR0057, adendo).
@@ -2041,3 +2050,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-23 — Full verify na ponta 5eb74e9 (6.1a+6.1b): VERIFY_OK tier=full, exit0 em 3963s sob `systemd-inhibit`; Rust 611, Python 358+25, isolamento e demo OK. Recibo `docs/plans/pilha-2026-10-23c-evidencias.json`. Critérios da 6.1 marcados (4). 6.2 iniciada em worktree.
 - 2026-10-23 — Etapa6.2 implementada (ADR0063): trust/v1, `TrustConfigPublished` tag17, índice v5, `facts::{publish_trust, register}` (sem `TrustRoots`; testes da 6.1 migrados), `Reject::Untrusted`, consultas `trust_grant`/`trust_version`/`fact_trust`, auditor com `trust_configs=`, vetores Python independentes (trust e evento tag17), fuzz `trust_decode` 120s/1.095.923 execuções. Critério: `db-monitor` assinando `backup` recusado; retirada do tópico barra citações novas. Mutações: 13/14 na primeira rodada (M4 equivalente pela UNIQUE de versões; teste de versão menor acrescentado) → 14/14.
 - 2026-10-24 — Revisão da pilha 6.1/6.2: auditor passou a decodificar trust/v1 de forma estrita (ordem, unicidade, tetos; mutações M15–M20 mortas, 20/20 na 6.2); invariante de que a conjunção da 6.1b cabe no teto AIR fixado em teste (o teto que manda é `max_axioms`, n=141); docs corrigidas (cabeçalho do STATUS, events §4, fact.md §3, comentários de fact.rs, plano 6.1); lacunas registradas (sem caminho de operador para fatos/confiança; admin fora do ledger). Teste Python de domínios atualizado para 19 tags.
+- 2026-10-24 — Etapa6.2 commitada (`680e3bf`, `--tier affected` OK em 2447s, depois de corrigir ruff, vetores de domínio/CAS e contagens Python para a tag nova). Etapa6.4 implementada (ADR0064): `IssuerRevoked` tag18, índice v6, `revoke_issuer`, retratação de fato, cascata com fatos no `reconcile`, auditor; critério de `backup-svc` demonstrado; mutações 11/11. Flake de `ledger.rs` (`WriterBusy` sob carga) explicado: o filho de `second_process_fails_to_open_writer` herda, entre fork e exec, cópia do `writer.lock` de outro teste; spawn e reaberturas agora serializados por mutex no teste (3/3 OK; falha não reproduzida de forma determinística).

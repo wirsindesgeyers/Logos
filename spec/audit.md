@@ -63,7 +63,8 @@ lrat_rust_rechecked, lrat_cake_rechecked, invalidated_by_recheck (5.10) e
 facts_verified (6.1: FactRegistered com fact/v1 no CAS e assinatura do emissor
 reverificada) e trust_configs (6.2: TrustConfigPublished reaplicados na ordem, com
 versão crescente; cada fato precisa de `Trusted(emissor, tópico)` vigente no ponto
-do registro, trust.md §4).
+do registro, trust.md §4; 6.4: fato de emissor já revogado e revogação repetida
+são falhas).
 Rota LRAT cujo certificado falha no recheck só é aceita se um Rechecked Rejected
 posterior a invalidar (incidente contado, não escondido); Rechecked precisa casar
 com h(O)/h(certificado) da rota, usar checker permitido e ter Accepted/Rejected

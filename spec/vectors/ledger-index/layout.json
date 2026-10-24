@@ -1,7 +1,7 @@
 {
-  "format": "ledger-index/v5",
+  "format": "ledger-index/v6",
   "application_id_hex": "4c494458",
-  "user_version": 5,
+  "user_version": 6,
   "statuses": {
     "Proposal": 0,
     "Pending": 1,
@@ -40,6 +40,7 @@
     "facts_fact": "CREATE UNIQUE INDEX facts_fact ON facts(fact)",
     "trust": "CREATE TABLE trust (issuer BLOB NOT NULL CHECK(length(issuer)=32), topic TEXT NOT NULL, config BLOB NOT NULL CHECK(length(config)=32), PRIMARY KEY(issuer,topic)) STRICT, WITHOUT ROWID",
     "trust_configs": "CREATE TABLE trust_configs (id BLOB PRIMARY KEY CHECK(length(id)=32), version BLOB NOT NULL CHECK(length(version)=8)) STRICT, WITHOUT ROWID",
-    "trust_configs_version": "CREATE UNIQUE INDEX trust_configs_version ON trust_configs(version)"
+    "trust_configs_version": "CREATE UNIQUE INDEX trust_configs_version ON trust_configs(version)",
+    "revoked_issuers": "CREATE TABLE revoked_issuers (issuer BLOB PRIMARY KEY CHECK(length(issuer)=32), since BLOB NOT NULL CHECK(length(since)=8), event BLOB NOT NULL CHECK(length(event)=32)) STRICT, WITHOUT ROWID"
   }
 }
