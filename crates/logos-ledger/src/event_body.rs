@@ -324,6 +324,21 @@ pub enum EventBody {
         /// Assinatura de autorização administrativa.
         authority: Authority,
     },
+    /// Conteúdo externo atribuído (6.6, ADR0068): o extrator afirma que `source` disse
+    /// `formula` (literal `Says`-lifted). É premissa de confiança "extração por X",
+    /// citável como assumption de escopo `session:extracted`; nunca é fato.
+    Extracted {
+        /// Vocabulário da fórmula.
+        vocabulary: Hash<Vocabulary>,
+        /// Nome da constante de sort `Source` que identifica a fonte.
+        source: Text,
+        /// SHA-256 bruto do conteúdo de onde a fórmula foi extraída.
+        content: [u8; 32],
+        /// Literal `Says`-lifted atribuído à fonte.
+        formula: Formula,
+        /// Extrator responsável (pode retratar a própria extração).
+        extractor: KeyId,
+    },
     /// Revogação formal de um verificador de provas previamente registrado.
     CheckerRevoked {
         /// Identificador do checker revogado.
@@ -334,6 +349,9 @@ pub enum EventBody {
         authority: Authority,
     },
 }
+
+/// Escopo fixo das premissas `Extracted` (6.6): condição aberta única de quem as cita.
+pub const EXTRACTED_SCOPE: &str = "session:extracted";
 
 fn validate_text(text: &Text, message: &'static str) -> Result<(), EventError> {
     if text.as_str().len() > MAX_TEXT_BYTES {
@@ -426,6 +444,7 @@ impl EventBody {
             Self::FactRegistered { .. } => 16,
             Self::TrustConfigPublished { .. } => 17,
             Self::IssuerRevoked { .. } => 18,
+            Self::Extracted { .. } => 19,
         }
     }
 
@@ -539,6 +558,15 @@ impl EventBody {
             Self::AssumptionDeclared { formula, scope, .. } => {
                 validate_formula(formula)?;
                 validate_text(scope, "scope text exceeds 64 KiB")?;
+            }
+            Self::Extracted {
+                source, formula, ..
+            } => {
+                validate_formula(formula)?;
+                if source.as_str().is_empty() {
+                    return Err(EventError::Invalid("Extracted source must not be empty"));
+                }
+                validate_text(source, "source text exceeds 64 KiB")?;
             }
             Self::Retracted { reason, .. } => {
                 validate_text(reason, "reason text exceeds 64 KiB")?;

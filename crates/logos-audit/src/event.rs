@@ -398,6 +398,24 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
             text(scope)?;
             digest(author)?;
         }
+        [
+            Value::Unsigned(1),
+            Value::Unsigned(19),
+            vocab,
+            source,
+            content,
+            formula,
+            extractor,
+        ] => {
+            p.refs.push(("vocab", digest(vocab)?));
+            text(source)?;
+            if Text::from_value(source)?.as_str().is_empty() {
+                return Err(fail("extracted source is empty"));
+            }
+            digest(content)?;
+            Formula::from_value(formula)?;
+            digest(extractor)?;
+        }
         [Value::Unsigned(1), Value::Unsigned(8), target, reason, auth] => {
             digest(target)?;
             text(reason)?;
@@ -486,7 +504,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 33);
+        assert_eq!(vectors.len(), 34);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

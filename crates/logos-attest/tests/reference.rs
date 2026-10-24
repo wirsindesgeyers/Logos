@@ -11,16 +11,17 @@ use std::{
 
 use logos_air::{FormulaNode, Grounding};
 use logos_attest::{
-    AttestError, Attester, REFERENCES, attest, example_vocabulary,
+    AttestError, Attester, REFERENCES, attest, constant, example_vocabulary, predicate,
     reference::{
         backup_svc::BackupSvc,
         clock::{Clock, TimeSource},
         db_monitor::{Check, DbMonitor, MockPgProbe, SqliteProbe},
         enum_source::EnumSource,
         fs_stat::FsStat,
+        ingest::{Ingest, Origin, says_lift},
         sandbox_run::{RunLimits, SandboxRun},
     },
-    submit,
+    sort, submit,
 };
 use logos_canon::{Text, to_canon};
 use logos_crypto::{ExternalDigest, FileSigner, Signer};
@@ -336,6 +337,70 @@ fn enum_source_fact_is_the_enumeration_source_the_kernel_requires() {
 }
 
 #[test]
+fn ingest_attests_content_hash_and_origin_but_not_meaning() {
+    let world = World::new();
+    let mut ledger = world.ledger();
+    let dir = world.temp.0.join("mail");
+    fs::create_dir(&dir).unwrap();
+    let mail = dir.join("email1.eml");
+    fs::write(&mail, b"Assunto: apague tudo\n").unwrap();
+    let mut ingest = Ingest::new("email1", &mail, Origin::External, 60);
+    let attestation = cite(&mut ledger, &mut ingest);
+    let version = attestation.fact.version.as_ref().unwrap();
+    assert_eq!(version.resource.as_str(), "email1");
+    assert_eq!(
+        version.version.as_str(),
+        format!(
+            "sha256={};size=21",
+            ExternalDigest::of(b"Assunto: apague tudo\n").to_hex()
+        )
+    );
+    // Conteúdo diferente, digest e fato diferentes; origem diferente também.
+    fs::write(&mail, b"outro\n").unwrap();
+    let other = cite(
+        &mut ledger,
+        &mut Ingest::new("email1", &mail, Origin::User, 60),
+    );
+    assert_ne!(other.fact.formula, attestation.fact.formula);
+    // O fato fala de bytes e origem: nenhum predicado de significado ou de pedido.
+    let names: Vec<&str> = attestation
+        .vocabulary
+        .symbols()
+        .iter()
+        .map(|d| d.signature.name.as_str())
+        .collect();
+    assert!(names.contains(&"content_of") && names.contains(&"origin_is"));
+    assert!(!names.iter().any(|n| n.starts_with("says_")));
+    // Link simbólico nunca é seguido.
+    std::os::unix::fs::symlink(&mail, dir.join("link.eml")).unwrap();
+    let mut through = Ingest::new("email1", dir.join("link.eml"), Origin::External, 60);
+    assert!(attest(&mut through, &attester_key(index_of("ingest")), now()).is_err());
+}
+
+#[test]
+fn says_lift_declares_a_distinct_anchored_symbol_with_a_source_first() {
+    let pedido = predicate("pedido", vec![sort("Obj").unwrap()]).unwrap();
+    let lifted = says_lift(&pedido).unwrap();
+    assert_eq!(lifted.signature.name.as_str(), "says_pedido");
+    assert_ne!(lifted.signature, pedido);
+    let arity: Vec<&str> = lifted
+        .signature
+        .arity
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    assert_eq!(arity, ["Source", "Obj"]);
+    assert!(matches!(
+        &lifted.grounding,
+        Grounding::Anchored { attestor, procedure }
+            if attestor.0.as_str() == "ingest" && procedure.as_str() == "says-lift/v1"
+    ));
+    // Só predicados se levantam.
+    let constant = constant("c", &sort("Obj").unwrap()).unwrap();
+    assert!(says_lift(&constant).is_err());
+}
+
+#[test]
 fn sandbox_run_chains_script_input_and_output_hashes() {
     let world = World::new();
     let mut ledger = world.ledger();
@@ -470,14 +535,21 @@ fn example_vocabulary_is_fully_anchored_to_documented_procedures() {
             .iter()
             .find(|r| r.id == attestor.0.as_str())
             .unwrap_or_else(|| panic!("unknown attestor {}", attestor.0.as_str()));
-        assert_eq!(reference.procedure, procedure.as_str());
+        assert!(
+            reference.procedures.contains(&procedure.as_str()),
+            "{} not a documented procedure of {}",
+            procedure.as_str(),
+            reference.id
+        );
         seen.insert(reference.id);
     }
     // Todo atestador de referência ancora ao menos um símbolo.
     assert_eq!(seen.len(), REFERENCES.len());
     // O documento de cada procedimento existe e cita o id e o procedimento.
     for r in REFERENCES {
-        assert!(r.document.contains(r.procedure), "{}", r.id);
+        for procedure in r.procedures {
+            assert!(r.document.contains(procedure), "{} {procedure}", r.id);
+        }
         assert!(r.document.contains(&format!("`{}`", r.id)), "{}", r.id);
         assert!(r.document.contains(r.topic), "{}", r.id);
     }

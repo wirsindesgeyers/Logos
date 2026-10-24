@@ -12,6 +12,7 @@ mod assume;
 pub mod certify;
 #[cfg(target_os = "linux")]
 mod enumeration;
+pub mod extracted;
 #[cfg(target_os = "linux")]
 pub mod facts;
 #[cfg(target_os = "linux")]

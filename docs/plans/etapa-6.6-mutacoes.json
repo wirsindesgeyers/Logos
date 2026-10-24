@@ -1,0 +1,81 @@
+{
+  "etapa": "6.6",
+  "comando": "cargo test -p logos-kernel -p logos-ledger -p logos-audit --test extracted --test events --lib",
+  "mutacoes": [
+    {
+      "id": "E1",
+      "descricao": "extrator sem confiança aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "E2",
+      "descricao": "extrator revogado aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "E3",
+      "descricao": "qualquer predicado aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "E4",
+      "descricao": "procedimento ignorado (atestador certo, procedimento errado)",
+      "resultado": "morta"
+    },
+    {
+      "id": "E5",
+      "descricao": "nome da fonte ignorado",
+      "resultado": "morta"
+    },
+    {
+      "id": "E6",
+      "descricao": "sort do primeiro argumento ignorado",
+      "resultado": "equivalente: a checagem da constante da fonte (nome e sort Source) cobre o mesmo caso"
+    },
+    {
+      "id": "E7",
+      "descricao": "fechamento dos termos ignorado",
+      "resultado": "equivalente: logos_air::check recusa variável livre antes"
+    },
+    {
+      "id": "E8",
+      "descricao": "sort-check ignorado",
+      "resultado": "morta"
+    },
+    {
+      "id": "E9",
+      "descricao": "negação recusada",
+      "resultado": "morta"
+    },
+    {
+      "id": "E10",
+      "descricao": "fórmula composta aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "E11",
+      "descricao": "escopo fixo trocado",
+      "resultado": "morta"
+    },
+    {
+      "id": "E12",
+      "descricao": "extrator não retrata a própria extração",
+      "resultado": "morta"
+    },
+    {
+      "id": "E13",
+      "descricao": "codec troca fonte e conteúdo",
+      "resultado": "morta"
+    },
+    {
+      "id": "E14",
+      "descricao": "projeção como Fact",
+      "resultado": "morta"
+    },
+    {
+      "id": "E15",
+      "descricao": "auditor aceita fonte vazia",
+      "resultado": "sobrevive: o ledger recusa fonte vazia no append; só um ledger forjado e assinado a exerceria, e o auditor não depende do ledger para fabricá-lo"
+    }
+  ]
+}

@@ -62,7 +62,8 @@ impl Retractions {
         }
         let mut author = None;
         replay(ledger, |event| {
-            if let EventBody::AssumptionDeclared { author: key, .. } = &event.body
+            if let EventBody::AssumptionDeclared { author: key, .. }
+            | EventBody::Extracted { extractor: key, .. } = &event.body
                 && hash(event)? == target
             {
                 author = Some(*key);
@@ -152,7 +153,9 @@ impl Retractions {
                         },
                     );
                 }
-                EventBody::AssumptionDeclared { .. } => order.push(id),
+                EventBody::AssumptionDeclared { .. } | EventBody::Extracted { .. } => {
+                    order.push(id)
+                }
                 // 6.4: fato morto (retratado ou de emissor revogado) é raiz da cascata.
                 EventBody::FactRegistered { fact } => {
                     order.push(id);

@@ -97,6 +97,8 @@ a janela aplicável e `Trusted(issuer, topic)` na tabela `trust`; `used` de fato
 exige o mesmo na época do Verified. TrustConfigPublished (6.2) lê trust/v1 do CAS,
 exige versão maior que todas as anteriores, grava `trust_configs` e substitui
 `trust`. FactRegistered sem concessão vigente é erro de reconstrução.
+Extracted (6.6) projeta a fórmula como status 5 (Assumption) com o escopo fixo
+`session:extracted`, sem mudar o esquema; a origem fica no evento.
 IssuerRevoked (6.4) grava `revoked_issuers` (repetida é erro) e mata, como um
 Retracted, todo Fact vivo do emissor com época de registro ≥ since; FactRegistered
 posterior de emissor revogado é erro de reconstrução. Retracted aceita Fact.

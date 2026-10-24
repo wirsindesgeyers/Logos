@@ -81,6 +81,7 @@ qualquer caminho não vazio do catálogo v1.
 | 16 | FactRegistered (6.1) | h(Fact) |
 | 17 | TrustConfigPublished (6.2) | h(TrustConfig), Authority |
 | 18 | IssuerRevoked (6.4) | KeyId, since_u64, Authority |
+| 19 | Extracted (6.6) | hV, source_Text, content_bytes32, Formula, extractor_KeyId |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -262,3 +263,13 @@ só grava com o signer admin e emissor ainda não revogado. A projeção mata to
 fato vivo do emissor com época de registro ≥ `since` (propagando como Retracted),
 recusa revogação repetida e FactRegistered posterior do mesmo emissor
 (ledger-index.md §3). O kernel registra a cascata com `Invalidated`.
+
+## 14. Conteúdo extraído — extracted-body/v1 (Etapa6.6, ADR0068)
+
+`[1,19,hV,source_Text,content_bytes32,Formula,extractor_KeyId]` é Extracted. `source` nomeia a
+constante de sort `Source` da fonte (não vazio, ≤ 64 KiB), `content` é o SHA-256 bruto do conteúdo
+de onde `Formula` foi extraída. O kernel só grava (`logos_kernel::extracted::register`) se o
+extrator tem `Trusted(extractor, "extraction")` e não está revogado, a fórmula é bem tipada em `hV`
+e é um **literal `Says`-lifted fechado da fonte** (`spec/says.md`). A projeção a trata como
+assumption de escopo `session:extracted` (`EXTRACTED_SCOPE`): citável, retratável pelo extrator ou
+pelo admin, e condição aberta de toda conclusão que a use. Nunca é `Fact`.

@@ -6,6 +6,8 @@ use rusqlite::{Connection, OptionalExtension, params};
 use crate::{Cas, Event, EventBody, Fact, LedgerError, LedgerHead, TrustConfig, Validity};
 
 // Mesmo layout/codebook publicado em spec/ledger-index.md.
+use crate::event_body::EXTRACTED_SCOPE;
+
 pub(crate) const PROPOSAL: i64 = 0;
 pub(crate) const PENDING: i64 = 1;
 pub(crate) const VERIFIED: i64 = 2;
@@ -430,6 +432,18 @@ pub(crate) fn apply(
             vocabulary = Some(h.as_bytes().as_slice());
             formula = Some(to_canon(value)?);
             scope = Some(label.as_str());
+            ASSUMPTION
+        }
+        // 6.6: extração é premissa de confiança, projetada como assumption de escopo fixo
+        // (vira condição aberta de quem a cita); o evento distingue a origem.
+        EventBody::Extracted {
+            vocabulary: h,
+            formula: value,
+            ..
+        } => {
+            vocabulary = Some(h.as_bytes().as_slice());
+            formula = Some(to_canon(value)?);
+            scope = Some(EXTRACTED_SCOPE);
             ASSUMPTION
         }
         EventBody::Retracted { target, .. } | EventBody::Invalidated { claim: target, .. } => {

@@ -158,6 +158,12 @@ def build_vectors() -> list[dict[str, Any]]:
     add("TrustConfigPublished", [1, 17, b"\x7c" * 32, admin.key_id], (1 << 64) - 1, admin)
     # issuer-revoked-body/v1 (6.4, ADR0064): KeyId do emissor e época de registro.
     add("IssuerRevoked", [1, 18, b"\x5e" * 32, 3, admin.key_id], (1 << 64) - 1, admin)
+    # extracted-body/v1 (6.6, ADR0068): fonte, SHA-256 do conteúdo, literal Says e extrator.
+    add(
+        "Extracted",
+        [1, 19, vocabulary, "email1", b"\xc0" * 32, true, author.key_id],
+        epoch=(1 << 64) - 1,
+    )
     return vectors
 
 

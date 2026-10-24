@@ -381,6 +381,21 @@ impl Canon for EventBody {
                 Value::Unsigned(*since),
                 authority.to_value()?,
             ]),
+            Self::Extracted {
+                vocabulary,
+                source,
+                content,
+                formula,
+                extractor,
+            } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(19),
+                vocabulary.to_value()?,
+                source.to_value()?,
+                Value::Bytes(content.to_vec()),
+                formula.to_value()?,
+                extractor.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -712,6 +727,19 @@ impl CanonDecode for EventBody {
                 since: u64::from_value(since_val)?,
                 authority: Authority::from_value(auth_val)?,
             },
+            (19, [vocab_val, source_val, content_val, form_val, extractor_val]) => {
+                let source = Text::from_value(source_val)?;
+                if source.as_str().len() > MAX_TEXT_BYTES {
+                    return Err(CanonError::WrongType);
+                }
+                Self::Extracted {
+                    vocabulary: digest::<Vocabulary>(vocab_val)?,
+                    source,
+                    content: bytes32(content_val)?,
+                    formula: Formula::from_value(form_val)?,
+                    extractor: digest::<logos_crypto::PublicKey>(extractor_val)?,
+                }
+            }
             (12, [checker_val, reason_val, auth_val]) => {
                 let checker = digest::<Checker>(checker_val)?;
                 let reason = Text::from_value(reason_val)?;

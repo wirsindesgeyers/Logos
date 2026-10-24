@@ -5,6 +5,7 @@ pub mod clock;
 pub mod db_monitor;
 pub mod enum_source;
 pub mod fs_stat;
+pub mod ingest;
 pub mod sandbox_run;
 
 use logos_air::{SortDecl, SymbolDecl, Vocabulary};
@@ -17,53 +18,78 @@ use crate::sdk::AttestError;
 pub struct Reference {
     /// `AttestorId` dos símbolos ancorados.
     pub id: &'static str,
-    /// Identificador do procedimento nos símbolos `Anchored`.
-    pub procedure: &'static str,
+    /// Procedimentos dos símbolos `Anchored` do atestador.
+    pub procedures: &'static [&'static str],
     /// Tópico que o operador concede na configuração de confiança.
     pub topic: &'static str,
     /// Documento "procedimento" (`docs/attesters/<id>.md`).
     pub document: &'static str,
 }
 
-/// Os seis atestadores de referência, com o texto do documento de cada procedimento.
-pub const REFERENCES: [Reference; 6] = [
+/// Os sete atestadores de referência, com o texto do documento de cada procedimento.
+pub const REFERENCES: [Reference; 7] = [
     Reference {
         id: clock::ID,
-        procedure: clock::PROCEDURE,
+        procedures: &[clock::PROCEDURE],
         topic: clock::TOPIC,
         document: include_str!("../../../../docs/attesters/clock.md"),
     },
     Reference {
         id: fs_stat::ID,
-        procedure: fs_stat::PROCEDURE,
+        procedures: &[fs_stat::PROCEDURE],
         topic: fs_stat::TOPIC,
         document: include_str!("../../../../docs/attesters/fs-stat.md"),
     },
     Reference {
         id: db_monitor::ID,
-        procedure: db_monitor::PROCEDURE,
+        procedures: &[db_monitor::PROCEDURE],
         topic: db_monitor::TOPIC,
         document: include_str!("../../../../docs/attesters/db-monitor.md"),
     },
     Reference {
         id: backup_svc::ID,
-        procedure: backup_svc::PROCEDURE,
+        procedures: &[backup_svc::PROCEDURE],
         topic: backup_svc::TOPIC,
         document: include_str!("../../../../docs/attesters/backup-svc.md"),
     },
     Reference {
         id: enum_source::ID,
-        procedure: enum_source::PROCEDURE,
+        procedures: &[enum_source::PROCEDURE],
         topic: enum_source::TOPIC,
         document: include_str!("../../../../docs/attesters/enum-source.md"),
     },
     Reference {
+        id: ingest::ID,
+        procedures: &[ingest::PROCEDURE, ingest::SAYS],
+        topic: ingest::TOPIC,
+        document: include_str!("../../../../docs/attesters/ingest.md"),
+    },
+    Reference {
         id: sandbox_run::ID,
-        procedure: sandbox_run::PROCEDURE,
+        procedures: &[sandbox_run::PROCEDURE],
         topic: sandbox_run::TOPIC,
         document: include_str!("../../../../docs/attesters/sandbox-run.md"),
     },
 ];
+
+/// Ingestão de exemplo, mais o levantamento `says_` do predicado `pedido(Obj)`.
+fn ingest_part(digest: &ExternalDigest) -> Result<(Vec<SortDecl>, Vec<SymbolDecl>), AttestError> {
+    let (mut sorts, mut decls) = ingest::declarations("email1", digest)?;
+    let obj = crate::sdk::sort("Obj")?;
+    sorts.push(SortDecl {
+        name: logos_canon::Text::new("Obj")?,
+        domain: logos_air::SortDomain::Open,
+    });
+    let pedido = crate::sdk::predicate("pedido", vec![obj])?;
+    decls.push(crate::sdk::anchored(
+        pedido.clone(),
+        ingest::ID,
+        ingest::PROCEDURE,
+        "o objeto é pedido",
+    )?);
+    decls.push(ingest::says_lift(&pedido)?);
+    Ok((sorts, decls))
+}
 
 /// Vocabulário de exemplo operacional: todos os símbolos dos seis atestadores, cada um
 /// `Anchored` ao seu atestador e procedimento. Sorts aninhados repetidos entre atestadores
@@ -79,6 +105,7 @@ pub fn example_vocabulary() -> Result<Vocabulary, AttestError> {
     let parts = [
         clock::declarations()?,
         fs_stat::declarations("config_file")?,
+        ingest_part(&digest(4))?,
         db_monitor::declarations(&["users"], &["main_db"])?,
         backup_svc::declarations("main_db_backup")?,
         sandbox_run::declarations(&[digest(1), digest(2), digest(3)])?,

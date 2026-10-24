@@ -108,7 +108,8 @@ impl EventBody {
         let mut result = BTreeSet::new();
         match self {
             Self::VocabPublished { vocabulary, .. }
-            | Self::AssumptionDeclared { vocabulary, .. } => {
+            | Self::AssumptionDeclared { vocabulary, .. }
+            | Self::Extracted { vocabulary, .. } => {
                 result.insert(CasReference::Vocabulary(*vocabulary));
             }
             Self::Proposed { proposal, .. } => {
