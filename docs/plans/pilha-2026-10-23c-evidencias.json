@@ -1,0 +1,36 @@
+{
+  "tip": "5eb74e9",
+  "covers": [
+    "7cd3bac 6.1a",
+    "5eb74e9 6.1b"
+  ],
+  "verification": {
+    "status": "finished",
+    "command": [
+      "systemd-inhibit",
+      "ci/verify.sh"
+    ],
+    "tier": "full",
+    "exit": 0,
+    "seconds": 3963,
+    "verify_ok": true,
+    "log_sha256": "fc0855fac01278c41f50d1840f7879d9ecdd771fc399d2fb6d5bcc628933b5f4",
+    "note": "rodou sobre a árvore de trabalho idêntica a 5eb74e9 (commit feito durante a execução, sem mudança de arquivos); mutações da 6.2 rodaram em paralelo em outro worktree"
+  },
+  "statistics": {
+    "rust_passed": 611,
+    "python_summaries": [
+      "358 passed in 704.78s (0:11:44)",
+      "25 passed in 1.95s"
+    ],
+    "isolation": [
+      "ISOLATION_OK forbidden=9 blocked=all control_reached=9 allowed=3 units=3"
+    ],
+    "demo": [
+      "DEMO_KERNEL_AUDIT_OK verified=1 refuted=1 unknown=1 invalidated=1 audit=complete"
+    ]
+  },
+  "criteria_marked": [
+    "6.1 (4)"
+  ]
+}

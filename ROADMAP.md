@@ -1420,10 +1420,10 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 - Kernel registra `FactRegistered { h(fact) }` só se a assinatura verifica contra uma raiz de confiança.
 
 **Critério de conclusão.**
-- [ ] Fato com assinatura de emissor desconhecido → recusado.
-- [ ] Fato expirado → não citável.
-- [ ] Fato assinado por emissor reconhecido, registrado no ledger real com validade [3,5], é citável em 4 e recusado em 6 pela LedgerView/gerador reais. Critério integrado preservado da 3.4 por decisão do mantenedor (ADR 0023); sem view falsa ou janela confiada ao cache.
-- [ ] Fonte Fact de enumeração autenticada e resolvida pelo evento correto produz axiomas explícitos em O; certificado real usa os axiomas e used/deps rastreiam a fonte; fonte ausente/adulterada é recusada. Parte factual do critério original4.1, preservada por ADR0026; sem copiar hash de payload para PremiseRef.
+- [x] Fato com assinatura de emissor desconhecido → recusado.
+- [x] Fato expirado → não citável.
+- [x] Fato assinado por emissor reconhecido, registrado no ledger real com validade [3,5], é citável em 4 e recusado em 6 pela LedgerView/gerador reais. Critério integrado preservado da 3.4 por decisão do mantenedor (ADR 0023); sem view falsa ou janela confiada ao cache.
+- [x] Fonte Fact de enumeração autenticada e resolvida pelo evento correto produz axiomas explícitos em O; certificado real usa os axiomas e used/deps rastreiam a fonte; fonte ausente/adulterada é recusada. Parte factual do critério original4.1, preservada por ADR0026; sem copiar hash de payload para PremiseRef.
 
 ---
 

@@ -257,7 +257,7 @@ fontes opacas não demonstram autenticação.
 | 5.8 Especulação de claims | ⚠ concluída localmente; CI pendente | ADR0058; `speculative_on` = h(Pending) não concluído; `generate_speculative`; CERTIFY só com base Verified (rota em `cited`, base→rota em `used`); `SpeculationFailed` = `Invalidated{pending,[raiz,base]}` por varredura idempotente após Refuted e no reconcile. Critérios demonstrados: C7 refutado → C8/C9 invalidados; 1000 cadeias com profundidade 0 sem especulação (controle especulativo 138). 12/14 mutações mortas, 2 equivalentes. Sem formato novo. |
 | 5.11 Isolamento de processos | ⚠ concluída localmente; CI pendente | ADR0059; crate `logos-sandbox` (TCB): agente em bwrap sem rede, só socket do kernel, staging, código ro e proxy restrito ao LLM; `deploy/systemd` com usuários `logos-kernel`/`logos-gateway`/`logos-agent`. Pentest `ci/check-isolation.sh`: 9 tentativas proibidas conseguem fora (controle) e falham dentro; kernel/staging/LLM funcionam dentro. 9/9 mutações. Usuários de SO reais não exercitados (precisa root); gateway stub, repetir na 8.4. |
 | 5.12 ★ Kernel mínimo ponta a ponta | ⚠ concluída localmente; CI pendente | ADR0060; `make demo-kernel`: vocabulário → fatos do atestador stub (assumptions `session:fatos-de-teste`) → Verified LRAT, Refuted por modelo, Unknown por orçamento de passos → atestador retrata `chove` → Verified invalidada → `logos-audit` AUDIT_OK com LRAT rechecado por Rust e cake_lpr. |
-| 6.1 Objeto Fact | 🚧 6.1a+6.1b implementadas; falta full verify para marcar | ADR0061/0062; fact/v1 no CAS, `FactRegistered` tag16 só para emissor da raiz de confiança com assinatura/tipagem/janela válidas; índice v4 (Fact=8, tabela `facts`); janela por épocas ou `Until` (`Reject::Expired`); auditor reverifica assinatura (`facts_verified`). Mutações 10/10; fuzz `fact_decode` 1,8M execuções. 6.1b (ADR0062): `FactRef` = hash da conjunção fecho ∧ nomes únicos; grounder aceita a conjunção como suporte único; kernel (`enumeration.rs`) exige que venha de entrada `Fact` no PROPOSE e no CERTIFY; prova LRAT real com `used`/deps no fato; Policy recusada até a 7.3. Mutações 9/9. [Plano](docs/plans/etapa-6.1.md). |
+| 6.1 Objeto Fact | ✅ concluída localmente (full verify; CI remota pendente) | ADR0061/0062; fact/v1 no CAS, `FactRegistered` tag16 só para emissor da raiz de confiança com assinatura/tipagem/janela válidas; índice v4 (Fact=8, tabela `facts`); janela por épocas ou `Until` (`Reject::Expired`); auditor reverifica assinatura (`facts_verified`). Mutações 10/10; fuzz `fact_decode` 1,8M execuções. 6.1b (ADR0062): `FactRef` = hash da conjunção fecho ∧ nomes únicos; grounder aceita a conjunção como suporte único; kernel (`enumeration.rs`) exige que venha de entrada `Fact` no PROPOSE e no CERTIFY; prova LRAT real com `used`/deps no fato; Policy recusada até a 7.3. Mutações 9/9. [Plano](docs/plans/etapa-6.1.md). |
 | 5.9 Retratação/cascata ATMS | ⚠ concluída localmente; CI pendente | ADR0052; nó = h(O), rotas independentes, `Retractions` (admin/autor), Invalidated com causas de tamanho fixo e reconcile após crash. Diferencial 10k claims/25 retratações contra referência Python ingênua, 8 mutações + 1 equivalente. Feita em worktree paralelo (ADR0051). |
 | 5.10 Revogação de checker e recheck | ⚠ concluída localmente; CI pendente | ADR0056; revogação suspende (Suspended, índice v3, kind10), `Rechecked` tag15 reativa/invalida, `logos ledger revoke-checker|recheck`, auditor com `invalidated_by_recheck`. Critério com provas LRAT reais + cake_lpr e certificado plantado; 12/12 mutações mortas; fuzz event_decode 600s/910896 execuções. |
 
@@ -566,23 +566,20 @@ Esse trabalho manteve a5.4 como próximo passo principal; a revisão da codebase
 posterior acrescentou as correções abaixo. Se o mantenedor priorizar memória,
 o primeiro trabalho é o plano documental MEM.0, sem antecipar runtime.
 
-## Próximo passo: fechar a 6.1 com full verify; depois 6.2
+## Próximo passo: Etapa 6.2 (confiança por tópico) — implementada em worktree
 
 Pilha local não enviada, coberta por full verify (recibos
-[pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json) e
-[pilha-2026-10-23b](docs/plans/pilha-2026-10-23b-evidencias.json)): 5R.3, 5.10,
-5.8, 5.11, 5.12 e correções. Fase 5 completa localmente; push e CI quando o
-mantenedor pedir.
+[pilha-2026-10-23](docs/plans/pilha-2026-10-23-evidencias.json),
+[pilha-2026-10-23b](docs/plans/pilha-2026-10-23b-evidencias.json) e
+[pilha-2026-10-23c](docs/plans/pilha-2026-10-23c-evidencias.json)): Fase 5 e 6.1
+(6.1a ADR0061, 6.1b ADR0062), com os quatro critérios da 6.1 marcados. Push e CI
+quando o mantenedor pedir.
 
-6.1 implementada na main em dois commits: 6.1a (ADR0061; objeto fact/v1,
-`FactRegistered` tag16, raiz de confiança do kernel, janela, índice v4,
-`Reject::Expired`, auditor) e 6.1b (ADR0062; fonte `Fact` de sort enumerado).
-Falta: `ci/verify.sh` completo na ponta, recibo e marcar os quatro critérios da 6.1.
-Depois: **6.2** (raízes e política de confiança por tópico: `TrustConfig` assinada no
-ledger substitui `facts::TrustRoots`). Riscos conhecidos da 6.1: a projeção lê o CAS;
-`Until` depende do relógio do kernel; a fonte de enumeração prende o conteúdo, não o
-emissor (isso é da 6.2). Bend2 como produtor não confiável: spike só com OK do
-mantenedor (recomendação dada em 23/out).
+6.2 (ADR0063) implementada no worktree `../LOGOS-6.2` (branch `etapa-6.2`): trust/v1
+no CAS, `TrustConfigPublished` tag17 assinado pelo admin, índice v5, regra no
+registro e na citação (`Reject::Untrusted`), auditor reconfere. Falta rebase,
+`--tier affected` e commit. Depois: 6.3 (SDK de atestador) ou 6.4 (revogação de
+emissores). Bend2 como produtor não confiável: spike só com OK do mantenedor.
 
 Do mantenedor, **sem pressa** (registrado para quando quiser): revisão humana das
 50 paráfrases da 9.1 ([material](docs/plans/etapa-9.1-revisao/README.md)), que é
@@ -2028,3 +2025,4 @@ Ver `AGENTS.md` §8 (toolchain, `cp -i`, `pkill -f`, Unicode 16, `gh` ausente, `
 - 2026-10-23 — Full verify/selftest na ponta 0e9be61 (5.8, 5.11, 772235f, 5.12): VERIFY_OK tier=full, exit0 em 3371s sob `systemd-inhibit`. Rust 599, isolamento `ISOLATION_OK forbidden=9`, demo `DEMO_KERNEL_AUDIT_OK`, 1000 cadeias da 5.8 no cargo-test. Recibo `docs/plans/pilha-2026-10-23b-evidencias.json`. Critérios marcados: 5.8 (2), 5.11 (1), 5.12 (2). Fase 5 completa localmente. 6.1 iniciada em worktree.
 - 2026-10-23 — Etapa6.1a implementada em worktree (ADR0061): fact/v1 (emissor como chave pública, assinatura `logos/sig/fact/v1`), `FactRegistered` tag16, `facts::{TrustRoots, register}`, índice v4 com tabela `facts` (LIMIT do `valid_schema` passou a 11 objetos+1), `LedgerEntry::expired`/`Reject::Expired`, auditor `facts_verified`, fuzz `fact_decode`, vetores Python independentes reproduzidos byte a byte pelo Rust. Critérios 1–3 demonstrados; 10/10 mutações; 6.1b (enumeração) pendente.
 - 2026-10-23 — Etapa6.1b implementada (ADR0062): `AxiomCandidates::conjunction`, grounder aceita a conjunção como suporte único do sort, `logos-kernel/src/enumeration.rs` no PROPOSE (que passa a fazer grounding de V enumerado) e no contexto do CERTIFY/REFUTE/WITNESS. Prova LRAT real com `used` contendo o evento do fato da fonte; ausente, fecho adulterado, hipótese com a mesma fórmula, axiomas separados e `FactRef` errado recusados sem evento. Mutações: primeira rodada 8/9 (checagem do CERTIFY redundante para O do PROPOSE atual); teste de Pending gravado sem a checagem → 9/9. Worktree `../LOGOS-6.1` removido.
+- 2026-10-23 — Full verify na ponta 5eb74e9 (6.1a+6.1b): VERIFY_OK tier=full, exit0 em 3963s sob `systemd-inhibit`; Rust 611, Python 358+25, isolamento e demo OK. Recibo `docs/plans/pilha-2026-10-23c-evidencias.json`. Critérios da 6.1 marcados (4). 6.2 iniciada em worktree.
