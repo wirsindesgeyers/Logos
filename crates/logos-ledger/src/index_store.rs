@@ -28,9 +28,20 @@ pub(crate) const TABLES: &[(&str, &str)] = &[
         "CREATE TABLE revoked (checker BLOB PRIMARY KEY CHECK(length(checker)=32)) STRICT, WITHOUT ROWID",
     ),
     // ledger-index/v4 (6.1): janela de cada fato registrado; ids são claims status 8.
+    // v5 (6.2): emissor (KeyId) e tópico do fato, para a regra de confiança.
     (
         "facts",
-        "CREATE TABLE facts (id BLOB PRIMARY KEY CHECK(length(id)=32), fact BLOB NOT NULL CHECK(length(fact)=32), first BLOB CHECK(first IS NULL OR length(first)=8), last BLOB CHECK(last IS NULL OR length(last)=8), until BLOB CHECK(until IS NULL OR length(until)=8), CHECK((first IS NULL AND last IS NULL AND until IS NOT NULL) OR (first IS NOT NULL AND last IS NOT NULL AND until IS NULL))) STRICT, WITHOUT ROWID",
+        "CREATE TABLE facts (id BLOB PRIMARY KEY CHECK(length(id)=32), fact BLOB NOT NULL CHECK(length(fact)=32), issuer BLOB NOT NULL CHECK(length(issuer)=32), topic TEXT NOT NULL, first BLOB CHECK(first IS NULL OR length(first)=8), last BLOB CHECK(last IS NULL OR length(last)=8), until BLOB CHECK(until IS NULL OR length(until)=8), CHECK((first IS NULL AND last IS NULL AND until IS NOT NULL) OR (first IS NOT NULL AND last IS NOT NULL AND until IS NULL))) STRICT, WITHOUT ROWID",
+    ),
+    // ledger-index/v5 (6.2): concessões Trusted(emissor, tópico) da configuração
+    // vigente, com o evento TrustConfigPublished que as concedeu; e o histórico de versões.
+    (
+        "trust",
+        "CREATE TABLE trust (issuer BLOB NOT NULL CHECK(length(issuer)=32), topic TEXT NOT NULL, config BLOB NOT NULL CHECK(length(config)=32), PRIMARY KEY(issuer,topic)) STRICT, WITHOUT ROWID",
+    ),
+    (
+        "trust_configs",
+        "CREATE TABLE trust_configs (id BLOB PRIMARY KEY CHECK(length(id)=32), version BLOB NOT NULL CHECK(length(version)=8)) STRICT, WITHOUT ROWID",
     ),
     (
         "metadata",
@@ -57,6 +68,10 @@ const INDEXES: &[(&str, &str)] = &[
         "facts_fact",
         "CREATE UNIQUE INDEX facts_fact ON facts(fact)",
     ),
+    (
+        "trust_configs_version",
+        "CREATE UNIQUE INDEX trust_configs_version ON trust_configs(version)",
+    ),
 ];
 const QUERIES: &[&str] = &[
     "SELECT * FROM claims ORDER BY id",
@@ -64,6 +79,8 @@ const QUERIES: &[&str] = &[
     "SELECT * FROM citable ORDER BY ref,epoch",
     "SELECT * FROM revoked ORDER BY checker",
     "SELECT * FROM facts ORDER BY id",
+    "SELECT * FROM trust ORDER BY issuer,topic",
+    "SELECT * FROM trust_configs ORDER BY id",
     "SELECT * FROM metadata ORDER BY singleton",
 ];
 
@@ -96,7 +113,7 @@ pub struct RebuildReport {
 pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
     connection.execute_batch("PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;")?;
     connection.pragma_update(None, "application_id", APPLICATION_ID)?;
-    connection.pragma_update(None, "user_version", 4)?;
+    connection.pragma_update(None, "user_version", 5)?;
     for (_, sql) in TABLES.iter().chain(INDEXES) {
         connection.execute_batch(sql)?;
     }
@@ -106,11 +123,11 @@ pub(crate) fn create(connection: &Connection) -> Result<(), LedgerError> {
 fn valid_schema(connection: &Connection) -> Result<bool, LedgerError> {
     let app: i64 = connection.pragma_query_value(None, "application_id", |r| r.get(0))?;
     let version: i64 = connection.pragma_query_value(None, "user_version", |r| r.get(0))?;
-    if app != APPLICATION_ID || version != 4 {
+    if app != APPLICATION_ID || version != 5 {
         return Ok(false);
     }
     let mut statement =
-        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 11")?;
+        connection.prepare("SELECT name, sql FROM sqlite_schema ORDER BY name LIMIT 14")?;
     let mut rows = statement.query([])?;
     let mut expected: Vec<_> = TABLES.iter().chain(INDEXES).copied().collect();
     expected.sort_unstable_by_key(|entry| entry.0);

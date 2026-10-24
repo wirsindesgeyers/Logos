@@ -149,6 +149,7 @@ fn test_all_20_obligation_vectors() {
                     epoch: p_epoch,
                     retracted,
                     expired: false,
+                    untrusted: false,
                     vocabulary: v_ref,
                     formula: f_ref,
                 },

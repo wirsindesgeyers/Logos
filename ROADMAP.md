@@ -1429,6 +1429,8 @@ Objetivo da fase: fatos entram no sistema só como objetos assinados por emissor
 
 ### Etapa 6.2 — Raízes e política de confiança por tópico · `M` · ⚠ TCB (fidelidade)
 
+**Contrato ajustado (ADR0063, 2026-10-23).** `Trusted(issuer, topic)` é premissa explícita no ledger (concessão consultável que aponta o `TrustConfigPublished` vigente), não fórmula AIR em O; a forma lógica fica com a 17.4 (P8). Retirar um tópico impede citações novas; derrubar claims já Verified é da 6.4.
+
 **Depende de (recebe pronto).** 6.1.
 
 **Fora do escopo.** delegação entre agentes (17.2).

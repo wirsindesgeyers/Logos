@@ -92,6 +92,7 @@ entrada lógica válida em duas épocas produz os mesmos bytes/hash.
 3. Copiar referências, ordenar e deduplicar; ler época do snapshot uma vez.
 4. Para cada referência ordenada: lookup; erro => Ledger, None => UnknownCitation.
 5. Se retracted => Retracted; expirado (fato `Until` vencido, 6.1) => Expired;
+   emissor sem `Trusted(emissor, tópico)` vigente (6.2, trust.md) => Untrusted;
    época diferente => InvalidEpoch; kind fora de
    Fact/Policy/Verified/Assumption => NotCitable. Pending nunca é hipótese
    automaticamente; Unknown/Rejected/Refuted/Invalidated não são Verified.
@@ -105,7 +106,7 @@ entrada lógica válida em duas épocas produz os mesmos bytes/hash.
 8. Construir O privado com lógica, encoder 1, h(V_alvo), premissas e goal próprios.
 
 Erros públicos (com payloads precisos): UnknownCitation(PremiseRef),
-Retracted(PremiseRef), Expired(PremiseRef), InvalidEpoch { reference, expected, actual },
+Retracted(PremiseRef), Expired(PremiseRef), Untrusted(PremiseRef), InvalidEpoch { reference, expected, actual },
 NotCitable { reference, kind }, IncompatibleVocabulary(PremiseRef),
 GoalSort(SortError), PremiseSort { reference, error }, Ledger { reference, error },
 Canon(CanonError). Sem conversão de rejeição em veredicto. Referências inválidas

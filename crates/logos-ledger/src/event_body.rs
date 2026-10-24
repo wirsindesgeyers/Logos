@@ -305,6 +305,15 @@ pub enum EventBody {
         /// Fato registrado (identidade fact/v1 no CAS).
         fact: Hash<crate::Fact>,
     },
+    /// Publicação de uma configuração de confiança por tópico (6.2, ADR0063).
+    ///
+    /// O objeto trust/v1 fica no CAS; a assinatura do admin cobre `h(config)`.
+    TrustConfigPublished {
+        /// Configuração publicada (identidade trust/v1 no CAS).
+        config: Hash<crate::TrustConfig>,
+        /// Assinatura de autorização administrativa.
+        authority: Authority,
+    },
     /// Revogação formal de um verificador de provas previamente registrado.
     CheckerRevoked {
         /// Identificador do checker revogado.
@@ -405,6 +414,7 @@ impl EventBody {
             Self::CheckerRevoked { .. } => 12,
             Self::Rechecked { .. } => 15,
             Self::FactRegistered { .. } => 16,
+            Self::TrustConfigPublished { .. } => 17,
         }
     }
 
@@ -415,7 +425,8 @@ impl EventBody {
             Self::VocabPublished { authority, .. }
             | Self::Retracted { authority, .. }
             | Self::CheckerRegistered { authority, .. }
-            | Self::CheckerRevoked { authority, .. } => Some(authority),
+            | Self::CheckerRevoked { authority, .. }
+            | Self::TrustConfigPublished { authority, .. } => Some(authority),
             _ => None,
         }
     }
@@ -432,7 +443,9 @@ impl EventBody {
                     return Err(EventError::Invalid("Genesis ledger_version must be 1"));
                 }
             }
-            Self::VocabPublished { .. } | Self::FactRegistered { .. } => {}
+            Self::VocabPublished { .. }
+            | Self::FactRegistered { .. }
+            | Self::TrustConfigPublished { .. } => {}
             Self::Proposed { proposal, .. } => proposal.validate()?,
             Self::ObligationCreated { route, cnf, .. } => {
                 if let Some(c) = cnf
@@ -590,6 +603,12 @@ impl EventBody {
                 Value::Unsigned(12),
                 checker.to_value()?,
                 reason.to_value()?,
+                authority.key.to_value()?,
+            ])?),
+            Self::TrustConfigPublished { config, authority } => Value::Array(Array::new(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(17),
+                config.to_value()?,
                 authority.key.to_value()?,
             ])?),
             _ => return Ok(None),

@@ -154,6 +154,8 @@ def build_vectors() -> list[dict[str, Any]]:
         add("Rechecked-" + name, [1, 15, ref1, check], epoch=(1 << 64) - 1)
     # fact-registered-body/v1 (6.1, ADR0061): só o h(Fact); o objeto fica no CAS.
     add("FactRegistered", [1, 16, b"\xfa" * 32], epoch=(1 << 64) - 1)
+    # trust-config-body/v1 (6.2, ADR0063): h(TrustConfig) assinado pelo admin.
+    add("TrustConfigPublished", [1, 17, b"\x7c" * 32, admin.key_id], (1 << 64) - 1, admin)
     return vectors
 
 
@@ -166,7 +168,8 @@ def main() -> None:
         json.dumps(
             {
                 "format": "event/v1+epoch-body/v2+certificate-rejected-body/v2"
-                "+consistency-body/v3+rechecked-body/v1+fact-registered-body/v1",
+                "+consistency-body/v3+rechecked-body/v1+fact-registered-body/v1"
+                "+trust-config-body/v1",
                 "vectors": vectors,
             },
             ensure_ascii=False,

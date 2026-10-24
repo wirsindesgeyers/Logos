@@ -16,7 +16,7 @@ use logos_lrat::{CakeRegistry, LratCertificate, LratChecker};
 use logos_model::{FiniteModel, ModelChecker};
 use logos_obligation::{DecodeLimits, Obligation, vocabulary_for_check};
 
-use crate::event::{Certificate, Checker, FactObject, Parsed, Recheck};
+use crate::event::{Certificate, Checker, FactObject, Parsed, Recheck, TrustObject};
 use crate::{AuditError, Report, Result, event, fail, source};
 
 pub(crate) fn walk(
@@ -106,6 +106,7 @@ pub fn verify_with_checkers(
     let mut failed: BTreeMap<[u8; 32], String> = BTreeMap::new();
     let mut invalidated_by_recheck = 0;
     let mut facts = 0;
+    let mut trust = Grants::default();
     let mut report = walk(path, key, |p, _| {
         for (domain, digest) in &p.refs {
             match *domain {
@@ -128,8 +129,17 @@ pub fn verify_with_checkers(
                     source::cas::<Checker>(cas, Hash::from_bytes(*digest))?;
                 }
                 "fact" => {
-                    fact_signature(&source::cas::<FactObject>(cas, Hash::from_bytes(*digest))?)?;
+                    let (issuer, topic) = fact_signature(&source::cas::<FactObject>(
+                        cas,
+                        Hash::from_bytes(*digest),
+                    )?)?;
+                    if !trust.grants.contains(&(issuer, topic)) {
+                        return Err(fail("fact issuer not trusted for its topic"));
+                    }
                     facts += 1;
+                }
+                "trust" => {
+                    trust.publish(&source::cas::<TrustObject>(cas, Hash::from_bytes(*digest))?)?;
                 }
                 _ => return Err(fail("unhandled CAS reference domain")),
             }
@@ -235,6 +245,7 @@ pub fn verify_with_checkers(
     }
     report.invalidated_by_recheck = invalidated_by_recheck;
     report.facts = facts;
+    report.trust_configs = trust.configs;
     report.refutations = refutations;
     report.consistencies = consistencies;
     report.cnf_derivations = cnf_derivations;
@@ -243,10 +254,83 @@ pub fn verify_with_checkers(
     Ok(report)
 }
 
+/// Concessões `Trusted(KeyId, tópico)` da configuração vigente no ponto da caminhada.
+#[derive(Default)]
+struct Grants {
+    grants: std::collections::BTreeSet<([u8; 32], String)>,
+    version: Option<u64>,
+    configs: u64,
+}
+
+impl Grants {
+    /// Reaplica trust/v1 (6.2) com decoder próprio e estrito (trust.md §1):
+    /// `[1, version≥1, roots]`, 1..1024 raízes `[PublicKey, name, topics, level]` em
+    /// ordem estrita de KeyId, 1..256 tópicos em ordem estrita de bytes, textos não
+    /// vazios de até 4096 bytes; versão estritamente crescente.
+    fn publish(&mut self, bytes: &[u8]) -> Result<()> {
+        use logos_canon::{CanonDecode, Text, Value};
+        let items = |value: &Value| match value {
+            Value::Array(array) => Ok(array.items().to_vec()),
+            _ => Err(fail("trust config shape")),
+        };
+        let text = |value: &Value| -> Result<String> {
+            let text = Text::from_value(value)?.as_str().to_owned();
+            if text.is_empty() || text.len() > 4096 {
+                return Err(fail("trust config text"));
+            }
+            Ok(text)
+        };
+        let value: Value = from_canon(bytes)?;
+        let [Value::Unsigned(1), Value::Unsigned(version), roots] = &items(&value)?[..] else {
+            return Err(fail("trust config version/arity"));
+        };
+        if *version == 0 || self.version.is_some_and(|current| *version <= current) {
+            return Err(fail("trust config version not increasing"));
+        }
+        let roots = items(roots)?;
+        if roots.is_empty() || roots.len() > 1024 {
+            return Err(fail("trust config roots"));
+        }
+        let mut grants = std::collections::BTreeSet::new();
+        let mut previous: Option<[u8; 32]> = None;
+        for root in roots {
+            let [issuer, name, topics, Value::Unsigned(_level)] = &items(&root)?[..] else {
+                return Err(fail("trust root arity"));
+            };
+            text(name)?;
+            let issuer = *logos_crypto::hash(&PublicKey::from_value(issuer)?)?.as_bytes();
+            if previous.is_some_and(|p| p >= issuer) {
+                return Err(fail("trust roots not in strict KeyId order"));
+            }
+            previous = Some(issuer);
+            let topics = items(topics)?;
+            if topics.is_empty() || topics.len() > 256 {
+                return Err(fail("trust root topics"));
+            }
+            let mut last: Option<String> = None;
+            for topic in &topics {
+                let topic = text(topic)?;
+                if last
+                    .as_ref()
+                    .is_some_and(|l| l.as_bytes() >= topic.as_bytes())
+                {
+                    return Err(fail("trust topics not in strict order"));
+                }
+                grants.insert((issuer, topic.clone()));
+                last = Some(topic);
+            }
+        }
+        self.grants = grants;
+        self.version = Some(*version);
+        self.configs += 1;
+        Ok(())
+    }
+}
+
 /// Reverifica a assinatura do emissor de um fact/v1 (6.1) sem o decoder do ledger:
-/// corpo = os oito primeiros campos, assinatura = o nono. Não decide confiança no
-/// emissor (raiz de confiança é configuração do kernel até a 6.2).
-fn fact_signature(bytes: &[u8]) -> Result<()> {
+/// corpo = os oito primeiros campos, assinatura = o nono. Devolve o `KeyId` do
+/// emissor e o tópico, para a regra de confiança da 6.2.
+fn fact_signature(bytes: &[u8]) -> Result<([u8; 32], String)> {
     let value: logos_canon::Value = from_canon(bytes)?;
     let logos_canon::Value::Array(array) = value else {
         return Err(fail("fact is not an array"));
@@ -264,7 +348,11 @@ fn fact_signature(bytes: &[u8]) -> Result<()> {
     let sig = <logos_crypto::Signature as logos_canon::CanonDecode>::from_value(sig)?;
     logos_crypto::verify::<FactSig>(&body, &sig, &issuer)
         .map_err(|_| fail("fact signature does not verify"))?;
-    Ok(())
+    let topic = <logos_canon::Text as logos_canon::CanonDecode>::from_value(&array.items()[4])?;
+    Ok((
+        *logos_crypto::hash(&issuer)?.as_bytes(),
+        topic.as_str().to_owned(),
+    ))
 }
 
 struct FactSig;

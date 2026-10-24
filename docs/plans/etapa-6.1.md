@@ -9,7 +9,8 @@ Estado: 6.1a e 6.1b implementadas localmente (2026-10-23). Decisões em
 2. **Saídas (6.1a):** `logos_ledger::{Fact, Validity, ResourceVersion}` (fact/v1);
    `EventBody::FactRegistered` (tag16); índice ledger-index/v4 (status Fact=8,
    tabela `facts`); `LedgerEntry::expired` e `Reject::Expired`;
-   `logos_kernel::facts::{TrustRoots, register}`; auditor com `facts_verified`;
+   `logos_kernel::facts::{TrustRoots, register}` (`TrustRoots` substituído pela
+   configuração no ledger na 6.2, ADR0063); auditor com `facts_verified`;
    fuzz `fact_decode`; vetores `spec/vectors/fact/fact.json` (Python independente).
 3. **Critério → evidência (6.1a):**
    - *Emissor desconhecido → recusado*:

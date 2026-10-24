@@ -135,6 +135,8 @@ pub struct LedgerEntry<'a> {
     pub retracted: bool,
     /// A janela de validade da entrada (fato com `Until`) já passou (6.1).
     pub expired: bool,
+    /// O emissor do fato não é confiável para o tópico na configuração vigente (6.2).
+    pub untrusted: bool,
     /// Vocabulário associado à entrada.
     pub vocabulary: &'a Vocabulary,
     /// Fórmula da premissa atestada/provada no ledger.

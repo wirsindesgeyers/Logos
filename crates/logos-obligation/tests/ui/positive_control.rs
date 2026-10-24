@@ -75,6 +75,7 @@ fn main() {
             epoch: 1,
             retracted: false,
             expired: false,
+            untrusted: false,
             vocabulary: &vocab,
             formula: &goal,
         },

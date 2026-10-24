@@ -115,6 +115,13 @@ doc = false
 bench = false
 
 [[bin]]
+name = "trust_decode"
+path = "fuzz_targets/trust_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "event_decode"
 path = "fuzz_targets/event_decode.rs"
 test = false

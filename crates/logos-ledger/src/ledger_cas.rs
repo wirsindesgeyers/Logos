@@ -31,6 +31,8 @@ pub enum CasReference {
     Cnf(Hash<CnfObject>),
     /// Fato fact/v1 registrado em FactRegistered (6.1).
     Fact(Hash<crate::Fact>),
+    /// Configuração trust/v1 publicada em TrustConfigPublished (6.2).
+    Trust(Hash<crate::TrustConfig>),
 }
 
 impl CasReference {
@@ -45,6 +47,7 @@ impl CasReference {
             Self::Model(_) => "model-v1",
             Self::Cnf(_) => "cnf-v1",
             Self::Fact(_) => "fact-v1",
+            Self::Trust(_) => "trust-v1",
         }
     }
     /// Digest dentro do domínio explícito.
@@ -58,6 +61,7 @@ impl CasReference {
             Self::Model(h) => *h.as_bytes(),
             Self::Cnf(h) => *h.as_bytes(),
             Self::Fact(h) => *h.as_bytes(),
+            Self::Trust(h) => *h.as_bytes(),
         }
     }
     pub(crate) fn require(self, cas: &Cas) -> Result<(), LedgerError> {
@@ -69,6 +73,7 @@ impl CasReference {
             Self::Model(h) => cas.verified_present(&h),
             Self::Cnf(h) => cas.verified_present(&h),
             Self::Fact(h) => cas.verified_present(&h),
+            Self::Trust(h) => cas.verified_present(&h),
         }?;
         if !present {
             return Err(LedgerError::MissingObject(self));
@@ -147,6 +152,9 @@ impl EventBody {
             }
             Self::FactRegistered { fact } => {
                 result.insert(CasReference::Fact(*fact));
+            }
+            Self::TrustConfigPublished { config, .. } => {
+                result.insert(CasReference::Trust(*config));
             }
             Self::Genesis { .. }
             | Self::Retracted { .. }

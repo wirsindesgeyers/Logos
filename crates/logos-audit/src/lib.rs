@@ -71,6 +71,9 @@ pub struct Report {
     pub invalidated_by_recheck: u64,
     /// Fatos registrados com objeto no CAS e assinatura do emissor reverificada (6.1).
     pub facts: u64,
+    /// Configurações de confiança publicadas e reaplicadas na ordem (6.2); cada fato
+    /// precisa de `Trusted(emissor, tópico)` vigente no ponto do registro.
+    pub trust_configs: u64,
     /// Digest integral do último evento; None no vazio.
     pub head: Option<[u8; 32]>,
 }
@@ -80,7 +83,7 @@ impl fmt::Display for Report {
         let head = self.head.map(hex).unwrap_or_else(|| "none".into());
         write!(
             f,
-            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={} invalidated_by_recheck={} facts_verified={}",
+            "events={} refutations_rechecked={} consistencies_rechecked={} proofs_unchecked={} failures=0 head={head} cnf_rederived={} lrat_rust_rechecked={} lrat_cake_rechecked={} invalidated_by_recheck={} facts_verified={} trust_configs={}",
             self.events,
             self.refutations,
             self.consistencies,
@@ -89,7 +92,8 @@ impl fmt::Display for Report {
             self.lrat_proofs,
             self.lrat_proofs,
             self.invalidated_by_recheck,
-            self.facts
+            self.facts,
+            self.trust_configs
         )
     }
 }

@@ -45,12 +45,13 @@ ou reparar os eventos assinados. A consulta continua usando a cópia privada.
 
 ## 2. Layout
 
-application_id=0x4c494458 (LIDX), user_version=4 (ledger-index/v4, Etapa 6.1: status
+application_id=0x4c494458 (LIDX), user_version=5 (ledger-index/v5, Etapa 6.2: emissor e
+tópico em `facts`, tabelas `trust` e `trust_configs`; v4 (6.1): status
 Fact=8 e tabela `facts` com a janela de cada fato; v3 (5.10) acrescentou Suspended=7 e
 `claims_h_o` sobre `(h_o,status)`; v2 acrescentou `claims_h_o` na 5.6; caches anteriores são recusados e
 reconstruídos, nunca migrados). Schema SQL exato e codebook
 em [vectors/ledger-index/layout.json](vectors/ledger-index/layout.json),
-conferidos por teste contra arquivo real. Dez objetos SQL, sem triggers/views:
+conferidos por teste contra arquivo real. Treze objetos SQL, sem triggers/views:
 
 | Tabela | Campos | Chave/ordem de comparação |
 | --- | --- | --- |
@@ -58,7 +59,9 @@ conferidos por teste contra arquivo real. Dez objetos SQL, sem triggers/views:
 | deps | claim, premise | claim,premise; índice reverso premise,claim |
 | citable | ref, epoch | ref,epoch |
 | revoked | checker | checker |
-| facts | id, fact, first?, last?, until? | id; fact único |
+| facts | id, fact, issuer, topic, first?, last?, until? | id; fact único |
+| trust | issuer, topic, config | issuer,topic (concessões vigentes; config = h(TrustConfigPublished)) |
+| trust_configs | id, version | id; version única (BLOB8) |
 | metadata | singleton=1, seq?, epoch?, hash? | singleton |
 
 Digests são BLOB32; epoch é BLOB8 big-endian unsigned (inclusive u64::MAX).
@@ -68,7 +71,7 @@ cache vazio não inventa evento Genesis. Demais tabelas sem linhas é válido.
 Codebook: 0 Proposal, 1 Pending, 2 Verified, 3 Refuted, 4 Unknown,
 5 Assumption, 6 Invalidated, 7 Suspended, 8 Fact. Fact só nasce de FactRegistered
 (6.1; janela em `facts`: épocas first/last BLOB8 ou instante until BLOB8);
-Policy/Rejected não têm evento neste catálogo e MUST NOT ser sintetizados. Índices `claims_checker`, `claims_h_o`, `deps_premise`, `facts_fact` (único).
+Policy/Rejected não têm evento neste catálogo e MUST NOT ser sintetizados. Índices `claims_checker`, `claims_h_o`, `deps_premise`, `facts_fact` (único), `trust_configs_version` (único).
 
 ## 3. Projeção
 
@@ -87,7 +90,11 @@ reconstrução falha. Citável em estado: Assumption/Verified, não retratado ne
 invalidado, época da emissão igual à época corrente do snapshot. Unknown/
 Refuted/Pending/Proposal MUST NOT ser promovidos. is_citable só responde sobre
 a época corrente, não oferece citabilidade histórica. EpochRange genérico
-da 3.4 não prolonga essas entradas; janelas de Fact serão integradas na 6.1.
+da 3.4 não prolonga essas entradas. Fact (6.1/6.2) é citável enquanto vivo, com
+a janela aplicável e `Trusted(issuer, topic)` na tabela `trust`; `used` de fato
+exige o mesmo na época do Verified. TrustConfigPublished (6.2) lê trust/v1 do CAS,
+exige versão maior que todas as anteriores, grava `trust_configs` e substitui
+`trust`. FactRegistered sem concessão vigente é erro de reconstrução.
 
 Retracted/Invalidated MUST ter alvo lógico anterior; Retracted marca retracted
 só no alvo. Cascata ATMS (Etapa 5.9, ADR0052): o **nó** de uma linha Verified é

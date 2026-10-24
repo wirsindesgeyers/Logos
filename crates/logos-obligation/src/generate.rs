@@ -82,6 +82,10 @@ fn generate_with(
             return Err(Reject::Expired(reference));
         }
 
+        if entry.untrusted {
+            return Err(Reject::Untrusted(reference));
+        }
+
         if entry.epoch != current_epoch {
             return Err(Reject::InvalidEpoch {
                 reference,

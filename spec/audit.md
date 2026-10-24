@@ -61,7 +61,9 @@ Sucesso: exit0, AUDIT_OK com events, refutations_rechecked,
 consistencies_rechecked, proofs_unchecked, failures=0, head, cnf_rederived,
 lrat_rust_rechecked, lrat_cake_rechecked, invalidated_by_recheck (5.10) e
 facts_verified (6.1: FactRegistered com fact/v1 no CAS e assinatura do emissor
-reverificada; a confiança no emissor é configuração do kernel até a 6.2).
+reverificada) e trust_configs (6.2: TrustConfigPublished reaplicados na ordem, com
+versão crescente; cada fato precisa de `Trusted(emissor, tópico)` vigente no ponto
+do registro, trust.md §4).
 Rota LRAT cujo certificado falha no recheck só é aceita se um Rechecked Rejected
 posterior a invalidar (incidente contado, não escondido); Rechecked precisa casar
 com h(O)/h(certificado) da rota, usar checker permitido e ter Accepted/Rejected

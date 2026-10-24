@@ -320,21 +320,24 @@ impl<'a> LedgerIndex<'a> {
         if listed {
             return Ok(true);
         }
-        // 6.1: fato vivo é citável enquanto a janela incluir a época e o instante.
+        // 6.1: fato vivo é citável enquanto a janela incluir a época e o instante;
+        // 6.2: e enquanto o emissor for confiável para o tópico.
         Ok(match self.fact_window(reference)? {
-            Some((registered, validity)) => validity.applicable(epoch, unix_now()?, registered),
+            Some((registered, validity, trusted)) => {
+                trusted && validity.applicable(epoch, unix_now()?, registered)
+            }
             None => false,
         })
     }
 
-    /// Época de registro e janela de um fato vivo (status Fact), se for um.
+    /// Época de registro, janela e confiança vigente de um fato vivo (status Fact).
     fn fact_window(
         &self,
         reference: Hash<Event>,
-    ) -> Result<Option<(u64, crate::Validity)>, LedgerError> {
+    ) -> Result<Option<(u64, crate::Validity, bool)>, LedgerError> {
         let row = self
             .connection
-            .prepare("SELECT claims.epoch, facts.first, facts.last, facts.until FROM facts JOIN claims ON claims.id=facts.id WHERE facts.id=?1 AND claims.status=?2")?
+            .prepare("SELECT claims.epoch, facts.first, facts.last, facts.until, trust.config IS NOT NULL FROM facts JOIN claims ON claims.id=facts.id LEFT JOIN trust ON trust.issuer=facts.issuer AND trust.topic=facts.topic WHERE facts.id=?1 AND claims.status=?2")?
             .query_row(
                 params![reference.as_bytes().as_slice(), index_project::FACT],
                 |r| {
@@ -343,11 +346,12 @@ impl<'a> LedgerIndex<'a> {
                         r.get::<_, Option<Vec<u8>>>(1)?,
                         r.get::<_, Option<Vec<u8>>>(2)?,
                         r.get::<_, Option<Vec<u8>>>(3)?,
+                        r.get::<_, bool>(4)?,
                     ))
                 },
             )
             .optional()?;
-        let Some((registered, first, last, until)) = row else {
+        let Some((registered, first, last, until, trusted)) = row else {
             return Ok(None);
         };
         let number = |bytes: &[u8]| -> Result<u64, LedgerError> {
@@ -365,7 +369,7 @@ impl<'a> LedgerIndex<'a> {
             (None, None, Some(until)) => crate::Validity::Until(number(&until)?),
             _ => return Err(LedgerError::Invalid("fact window shape")),
         };
-        Ok(Some((number(&registered)?, validity)))
+        Ok(Some((number(&registered)?, validity, trusted)))
     }
 
     /// Época de aplicabilidade do fato no snapshot: a corrente se a janela a inclui;
@@ -377,9 +381,10 @@ impl<'a> LedgerIndex<'a> {
         entry: &mut ResolvedEntry,
     ) -> Result<(), LedgerError> {
         let current = self.head.map_or(0, |h| h.epoch);
-        let Some((registered, validity)) = self.fact_window(reference)? else {
+        let Some((registered, validity, trusted)) = self.fact_window(reference)? else {
             return Err(LedgerError::Invalid("fact without window"));
         };
+        entry.untrusted = !trusted;
         match validity {
             crate::Validity::Epochs(range) => {
                 entry.status.epoch = if range.contains(current) {
@@ -398,6 +403,72 @@ impl<'a> LedgerIndex<'a> {
             }
         }
         Ok(())
+    }
+
+    /// `Trusted(emissor, tópico)` na configuração vigente: o evento
+    /// TrustConfigPublished que concede, se houver (6.2).
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn trust_grant(
+        &self,
+        issuer: &logos_crypto::KeyId,
+        topic: &str,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT config FROM trust WHERE issuer=?1 AND topic=?2")?
+            .query_row(params![issuer.as_bytes().as_slice(), topic], |r| {
+                r.get::<_, Vec<u8>>(0)
+            })
+            .optional()?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(Hash::from_bytes)
+                .map_err(|_| LedgerError::Invalid("trust config digest"))
+        })
+        .transpose()
+    }
+
+    /// Versão da configuração de confiança vigente, se alguma foi publicada (6.2).
+    ///
+    /// # Errors
+    /// Falha SQL ou bytes de versão inválidos.
+    pub fn trust_version(&self) -> Result<Option<u64>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT max(version) FROM trust_configs")?
+            .query_row([], |r| r.get::<_, Option<Vec<u8>>>(0))?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(u64::from_be_bytes)
+                .map_err(|_| LedgerError::Invalid("trust config version bytes"))
+        })
+        .transpose()
+    }
+
+    /// Concessão vigente que torna citável o fato registrado em `reference` (6.2).
+    ///
+    /// # Errors
+    /// Falha SQL ou digest privado inválido.
+    pub fn fact_trust(&self, reference: Hash<Event>) -> Result<Option<Hash<Event>>, LedgerError> {
+        let row = self
+            .connection
+            .prepare("SELECT trust.config FROM facts JOIN trust ON trust.issuer=facts.issuer AND trust.topic=facts.topic WHERE facts.id=?1")?
+            .query_row([reference.as_bytes().as_slice()], |r| r.get::<_, Vec<u8>>(0))
+            .optional()?;
+        row.map(|bytes| {
+            bytes
+                .as_slice()
+                .try_into()
+                .map(Hash::from_bytes)
+                .map_err(|_| LedgerError::Invalid("trust config digest"))
+        })
+        .transpose()
     }
 
     /// Evento FactRegistered de um fato, se registrado (6.1).
@@ -549,6 +620,7 @@ impl LedgerView for LedgerSnapshot<'_> {
             epoch: entry.status.epoch,
             retracted: entry.status.retracted,
             expired: entry.expired,
+            untrusted: entry.untrusted,
             vocabulary: &entry.vocabulary,
             formula: &entry.formula,
         }))

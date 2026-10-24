@@ -1,0 +1,106 @@
+{
+  "format": "trust/v1",
+  "hash_tag": "logos/trust/v1",
+  "valid": [
+    {
+      "id": "single",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728162646201",
+      "trust_hash_hex": "d215c3549078c6df885586e6c5cd689548786ed959871ad862e0aaeab76753ce"
+    },
+    {
+      "id": "two-roots",
+      "trust_canon_hex": "8301078284a263616c676765643235353139636b65795820ca7d75b4ea1d5a861aa5838406782dfc62cdee7b059a334f0da153d59386a09a6a6261636b75702d73766382666261636b75706e6261636b75702f6f6666736974650284a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728162646201",
+      "trust_hash_hex": "3b80732e3e3ffc95cb8b39136286afea6705df5744f4a6ebd60fdbacb0d3ca5e"
+    },
+    {
+      "id": "max-version",
+      "trust_canon_hex": "83011bffffffffffffffff8184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6164836161616261631bffffffffffffffff",
+      "trust_hash_hex": "4841e59bf20e4aa1f77568e5dff6eee790ed3340c90b90bb7e3924edb9ce95c1"
+    }
+  ],
+  "invalid": [
+    {
+      "id": "format-2",
+      "trust_canon_hex": "8302018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728162646201"
+    },
+    {
+      "id": "version-0",
+      "trust_canon_hex": "8301008184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728162646201"
+    },
+    {
+      "id": "arity-2",
+      "trust_canon_hex": "820101"
+    },
+    {
+      "id": "no-roots",
+      "trust_canon_hex": "83010180"
+    },
+    {
+      "id": "roots-out-of-order",
+      "trust_canon_hex": "8301018284a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f72816264620184a263616c676765643235353139636b65795820ca7d75b4ea1d5a861aa5838406782dfc62cdee7b059a334f0da153d59386a09a6a6261636b75702d73766382666261636b75706e6261636b75702f6f66667369746502"
+    },
+    {
+      "id": "root-twice",
+      "trust_canon_hex": "8301018284a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f72816264620184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728162646201"
+    },
+    {
+      "id": "no-topics",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728001"
+    },
+    {
+      "id": "topics-out-of-order",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f7282626462666261636b757001"
+    },
+    {
+      "id": "topic-twice",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f728262646262646201"
+    },
+    {
+      "id": "empty-topic",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f72816001"
+    },
+    {
+      "id": "empty-name",
+      "trust_canon_hex": "8301018184a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b608162646201"
+    },
+    {
+      "id": "root-arity-3",
+      "trust_canon_hex": "8301018183a263616c676765643235353139636b657958203a1c28c339928a98cd829c08db30e7676864abbc6213c41ebec38f884e49e23b6a64622d6d6f6e69746f7281626462"
+    }
+  ],
+  "rule": {
+    "config": "two-roots",
+    "cases": [
+      {
+        "seed_hex": "dbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdb",
+        "topic": "db",
+        "trusted": true
+      },
+      {
+        "seed_hex": "dbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdbdb",
+        "topic": "backup",
+        "trusted": false
+      },
+      {
+        "seed_hex": "babababababababababababababababababababababababababababababababa",
+        "topic": "backup",
+        "trusted": true
+      },
+      {
+        "seed_hex": "babababababababababababababababababababababababababababababababa",
+        "topic": "backup/offsite",
+        "trusted": true
+      },
+      {
+        "seed_hex": "babababababababababababababababababababababababababababababababa",
+        "topic": "backup/",
+        "trusted": false
+      },
+      {
+        "seed_hex": "babababababababababababababababababababababababababababababababa",
+        "topic": "Backup",
+        "trusted": false
+      }
+    ]
+  }
+}

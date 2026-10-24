@@ -79,6 +79,7 @@ qualquer caminho não vazio do catálogo v1.
 | 13 | CertificateRejected | check (corpo v2) |
 | 15 | Rechecked (5.10) | route_hEvent, check (qualquer desfecho) |
 | 16 | FactRegistered (6.1) | h(Fact) |
+| 17 | TrustConfigPublished (6.2) | h(TrustConfig), Authority |
 
 ### Extensão epoch-body/v2 (Etapa 3.4)
 
@@ -127,7 +128,8 @@ exige obter certificado, fora deste decoder.
 
 ## 4. Assinaturas de autoridade
 
-VocabPublished, Retracted, CheckerRegistered e CheckerRevoked carregam
+VocabPublished, Retracted, CheckerRegistered, CheckerRevoked e
+TrustConfigPublished (6.2) carregam
 assinatura do admin/emissor além da assinatura externa do kernel.
 O payload de autoridade é `canon([1, 1, body_without_authority_signature])`;
 body conserva seu envelope/tag/campos e substitui Authority por somente KeyId.
@@ -238,9 +240,16 @@ de checker revogado (ledger-index.md §3).
 
 `[1,16,h(Fact)]` é FactRegistered: h(Fact) é bytes32 (domínio Fact, fact.md). O
 objeto fact/v1 MUST estar no CAS antes do append. Aridade exata; outra versão
-recusa a tag16. O kernel só grava o evento para emissor da raiz de confiança, com
+recusa a tag16. O kernel só grava o evento para emissor com `Trusted(emissor, tópico)` vigente (6.2), com
 assinatura válida, fórmula bem tipada, janela não vencida e fato ainda não
 registrado (fact.md §2). Sem assinatura de autoridade: a autoridade é a do
 emissor, dentro do objeto. A projeção lê o fato do CAS e recusa registro repetido
 (ledger-index.md §3).
 
+## 12. Confiança — trust-config-body/v1 (Etapa6.2, ADR0063)
+
+`[1,17,h(TrustConfig),Authority]` é TrustConfigPublished: h(TrustConfig) é bytes32
+(domínio trust, trust.md); Authority como em §4, assinando `[1,1,[1,17,h,KeyId]]`.
+O objeto trust/v1 MUST estar no CAS antes do append. Aridade exata. O kernel só
+grava o evento com o signer admin configurado e versão maior que a vigente. A
+projeção substitui as concessões e recusa versão que não cresce (ledger-index.md §3).

@@ -697,3 +697,22 @@ fn enumeration_conjunction_is_exact_and_covers_the_sort_as_one_premise() {
         Err(GroundError::MissingDomainAxiom)
     );
 }
+
+#[test]
+fn conjunction_fits_the_air_limit_for_every_enumeration_domain_axioms_accepts() {
+    // A conjunção soma um nó (And) ao agregado de domain_axioms; com os limites
+    // padrão o teto que manda é max_axioms (n=141, ~40 mil nós), longe do teto AIR,
+    // então o grounder nunca vira Unknown só por montar a conjunção.
+    let largest = (1..=256)
+        .rev()
+        .find(|&n| domain_axioms(&vocab(n, vec![]), &sort("E")).is_ok())
+        .unwrap();
+    assert_eq!(largest, 141);
+    let v = vocab(largest, vec![]);
+    let a = domain_axioms(&v, &sort("E")).unwrap();
+    let conjunction = a.conjunction().unwrap();
+    assert_eq!(
+        conjunction.nodes().len(),
+        1 + a.closure().nodes().len() + a.distinct().iter().map(|f| f.nodes().len()).sum::<usize>()
+    );
+}

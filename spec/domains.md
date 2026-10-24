@@ -42,9 +42,10 @@ H_T(x) = SHA-256( tag_T ‖ bytes(x) )          (32 bytes)
 | paraphrase | `logos/paraphrase/v1` | canonical | 9.1 |
 | token | `logos/token/v1` | canonical | 8.3 |
 | assumption | `logos/assumption/v1` | canonical | 5.7 |
+| trust | `logos/trust/v1` | canonical | 6.2 (ADR0063) |
 
 Os domínios originais foram *reservados* na Etapa 0.4; ground foi acrescentado
-na4.2 pelo ADR0027. Os tipos nascem nas etapas indicadas. Um domínio novo ou
+na4.2 pelo ADR0027; trust, na 6.2 pelo ADR0063 (`trust.md`). Os tipos nascem nas etapas indicadas. Um domínio novo ou
 uma mudança de tag exige entrada nesta tabela, ADR e novos vetores;
 mudar o conteúdo de um domínio existente é uma nova versão (`v2`), nunca uma edição da `v1`.
 Formato `obligation/v1` é definido em [`obligation.md`](obligation.md); usa a

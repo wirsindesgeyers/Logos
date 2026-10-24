@@ -1,42 +1,69 @@
-//! Registro de fatos assinados (Etapa 6.1, ADR0061).
+//! Registro de fatos assinados (6.1, ADR0061) e confiança por tópico (6.2, ADR0063).
 //!
-//! Um fato fact/v1 no CAS só vira `FactRegistered` se o emissor estiver na raiz de
-//! confiança do operador, a assinatura verificar, o vocabulário existir e a fórmula
-//! for bem tipada nele, a janela ainda não tiver passado e o fato não estiver
-//! registrado. Confiança por tópico é da 6.2: aqui a raiz vale para qualquer tópico.
+//! Um fato fact/v1 no CAS só vira `FactRegistered` se a configuração de confiança
+//! vigente no ledger (`TrustConfigPublished`, assinada pelo admin) conceder
+//! `Trusted(emissor, tópico)`, a assinatura verificar, o vocabulário existir e a
+//! fórmula for bem tipada nele, a janela ainda não tiver passado e o fato não estiver
+//! registrado. A citação confere a mesma concessão de novo (índice/snapshot).
 
 use logos_air::{Limits, Vocabulary};
-use logos_crypto::{Hash, KeyId, PublicKey, Signer, hash};
-use logos_ledger::{Event, EventBody, Fact, Ledger, Validity};
+use logos_crypto::{Hash, PublicKey, Signer, hash};
+use logos_ledger::{Authority, Event, EventBody, Fact, Ledger, TrustConfig, Validity};
 
 use crate::TransportError as Error;
 
-/// Emissores reconhecidos, configurados pelo operador (não vêm do protocolo).
-#[derive(Debug, Clone, Default)]
-pub struct TrustRoots {
-    issuers: Vec<KeyId>,
-}
-
-impl TrustRoots {
-    /// Raiz a partir das chaves públicas dos emissores.
-    ///
-    /// # Errors
-    /// Chave sem identidade derivável.
-    pub fn new(issuers: &[PublicKey]) -> Result<Self, Error> {
-        let issuers = issuers
-            .iter()
-            .map(PublicKey::key_id)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| Error::Invalid("trust root key"))?;
-        Ok(Self { issuers })
+/// Publica uma configuração de confiança (já no CAS), assinada pelo admin.
+///
+/// `admin` é a chave administrativa configurada pelo operador; `signer` precisa ser
+/// ela. A versão precisa ser maior que a vigente. Devolve o evento publicado.
+///
+/// # Errors
+/// Signer que não é o admin; configuração ausente/malformada; versão não crescente;
+/// assinatura ou I/O do ledger.
+pub fn publish_trust<S: Signer, A: Signer>(
+    ledger: &mut Ledger<'_, S>,
+    admin: &PublicKey,
+    signer: &A,
+    config: Hash<TrustConfig>,
+) -> Result<Hash<Event>, Error> {
+    if signer.public_key() != admin {
+        return Err(Error::Unauthorized);
     }
-
-    fn trusts(&self, issuer: &PublicKey) -> Result<bool, Error> {
-        let id = issuer
-            .key_id()
-            .map_err(|_| Error::Invalid("fact issuer key"))?;
-        Ok(self.issuers.contains(&id))
+    let bytes = ledger
+        .cas()
+        .get(&config)?
+        .ok_or(Error::Invalid("trust config missing from CAS"))?;
+    let decoded: TrustConfig =
+        logos_canon::from_canon(&bytes).map_err(|_| Error::Invalid("malformed trust config"))?;
+    if ledger
+        .live_index()?
+        .trust_version()?
+        .is_some_and(|current| decoded.version <= current)
+    {
+        return Err(Error::Invalid("trust config version not increasing"));
     }
+    let key = signer
+        .key_id()
+        .map_err(|_| Error::Invalid("authority key"))?;
+    let mut body = EventBody::TrustConfigPublished {
+        config,
+        authority: Authority {
+            key,
+            sig: signer
+                .sign::<Event>(b"")
+                .map_err(|_| Error::Invalid("authority signature"))?,
+        },
+    };
+    let message = body
+        .authority_message()?
+        .ok_or(Error::Invalid("trust config authority"))?;
+    let EventBody::TrustConfigPublished { authority, .. } = &mut body else {
+        return Err(Error::Invalid("trust config body"));
+    };
+    authority.sig = signer
+        .sign::<Event>(&message)
+        .map_err(|_| Error::Invalid("authority signature"))?;
+    Ok(hash(&ledger.append(body)?)?)
 }
 
 fn unix_now() -> Result<u64, Error> {
@@ -49,11 +76,11 @@ fn unix_now() -> Result<u64, Error> {
 /// Confere e registra o fato `fact` (já no CAS). Devolve o evento FactRegistered.
 ///
 /// # Errors
-/// Fato ausente/malformado, emissor fora da raiz, assinatura inválida, vocabulário
-/// ausente ou fórmula mal tipada, janela já vencida, fato repetido; I/O do ledger.
+/// Fato ausente/malformado, emissor sem `Trusted(emissor, tópico)` vigente,
+/// assinatura inválida, vocabulário ausente ou fórmula mal tipada, janela já
+/// vencida, fato repetido; I/O do ledger.
 pub fn register<S: Signer>(
     ledger: &mut Ledger<'_, S>,
-    roots: &TrustRoots,
     fact: Hash<Fact>,
 ) -> Result<Hash<Event>, Error> {
     let bytes = ledger
@@ -62,7 +89,16 @@ pub fn register<S: Signer>(
         .ok_or(Error::Invalid("fact missing from CAS"))?;
     let decoded: Fact =
         logos_canon::from_canon(&bytes).map_err(|_| Error::Invalid("malformed fact"))?;
-    if !roots.trusts(&decoded.issuer)? {
+    let issuer = decoded
+        .issuer
+        .key_id()
+        .map_err(|_| Error::Invalid("fact issuer key"))?;
+    // 6.2: `db-monitor` não atesta `backup`; sem configuração publicada, ninguém atesta.
+    if ledger
+        .live_index()?
+        .trust_grant(&issuer, decoded.topic.as_str())?
+        .is_none()
+    {
         return Err(Error::Unauthorized);
     }
     decoded

@@ -3,7 +3,7 @@
 //! Identidade `h(Fact)` = hash com domínio `logos/fact/v1\0` dos bytes canônicos
 //! completos (inclusive a assinatura). A assinatura do emissor cobre o corpo sem a
 //! assinatura, com a tag `logos/sig/fact/v1\0`. Assinatura válida não basta para
-//! citar: o kernel só registra fatos de emissores na raiz de confiança, e a
+//! citar: o kernel só registra fatos com `Trusted(emissor, tópico)` vigente (6.2), e a
 //! validade (épocas ou instante) decide quando o fato é citável.
 
 use logos_air::{Formula, Vocabulary};
@@ -44,7 +44,7 @@ pub struct Fact {
     pub vocabulary: Hash<Vocabulary>,
     /// Chave pública do emissor (o `KeyId` é derivado dela).
     pub issuer: PublicKey,
-    /// Tópico declarado (a política por tópico é da 6.2).
+    /// Tópico declarado; a confiança é por tópico (trust/v1, 6.2).
     pub topic: Text,
     /// Instante Unix (segundos) da observação.
     pub observed_at: u64,
@@ -179,7 +179,7 @@ impl Fact {
     }
 
     /// Confere a assinatura contra a chave pública declarada. Não diz se o emissor
-    /// é confiável: isso é da raiz de confiança do kernel.
+    /// é confiável: isso é da configuração de confiança no ledger (6.2).
     ///
     /// # Errors
     /// Assinatura inválida ou codificação.

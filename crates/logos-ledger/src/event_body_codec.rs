@@ -364,6 +364,12 @@ impl Canon for EventBody {
                 Value::Unsigned(16),
                 fact.to_value()?,
             ]),
+            Self::TrustConfigPublished { config, authority } => array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(17),
+                config.to_value()?,
+                authority.to_value()?,
+            ]),
             Self::CertificateRejected { check } => array(vec![
                 Value::Unsigned(2),
                 Value::Unsigned(13),
@@ -685,6 +691,10 @@ impl CanonDecode for EventBody {
             },
             (16, [fact_val]) => Self::FactRegistered {
                 fact: digest::<crate::Fact>(fact_val)?,
+            },
+            (17, [config_val, auth_val]) => Self::TrustConfigPublished {
+                config: digest::<crate::TrustConfig>(config_val)?,
+                authority: Authority::from_value(auth_val)?,
             },
             (12, [checker_val, reason_val, auth_val]) => {
                 let checker = digest::<Checker>(checker_val)?;

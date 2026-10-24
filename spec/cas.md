@@ -31,6 +31,7 @@ normativa; estas tags são as mesmas de [domains.md](domains.md).
 | `logos/token/v1` | token-v1 | canonical | 16777216 |
 | `logos/assumption/v1` | assumption-v1 | canonical | 16777216 |
 | `logos/cnf/v1` | cnf-v1 | raw | 16777216 |
+| `logos/trust/v1` | trust-v1 | canonical | 16777216 |
 
 16 MiB = 16777216 bytes; 256 MiB = 268435456 bytes. CAS calcula hash dos bytes recebidos,
 inclusive em domínios canonical: consumidor é responsável pela codificação correta.

@@ -30,6 +30,11 @@ pub(crate) struct FactObject;
 impl Domain for FactObject {
     const TAG: &'static [u8] = tags::FACT;
 }
+/// Objeto trust/v1 (6.2), conferido no CAS; concessões reaplicadas na ordem.
+pub(crate) struct TrustObject;
+impl Domain for TrustObject {
+    const TAG: &'static [u8] = tags::TRUST;
+}
 
 #[derive(Clone)]
 pub(crate) struct Check {
@@ -344,6 +349,10 @@ pub(crate) fn parse(wire: &[u8], key: &PublicKey) -> Result<Parsed> {
         [Value::Unsigned(1), Value::Unsigned(16), fact] => {
             p.refs.push(("fact", digest(fact)?));
         }
+        [Value::Unsigned(1), Value::Unsigned(17), config, auth] => {
+            p.refs.push(("trust", digest(config)?));
+            authority(auth)?;
+        }
         [Value::Unsigned(1), Value::Unsigned(15), route, record] => {
             let c = check(record, &mut p)?;
             p.rechecked = Some((digest(route)?, c));
@@ -466,7 +475,7 @@ mod tests {
             serde_json::from_str(include_str!("../../../spec/vectors/events/vectors.json"))
                 .unwrap();
         let vectors = fixture["vectors"].as_array().unwrap();
-        assert_eq!(vectors.len(), 31);
+        assert_eq!(vectors.len(), 32);
         for v in vectors {
             let key = PublicKey::new(
                 SigAlg::Ed25519,

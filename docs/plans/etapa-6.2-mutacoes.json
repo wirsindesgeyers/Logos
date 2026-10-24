@@ -1,0 +1,168 @@
+{
+  "stage": "6.2",
+  "killed": 20,
+  "total": 20,
+  "note": "M4 sobreviveu na primeira rodada como '<=' → '<' (equivalente: o índice UNIQUE de versões barra versão igual); trocada por remoção da checagem e o teste passou a gravar versão igual e menor sem o kernel; morta; M15–M20 (decoder estrito do auditor, acrescentado na revisão de 24/out) mortas na primeira rodada",
+  "mutations": [
+    {
+      "mutation": "M1 registro ignora a confiança por tópico",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_db_monitor_signing_a_backup_fact_is_not_citable' (1478369) panicked at crates/logos-kernel/tests/facts.rs:982:5:",
+        "thread 'unknown_issuer_bad_signature_and_duplicates_are_refused_without_events' (1478541) panicked at crates/logos-kernel/tests/facts.rs:262:5:"
+      ]
+    },
+    {
+      "mutation": "M2 publicação sem conferir o admin",
+      "killed": true,
+      "evidence": [
+        "thread 'trust_config_needs_the_admin_an_increasing_version_and_a_valid_object' (1479855) panicked at crates/logos-kernel/tests/facts.rs:1074:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M3 kernel aceita versão que não cresce",
+      "killed": true,
+      "evidence": [
+        "thread 'trust_config_needs_the_admin_an_increasing_version_and_a_valid_object' (1481046) panicked at crates/logos-kernel/tests/facts.rs:1099:9:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M4 projeção aceita versão que não cresce",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_refuses_used_facts_after_trust_is_withdrawn_and_stale_versions' (1482500) panicked at crates/logos-kernel/tests/facts.rs:1207:9:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M5 configuração nova não substitui a anterior",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_db_monitor_signing_a_backup_fact_is_not_citable' (1483707) panicked at crates/logos-kernel/tests/facts.rs:1025:37:",
+        "thread 'projection_refuses_used_facts_after_trust_is_withdrawn_and_stale_versions' (1483888) panicked at crates/logos-kernel/tests/facts.rs:1168:5:"
+      ]
+    },
+    {
+      "mutation": "M6 projeção registra fato sem confiança",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_a_fact_registered_without_trust' (1485059) panicked at crates/logos-kernel/tests/facts.rs:1131:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M7 used na projeção ignora confiança",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_refuses_used_facts_after_trust_is_withdrawn_and_stale_versions' (1486677) panicked at crates/logos-kernel/tests/facts.rs:1168:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M8 is_citable ignora confiança",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_db_monitor_signing_a_backup_fact_is_not_citable' (1487744) panicked at crates/logos-kernel/tests/facts.rs:1026:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M9 snapshot não marca untrusted",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_db_monitor_signing_a_backup_fact_is_not_citable' (1489267) panicked at crates/logos-kernel/tests/facts.rs:80:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M10 gerador ignora untrusted",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_db_monitor_signing_a_backup_fact_is_not_citable' (1491178) panicked at crates/logos-kernel/tests/facts.rs:80:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M11 auditor não confere confiança do fato",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_and_auditor_refuse_a_fact_registered_without_trust' (1493207) panicked at crates/logos-kernel/tests/facts.rs:1133:84:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M12 auditor aceita versão que não cresce",
+      "killed": true,
+      "evidence": [
+        "thread 'projection_refuses_used_facts_after_trust_is_withdrawn_and_stale_versions' (1494339) panicked at crates/logos-kernel/tests/facts.rs:1209:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M13 tópicos fora de ordem aceitos",
+      "killed": true,
+      "evidence": [
+        "thread 'invalid_vectors_are_refused' (1495060) panicked at crates/logos-ledger/tests/trust.rs:37:9:",
+        "error: test failed, to rerun pass `-p logos-ledger --test trust`"
+      ]
+    },
+    {
+      "mutation": "M14 regra ignora o emissor",
+      "killed": true,
+      "evidence": [
+        "thread 'topic_rule_is_exact_per_issuer' (1495335) panicked at crates/logos-ledger/tests/trust.rs:59:9:",
+        "error: test failed, to rerun pass `-p logos-ledger --test trust`"
+      ]
+    },
+    {
+      "mutation": "M15 auditor aceita raízes fora de ordem",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1600286) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M16 auditor aceita tópicos fora de ordem",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1600895) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M17 auditor aceita raiz sem tópicos",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1601438) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M18 auditor aceita configuração sem raízes",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1602154) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M19 auditor aceita texto vazio",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1602964) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M20 auditor aceita versão 0",
+      "killed": true,
+      "evidence": [
+        "thread 'auditor_decodes_trust_configs_strictly' (1603928) panicked at crates/logos-kernel/tests/facts.rs:1301:88:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    }
+  ]
+}

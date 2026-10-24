@@ -50,8 +50,8 @@ def render_vectors() -> str:
     tag_to_dir = parse_spec_tag_dirs(spec_text)
     examples = parse_spec_examples(spec_text)
 
-    if len(tag_to_dir) != 17:
-        raise ValueError(f"esperado 17 domínios em spec/cas.md, encontrados {len(tag_to_dir)}")
+    if len(tag_to_dir) != 18:
+        raise ValueError(f"esperado 18 domínios em spec/cas.md, encontrados {len(tag_to_dir)}")
     if len(examples) != 4:
         raise ValueError(f"esperado 4 exemplos em spec/cas.md, encontrados {len(examples)}")
 

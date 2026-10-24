@@ -57,6 +57,10 @@ fn store(cas: &Cas, reference: CasReference, bytes: &[u8]) {
             .unwrap()
             .as_bytes(),
         CasReference::Fact(_) => *cas.put::<logos_ledger::Fact>(bytes).unwrap().as_bytes(),
+        CasReference::Trust(_) => *cas
+            .put::<logos_ledger::TrustConfig>(bytes)
+            .unwrap()
+            .as_bytes(),
     };
     assert_eq!(digest, reference.digest());
 }

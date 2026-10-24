@@ -1,9 +1,9 @@
 # fact/v1 — fatos assinados (Etapa 6.1, ADR0061)
 
 Fato é uma afirmação AIR assinada por um emissor. Assinatura válida **não** torna
-o fato citável: o kernel só grava `FactRegistered` para emissores da raiz de
-confiança (configuração do operador; política por tópico na 6.2), e a citação
-depende da janela de validade.
+o fato citável: o kernel só grava `FactRegistered` se a configuração de confiança
+vigente no ledger concede `Trusted(emissor, tópico)` (trust.md, 6.2), e a citação
+depende da janela de validade e da mesma concessão.
 
 ## 1. Objeto
 
@@ -31,16 +31,18 @@ sig      = Signature (canon de logos-crypto)
 ## 2. Registro
 
 `FactRegistered { fact: h(Fact) }`, corpo `[1, 16, h(Fact)]` (events.md §3). O
-kernel grava o evento só se: o objeto está no CAS e decodifica; o emissor está na
-raiz de confiança; a assinatura verifica; o vocabulário está no CAS e a fórmula é
+kernel grava o evento só se: o objeto está no CAS e decodifica; a configuração
+vigente concede `Trusted(KeyId(emissor), tópico)` (trust.md §3); a assinatura verifica; o vocabulário está no CAS e a fórmula é
 bem tipada nele; a janela ainda não passou (época corrente ≤ last, ou agora ≤
 until); e o mesmo `h(Fact)` não foi registrado antes. Recusa não grava evento.
 
 ## 3. Citação
 
-A projeção do índice (ledger-index/v4) lê o fato do CAS (leitura confere o hash) e
-grava a linha `Fact` (status 8) e a janela na tabela `facts`. Um fato vivo é
-citável na época `e` e instante `t` se:
+A projeção do índice (ledger-index/v5) lê o fato do CAS (leitura confere o hash) e
+grava a linha `Fact` (status 8), a janela, o `KeyId` do emissor e o tópico na tabela
+`facts`. Um fato vivo é citável na época `e` e instante `t` se a configuração
+vigente concede `Trusted(emissor, tópico)` (senão o gerador recusa com `Untrusted`,
+trust.md §3) e:
 
 - `valid = [0, a, b]`: `a ≤ e ≤ b`;
 - `valid = [1, u]`: `e ≥` época de registro e `t ≤ u`.

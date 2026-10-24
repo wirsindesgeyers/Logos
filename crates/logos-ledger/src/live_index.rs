@@ -116,6 +116,31 @@ impl LedgerLiveIndex<'_> {
         self.index.fact_event(fact)
     }
 
+    /// Concessão vigente `Trusted(emissor, tópico)` (6.2).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn trust_grant(
+        &self,
+        issuer: &logos_crypto::KeyId,
+        topic: &str,
+    ) -> Result<Option<Hash<Event>>, LedgerError> {
+        self.index.trust_grant(issuer, topic)
+    }
+
+    /// Versão da configuração de confiança vigente (6.2).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn trust_version(&self) -> Result<Option<u64>, LedgerError> {
+        self.index.trust_version()
+    }
+
+    /// Concessão vigente que torna citável o fato do evento `reference` (6.2).
+    /// # Errors
+    /// SQL ou projeção inválida.
+    pub fn fact_trust(&self, reference: Hash<Event>) -> Result<Option<Hash<Event>>, LedgerError> {
+        self.index.fact_trust(reference)
+    }
+
     /// Menor rota Verified ativa e citável do nó h(O) (5.8).
     /// # Errors
     /// SQL ou projeção inválida.

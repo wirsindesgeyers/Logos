@@ -24,7 +24,7 @@ const RAW_LIMIT: u64 = 256 * 1024 * 1024;
 
 /// Tabela fixa dos 17 domínios suportados pelo CAS, conforme `spec/cas.md`.
 /// Tags de hash adicionais, como ground/v1, não criam namespaces implicitamente.
-pub(crate) const DOMAINS: [DomainEntry; 17] = [
+pub(crate) const DOMAINS: [DomainEntry; 18] = [
     DomainEntry {
         tag: tags::KEY,
         directory: "key-v1",
@@ -110,11 +110,16 @@ pub(crate) const DOMAINS: [DomainEntry; 17] = [
         directory: "cnf-v1",
         limit: CANONICAL_LIMIT,
     },
+    DomainEntry {
+        tag: tags::TRUST,
+        directory: "trust-v1",
+        limit: CANONICAL_LIMIT,
+    },
 ];
 
 /// Resolve uma tag binária exata para o índice correspondente na tabela [`DOMAINS`].
 ///
-/// Retorna `Some(index)` se a tag for exatamente uma das 17 tags do CAS,
+/// Retorna `Some(index)` se a tag for exatamente uma das 18 tags do CAS,
 /// ou `None` caso contrário (inclusive se for prefixo, sufixo ou malformada).
 #[must_use]
 pub(crate) fn resolve(tag: &[u8]) -> Option<usize> {

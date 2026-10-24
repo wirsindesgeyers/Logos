@@ -22,6 +22,7 @@ impl LedgerView for View<'_> {
             epoch: 0,
             retracted: false,
             expired: false,
+            untrusted: false,
             vocabulary: self.v,
             formula: f,
         }))

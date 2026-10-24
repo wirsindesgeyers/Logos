@@ -71,9 +71,11 @@ pub mod tags {
     pub const TOKEN: &[u8] = b"logos/token/v1\0";
     /// Assumption com escopo (5.7).
     pub const ASSUMPTION: &[u8] = b"logos/assumption/v1\0";
+    /// Configuração de confiança por tópico (6.2, ADR0063).
+    pub const TRUST: &[u8] = b"logos/trust/v1\0";
 
     /// `(nome, tag, codificação)` de todos os domínios reservados; `"raw"` = bytes crus.
-    pub const RESERVED: [(&str, &[u8], &str); 18] = [
+    pub const RESERVED: [(&str, &[u8], &str); 19] = [
         ("key", KEY, "canonical"),
         ("formula", FORMULA, "canonical"),
         ("vocab", VOCAB, "canonical"),
@@ -92,6 +94,7 @@ pub mod tags {
         ("paraphrase", PARAPHRASE, "canonical"),
         ("token", TOKEN, "canonical"),
         ("assumption", ASSUMPTION, "canonical"),
+        ("trust", TRUST, "canonical"),
     ];
 }
 

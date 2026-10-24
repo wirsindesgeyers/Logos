@@ -142,7 +142,8 @@ def auditor() -> Auditor:
         b"AUDIT_OK fake\n",
         b"AUDIT_OK events=1 refutations_rechecked=0 consistencies_rechecked=0 "
         b"proofs_unchecked=1 failures=0 head=none cnf_rederived=0 "
-        b"lrat_rust_rechecked=0 lrat_cake_rechecked=0 invalidated_by_recheck=0 facts_verified=0\n",
+        b"lrat_rust_rechecked=0 lrat_cake_rechecked=0 invalidated_by_recheck=0 "
+        b"facts_verified=0 trust_configs=0\n",
     ],
 )
 def test_audit_rejects_malformed_or_unchecked_reports(

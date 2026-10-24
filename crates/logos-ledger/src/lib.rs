@@ -21,6 +21,7 @@ mod ledger_cas;
 mod ledger_error;
 mod ledger_store;
 mod live_index;
+mod trust;
 
 pub use cas::{Cas, CasError, Limits};
 pub use event::{Event, EventError, MAX_EVENT_BYTES};
@@ -35,3 +36,4 @@ pub use ledger::{Ledger, LedgerHead};
 pub use ledger_cas::{CasReference, LedgerReferences, ledger_references};
 pub use ledger_error::LedgerError;
 pub use live_index::LedgerLiveIndex;
+pub use trust::{MAX_TRUST_BYTES, MAX_TRUST_ROOTS, MAX_TRUST_TOPICS, TrustConfig, TrustRoot};

@@ -13,14 +13,15 @@ use logos_crypto::{FileSigner, Hash, Signer};
 use logos_kernel::{
     TransportError,
     certify::CertificationHandlers,
-    facts::{TrustRoots, register},
+    facts::{publish_trust, register},
     registry::{CheckerRegistry, LRAT},
     server::Server,
     staging::Staging,
     wire::{Message, ObjectRef, Request, encode_frame},
 };
 use logos_ledger::{
-    Certificate, Event, EventBody, EventProposal, Fact, Ledger, LedgerIndex, TaintedText, Validity,
+    Certificate, Event, EventBody, EventProposal, Fact, Ledger, LedgerIndex, TaintedText,
+    TrustConfig, TrustRoot, Validity,
 };
 use logos_obligation::{DecodeLimits, EntryKind, Obligation};
 use std::{
@@ -212,6 +213,40 @@ fn issuer() -> FileSigner {
     FileSigner::from_seed(&[0x61; 32]).unwrap()
 }
 
+fn admin() -> FileSigner {
+    FileSigner::from_seed(&[0xad; 32]).unwrap()
+}
+
+/// Publica (como admin) uma configuração em que `issuer` atesta os tópicos dados.
+fn grant(ledger: &mut L<'_>, roots: &[(&FileSigner, &str, &[&str])], version: u64) -> Hash<Event> {
+    let mut roots: Vec<_> = roots
+        .iter()
+        .map(|(signer, name, topics)| TrustRoot {
+            issuer: signer.public_key().clone(),
+            name: Text::new(*name).unwrap(),
+            topics: topics.iter().map(|t| Text::new(*t).unwrap()).collect(),
+            level: 1,
+        })
+        .collect();
+    roots.sort_by_key(|r| *r.issuer.key_id().unwrap().as_bytes());
+    let config = TrustConfig::new(version, roots).unwrap();
+    let h = ledger
+        .cas()
+        .put::<TrustConfig>(&to_canon(&config).unwrap())
+        .unwrap();
+    let admin = admin();
+    publish_trust(ledger, admin.public_key(), &admin, h).unwrap()
+}
+
+/// Configuração dos testes da 6.1: o emissor atesta clima e o inventário de cores.
+fn trust(ledger: &mut L<'_>, issuer: &FileSigner, version: u64) -> Hash<Event> {
+    grant(
+        ledger,
+        &[(issuer, "estacao", &["clima", "inventario/cores"])],
+        version,
+    )
+}
+
 #[test]
 fn unknown_issuer_bad_signature_and_duplicates_are_refused_without_events() {
     let temp = Temp::new();
@@ -219,13 +254,13 @@ fn unknown_issuer_bad_signature_and_duplicates_are_refused_without_events() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     let head = ledger.head().unwrap();
     // Emissor desconhecido: assinatura válida, mas fora da raiz.
     let stranger = FileSigner::from_seed(&[0x13; 32]).unwrap();
     let foreign = fact(&ledger, &stranger, &w, Validity::Until(u64::MAX));
     assert!(matches!(
-        register(&mut ledger, &roots, foreign),
+        register(&mut ledger, foreign),
         Err(TransportError::Unauthorized)
     ));
     // Assinatura que não cobre o corpo publicado: fórmula trocada depois de assinar.
@@ -244,24 +279,24 @@ fn unknown_issuer_bad_signature_and_duplicates_are_refused_without_events() {
         .cas()
         .put::<Fact>(&to_canon(&forged).unwrap())
         .unwrap();
-    assert!(register(&mut ledger, &roots, forged).is_err());
+    assert!(register(&mut ledger, forged).is_err());
     // Fato ausente do CAS e bytes que não são fact/v1.
-    assert!(register(&mut ledger, &roots, Hash::from_bytes([3; 32])).is_err());
+    assert!(register(&mut ledger, Hash::from_bytes([3; 32])).is_err());
     let junk = ledger
         .cas()
         .put::<Fact>(&to_canon(&w.chove).unwrap())
         .unwrap();
-    assert!(register(&mut ledger, &roots, junk).is_err());
+    assert!(register(&mut ledger, junk).is_err());
     assert_eq!(ledger.head().unwrap(), head);
     // O mesmo fato só é registrado uma vez.
     let good = fact(&ledger, &trusted, &w, Validity::Until(u64::MAX));
-    let event = register(&mut ledger, &roots, good).unwrap();
+    let event = register(&mut ledger, good).unwrap();
     assert_eq!(
         ledger.live_index().unwrap().fact_event(good).unwrap(),
         Some(event)
     );
     let head = ledger.head().unwrap();
-    assert!(register(&mut ledger, &roots, good).is_err());
+    assert!(register(&mut ledger, good).is_err());
     assert_eq!(ledger.head().unwrap(), head);
     assert_eq!(
         ledger
@@ -283,7 +318,7 @@ fn criterion_fact_valid_3_to_5_is_citable_in_4_and_refused_in_6() {
     let mut ledger = Ledger::open(&path, &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     advance(&mut ledger, 3);
     let f = fact(
         &ledger,
@@ -291,7 +326,7 @@ fn criterion_fact_valid_3_to_5_is_citable_in_4_and_refused_in_6() {
         &w,
         Validity::Epochs(EpochRange::new(3, 5).unwrap()),
     );
-    let registered = register(&mut ledger, &roots, f).unwrap();
+    let registered = register(&mut ledger, f).unwrap();
     // Época 4: citável pelo gerador real; a prova LRAT usa o fato e o used o rastreia.
     advance(&mut ledger, 4);
     assert!(
@@ -353,24 +388,24 @@ fn criterion_expired_fact_is_not_citable() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     // Já vencido no registro: recusado.
     let past = fact(&ledger, &trusted, &w, Validity::Until(1));
-    assert!(register(&mut ledger, &roots, past).is_err());
+    assert!(register(&mut ledger, past).is_err());
     let old = fact(
         &ledger,
         &trusted,
         &w,
         Validity::Epochs(EpochRange::new(0, 0).unwrap()),
     );
-    let by_epoch = register(&mut ledger, &roots, old).unwrap();
+    let by_epoch = register(&mut ledger, old).unwrap();
     // Vence durante a sessão: citável antes, recusado (Expired) depois.
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
     let soon = fact(&ledger, &trusted, &w, Validity::Until(now + 2));
-    let by_time = register(&mut ledger, &roots, soon).unwrap();
+    let by_time = register(&mut ledger, soon).unwrap();
     accepted(&propose(&mut ledger, &w, vec![by_time]));
     std::thread::sleep(std::time::Duration::from_secs(4));
     assert!(!ledger.live_index().unwrap().is_citable(by_time, 0).unwrap());
@@ -397,7 +432,7 @@ fn criterion_expired_fact_is_not_citable() {
         .cas()
         .put::<Fact>(&to_canon(&stale).unwrap())
         .unwrap();
-    assert!(register(&mut ledger, &roots, stale).is_err());
+    assert!(register(&mut ledger, stale).is_err());
     assert_eq!(ledger.head().unwrap(), head_after);
 }
 
@@ -409,9 +444,9 @@ fn independent_auditor_reverifies_fact_signatures() {
     let mut ledger = Ledger::open(&path, &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     let f = fact(&ledger, &trusted, &w, Validity::Until(u64::MAX));
-    register(&mut ledger, &roots, f).unwrap();
+    register(&mut ledger, f).unwrap();
     drop(ledger);
     let report = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap();
     assert_eq!(report.facts, 1);
@@ -448,7 +483,7 @@ fn projection_refuses_a_used_fact_outside_its_window() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     advance(&mut ledger, 3);
     let f = fact(
         &ledger,
@@ -456,7 +491,7 @@ fn projection_refuses_a_used_fact_outside_its_window() {
         &w,
         Validity::Epochs(EpochRange::new(3, 5).unwrap()),
     );
-    let registered = register(&mut ledger, &roots, f).unwrap();
+    let registered = register(&mut ledger, f).unwrap();
     advance(&mut ledger, 4);
     let reply = propose(&mut ledger, &w, vec![registered]);
     let o: Hash<Obligation> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
@@ -585,7 +620,6 @@ fn and(parts: &[Formula]) -> Formula {
 
 fn register_formula(
     ledger: &mut L<'_>,
-    roots: &TrustRoots,
     issuer: &FileSigner,
     formula: Formula,
     hv: Hash<Vocabulary>,
@@ -601,7 +635,7 @@ fn register_formula(
     )
     .unwrap();
     let h = ledger.cas().put::<Fact>(&to_canon(&fact).unwrap()).unwrap();
-    register(ledger, roots, h).unwrap()
+    register(ledger, h).unwrap()
 }
 
 fn propose_goal(
@@ -631,7 +665,7 @@ fn criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     let (v, conjunction) = sourced_colors();
     let hv = ledger
         .cas()
@@ -639,7 +673,7 @@ fn criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used() {
         .unwrap();
     let goal = ok_of(&v, None);
     let inventory = and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]);
-    let both = register_formula(&mut ledger, &roots, &trusted, inventory, hv);
+    let both = register_formula(&mut ledger, &trusted, inventory, hv);
 
     // Fonte ausente: sem o fato do fecho, PROPOSE recusa e nada é gravado.
     let head = ledger.head().unwrap();
@@ -665,7 +699,7 @@ fn criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used() {
         Limits::default(),
     )
     .unwrap();
-    let forged = register_formula(&mut ledger, &roots, &trusted, closure_red, hv);
+    let forged = register_formula(&mut ledger, &trusted, closure_red, hv);
     let head = ledger.head().unwrap();
     refused(&propose_goal(
         &mut ledger,
@@ -727,7 +761,7 @@ fn criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used() {
     assert_eq!(ledger.head().unwrap(), head);
 
     // Fonte registrada: axiomas em O, prova LRAT real e used/deps com o fato da fonte.
-    let source = register_formula(&mut ledger, &roots, &trusted, conjunction.clone(), hv);
+    let source = register_formula(&mut ledger, &trusted, conjunction.clone(), hv);
     let reply = propose_goal(&mut ledger, &w.handlers, hv, goal, vec![both, source]);
     let o: Hash<Obligation> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
     let bytes = ledger.cas().get(&o).unwrap().unwrap();
@@ -769,23 +803,16 @@ fn enumeration_source_must_match_the_vocabulary_and_policy_stays_refused() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     // FactRef que não é o hash da conjunção de V: nenhum fato pode ser a fonte.
     let v = colors(logos_air::FactRef([7; 32]));
     let hv = ledger
         .cas()
         .put::<Vocabulary>(&to_canon(&v).unwrap())
         .unwrap();
-    let source = register_formula(
-        &mut ledger,
-        &roots,
-        &trusted,
-        enumeration_conjunction(&v),
-        hv,
-    );
+    let source = register_formula(&mut ledger, &trusted, enumeration_conjunction(&v), hv);
     let both = register_formula(
         &mut ledger,
-        &roots,
         &trusted,
         and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]),
         hv,
@@ -821,6 +848,7 @@ impl logos_obligation::LedgerView for Entries<'_> {
                 epoch: 0,
                 retracted: false,
                 expired: false,
+                untrusted: false,
                 vocabulary: self.0,
                 formula,
             }))
@@ -834,7 +862,7 @@ fn certify_rechecks_the_source_of_a_pending_written_without_it() {
     let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
     let w = world(&mut ledger, &kernel);
     let trusted = issuer();
-    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    trust(&mut ledger, &trusted, 1);
     let (v, _) = sourced_colors();
     let hv = ledger
         .cas()
@@ -842,7 +870,7 @@ fn certify_rechecks_the_source_of_a_pending_written_without_it() {
         .unwrap();
     let goal = ok_of(&v, None);
     let inventory = and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]);
-    let both = register_formula(&mut ledger, &roots, &trusted, inventory.clone(), hv);
+    let both = register_formula(&mut ledger, &trusted, inventory.clone(), hv);
     let mut entries = vec![(both, EntryKind::Fact, inventory)];
     let axioms = logos_ground::domain_axioms(
         &v,
@@ -924,4 +952,353 @@ fn certify_rechecks_the_source_of_a_pending_written_without_it() {
         },
     ));
     assert_eq!(ledger.head().unwrap(), head);
+}
+
+fn fact_on(ledger: &L<'_>, issuer: &FileSigner, w: &World, topic: &str) -> Hash<Fact> {
+    let fact = Fact::sign(
+        issuer,
+        w.chove.clone(),
+        w.hv,
+        Text::new(topic).unwrap(),
+        1_700_000_000,
+        Validity::Until(u64::MAX),
+        None,
+    )
+    .unwrap();
+    ledger.cas().put::<Fact>(&to_canon(&fact).unwrap()).unwrap()
+}
+
+#[test]
+fn criterion_db_monitor_signing_a_backup_fact_is_not_citable() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let db = FileSigner::from_seed(&[0xdb; 32]).unwrap();
+    let backup = FileSigner::from_seed(&[0xba; 32]).unwrap();
+    // Sem configuração publicada, ninguém atesta.
+    let early = fact_on(&ledger, &db, &w, "db");
+    assert!(matches!(
+        register(&mut ledger, early),
+        Err(TransportError::Unauthorized)
+    ));
+    let v1 = grant(
+        &mut ledger,
+        &[
+            (&db, "db-monitor", &["db"]),
+            (&backup, "backup-svc", &["backup"]),
+        ],
+        1,
+    );
+    // db-monitor assinando fato de tópico backup: recusado, nada gravado.
+    let head = ledger.head().unwrap();
+    let crossed = fact_on(&ledger, &db, &w, "backup");
+    assert!(matches!(
+        register(&mut ledger, crossed),
+        Err(TransportError::Unauthorized)
+    ));
+    assert_eq!(ledger.head().unwrap(), head);
+    assert_eq!(
+        ledger.live_index().unwrap().fact_event(crossed).unwrap(),
+        None
+    );
+    // Cada emissor no próprio tópico: citável, com a concessão explícita.
+    let own = register(&mut ledger, early).unwrap();
+    let backup_fact = fact_on(&ledger, &backup, &w, "backup");
+    let backups = register(&mut ledger, backup_fact).unwrap();
+    let index = ledger.live_index().unwrap();
+    assert!(index.is_citable(own, 0).unwrap());
+    assert!(index.is_citable(backups, 0).unwrap());
+    assert_eq!(index.fact_trust(backups).unwrap(), Some(v1));
+    drop(index);
+    accepted(&propose(&mut ledger, &w, vec![own]));
+    // Configuração nova (v2) tira `db` do db-monitor: o fato dele deixa de ser citável.
+    let v2 = grant(
+        &mut ledger,
+        &[
+            (&db, "db-monitor", &["db-replica"]),
+            (&backup, "backup-svc", &["backup"]),
+        ],
+        2,
+    );
+    let index = ledger.live_index().unwrap();
+    assert!(!index.is_citable(own, 0).unwrap());
+    assert_eq!(index.fact_trust(own).unwrap(), None);
+    assert_eq!(index.fact_trust(backups).unwrap(), Some(v2));
+    assert_eq!(index.trust_version().unwrap(), Some(2));
+    drop(index);
+    let head = ledger.head().unwrap();
+    refused(&propose(&mut ledger, &w, vec![own]));
+    assert_eq!(ledger.head().unwrap(), head);
+    accepted(&propose(&mut ledger, &w, vec![backups]));
+    // Auditor independente reaplica as configurações e confere cada fato.
+    drop(ledger);
+    let report = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap();
+    assert_eq!((report.facts, report.trust_configs), (2, 2));
+    // Índice reconstruído do zero chega ao mesmo estado.
+    let rebuilt = LedgerIndex::open(&path, kernel.public_key()).unwrap();
+    assert!(!rebuilt.is_citable(own, 0).unwrap());
+    assert!(rebuilt.is_citable(backups, 0).unwrap());
+}
+
+#[test]
+fn trust_config_needs_the_admin_an_increasing_version_and_a_valid_object() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
+    world(&mut ledger, &kernel);
+    let db = FileSigner::from_seed(&[0xdb; 32]).unwrap();
+    let config = |version| {
+        TrustConfig::new(
+            version,
+            vec![TrustRoot {
+                issuer: db.public_key().clone(),
+                name: Text::new("db-monitor").unwrap(),
+                topics: vec![Text::new("db").unwrap()],
+                level: 1,
+            }],
+        )
+        .unwrap()
+    };
+    let put = |ledger: &L<'_>, c: &TrustConfig| {
+        ledger
+            .cas()
+            .put::<TrustConfig>(&to_canon(c).unwrap())
+            .unwrap()
+    };
+    let admin = admin();
+    let head = ledger.head().unwrap();
+    // Outro signer que não o admin configurado.
+    let h3 = put(&ledger, &config(3));
+    assert!(matches!(
+        publish_trust(&mut ledger, admin.public_key(), &db, h3),
+        Err(TransportError::Unauthorized)
+    ));
+    // Objeto ausente e bytes que não são trust/v1.
+    assert!(
+        publish_trust(
+            &mut ledger,
+            admin.public_key(),
+            &admin,
+            Hash::from_bytes([4; 32])
+        )
+        .is_err()
+    );
+    let junk = ledger
+        .cas()
+        .put::<TrustConfig>(&to_canon(&Text::new("x").unwrap()).unwrap())
+        .unwrap();
+    assert!(publish_trust(&mut ledger, admin.public_key(), &admin, junk).is_err());
+    assert_eq!(ledger.head().unwrap(), head);
+    // Versão estritamente crescente.
+    publish_trust(&mut ledger, admin.public_key(), &admin, h3).unwrap();
+    let head = ledger.head().unwrap();
+    for version in [2, 3] {
+        let h = put(&ledger, &config(version));
+        assert!(publish_trust(&mut ledger, admin.public_key(), &admin, h).is_err());
+    }
+    assert_eq!(ledger.head().unwrap(), head);
+    // O evento carrega a assinatura do admin sobre h(config).
+    let seq = ledger.head().unwrap().unwrap().seq;
+    let event = ledger.events_from(seq, 1).unwrap().pop().unwrap();
+    event.body.verify_authority(admin.public_key()).unwrap();
+    assert!(event.body.verify_authority(db.public_key()).is_err());
+    // Formato: versão 0, tópicos fora de ordem ou repetidos não constroem.
+    assert!(TrustConfig::new(0, config(1).roots).is_err());
+    let mut unordered = config(1).roots;
+    unordered[0].topics = vec![Text::new("z").unwrap(), Text::new("a").unwrap()];
+    assert!(TrustConfig::new(1, unordered).is_err());
+    let mut twice = config(1).roots;
+    twice.push(twice[0].clone());
+    assert!(TrustConfig::new(1, twice).is_err());
+}
+
+#[test]
+fn projection_and_auditor_refuse_a_fact_registered_without_trust() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let db = FileSigner::from_seed(&[0xdb; 32]).unwrap();
+    grant(&mut ledger, &[(&db, "db-monitor", &["db"])], 1);
+    // FactRegistered gravado sem o kernel para um tópico que o emissor não tem.
+    let crossed = fact_on(&ledger, &db, &w, "backup");
+    ledger
+        .append(EventBody::FactRegistered { fact: crossed })
+        .unwrap();
+    assert!(ledger.live_index().is_err());
+    drop(ledger);
+    let error = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap_err();
+    assert!(error.to_string().contains("not trusted"), "{error}");
+}
+
+#[test]
+fn projection_refuses_used_facts_after_trust_is_withdrawn_and_stale_versions() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let path = temp.0.join("ledger");
+    let mut ledger = Ledger::open(&path, &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let backup = FileSigner::from_seed(&[0xba; 32]).unwrap();
+    grant(&mut ledger, &[(&backup, "backup-svc", &["backup"])], 1);
+    let f = fact_on(&ledger, &backup, &w, "backup");
+    let registered = register(&mut ledger, f).unwrap();
+    let reply = propose(&mut ledger, &w, vec![registered]);
+    let o: Hash<Obligation> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
+    let c = proof(&ledger, o, &w.v);
+    accepted(&exchange(
+        &mut ledger,
+        &w.handlers,
+        Message::Certify {
+            obligation: o,
+            format: Text::new(LRAT).unwrap(),
+            certificate: ObjectRef::Cas(c),
+        },
+    ));
+    let seq = ledger.head().unwrap().unwrap().seq;
+    let verified = ledger.events_from(seq, 1).unwrap().pop().unwrap().body;
+    // v2 retira `backup`; a mesma rota gravada sem o kernel depois disso é recusada.
+    let other = FileSigner::from_seed(&[0x0b; 32]).unwrap();
+    grant(&mut ledger, &[(&other, "outro", &["outro"])], 2);
+    ledger.live_index().unwrap();
+    let mut stale = ledger.append(verified);
+    assert!(stale.is_ok());
+    assert!(ledger.live_index().is_err());
+    drop(ledger);
+    assert!(LedgerIndex::open(&path, kernel.public_key()).is_err());
+
+    // Versão igual ou menor, gravada sem o kernel: projeção e auditor recusam.
+    for version in [5, 4] {
+        let temp = Temp::new();
+        let path = temp.0.join("ledger");
+        let mut ledger = Ledger::open(&path, &kernel).unwrap();
+        world(&mut ledger, &kernel);
+        grant(&mut ledger, &[(&backup, "backup-svc", &["backup"])], 5);
+        let config = TrustConfig::new(
+            version,
+            vec![TrustRoot {
+                issuer: other.public_key().clone(),
+                name: Text::new("outro").unwrap(),
+                topics: vec![Text::new("outro").unwrap()],
+                level: 1,
+            }],
+        )
+        .unwrap();
+        let h = ledger
+            .cas()
+            .put::<TrustConfig>(&to_canon(&config).unwrap())
+            .unwrap();
+        let admin = admin();
+        let mut body = EventBody::TrustConfigPublished {
+            config: h,
+            authority: logos_ledger::Authority {
+                key: admin.key_id().unwrap(),
+                sig: admin.sign::<Event>(b"").unwrap(),
+            },
+        };
+        let message = body.authority_message().unwrap().unwrap();
+        if let EventBody::TrustConfigPublished { authority, .. } = &mut body {
+            authority.sig = admin.sign::<Event>(&message).unwrap();
+        }
+        stale = ledger.append(body);
+        assert!(stale.is_ok());
+        assert!(ledger.live_index().is_err(), "version {version}");
+        drop(ledger);
+        let error = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap_err();
+        assert!(error.to_string().contains("version"), "{error}");
+    }
+}
+
+#[test]
+fn auditor_decodes_trust_configs_strictly() {
+    use logos_canon::{Array, Canon};
+    let db = FileSigner::from_seed(&[0xdb; 32]).unwrap();
+    let text = |s: &str| Value::Text(Text::new(s).unwrap());
+    let array = |items: Vec<Value>| Value::Array(Array::new(items).unwrap());
+    let root = |topics: &[&str]| {
+        array(vec![
+            db.public_key().to_value().unwrap(),
+            text("db-monitor"),
+            array(topics.iter().map(|t| text(t)).collect()),
+            Value::Unsigned(1),
+        ])
+    };
+    // Formas que o decoder do ledger recusa; o auditor também, por conta própria.
+    let bad = [
+        (
+            "topics not in strict order",
+            array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(1),
+                array(vec![root(&["z", "a"])]),
+            ]),
+        ),
+        (
+            "KeyId order",
+            array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(1),
+                array(vec![root(&["db"]), root(&["db"])]),
+            ]),
+        ),
+        (
+            "topics",
+            array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(1),
+                array(vec![root(&[])]),
+            ]),
+        ),
+        (
+            "roots",
+            array(vec![Value::Unsigned(1), Value::Unsigned(1), array(vec![])]),
+        ),
+        (
+            "text",
+            array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(1),
+                array(vec![root(&[""])]),
+            ]),
+        ),
+        (
+            "version",
+            array(vec![
+                Value::Unsigned(1),
+                Value::Unsigned(0),
+                array(vec![root(&["db"])]),
+            ]),
+        ),
+    ];
+    let kernel = signer();
+    let admin = admin();
+    for (reason, config) in bad {
+        let temp = Temp::new();
+        let path = temp.0.join("ledger");
+        let mut ledger = Ledger::open(&path, &kernel).unwrap();
+        world(&mut ledger, &kernel);
+        let h = ledger
+            .cas()
+            .put::<TrustConfig>(&to_canon(&config).unwrap())
+            .unwrap();
+        assert!(logos_canon::from_canon::<TrustConfig>(&to_canon(&config).unwrap()).is_err());
+        let mut body = EventBody::TrustConfigPublished {
+            config: h,
+            authority: logos_ledger::Authority {
+                key: admin.key_id().unwrap(),
+                sig: admin.sign::<Event>(b"").unwrap(),
+            },
+        };
+        let message = body.authority_message().unwrap().unwrap();
+        if let EventBody::TrustConfigPublished { authority, .. } = &mut body {
+            authority.sig = admin.sign::<Event>(&message).unwrap();
+        }
+        let appended = ledger.append(body);
+        assert!(appended.is_ok());
+        drop(ledger);
+        let error = logos_audit::verify(&path, &path.join("cas"), kernel.public_key()).unwrap_err();
+        assert!(error.to_string().contains(reason), "{reason}: {error}");
+    }
 }

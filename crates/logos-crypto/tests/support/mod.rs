@@ -41,7 +41,7 @@ hash_domains! {
     DObligation => tags::OBLIGATION, DCertificate => tags::CERTIFICATE, DChecker => tags::CHECKER,
     DModel => tags::MODEL, DGround => tags::GROUND, DCnf => tags::CNF, DEvent => tags::EVENT, DFact => tags::FACT, DPolicy => tags::POLICY,
     DContract => tags::CONTRACT, DAction => tags::ACTION, DParaphrase => tags::PARAPHRASE,
-    DToken => tags::TOKEN, DAssumption => tags::ASSUMPTION,
+    DToken => tags::TOKEN, DAssumption => tags::ASSUMPTION, DTrust => tags::TRUST,
 }
 
 /// `hash_raw` no domínio chamado `name` (nome da tabela de spec/domains.md).
@@ -66,6 +66,7 @@ pub fn hash_by_name(name: &str, msg: &[u8]) -> String {
         "paraphrase" => hash_raw::<DParaphrase>(msg).to_hex(),
         "token" => hash_raw::<DToken>(msg).to_hex(),
         "assumption" => hash_raw::<DAssumption>(msg).to_hex(),
+        "trust" => hash_raw::<DTrust>(msg).to_hex(),
         other => panic!("domínio desconhecido nos vetores: {other}"),
     }
 }
