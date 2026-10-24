@@ -348,6 +348,7 @@ name = "logos"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "mcp" },
     { name = "pydantic" },
     { name = "z3-solver" },
@@ -355,7 +356,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "cryptography" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -363,6 +363,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "mcp", specifier = "==2.3.0" },
     { name = "pydantic", specifier = "==2.14.1" },
     { name = "z3-solver", specifier = "==5.1.0.0" },
@@ -370,7 +371,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "mypy", specifier = ">=1.13" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.8" },

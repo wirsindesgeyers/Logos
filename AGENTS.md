@@ -24,9 +24,11 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 2. Implementar com testes. **Critério de conclusão é contrato**: cada item vira um teste, script
    ou artefato reproduzível. Só marque `- [x]` no `ROADMAP.md` o que foi *demonstrado*
    (localmente basta se o item não depende da CI; se depende, marque só depois de ver a CI).
-3. Rodar `ci/verify.sh --tier fast` (ou `--tier affected`) a cada commit e corrigir tudo. Etapas
-   independentes podem andar em `git worktree` paralelos; a verificação **completa** roda na ponta
-   da pilha antes de qualquer push e antes de marcar critérios (ADR 0051, ADR 0057).
+3. Durante a etapa, rodar só testes direcionados dos crates tocados; `ci/verify.sh --tier fast`
+   é opcional por commit (recomendado se a etapa mexe em crate compartilhado ou formato). Etapas
+   independentes podem andar em `git worktree` paralelos; a verificação **completa** roda **no
+   fim da fase** (e antes de qualquer push) e só então se marcam critérios (ADR 0066, que revisa
+   os ADRs 0051 e 0057).
 4. Atualizar `STATUS.md` (§6) **no mesmo commit** do trabalho.
 5. Commitar (§5).
 
@@ -52,7 +54,7 @@ numerado da seção N); plano completo em [`ROADMAP.md`](ROADMAP.md).
 ## 4. Verificação (níveis, ADR 0057)
 
 ```sh
-ci/verify.sh --tier fast      # a cada commit (minutos): build do cake_lpr, fmt, clippy -D warnings,
+ci/verify.sh --tier fast      # opcional por commit, recomendado em crate compartilhado (minutos): build do cake_lpr, fmt, clippy -D warnings,
                               # cargo test --workspace com LOGOS_TIER=fast (escala reduzida, mesma lógica),
                               # lints/manifesto/independência da TCB, ruff/mypy, vetores --check,
                               # pytest -m "not heavy"; sem smokes de integração, sem rede
@@ -106,10 +108,10 @@ Se uma etapa de `ci/verify.sh` mudar, mude o script (e este trecho), não só o 
   (decisão do mantenedor). Vale para qualquer agente.
 - Só faça `git push` quando o mantenedor pedir (ou já tiver pedido nesta sessão). Nunca use
   `--force` sem pedido explícito. A branch é `main`; o remoto é `origin` (GitHub).
-- Commit local exige `ci/verify.sh --tier fast` (ou `affected`) passando, mais mutações quando a
-  etapa toca TCB (ADR 0057, revisa o 0051); **push** exige a verificação
-  completa passando na ponta da pilha (no máximo três commits de etapa sem ela), com o recibo
-  listando os commits cobertos. Critérios que dependem dela só são marcados depois.
+- Commit local exige `fmt` + `clippy` + testes dos crates tocados e dependentes, mais mutações
+  quando a etapa toca TCB (ADR 0066); **push** exige a verificação completa passando na ponta,
+  com o recibo listando os commits cobertos, e ela roda no fim de cada fase. Critérios que
+  dependem dela só são marcados depois.
   Se um commit local ainda não foi enviado e
   precisa de correção, `--amend` é aceitável; depois de enviado, faça um commit novo.
 

@@ -233,6 +233,18 @@ version = "0.0.0"
 [[package]]
 name = "logos-attest"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-audit",
+ "logos-canon",
+ "logos-core",
+ "logos-crypto",
+ "logos-ground",
+ "logos-kernel",
+ "logos-ledger",
+ "rusqlite",
+ "serde_json",
+]
 
 [[package]]
 name = "logos-audit"
@@ -262,6 +274,7 @@ name = "logos-cli"
 version = "0.0.0"
 dependencies = [
  "logos-air",
+ "logos-attest",
  "logos-canon",
  "logos-core",
  "logos-crypto",

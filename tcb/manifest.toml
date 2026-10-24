@@ -154,4 +154,4 @@ name = "logos-attest"
 properties = ["fidelity"]
 strict = false
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/lib.rs", "src/sdk.rs", "src/reference/mod.rs", "src/reference/backup_svc.rs", "src/reference/clock.rs", "src/reference/db_monitor.rs", "src/reference/enum_source.rs", "src/reference/fs_stat.rs", "src/reference/sandbox_run.rs"]

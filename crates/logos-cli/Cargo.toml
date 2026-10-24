@@ -13,6 +13,7 @@ name = "logos"
 path = "src/main.rs"
 
 [dependencies]
+logos-air = { path = "../logos-air" }
 logos-canon = { path = "../logos-canon" }
 logos-core = { path = "../logos-core" }
 logos-ledger = { path = "../logos-ledger" }
@@ -20,7 +21,7 @@ logos-crypto = { path = "../logos-crypto" }
 logos-kernel = { path = "../logos-kernel" }
 
 [dev-dependencies]
-logos-air = { path = "../logos-air" }
+logos-attest = { path = "../logos-attest" }
 
 [lints]
 workspace = true

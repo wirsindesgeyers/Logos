@@ -1,0 +1,22 @@
+{
+  "etapa": "6.3",
+  "alvo": "crates/logos-attest/src",
+  "comando": "cargo test -p logos-attest --test reference --test vectors",
+  "mutacoes": [
+    {"id": "M1", "descricao": "clock: tolerância exclusiva (skew < tol)", "resultado": "morta"},
+    {"id": "M2", "descricao": "fs-stat: segue link simbólico", "resultado": "morta"},
+    {"id": "M3", "descricao": "fs-stat: presença invertida", "resultado": "morta"},
+    {"id": "M4", "descricao": "backup-svc: aceita backup do futuro", "resultado": "morta"},
+    {"id": "M5", "descricao": "backup-svc: idade máxima exclusiva", "resultado": "morta (após teste de fronteira)"},
+    {"id": "M6", "descricao": "sandbox-run: sem checagem de determinismo", "resultado": "morta"},
+    {"id": "M7", "descricao": "sandbox-run: sem --unshare-net (listener do host alcançável)", "resultado": "morta"},
+    {"id": "M8", "descricao": "sandbox-run: /home do host visível", "resultado": "morta"},
+    {"id": "M9", "descricao": "sandbox-run: ignora script alterado durante a execução", "resultado": "morta (após teste de corrida)"},
+    {"id": "M10", "descricao": "enum-source: FactRef zerado no vocabulário final", "resultado": "morta"},
+    {"id": "M11", "descricao": "db-monitor: nome de tabela com injeção de SQL aceito", "resultado": "morta"},
+    {"id": "M12", "descricao": "db-monitor: linha ausente vira presente", "resultado": "morta"},
+    {"id": "M13", "descricao": "sdk: validade no passado (checked_sub)", "resultado": "morta"},
+    {"id": "M14", "descricao": "sdk: tópico trocado no fato", "resultado": "morta"},
+    {"id": "M15", "descricao": "sdk: negação omitida em literal()", "resultado": "morta"}
+  ]
+}

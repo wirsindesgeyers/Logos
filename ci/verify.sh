@@ -72,7 +72,7 @@ step mypy py uv run mypy
 step mypy-tools py uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests \
   ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py \
   ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py \
-  ../tools/gen_render_template_vectors.py ../tools/gen_notebook_vectors.py ../tools/gen_fact_vectors.py ../tools/gen_trust_vectors.py \
+  ../tools/gen_render_template_vectors.py ../tools/gen_notebook_vectors.py ../tools/gen_fact_vectors.py ../tools/gen_trust_vectors.py ../tools/gen_attest_vectors.py \
   ../tools/gen_paraphrase_vectors.py ../tools/check_ws_docs.py ../tools/gen_obligation_vectors.py \
   ../tools/gen_protocol_vectors.py ../tools/gen_kernel_protocol_vectors.py \
   ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py \
@@ -82,7 +82,7 @@ step mypy-tools py uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../t
   ../tools/check_ledger_crash.py ../tools/verify_plan.py ../tools/check_isolation.py
 # Vetores normativos: todo gerador confere os arquivos versionados (--check).
 for generator in unicode_assigned crypto_vectors cas_vectors core_vectors air_vectors \
-  vocabulary_vectors paraphrase_vectors notebook_vectors fact_vectors trust_vectors obligation_vectors protocol_vectors \
+  vocabulary_vectors paraphrase_vectors notebook_vectors fact_vectors trust_vectors attest_vectors obligation_vectors protocol_vectors \
   kernel_protocol_vectors model_vectors event_vectors audit_vectors fragment_vectors \
   grounding_vectors cnf_vectors lrat_vectors; do
   step "vectors-$generator" py uv run python "../tools/gen_$generator.py" --check
