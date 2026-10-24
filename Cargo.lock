@@ -395,6 +395,24 @@ dependencies = [
 [[package]]
 name = "logos-policy"
 version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-air-text",
+ "logos-canon",
+ "logos-crypto",
+ "serde_json",
+]
+
+[[package]]
+name = "logos-policy-text"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-air-text",
+ "logos-canon",
+ "logos-policy",
+ "serde_json",
+]
 
 [[package]]
 name = "logos-protocol"

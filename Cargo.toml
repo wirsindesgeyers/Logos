@@ -16,6 +16,7 @@ members = [
     "crates/logos-ledger",
     "crates/logos-seal",
     "crates/logos-policy",
+    "crates/logos-policy-text",
     "crates/logos-token",
     "crates/logos-kernel",
     "crates/logos-gateway",

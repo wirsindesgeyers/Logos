@@ -34,6 +34,7 @@ allow = [
   { name = "logos-ledger" }, # ADRs 0020/0021/0025/0033: eventos/SQLite; model/ground/lrat só dev
   { name = "logos-seal" }, # ADR0050: paráfrase 9.1 → air/canon/crypto workspace, sem externa
   { name = "logos-policy" },
+  { name = "logos-policy-text" }, # fora da TCB, ADR 0069: air-text/policy/canon/air workspace
   { name = "logos-token" },
   { name = "logos-kernel" }, # ADR0034/0035: air/canon/core/crypto/ledger/obligation/rustix; protocol/trybuild/JSON dev
   { name = "logos-gateway" },

@@ -261,6 +261,7 @@ dependencies = [
  "logos-lrat",
  "logos-model",
  "logos-obligation",
+ "logos-policy",
  "logos-seal",
 ]
 
@@ -333,6 +334,15 @@ dependencies = [
  "logos-air",
  "logos-canon",
  "logos-core",
+ "logos-crypto",
+]
+
+[[package]]
+name = "logos-policy"
+version = "0.0.0"
+dependencies = [
+ "logos-air",
+ "logos-canon",
  "logos-crypto",
 ]
 

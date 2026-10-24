@@ -94,6 +94,24 @@ for case in cases:
 print(f"trust_decode: {len(cases)} sementes no corpus")
 PY
   fi
+  if [ "$t" = policy_decode ]; then
+    # Políticas válidas e inválidas dos vetores independentes (7.1) como sementes.
+    python3 - ../spec/vectors/policy/policy.json corpus/policy_decode <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+corpus = Path(sys.argv[2])
+corpus.mkdir(parents=True, exist_ok=True)
+cases = root["valid"] + root["invalid"]
+for case in cases:
+    wire = bytes.fromhex(case["policy_canon_hex"])
+    (corpus / hashlib.sha256(wire).hexdigest()).write_bytes(wire)
+print(f"policy_decode: {len(cases)} sementes no corpus")
+PY
+  fi
   if [ "$t" = cnf_decode ] || [ "$t" = lrat_decode ]; then
     python3 - "$t" <<'SEED'
 import hashlib

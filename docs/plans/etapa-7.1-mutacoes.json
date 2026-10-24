@@ -1,0 +1,106 @@
+{
+  "etapa": "7.1",
+  "comando": "cargo test -p logos-policy -p logos-policy-text",
+  "mutacoes": [
+    {
+      "id": "P1",
+      "descricao": "sort-check ignorado",
+      "resultado": "morta"
+    },
+    {
+      "id": "P2",
+      "descricao": "duplicata aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "P3",
+      "descricao": "ordem não conferida",
+      "resultado": "morta"
+    },
+    {
+      "id": "P4",
+      "descricao": "cabeça allow qualquer",
+      "resultado": "morta"
+    },
+    {
+      "id": "P5",
+      "descricao": "deny com cabeça positiva",
+      "resultado": "morta"
+    },
+    {
+      "id": "P6",
+      "descricao": "derive define Allowed",
+      "resultado": "morta"
+    },
+    {
+      "id": "P7",
+      "descricao": "negação dupla aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "P8",
+      "descricao": "aresta negativa ignorada",
+      "resultado": "morta"
+    },
+    {
+      "id": "P9",
+      "descricao": "deny-overrides sem sinal",
+      "resultado": "morta"
+    },
+    {
+      "id": "P10",
+      "descricao": "versão 0 aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "P11",
+      "descricao": "require sem Allowed aceita",
+      "resultado": "morta"
+    },
+    {
+      "id": "P12",
+      "descricao": "vocabulário trocado aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "P13",
+      "descricao": "Allowed ausente aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "P14",
+      "descricao": "disjunção aceita no corpo",
+      "resultado": "morta"
+    },
+    {
+      "id": "P15",
+      "descricao": "tags allow/deny trocadas",
+      "resultado": "morta"
+    },
+    {
+      "id": "P16",
+      "descricao": "teto de regras no decode",
+      "resultado": "equivalente: o teto de regras também é conferido em validate()"
+    },
+    {
+      "id": "P17",
+      "descricao": "Allowed não unário aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "P18",
+      "descricao": "∀ no corpo aceito",
+      "resultado": "morta"
+    },
+    {
+      "id": "P19",
+      "descricao": "negação de bloco tratada como positiva",
+      "resultado": "morta"
+    },
+    {
+      "id": "P20",
+      "descricao": "comentário sem teto",
+      "resultado": "morta"
+    }
+  ]
+}

@@ -106,6 +106,28 @@ jobs:
           name: sort-check-coverage
           path: target/sort-check-coverage.json
 
+  policy-coverage:
+    name: Validação de políticas (100% dos ramos LLVM)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-09-28
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.9.1
+      - name: Exigir cobertura integral
+        run: ci/check-policy-coverage.sh
+      - name: Arquivar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-coverage
+          path: target/policy-coverage.json
+
   tcb-rules:
     name: Regras da TCB e independência do auditor
     runs-on: ubuntu-24.04
@@ -192,7 +214,7 @@ jobs:
       - run: uv run ruff check . ../tcb ../tools
       - run: uv run ruff format --check . ../tcb ../tools
       - run: uv run mypy
-      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_kernel_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/build_cadical.py ../tools/gen_sat_vectors.py ../tools/check_cnf.py ../tools/check_ledger_crash.py ../tools/gen_fact_vectors.py ../tools/gen_trust_vectors.py ../tools/gen_attest_vectors.py
+      - run: uv run mypy --strict ../tcb/tcb.py ../tcb/check_lints.py ../tcb/tests ../tools/gen_unicode_assigned.py ../tools/gen_crypto_vectors.py ../tools/gen_cas_vectors.py ../tools/gen_core_vectors.py ../tools/gen_air_vectors.py ../tools/gen_vocabulary_vectors.py ../tools/gen_obligation_vectors.py ../tools/gen_protocol_vectors.py ../tools/gen_kernel_protocol_vectors.py ../tools/gen_model_vectors.py ../tools/gen_event_vectors.py ../tools/gen_audit_vectors.py ../tools/gen_fragment_vectors.py ../tools/gen_grounding_vectors.py ../tools/gen_cnf_vectors.py ../tools/gen_lrat_vectors.py ../tools/lrat_corpus.py ../tools/build_cake_lpr.py ../tools/build_cadical.py ../tools/gen_sat_vectors.py ../tools/check_cnf.py ../tools/check_ledger_crash.py ../tools/gen_fact_vectors.py ../tools/gen_trust_vectors.py ../tools/gen_attest_vectors.py ../tools/gen_policy_vectors.py
       - run: uv run python ../tools/gen_unicode_assigned.py --check
       - run: uv run python ../tools/gen_crypto_vectors.py --check
       - run: uv run python ../tools/gen_cas_vectors.py --check
@@ -214,6 +236,7 @@ jobs:
       - run: uv run python ../tools/gen_fact_vectors.py --check
       - run: uv run python ../tools/gen_trust_vectors.py --check
       - run: uv run python ../tools/gen_attest_vectors.py --check
+      - run: uv run python ../tools/gen_policy_vectors.py --check
       - name: CNF contra SAT Z3 e tabela verdade (5 mil O)
         run: ../ci/check-cnf.sh
       - name: Dependências do produtor SAT e isolamento do checker

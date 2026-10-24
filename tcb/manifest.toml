@@ -112,7 +112,7 @@ name = "logos-policy"
 properties = ["correctness"]
 strict = true
 verified = "none"
-files = ["src/lib.rs"]
+files = ["src/error.rs", "src/lib.rs", "src/policy.rs", "src/shape.rs", "src/stratify.rs"]
 
 [[crate]]
 name = "logos-token"
