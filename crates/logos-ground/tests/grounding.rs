@@ -6,7 +6,9 @@ use logos_air::{
 use logos_canon::to_canon;
 use logos_core::Exhausted;
 use logos_crypto::hash;
-use logos_ground::{GroundError, GroundLimits, PropNode, ground, ground_with_limits};
+use logos_ground::{
+    GroundError, GroundLimits, PropNode, domain_axioms, ground, ground_with_limits,
+};
 use logos_model::{FiniteModel, ModelData, ModelLimits, eval};
 use std::collections::BTreeSet;
 use support::*;
@@ -657,4 +659,41 @@ fn tuple_coordinates_are_charged_before_creating_atom_arguments() {
             Err(GroundError::Unknown(Exhausted::Size))
         );
     }
+}
+
+#[test]
+fn enumeration_conjunction_is_exact_and_covers_the_sort_as_one_premise() {
+    // 6.1b (ADR0062): a fórmula que um fato de fonte afirma.
+    let v = vocab(3, vec![]);
+    let a = domain_axioms(&v, &sort("E")).unwrap();
+    let conjunction = a.conjunction().unwrap();
+    let mut expected = vec![F::And(4)];
+    for f in std::iter::once(a.closure()).chain(a.distinct()) {
+        expected.extend_from_slice(f.nodes());
+    }
+    assert_eq!(conjunction.nodes(), &expected[..]);
+    // Sozinha basta e vira o único suporte do sort; o fecho do sort é teorema.
+    let goal = a.closure().clone();
+    let g = ground(
+        &obligation(&v, &goal, std::slice::from_ref(&conjunction)),
+        &v,
+    )
+    .unwrap();
+    assert_eq!(g.domain_axioms().len(), 1);
+    assert!(tautology(&g));
+    // Com axiomas separados também presentes, a conjunção tem preferência.
+    let mut fs = axioms(&v);
+    fs.push(conjunction.clone());
+    let o = obligation(&v, &goal, &fs);
+    let g = ground(&o, &v).unwrap();
+    assert_eq!(g.domain_axioms(), &[o.premises().last().unwrap().0][..]);
+    // Outra ordem dos conjuntos não é a conjunção: falta o axioma.
+    let mut swapped = vec![F::And(4)];
+    for f in a.distinct().iter().chain(std::iter::once(a.closure())) {
+        swapped.extend_from_slice(f.nodes());
+    }
+    assert_eq!(
+        ground(&obligation(&v, &goal, &[f(swapped)]), &v),
+        Err(GroundError::MissingDomainAxiom)
+    );
 }

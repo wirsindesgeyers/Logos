@@ -60,3 +60,4 @@ assinatura `logos/sig/fact/v1` e o namespace CAS `fact-v1` já estavam reservado
   recusados e reconstruídos), `Reject::Expired`, campo `facts_verified` no auditor.
 - `LedgerEntry` ganha `expired` (todas as views precisam preenchê-lo).
 - Revogação de fatos e de emissores é da 6.4; tópicos, da 6.2.
+- 6.1b (fonte de enumeração): ADR0062.

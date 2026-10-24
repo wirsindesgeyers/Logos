@@ -506,19 +506,33 @@ fn ground_parts(
                 },
             )?;
             let start = references.len();
-            for f in std::iter::once(c.closure()).chain(c.distinct()) {
-                let mut found = None;
-                for (r, p) in source {
-                    e.dag.charge(f.node_count())?;
-                    if p == f {
-                        found = Some(*r);
-                        break;
-                    }
+            // 6.1b: uma premissa com a conjunção (fato de fonte) cobre o sort inteiro.
+            let conjunction = c.conjunction()?;
+            let mut whole = None;
+            for (r, p) in source {
+                e.dag.charge(conjunction.node_count())?;
+                if *p == conjunction {
+                    whole = Some(*r);
+                    break;
                 }
-                push(
-                    &mut references,
-                    found.ok_or(GroundError::MissingDomainAxiom)?,
-                )?;
+            }
+            if let Some(r) = whole {
+                push(&mut references, r)?;
+            } else {
+                for f in std::iter::once(c.closure()).chain(c.distinct()) {
+                    let mut found = None;
+                    for (r, p) in source {
+                        e.dag.charge(f.node_count())?;
+                        if p == f {
+                            found = Some(*r);
+                            break;
+                        }
+                    }
+                    push(
+                        &mut references,
+                        found.ok_or(GroundError::MissingDomainAxiom)?,
+                    )?;
+                }
             }
             let mut refs = space(references.len() - start, limits.max_cells)?;
             refs.extend_from_slice(&references[start..]);

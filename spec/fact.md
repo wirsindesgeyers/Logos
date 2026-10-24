@@ -52,7 +52,27 @@ logo após `Retracted` na precedência de obligation.md §3). Na replay da proje
 (`used` de um Verified), `Until` vale enquanto o fato estiver vivo: a replay não
 depende do relógio; o instante é conferido pelo kernel ao regenerar a obrigação.
 
-## 4. Auditoria
+## 4. Fonte de sort enumerado (6.1b, ADR0062)
+
+Um sort `Enumerated { constants, domain_source: Fact(r) }` de V só é usável se,
+em PROPOSE e de novo em CERTIFY/REFUTE/WITNESS (sobre O regenerado):
+
+1. `r = hash(Formula)` da conjunção `And(fecho, distinct…)` de V
+   (`spec/finite-fragment.md`); senão `enumeration source does not match vocabulary`;
+2. alguma premissa de O tem exatamente essa fórmula; senão
+   `missing enumeration source fact` (axiomas separados, ainda que aceitos pelo
+   grounder, não bastam);
+3. toda premissa de O com essa fórmula resolve, no snapshot que gerou O, para uma
+   entrada `Fact` (evento `FactRegistered` vivo e aplicável); hipótese ou Verified
+   com a mesma fórmula é `enumeration source is not a registered fact`.
+
+A premissa entra em O pelo gerador comum (citação do evento do fato), então a
+fonte é o `PremiseRef` do evento `FactRegistered`, nunca bytes copiados de `r`.
+Como ela é o suporte do sort no grounding, o `used` de qualquer prova que toque o
+domínio inclui o evento do fato, e o índice o registra em deps. Fonte `Policy` é
+recusada (`unresolved enumeration source`) até a 7.3. Recusa não grava evento.
+
+## 5. Auditoria
 
 O auditor independente confere o objeto no CAS e reverifica a assinatura do
 emissor (`facts_verified` em audit.md). Ele não decide confiança no emissor.

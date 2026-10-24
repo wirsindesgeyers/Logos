@@ -89,15 +89,24 @@ Limites não garantem RSS/tempo e não limitam tamanho dos nomes/bytes de V.
 
 ## Fronteira de proveniência e fases futuras
 
-DomainSource::Fact/Policy guarda hash de payload opaco da1.2, não digest de
-evento citável. MUST NOT copiar esses bytes para PremiseRef e tratá-los como
-evento conferido. Candidatos não demonstram existência/autenticidade da fonte.
+DomainSource::Fact/Policy guarda 32 bytes, não digest de evento citável. MUST
+NOT copiar esses bytes para PremiseRef e tratá-los como evento conferido.
+Candidatos não demonstram existência/autenticidade da fonte.
+
+**Conjunção de fonte (6.1b, ADR0062).** `AxiomCandidates::conjunction()` devolve
+`And(1+|distinct|)` seguido dos nós do fecho e de cada desigualdade, na ordem
+acima, sem normalização. `FactRef` de um sort Fact é `hash(Formula)` dessa
+conjunção. O grounder procura primeiro uma premissa de O exatamente igual a ela
+(comparação de AST, cobrada no DAG); se existe, ela é o único suporte do sort.
+Senão, exige cada axioma separado, como na4.2. O grounder não sabe de onde a
+premissa veio: a autoridade é do kernel (`spec/fact.md` §4).
 
 A decisão do mantenedor preserva integração factual em6.1 e política/
 completion em7.3, repetida para projeções com as_of:h(head) em7.5. Só esses
 caminhos com fontes/checkers reais podem ligar candidatos a O/used/deps.
 Grounder4.2 MUST exigir axiomas explícitos em O; não ganha fecho implícito.
-CERTIFY5.4 MUST recusar uso autorizador de fontes ainda não resolvidas.
+CERTIFY5.4 MUST recusar uso autorizador de fontes ainda não resolvidas; desde
+a6.1b, PROPOSE e CERTIFY resolvem Fact pelo fato registrado e recusam Policy.
 Não completar predicado a partir de mera ausência de fatos. Declaração de
 fragmento ou objeto candidato nunca emite Verified/token.
 

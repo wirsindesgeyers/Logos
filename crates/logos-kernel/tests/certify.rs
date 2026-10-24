@@ -664,40 +664,31 @@ fn enumeration_sources_are_not_promoted_by_hash_or_cast() {
         }],
     )
     .unwrap();
-    let p = candidate(&ledger, &v, truth(true), vec![]);
-    let o = proposed(&mut ledger, &handlers, p);
-    let c = ledger.cas().put::<Certificate>(b"1 0 0\n").unwrap();
-    let head = ledger.head().unwrap();
-    refused(&exchange(&mut ledger, &handlers, certify(o, c, LRAT)));
-    assert_eq!(ledger.head().unwrap(), head);
-    let p = candidate(&ledger, &v, truth(false), vec![]);
-    let o = proposed(&mut ledger, &handlers, p);
-    let model = FiniteModel::new(
-        ModelData {
-            vocab: hash(&v).unwrap(),
-            domains: vec![1],
-            consts: vec![(0, 0)],
-            funcs: vec![],
-            preds: vec![],
-        },
+    // 6.1b (ADR0062): fonte Policy continua não resolvida até a 7.3; PROPOSE já recusa,
+    // pelas duas rotas (LRAT e modelo), sem gravar nada.
+    // Com o fecho citado como hipótese o grounder aceitaria; só a recusa de Policy barra.
+    let closure = logos_ground::domain_axioms(
         &v,
-        ModelLimits::default(),
-    )
-    .unwrap();
-    let model = ledger
-        .cas()
-        .put::<ModelObject>(&to_canon(&model).unwrap())
-        .unwrap();
-    let head = ledger.head().unwrap();
-    refused(&exchange(
-        &mut ledger,
-        &handlers,
-        Message::Refute {
-            obligation: o,
-            model: ObjectRef::Cas(model),
+        &Sort {
+            name: Text::new("S").unwrap(),
         },
-    ));
-    assert_eq!(ledger.head().unwrap(), head);
+    )
+    .unwrap()
+    .closure()
+    .clone();
+    let message = assume_message(&ledger, &v, closure, "session:fonte");
+    let reply = exchange(&mut ledger, &handlers, message);
+    let axiom = assumed(&reply);
+    for (goal, cites) in [
+        (truth(true), vec![]),
+        (truth(false), vec![]),
+        (truth(true), vec![axiom]),
+    ] {
+        let head = ledger.head().unwrap();
+        let p = candidate(&ledger, &v, goal, cites);
+        refused(&exchange(&mut ledger, &handlers, Message::Propose(p)));
+        assert_eq!(ledger.head().unwrap(), head);
+    }
 }
 
 #[test]

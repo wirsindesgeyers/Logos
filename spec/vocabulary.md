@@ -83,11 +83,16 @@ Cada declaração associa um nome de sort (`Text`) a um domínio (`SortDomain`):
     4. Ter resultado `SymbolResult::Sort(s)` onde `s.name == sort.name`.
   - Todas as constantes na lista DEVEM ser mutuamente distintas por nome.
   - `source`: autoridade formal que fixa a enumeração:
-    - `Fact(FactRef)`: digest criptográfico SHA-256 de 32 bytes referenciando um fato atestado.
+    - `Fact(FactRef)`: digest criptográfico SHA-256 de 32 bytes. Desde a 6.1b (ADR0062)
+      é o hash AIR (`hash(Formula)`) da conjunção fecho ∧ nomes únicos do próprio sort
+      (`spec/finite-fragment.md`), que um fato registrado precisa afirmar; não é `h(Fact)`,
+      que criaria um ciclo (o fato carrega `h(V)`).
     - `Policy(PolicyRef)`: digest criptográfico SHA-256 de 32 bytes referenciando uma política.
 
 As referências `FactRef` e `PolicyRef` são identificadores opacos de 32 bytes no fio;
 o vocabulário NÃO resolve nem valida a existência dos registros externos referenciados.
+A resolução de `Fact` é do kernel (PROPOSE/CERTIFY, `spec/fact.md` §4); `Policy` segue
+recusada até a 7.3.
 
 ### 3.2. Declaração de símbolo (`SymbolDecl`)
 Cada declaração associa uma assinatura `Symbol` ao seu `grounding` e a uma glosa

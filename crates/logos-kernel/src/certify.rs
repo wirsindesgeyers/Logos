@@ -1,6 +1,6 @@
 //! CERTIFY/REFUTE: somente resultados de checkers ativos viram transições.
 
-use logos_air::{Limits, SortDomain, Vocabulary};
+use logos_air::{Limits, Vocabulary};
 use logos_canon::{Array, Canon, Text, Value, to_canon};
 use logos_core::{Budget, CheckOutcome};
 use logos_crypto::{Hash, Signer, hash_raw};
@@ -91,14 +91,6 @@ pub(crate) fn context<S: Signer>(
         .ok_or(Error::Invalid("missing vocabulary"))?;
     let vocabulary = Vocabulary::decode_with_limits(&vocab_bytes, Limits::default())
         .map_err(|_| Error::Invalid("invalid obligation vocabulary"))?;
-    // Fact/Policy DomainSource ainda são opacos; nem o hash nem um cast os autentica.
-    if vocabulary
-        .sorts()
-        .iter()
-        .any(|s| matches!(s.domain, SortDomain::Enumerated { .. }))
-    {
-        return Err(Error::Invalid("unresolved enumeration source"));
-    }
     if !proposal.speculative_on.is_empty() && speculation == Speculation::Refused {
         return Err(Error::Invalid("speculative consistency witness"));
     }
@@ -138,6 +130,8 @@ pub(crate) fn context<S: Signer>(
         &view,
     )
     .map_err(|_| Error::Invalid("Pending context no longer eligible"))?;
+    // 6.1b: fonte de sort enumerado só por fato registrado (ADR0062).
+    crate::enumeration::check_sources(&vocabulary, &regenerated, &view)?;
     if to_canon(&regenerated)? != bytes || hash_raw::<Obligation>(&bytes) != obligation {
         return Err(Error::Invalid(
             "Pending obligation differs from regenerated proposal",

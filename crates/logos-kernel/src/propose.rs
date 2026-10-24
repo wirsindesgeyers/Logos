@@ -68,7 +68,7 @@ pub(crate) fn create<S: Signer>(
         let mut snapshot_refs = references.clone();
         snapshot_refs.extend_from_slice(&speculative);
         let view = index.snapshot(ledger.cas(), &snapshot_refs, &scope)?;
-        generate_speculative(
+        let obligation = generate_speculative(
             Proposal {
                 vocabulary: &vocabulary,
                 goal: &proposal.goal,
@@ -80,7 +80,10 @@ pub(crate) fn create<S: Signer>(
         .map_err(|error| {
             eprintln!("kernel PROPOSE rejected: {error}");
             Error::Invalid("proposal rejected by obligation generator")
-        })?
+        })?;
+        // 6.1b (ADR0062): sort enumerado exige o fato da fonte entre as premissas.
+        crate::enumeration::check_sources(&vocabulary, &obligation, &view)?;
+        obligation
     };
     let bytes = to_canon(&obligation)?;
     if bytes.len() > DecodeLimits::DEFAULT_MAX_BYTES {
@@ -116,12 +119,7 @@ pub(crate) fn create<S: Signer>(
     let mut route = Route::Model;
     let mut artifact = *hash.as_bytes();
     let mut record = None;
-    if layer1
-        && !vocabulary
-            .sorts()
-            .iter()
-            .any(|s| matches!(s.domain, logos_air::SortDomain::Enumerated { .. }))
-    {
+    if layer1 {
         match logos_ground::ground(&obligation, &vocabulary)
             .and_then(|g| logos_ground::clausify(&g))
         {

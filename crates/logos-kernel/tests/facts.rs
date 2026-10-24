@@ -478,3 +478,450 @@ fn projection_refuses_a_used_fact_outside_its_window() {
     ledger.append(verified).unwrap();
     assert!(ledger.live_index().is_err());
 }
+
+/// V com sort `Cor = {vermelho, azul}` cuja fonte é `Fact(r)` e o predicado `ok(Cor)`.
+fn colors(source: logos_air::FactRef) -> Vocabulary {
+    use logos_air::{DomainSource, Sort, SortDecl, SortDomain};
+    let cor = Sort {
+        name: Text::new("Cor").unwrap(),
+    };
+    let constant = |name: &str| Symbol {
+        name: Text::new(name).unwrap(),
+        kind: SymbolKind::Const,
+        arity: vec![],
+        result: SymbolResult::Sort(cor.clone()),
+    };
+    let decl = |signature: Symbol| SymbolDecl {
+        signature,
+        grounding: Grounding::Glossed(Text::new("cor").unwrap()),
+        gloss_pt: Text::new("cor").unwrap(),
+    };
+    let constants = vec![constant("vermelho"), constant("azul")];
+    let mut symbols: Vec<_> = constants.iter().cloned().map(decl).collect();
+    symbols.push(decl(Symbol {
+        name: Text::new("ok").unwrap(),
+        kind: SymbolKind::Pred,
+        arity: vec![cor.clone()],
+        result: SymbolResult::Bool,
+    }));
+    Vocabulary::new(
+        1,
+        vec![SortDecl {
+            name: cor.name,
+            domain: SortDomain::Enumerated {
+                constants,
+                domain_source: DomainSource::Fact(source),
+            },
+        }],
+        symbols,
+    )
+    .unwrap()
+}
+
+fn enumeration_conjunction(v: &Vocabulary) -> Formula {
+    logos_ground::domain_axioms(
+        v,
+        &logos_air::Sort {
+            name: Text::new("Cor").unwrap(),
+        },
+    )
+    .unwrap()
+    .conjunction()
+    .unwrap()
+}
+
+/// O ciclo V ↔ fato é evitado porque `FactRef` é o hash da fórmula, não do fato.
+fn sourced_colors() -> (Vocabulary, Formula) {
+    let conjunction = enumeration_conjunction(&colors(logos_air::FactRef([0; 32])));
+    let source = logos_air::FactRef(*logos_crypto::hash(&conjunction).unwrap().as_bytes());
+    let v = colors(source);
+    assert_eq!(enumeration_conjunction(&v), conjunction);
+    (v, conjunction)
+}
+
+fn ok_of(v: &Vocabulary, constant: Option<&str>) -> Formula {
+    use logos_air::{Sort, Term, TermNode};
+    let cor = Sort {
+        name: Text::new("Cor").unwrap(),
+    };
+    let ok = v
+        .symbols()
+        .iter()
+        .find(|d| d.signature.name.as_str() == "ok");
+    let arg = match constant {
+        Some(name) => TermNode::App {
+            symbol: v
+                .symbols()
+                .iter()
+                .find(|d| d.signature.name.as_str() == name)
+                .unwrap()
+                .signature
+                .clone(),
+            args: 0,
+        },
+        None => TermNode::Var {
+            index: 0,
+            sort: cor.clone(),
+        },
+    };
+    let atom = FormulaNode::Pred {
+        symbol: ok.unwrap().signature.clone(),
+        args: vec![Term::new(vec![arg], Limits::default()).unwrap()],
+    };
+    let nodes = match constant {
+        Some(_) => vec![atom],
+        None => vec![FormulaNode::Forall(cor), atom],
+    };
+    Formula::new(nodes, Limits::default()).unwrap()
+}
+
+fn and(parts: &[Formula]) -> Formula {
+    let mut nodes = vec![FormulaNode::And(parts.len())];
+    for p in parts {
+        nodes.extend_from_slice(p.nodes());
+    }
+    Formula::new(nodes, Limits::default()).unwrap()
+}
+
+fn register_formula(
+    ledger: &mut L<'_>,
+    roots: &TrustRoots,
+    issuer: &FileSigner,
+    formula: Formula,
+    hv: Hash<Vocabulary>,
+) -> Hash<Event> {
+    let fact = Fact::sign(
+        issuer,
+        formula,
+        hv,
+        Text::new("inventario/cores").unwrap(),
+        1_700_000_000,
+        Validity::Until(u64::MAX),
+        None,
+    )
+    .unwrap();
+    let h = ledger.cas().put::<Fact>(&to_canon(&fact).unwrap()).unwrap();
+    register(ledger, roots, h).unwrap()
+}
+
+fn propose_goal(
+    ledger: &mut L<'_>,
+    h: &CertificationHandlers,
+    hv: Hash<Vocabulary>,
+    goal: Formula,
+    cites: Vec<Hash<Event>>,
+) -> Value {
+    exchange(
+        ledger,
+        h,
+        Message::Propose(EventProposal {
+            text_pt: TaintedText::new("toda cor está ok".into()).unwrap(),
+            goal,
+            cites,
+            speculative_on: vec![],
+            vocabulary: hv,
+        }),
+    )
+}
+
+#[test]
+fn criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let trusted = issuer();
+    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    let (v, conjunction) = sourced_colors();
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(&v).unwrap())
+        .unwrap();
+    let goal = ok_of(&v, None);
+    let inventory = and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]);
+    let both = register_formula(&mut ledger, &roots, &trusted, inventory, hv);
+
+    // Fonte ausente: sem o fato do fecho, PROPOSE recusa e nada é gravado.
+    let head = ledger.head().unwrap();
+    refused(&propose_goal(
+        &mut ledger,
+        &w.handlers,
+        hv,
+        goal.clone(),
+        vec![both],
+    ));
+    assert_eq!(ledger.head().unwrap(), head);
+
+    // Fonte adulterada: fato registrado que omite azul do fecho não é a fonte.
+    let closure_red = Formula::new(
+        [
+            vec![FormulaNode::Forall(logos_air::Sort {
+                name: Text::new("Cor").unwrap(),
+            })],
+            vec![FormulaNode::Or(1)],
+            conjunction.nodes()[4..5].to_vec(),
+        ]
+        .concat(),
+        Limits::default(),
+    )
+    .unwrap();
+    let forged = register_formula(&mut ledger, &roots, &trusted, closure_red, hv);
+    let head = ledger.head().unwrap();
+    refused(&propose_goal(
+        &mut ledger,
+        &w.handlers,
+        hv,
+        goal.clone(),
+        vec![both, forged],
+    ));
+    // A conjunção exata como hipótese do agente não autentica a fonte.
+    let reply = exchange(
+        &mut ledger,
+        &w.handlers,
+        Message::Assume {
+            vocabulary: hv,
+            formula: conjunction.clone(),
+            scope: Text::new("session:cores").unwrap(),
+        },
+    );
+    let assumed: Hash<Event> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
+    let head_after_assume = ledger.head().unwrap();
+    assert_ne!(head, head_after_assume);
+    refused(&propose_goal(
+        &mut ledger,
+        &w.handlers,
+        hv,
+        goal.clone(),
+        vec![both, assumed],
+    ));
+    assert_eq!(ledger.head().unwrap(), head_after_assume);
+    // Fecho e nomes únicos separados como hipóteses: o grounder aceitaria, o kernel não.
+    let axioms = logos_ground::domain_axioms(
+        &v,
+        &logos_air::Sort {
+            name: Text::new("Cor").unwrap(),
+        },
+    )
+    .unwrap();
+    let mut cites = vec![both];
+    for formula in std::iter::once(axioms.closure()).chain(axioms.distinct()) {
+        let reply = exchange(
+            &mut ledger,
+            &w.handlers,
+            Message::Assume {
+                vocabulary: hv,
+                formula: formula.clone(),
+                scope: Text::new("session:cores").unwrap(),
+            },
+        );
+        cites.push(logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap());
+    }
+    let head = ledger.head().unwrap();
+    refused(&propose_goal(
+        &mut ledger,
+        &w.handlers,
+        hv,
+        goal.clone(),
+        cites,
+    ));
+    assert_eq!(ledger.head().unwrap(), head);
+
+    // Fonte registrada: axiomas em O, prova LRAT real e used/deps com o fato da fonte.
+    let source = register_formula(&mut ledger, &roots, &trusted, conjunction.clone(), hv);
+    let reply = propose_goal(&mut ledger, &w.handlers, hv, goal, vec![both, source]);
+    let o: Hash<Obligation> = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
+    let bytes = ledger.cas().get(&o).unwrap().unwrap();
+    let decoded =
+        logos_obligation::decode_for_check(&bytes, o, &v, DecodeLimits::default()).unwrap();
+    assert!(
+        decoded
+            .premises()
+            .iter()
+            .any(|(r, f)| f == &conjunction && r.event_hash() == source.as_bytes())
+    );
+    let c = proof(&ledger, o, &v);
+    let reply = exchange(
+        &mut ledger,
+        &w.handlers,
+        Message::Certify {
+            obligation: o,
+            format: Text::new(LRAT).unwrap(),
+            certificate: ObjectRef::Cas(c),
+        },
+    );
+    let verified: Hash<Event> = logos_canon::CanonDecode::from_value(&accepted(&reply)[2]).unwrap();
+    let head = ledger.head().unwrap().unwrap().seq;
+    let EventBody::Verified { used, .. } = ledger.events_from(head, 1).unwrap().pop().unwrap().body
+    else {
+        panic!("Verified")
+    };
+    assert!(used.contains(&source), "{used:?}");
+    assert_eq!(
+        ledger.live_index().unwrap().dependents(source).unwrap(),
+        vec![verified]
+    );
+}
+
+#[test]
+fn enumeration_source_must_match_the_vocabulary_and_policy_stays_refused() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let trusted = issuer();
+    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    // FactRef que não é o hash da conjunção de V: nenhum fato pode ser a fonte.
+    let v = colors(logos_air::FactRef([7; 32]));
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(&v).unwrap())
+        .unwrap();
+    let source = register_formula(
+        &mut ledger,
+        &roots,
+        &trusted,
+        enumeration_conjunction(&v),
+        hv,
+    );
+    let both = register_formula(
+        &mut ledger,
+        &roots,
+        &trusted,
+        and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]),
+        hv,
+    );
+    let head = ledger.head().unwrap();
+    refused(&propose_goal(
+        &mut ledger,
+        &w.handlers,
+        hv,
+        ok_of(&v, None),
+        vec![both, source],
+    ));
+    assert_eq!(ledger.head().unwrap(), head);
+}
+
+/// Snapshot mínimo para reproduzir o O que um kernel anterior à 6.1b gravaria.
+struct Entries<'a>(&'a Vocabulary, Vec<(Hash<Event>, EntryKind, Formula)>);
+
+impl logos_obligation::LedgerView for Entries<'_> {
+    fn current_epoch(&self) -> u64 {
+        0
+    }
+    fn lookup(
+        &self,
+        reference: logos_obligation::PremiseRef,
+    ) -> Result<Option<logos_obligation::LedgerEntry<'_>>, logos_obligation::LedgerError> {
+        Ok(self
+            .1
+            .iter()
+            .find(|(h, _, _)| h.as_bytes() == reference.event_hash())
+            .map(|(_, kind, formula)| logos_obligation::LedgerEntry {
+                kind: *kind,
+                epoch: 0,
+                retracted: false,
+                expired: false,
+                vocabulary: self.0,
+                formula,
+            }))
+    }
+}
+
+#[test]
+fn certify_rechecks_the_source_of_a_pending_written_without_it() {
+    let temp = Temp::new();
+    let kernel = signer();
+    let mut ledger = Ledger::open(&temp.0.join("ledger"), &kernel).unwrap();
+    let w = world(&mut ledger, &kernel);
+    let trusted = issuer();
+    let roots = TrustRoots::new(&[trusted.public_key().clone()]).unwrap();
+    let (v, _) = sourced_colors();
+    let hv = ledger
+        .cas()
+        .put::<Vocabulary>(&to_canon(&v).unwrap())
+        .unwrap();
+    let goal = ok_of(&v, None);
+    let inventory = and(&[ok_of(&v, Some("vermelho")), ok_of(&v, Some("azul"))]);
+    let both = register_formula(&mut ledger, &roots, &trusted, inventory.clone(), hv);
+    let mut entries = vec![(both, EntryKind::Fact, inventory)];
+    let axioms = logos_ground::domain_axioms(
+        &v,
+        &logos_air::Sort {
+            name: Text::new("Cor").unwrap(),
+        },
+    )
+    .unwrap();
+    for formula in std::iter::once(axioms.closure()).chain(axioms.distinct()) {
+        let reply = exchange(
+            &mut ledger,
+            &w.handlers,
+            Message::Assume {
+                vocabulary: hv,
+                formula: formula.clone(),
+                scope: Text::new("session:cores").unwrap(),
+            },
+        );
+        let event = logos_canon::CanonDecode::from_value(&accepted(&reply)[1]).unwrap();
+        entries.push((event, EntryKind::Assumption, formula.clone()));
+    }
+    let cites: Vec<_> = entries.iter().map(|(h, _, _)| *h).collect();
+    let refs: Vec<_> = cites
+        .iter()
+        .map(|h| logos_obligation::PremiseRef::from_event_hash(*h.as_bytes()))
+        .collect();
+    let o = logos_obligation::generate(
+        logos_obligation::Proposal {
+            vocabulary: &v,
+            goal: &goal,
+            cites: &refs,
+        },
+        &Entries(&v, entries),
+    )
+    .unwrap();
+    // O grounder aceita os axiomas separados; só a fonte barra este O.
+    let (cnf, _) = logos_ground::clausify(&logos_ground::ground(&o, &v).unwrap()).unwrap();
+    let ho = ledger
+        .cas()
+        .put::<Obligation>(&to_canon(&o).unwrap())
+        .unwrap();
+    let cnf_hash = ledger
+        .cas()
+        .put::<logos_ledger::CnfObject>(cnf.dimacs())
+        .unwrap();
+    let author = ledger.events_from(0, 1).unwrap()[0].kernel_key;
+    ledger
+        .append(EventBody::Proposed {
+            proposal: EventProposal {
+                text_pt: TaintedText::new("toda cor está ok".into()).unwrap(),
+                goal,
+                cites,
+                speculative_on: vec![],
+                vocabulary: hv,
+            },
+            author,
+        })
+        .unwrap();
+    ledger
+        .append(EventBody::ObligationCreated {
+            obligation: ho,
+            route: logos_ledger::Route::Lrat,
+            artifact: *logos_crypto::ExternalDigest::of(cnf.dimacs()).as_bytes(),
+            cnf: Some(logos_ledger::CnfRecord {
+                hash: cnf_hash,
+                encoder_version: 1,
+            }),
+        })
+        .unwrap();
+    let c = proof(&ledger, ho, &v);
+    let head = ledger.head().unwrap();
+    refused(&exchange(
+        &mut ledger,
+        &w.handlers,
+        Message::Certify {
+            obligation: ho,
+            format: Text::new(LRAT).unwrap(),
+            certificate: ObjectRef::Cas(c),
+        },
+    ));
+    assert_eq!(ledger.head().unwrap(), head);
+}

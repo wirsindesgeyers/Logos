@@ -40,6 +40,7 @@ pub struct AxiomCandidates {
     source: DomainSource,
     closure: Formula,
     distinct: Vec<Formula>,
+    air: Limits,
 }
 impl AxiomCandidates {
     /// Identidade do vocabulário completo que originou os candidatos.
@@ -66,6 +67,28 @@ impl AxiomCandidates {
     #[must_use]
     pub fn distinct(&self) -> &[Formula] {
         &self.distinct
+    }
+    /// And(fecho, distinct...) na mesma ordem: a fórmula que um fato de fonte
+    /// enumerada afirma (6.1b, ADR0062); `FactRef` é o hash AIR dela.
+    ///
+    /// # Errors
+    /// Limites AIR da fórmula agregada (Unknown(Size)) ou reserva (Unknown(Memory)).
+    pub fn conjunction(&self) -> Result<Formula, GroundError> {
+        let size = self
+            .distinct
+            .iter()
+            .chain(std::iter::once(&self.closure))
+            .try_fold(1usize, |n, f| n.checked_add(f.nodes().len()))
+            .ok_or(GroundError::Unknown(Exhausted::Size))?;
+        let mut nodes = Vec::new();
+        nodes
+            .try_reserve_exact(size)
+            .map_err(|_| GroundError::Unknown(Exhausted::Memory))?;
+        nodes.push(FormulaNode::And(self.distinct.len() + 1));
+        for f in std::iter::once(&self.closure).chain(&self.distinct) {
+            nodes.extend_from_slice(f.nodes());
+        }
+        Ok(Formula::new(nodes, self.air)?)
     }
 }
 
@@ -156,6 +179,7 @@ pub fn domain_axioms_with_limits(
         source: domain_source.clone(),
         closure,
         distinct,
+        air: limits.air,
     })
 }
 

@@ -1,0 +1,84 @@
+{
+  "stage": "6.1b",
+  "killed": 9,
+  "total": 9,
+  "note": "M9 (checagem no CERTIFY) sobreviveu na primeira rodada: o PROPOSE já barrava. Teste de Pending gravado sem a checagem (ledger anterior) acrescentado e M9 morta",
+  "mutations": [
+    {
+      "mutation": "M1 FactRef não comparado com h(conjunção)",
+      "killed": true,
+      "evidence": [
+        "thread 'enumeration_source_must_match_the_vocabulary_and_policy_stays_refused' (1312605) panicked at crates/logos-kernel/tests/facts.rs:79:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M2 hipótese aceita como fonte",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used' (1313429) panicked at crates/logos-kernel/tests/facts.rs:79:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M3 fonte ausente aceita (axiomas separados)",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used' (1314107) panicked at crates/logos-kernel/tests/facts.rs:79:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    },
+    {
+      "mutation": "M4 Policy tratada como resolvida",
+      "killed": true,
+      "evidence": [
+        "thread 'enumeration_sources_are_not_promoted_by_hash_or_cast' (1314807) panicked at crates/logos-kernel/tests/certify.rs:188:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test certify`"
+      ]
+    },
+    {
+      "mutation": "M5 grounder ignora a conjunção",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used' (1315851) panicked at crates/logos-kernel/tests/facts.rs:74:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`",
+        "thread 'enumeration_conjunction_is_exact_and_covers_the_sort_as_one_premise' (1316098) panicked at crates/logos-ground/tests/grounding.rs:677:72:",
+        "error: test failed, to rerun pass `-p logos-ground --test grounding`"
+      ]
+    },
+    {
+      "mutation": "M6 conjunção não entra no suporte do sort",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used' (1317033) panicked at crates/logos-kernel/tests/facts.rs:744:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`",
+        "thread 'enumeration_conjunction_is_exact_and_covers_the_sort_as_one_premise' (1317295) panicked at crates/logos-ground/tests/grounding.rs:678:5:",
+        "error: test failed, to rerun pass `-p logos-ground --test grounding`"
+      ]
+    },
+    {
+      "mutation": "M7 conjunção sem nomes únicos",
+      "killed": true,
+      "evidence": [
+        "thread 'enumeration_conjunction_is_exact_and_covers_the_sort_as_one_premise' (1318619) panicked at crates/logos-ground/tests/grounding.rs:674:5:",
+        "error: test failed, to rerun pass `-p logos-ground --test grounding`"
+      ]
+    },
+    {
+      "mutation": "M8 PROPOSE sem checagem de fonte",
+      "killed": true,
+      "evidence": [
+        "thread 'criterion_enumeration_source_fact_puts_axioms_in_o_and_is_traced_by_used' (1319551) panicked at crates/logos-kernel/tests/facts.rs:79:5:",
+        "thread 'enumeration_source_must_match_the_vocabulary_and_policy_stays_refused' (1319552) panicked at crates/logos-kernel/tests/facts.rs:79:5:"
+      ]
+    },
+    {
+      "mutation": "M9 CERTIFY sem checagem de fonte",
+      "killed": true,
+      "evidence": [
+        "thread 'certify_rechecks_the_source_of_a_pending_written_without_it' (1323975) panicked at crates/logos-kernel/tests/facts.rs:79:5:",
+        "error: test failed, to rerun pass `-p logos-kernel --test facts`"
+      ]
+    }
+  ]
+}
